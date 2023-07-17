@@ -210,6 +210,26 @@ namespace Finance.MakeOffers.AnalyseBoard
             }
 
         }
+
+        /// <summary>
+        /// 查看报表分析看板
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <param name="GrossMarginId"></param>
+        /// <returns></returns>
+        /// <exception cref="UserFriendlyException"></exception>
+        public async Task<AnalyseBoardDto> GetStatementAnalysisBoardSecond(long Id, long? GrossMarginId)
+        {
+            
+            
+            AnalyseBoardDto analyseBoardDto = new AnalyseBoardDto();        
+            
+            
+            
+            return analyseBoardDto;
+
+        }
+
         /// <summary>
         /// 报价分析看板 动态动态单价表单的计算
         /// </summary>
@@ -268,6 +288,21 @@ namespace Finance.MakeOffers.AnalyseBoard
             try
             {
                 return await _analysisBoardMethod.DownloadMessage(Id, FileName);
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
+        }
+        /// <summary>
+        /// 下载成本信息表excel
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> GetCostInformationExcel(long Id, string FileName = "成本信息表下载")
+        {
+            try
+            {
+                return await _analysisBoardMethod.DownloadCostInformationExcel(Id, FileName);
             }
             catch (Exception e)
             {

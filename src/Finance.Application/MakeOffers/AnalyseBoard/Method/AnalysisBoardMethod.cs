@@ -1085,7 +1085,8 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             return spreadSheetCalculateDtos;
         }
         /// <summary>
-        /// 下载成本信息表
+        /// 下载
+        /// 表
         /// </summary>
         /// <param name="processId"></param>
         /// <param name="fileName"></param>
@@ -1185,6 +1186,115 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
                 FileDownloadName = $"{fileName}.xlsx"
             };
         }
+        
+          /// <summary>
+        /// 下载
+        /// 表
+        /// </summary>
+        /// <param name="processId"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> DownloadCostInformationExcel(long processId, string fileName)
+        {
+            string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\新成本信息表模板.xlsx";
+            QuotationListDto quotationListDto = await QuotationList(processId);
+            //年份
+            List<int> YearList = await GetYear(processId);
+            List<SopModel> Sop = new List<SopModel>();
+            foreach (int year in YearList)
+            {
+                SopModel sopModel = new();
+                foreach (MotionMessageModel item in quotationListDto.MotionMessage)
+                {
+                    sopModel.Year = year;
+                    if (item.MessageName.Contains(StaticName.ZL))
+                    {
+                        sopModel.Motion = item.Sop.Where(p => p.Year.Equals(year)).Select(p => p.Value).First();
+                    }
+                    if (item.MessageName.Contains(StaticName.NJL))
+                    {
+                        sopModel.YearDrop = item.Sop.Where(p => p.Year.Equals(year)).Select(p => p.Value).First();
+                    }
+                    if (item.MessageName.Contains(StaticName.NDFLYQ))
+                    {
+                        sopModel.RebateRequest = item.Sop.Where(p => p.Year.Equals(year)).Select(p => p.Value).First();
+                    }
+                    if (item.MessageName.Contains(StaticName.YCXZRL))
+                    {
+                        sopModel.DiscountRate = item.Sop.Where(p => p.Year.Equals(year)).Select(p => p.Value).First();
+                    }
+                    //年度佣金比例(%),字段还未知
+                    if (item.MessageName.Contains(StaticName.YCXZRL))
+                    {
+                        sopModel.DiscountRate = item.Sop.Where(p => p.Year.Equals(year)).Select(p => p.Value).First();
+                    }
+                }
+                Sop.Add(sopModel);
+            }
+            //核心部件
+            List<PartsModel> partsModels = new List<PartsModel>();
+            foreach (CoreComponentModel item in quotationListDto.CoreComponent)
+            {
+                partsModels.Add(new PartsModel() { PartsName = "核心部件:" + item.ComponentName, Parts = "核心部件", Model = "型号", Type = "类型", Remark = "备注" });
+                foreach (ComponenModel prod in item.ProductSubclass)
+                {
+                    partsModels.Add(new PartsModel() { PartsName = "", Parts = prod.CoreComponent, Model = prod.Model, Type = prod.Type, Remark = prod.Remark });
+                }
+                partsModels.Add(new PartsModel() { Model = "", Parts = "", PartsName = "", Type = "", Remark = "" });
+            }
+            //NRE
+            List<NREModel> nREModels = new();
+            foreach (NreCostMessageModel item in quotationListDto.NreCost)
+            {
+                nREModels.Add(new NREModel() { NreName = "NRE费用信息:" + item.NreCostModuleName, CostName = "", Cost = "成本" });
+                foreach (NreCostModel nre in item.NreCostModels)
+                {
+                    nREModels.Add(new NREModel() { NreName = "", CostName = nre.Name, Cost = nre.Cost.ToString() });
+                }
+                nREModels.Add(new NREModel() { NreName = "", CostName = "", Cost = "" });
+            }
+            //成本单价信息
+            List<PricingModel> pricingModels = new();
+            foreach (PricingMessage item in quotationListDto.PricingMessage)
+            {
+                decimal BOM = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.BOMCB)).Select(p => p.CostValue).First();
+                decimal ProduceCost = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.ZZCB)).Select(p => p.CostValue).First();
+                decimal Yield = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.SHCB)).Select(p => p.CostValue).First();
+                decimal Freight = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.WLCB)).Select(p => p.CostValue).First();
+                decimal MOQ = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.MOQFTCB)).Select(p => p.CostValue).First();
+                decimal QualityCost = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.QT)).Select(p => p.CostValue).First();
+                decimal SumCost = item.PricingMessageModels.Where(p => p.Name.Contains(StaticName.ZCB)).Select(p => p.CostValue).First();
+                pricingModels.Add(new PricingModel() { Name = item.PricingMessageName, BOM = BOM, ProduceCost = ProduceCost, Yield = Yield, Freight = Freight, MOQ = MOQ, QualityCost = QualityCost, SumCost = SumCost, Remark = "" });
+            }
+            var value = new
+            {
+                Date = DateTime.Now.ToString("yyyy-MM-dd"),//日期
+                RecordNumber = quotationListDto.RecordNumber,//记录编号           
+                Versions = quotationListDto.Versions,//版本
+                DirectCustomerName = quotationListDto.DirectCustomerName,//直接客户名称
+                TerminalCustomerName = quotationListDto.TerminalCustomerName,//终端客户名称
+                OfferForm = quotationListDto.OfferForm,//报价形式
+                SopTime = quotationListDto.SopTime,//SOP时间
+                ProjectCycle = quotationListDto.ProjectCycle,//项目生命周期
+                ForSale = quotationListDto.ForSale,//销售类型
+                modeOfTrade = quotationListDto.modeOfTrade,//贸易方式
+                PaymentMethod = quotationListDto.PaymentMethod,//付款方式
+                ExchangeRate = quotationListDto.ExchangeRate,//汇率
+                Sop = Sop,
+                ProjectName = quotationListDto.ProjectName,//项目名称
+                Parts = partsModels,
+                NRE = nREModels,
+                Cost = pricingModels,
+            };
+            var memoryStream = new MemoryStream();
+            await memoryStream.SaveAsByTemplateAsync(templatePath, value);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = $"{fileName}.xlsx"
+            };
+        }
+        
         private async Task<DownloadAuditQuotationListModel> DownloadAuditQuotation(long processId)
         {
             QuotationListDto quotationListDto = await QuotationList(processId);
