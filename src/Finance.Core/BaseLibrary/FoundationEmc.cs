@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--EMC
     /// </summary>
-    [Table("FoundationEmc")]
+    [Table("FEmc")]
 	public class FoundationEmc : FullAuditedEntity<long>
     {
 

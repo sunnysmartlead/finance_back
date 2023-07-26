@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--工时工序追溯部分(硬件及软件开发费用)
     /// </summary>
-    [Table("FoundationTechnologyHardware")]
+    [Table("FTHardware")]
 	public class FoundationTechnologyHardware : FullAuditedEntity<long>
     {
 

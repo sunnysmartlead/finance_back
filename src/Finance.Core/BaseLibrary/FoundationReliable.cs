@@ -8,7 +8,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--实验库环境
     /// </summary>
-    [Table("FoundationReliable")]
+    [Table("FR")]
 	public class Foundationreliable : FullAuditedEntity<long>
     {
 

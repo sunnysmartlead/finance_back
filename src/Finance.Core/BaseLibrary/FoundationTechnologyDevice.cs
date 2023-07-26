@@ -8,7 +8,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--设备信息
     /// </summary>
-    [Table("FoundationTechnologyDevice")]
+    [Table("FTDevice")]
 	public class FoundationTechnologyDevice : FullAuditedEntity<long>
     {
 

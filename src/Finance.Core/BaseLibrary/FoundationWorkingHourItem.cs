@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--工时库明细
     /// </summary>
-    [Table("FoundationWorkingHourItem")]
+    [Table("FWorkingHourItem")]
 	public class FoundationWorkingHourItem : FullAuditedEntity<long>
     {
 

@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--工装库
     /// </summary>
-    [Table("FoundationProcedure")]
+    [Table("FProcedure")]
 	public class FoundationProcedure : FullAuditedEntity<long>
     {
 

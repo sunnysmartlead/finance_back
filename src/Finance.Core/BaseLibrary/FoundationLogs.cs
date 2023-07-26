@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--日志表
     /// </summary>
-    [Table("FoundationLogs")]
+    [Table("FLogs")]
 	public class FoundationLogs : FullAuditedEntity<long>
     {
 

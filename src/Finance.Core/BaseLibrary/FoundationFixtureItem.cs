@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库---治具检具库界面明细
     /// </summary>
-    [Table("FoundationFixtureItem")]
+    [Table("FFiItem")]
 	public class FoundationFixtureItem : FullAuditedEntity<long>
     {
 

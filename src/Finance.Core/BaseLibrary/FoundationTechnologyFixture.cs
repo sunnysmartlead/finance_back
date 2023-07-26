@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--工序工时工装治置
     /// </summary>
-    [Table("FoundationTechnologyFixture")]
+    [Table("FTFixture")]
 	public class FoundationTechnologyFixture : FullAuditedEntity<long>
     {
 

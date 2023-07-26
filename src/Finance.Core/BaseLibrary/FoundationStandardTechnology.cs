@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--标准工艺库
     /// </summary>
-    [Table("FoundationStandardTechnology")]
+    [Table("FSTechnology")]
 	public class FoundationStandardTechnology : FullAuditedEntity<long>
     {
 

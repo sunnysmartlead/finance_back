@@ -9,7 +9,7 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// 基础库--工序工时
     /// </summary>
-    [Table("FoundationReliableProcessHours")]
+    [Table("FRProcessHours")]
 	public class FoundationReliableProcessHours : FullAuditedEntity<long>
     {
 
