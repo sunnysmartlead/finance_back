@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE.xlsx",
+      "PackagePath": "staticwebassets\\Excel\\NRE.xlsx"
+    },
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE实验费模板.xlsx",
+      "PackagePath": "staticwebassets\\Excel\\NRE实验费模板.xlsx"
+    },
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\成本信息表模板.xlsx",
+      "PackagePath": "staticwebassets\\Excel\\成本信息表模板.xlsx"
+    },
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\报价审核表模板.xlsx",
+      "PackagePath": "staticwebassets\\Excel\\报价审核表模板.xlsx"
+    },
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.js",
+      "PackagePath": "staticwebassets\\swagger\\ui\\abp.js"
+    },
+    {
+      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.swagger.js",
+      "PackagePath": "staticwebassets\\swagger\\ui\\abp.swagger.js"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.Finance.Web.Host.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.build.Finance.Web.Host.props",
+      "PackagePath": "build\\Finance.Web.Host.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildMultiTargeting.Finance.Web.Host.props",
+      "PackagePath": "buildMultiTargeting\\Finance.Web.Host.props"
+    },
+    {
+      "Id": "obj\\Debug\\net6.0\\staticwebassets\\msbuild.buildTransitive.Finance.Web.Host.props",
+      "PackagePath": "buildTransitive\\Finance.Web.Host.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

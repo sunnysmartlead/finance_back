@@ -26,6 +26,11 @@ namespace Finance.Dto
         public int SkipCount { get; set; }
 
         /// <summary>
+        /// 当前第几页，下标从0开始,第一页传过来为0
+        /// </summary>
+        public int PageIndex { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public PagedInputDto()
@@ -111,6 +116,10 @@ namespace Finance.Dto
         /// 错误信息
         /// </summary>
         public string Message { get; set; } = "调用成功";
+        /// <summary>
+        /// 返回结果
+        /// </summary>
+        public Object ResultData { get; set; }
     }
 
 }

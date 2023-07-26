@@ -32,7 +32,7 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("price")]
 		[StringLength(255, ErrorMessage = "单价长度不能超出255字符")]
-		public string Price { get; set; }
+		public double? Price { get; set; }
 
 		/// <summary>
 		/// 单位
@@ -41,6 +41,12 @@ namespace Finance.BaseLibrary
 		[StringLength(255, ErrorMessage = "单位长度不能超出255字符")]
 		public string Unit { get; set; }
 
+        /// <summary>
+        /// 实验室
+        /// </summary>
+        [Column("laboratory")]
+        [StringLength(255, ErrorMessage = "单位长度不能超出255字符")]
+        public string Laboratory { get; set; }
 
-	}
+    }
 }

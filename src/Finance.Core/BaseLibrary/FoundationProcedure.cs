@@ -52,7 +52,7 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("process_number")]
 		[StringLength(255, ErrorMessage = "工序单价长度不能超出255字符")]
-		public string ProcessNumber { get; set; }
+		public decimal? ProcessNumber { get; set; }
 
 		/// <summary>
 		/// 测试线名称

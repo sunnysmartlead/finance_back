@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Finance.Web.Host</name>
+    </assembly>
+    <members>
+        <member name="M:Finance.Web.Host.Controllers.HomeController.TestNotification(System.String)">
+            <summary>
+            This is a demo code to demonstrate sending notification to default tenant admin and host admin uers.
+            Don't use this code in production !!!
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Finance.Web.Host.Startup.MyExceptionFilter.GetStatusCode(Microsoft.AspNetCore.Mvc.Filters.ExceptionContext,System.Boolean)">
+            <summary>
+            Get http code
+            </summary>
+            <param name="context"></param>
+            <param name="wrapOnError"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

@@ -27,6 +27,13 @@ namespace Finance.BaseLibrary
 		[StringLength(255, ErrorMessage = "版本长度不能超出255字符")]
 		public string Version { get; set; }
 
+        /// <summary>
+        /// 日志类型 类型1-实验室库环境
+        /// </summary>
+        [Column("Type")]
+        [StringLength(255, ErrorMessage = "版本长度不能超出255字符")]
+        public int? Type { get; set; }
+        
 
-	}
+    }
 }
