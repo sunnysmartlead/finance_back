@@ -51,7 +51,7 @@ namespace Finance.BaseLibrary
 		/// 设备库id
 		/// </summary>
 		[Column("process_hours_enter_id")]
-		public decimal? ProcessHoursEnterId { get; set; }
+		public long? ProcessHoursEnterId { get; set; }
 
 
 	}

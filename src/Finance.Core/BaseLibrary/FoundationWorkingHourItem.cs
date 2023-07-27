@@ -17,7 +17,7 @@ namespace Finance.BaseLibrary
 		/// 基础库工时id
 		/// </summary>
 		[Column("foundation_working_hour_id")]
-		public decimal? FoundationWorkingHourId { get; set; }
+		public long? FoundationWorkingHourId { get; set; }
 
 		/// <summary>
 		/// 标准人工工时

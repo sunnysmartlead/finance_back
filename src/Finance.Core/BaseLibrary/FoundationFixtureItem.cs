@@ -44,6 +44,6 @@ namespace Finance.BaseLibrary
 		/// 治具检具库id
 		/// </summary>
 		[Column("foundation_fixture_id")]
-		public decimal? FoundationFixtureId { get; set; }
+		public long? FoundationFixtureId { get; set; }
 	}
 }

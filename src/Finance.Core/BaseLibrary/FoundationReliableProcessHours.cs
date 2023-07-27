@@ -100,7 +100,7 @@ namespace Finance.BaseLibrary
 		/// 标准工艺id
 		/// </summary>
 		[Column("standard_technology_id")]
-		public decimal? StandardTechnologyId { get; set; }
+		public long? StandardTechnologyId { get; set; }
 
 		/// <summary>
 		/// 测试线名称

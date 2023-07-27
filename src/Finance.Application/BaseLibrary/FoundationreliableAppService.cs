@@ -193,8 +193,6 @@ namespace Finance.BaseLibrary
                     entity.CreationTime = DateTime.Now;
                 }
             }
-            var maxId = this._foundationLogsRepository.GetAll().Max(t => t.Id);
-            entity.Id = maxId + 1;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }

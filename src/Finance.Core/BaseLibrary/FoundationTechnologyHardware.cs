@@ -24,7 +24,7 @@ namespace Finance.BaseLibrary
 		/// 工序工时id
 		/// </summary>
 		[Column("foundation_reliable_hours_id")]
-		public decimal? FoundationReliableHoursId { get; set; }
+		public long? FoundationReliableHoursId { get; set; }
 
 		/// <summary>
 		/// 名称

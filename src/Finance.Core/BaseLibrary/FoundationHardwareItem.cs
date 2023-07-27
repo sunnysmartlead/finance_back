@@ -17,7 +17,7 @@ namespace Finance.BaseLibrary
 		/// 硬件id
 		/// </summary>
 		[Column("foundation_hardware_id")]
-		public decimal? FoundationHardwareId { get; set; }
+		public long? FoundationHardwareId { get; set; }
 
 		/// <summary>
 		/// 供应商
