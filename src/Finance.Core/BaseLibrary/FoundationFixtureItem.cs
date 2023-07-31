@@ -45,5 +45,11 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("foundation_fixture_id")]
 		public long? FoundationFixtureId { get; set; }
-	}
+        /// <summary>
+        /// 供应商
+        /// </summary>
+        [Column("fixture_provider")]
+        [StringLength(255, ErrorMessage = "治具状态长度不能超出255字符")]
+        public string FixtureProvider { get; set; }
+    }
 }

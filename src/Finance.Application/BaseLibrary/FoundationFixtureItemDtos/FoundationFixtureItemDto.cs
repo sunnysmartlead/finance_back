@@ -19,6 +19,7 @@ namespace Finance.BaseLibrary
         public string FixtureName { get; set; }
         public System.Nullable<System.Decimal> FixturePrice { get; set; }
         public string FixtureState { get; set; }
+        public string FixtureProvider { get; set; }
         public System.Nullable<System.Decimal> FoundationFixtureId { get; set; }
     }
 }

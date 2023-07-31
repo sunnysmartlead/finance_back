@@ -1,5 +1,6 @@
 using Abp.Domain.Entities.Auditing;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,6 +27,7 @@ namespace Finance.BaseLibrary
 		[Column("process_number")]
 		[StringLength(255, ErrorMessage = "工序编号长度不能超出255字符")]
 		public string ProcessNumber { get; set; }
+
 
 
 	}

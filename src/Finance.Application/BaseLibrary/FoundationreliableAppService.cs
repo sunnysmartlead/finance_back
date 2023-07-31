@@ -75,7 +75,7 @@ namespace Finance.BaseLibrary
         public virtual async Task<List<FoundationreliableDto>> GetListAllAsync(GetFoundationreliablesInput input)
         {
             // 设置查询条件
-            var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == true);
+            var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false);
             if (!string.IsNullOrEmpty(input.Name))
             {
                 query = query.Where(t => t.Name.Contains(input.Name));

@@ -1,5 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Finance.BaseLibrary
 {
@@ -17,9 +19,10 @@ namespace Finance.BaseLibrary
         public long? CreatorUserId { get; set; }
         public string DeviceName { get; set; }
         public string DeviceNumber { get; set; }
-        public string DevicePrice { get; set; }
+        public decimal DevicePrice { get; set; }
         public decimal? DeviceSort { get; set; }
         public string DeviceStatus { get; set; }
-        public decimal? ProcessHoursEnterId { get; set; }
+        public string DeviceProvider { get; set; }
+        public long? ProcessHoursEnterId { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
+using System.Collections.Generic;
 
 namespace Finance.BaseLibrary
 {
@@ -21,5 +22,10 @@ namespace Finance.BaseLibrary
         public string FixtureGaugeState { get; set; }
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
+        public List<FoundationFixtureItemDto> FixtureList { get; set; }
+        /// <summary>
+        /// 维护人
+        /// </summary>
+        public string LastModifierUserName { get; set; }
     }
 }

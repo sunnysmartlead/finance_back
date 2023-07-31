@@ -53,6 +53,13 @@ namespace Finance.BaseLibrary
 		[Column("process_hours_enter_id")]
 		public long? ProcessHoursEnterId { get; set; }
 
+        /// <summary>
+        /// 供应商
+        /// </summary>
+        [Column("DeviceProvider")]
+        [StringLength(255, ErrorMessage = "供应商长度不能超出255字符")]
+        public string DeviceProvider { get; set; }
 
-	}
+
+    }
 }
