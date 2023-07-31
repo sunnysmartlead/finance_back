@@ -4,6 +4,7 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
+using Finance.BaseLibrary;
 using Finance.EngineeringDepartment;
 using Finance.EngineeringDepartment.Dto;
 using Finance.Ext;
@@ -173,6 +174,64 @@ namespace Finance
             configuration.CreateMap<UserInputDto, UserInputInfo>();
             configuration.CreateMap<UserInputInfo, UserInputDto>();
 
+          // 基础库
+            configuration.CreateMap<FoundationDeviceItem, FoundationDeviceItemDto>();
+            configuration.CreateMap<FoundationDeviceItemDto, FoundationDeviceItem>();
+
+            configuration.CreateMap<FoundationDevice, FoundationDeviceDto>();
+            configuration.CreateMap<FoundationDeviceDto, FoundationDevice>();
+
+            configuration.CreateMap<FoundationEmc, FoundationEmcDto>();
+            configuration.CreateMap<FoundationEmcDto,FoundationEmc>();
+
+            configuration.CreateMap<FoundationFixture, FoundationFixtureDto>();
+            configuration.CreateMap<FoundationFixtureDto, FoundationFixture>();
+
+            configuration.CreateMap<FoundationFixtureItem, FoundationFixtureItemDto>();
+            configuration.CreateMap<FoundationFixtureItemDto, FoundationFixtureItem>();
+
+            configuration.CreateMap<FoundationHardware, FoundationHardwareDto>();
+            configuration.CreateMap<FoundationHardwareDto, FoundationHardware>();
+
+            configuration.CreateMap<FoundationHardwareItem, FoundationHardwareItemDto>();
+            configuration.CreateMap<FoundationHardwareItemDto, FoundationHardwareItem>();
+
+            configuration.CreateMap<FoundationLogs, FoundationLogsDto>();
+            configuration.CreateMap<FoundationLogsDto, FoundationLogs>();
+
+            configuration.CreateMap<FoundationProcedure, FoundationProcedureDto>();
+            configuration.CreateMap<FoundationProcedureDto, FoundationProcedure>();
+
+            configuration.CreateMap<Foundationreliable, FoundationreliableDto>();
+            configuration.CreateMap<FoundationreliableDto, Foundationreliable>();
+
+            configuration.CreateMap<FoundationReliableProcessHours, FoundationReliableProcessHoursDto>();
+            configuration.CreateMap<FoundationReliableProcessHoursDto, FoundationReliableProcessHours>();
+
+            configuration.CreateMap<FoundationStandardTechnology, FoundationStandardTechnologyDto>();
+            configuration.CreateMap<FoundationStandardTechnologyDto, FoundationStandardTechnology>();
+
+            configuration.CreateMap<FoundationTechnologyDevice, FoundationTechnologyDeviceDto>();
+            configuration.CreateMap<FoundationTechnologyDeviceDto, FoundationTechnologyDevice>();
+
+            configuration.CreateMap<FoundationTechnologyFixture, FoundationTechnologyFixtureDto>();
+            configuration.CreateMap<FoundationTechnologyFixtureDto, FoundationTechnologyFixture>();
+
+            configuration.CreateMap<FoundationTechnologyFrock, FoundationTechnologyFrockDto>();
+            configuration.CreateMap<FoundationTechnologyFrockDto, FoundationTechnologyFrock>();
+
+            configuration.CreateMap<FoundationTechnologyHardware, FoundationTechnologyHardwareDto>();
+            configuration.CreateMap<FoundationTechnologyHardwareDto, FoundationTechnologyHardware>();
+
+            configuration.CreateMap<FoundationWorkingHour, FoundationWorkingHourDto>();
+            configuration.CreateMap<FoundationWorkingHourDto, FoundationWorkingHour>();
+
+            configuration.CreateMap<FoundationWorkingHourItem, FoundationWorkingHourItemDto>();
+            configuration.CreateMap<FoundationWorkingHourItemDto, FoundationWorkingHourItem>();
+
+            configuration.CreateMap<Logisticscost, LogisticscostDto>();
+            configuration.CreateMap<LogisticscostDto, Logisticscost>();
+            
             configuration.CreateMap<Material, ProductMaterialInfo>()
                 .ForMember(p => p.MaterialCode, p => p.MapFrom(o => o.Sap))
                 .ForMember(p => p.MaterialName, p => p.MapFrom(o => o.MaterialName))
