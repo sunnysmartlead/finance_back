@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
+using System.Collections.Generic;
 
 namespace Finance.BaseLibrary
 {
@@ -18,7 +19,10 @@ namespace Finance.BaseLibrary
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
         public string SoftwareName { get; set; }
-        public string SoftwarePrice { get; set; }
+        public decimal SoftwarePrice { get; set; }
         public string SoftwareState { get; set; }
+        public string LastModifierUserName { get; set; }
+
+        public List<FoundationHardwareItemDto> ListHardware;
     }
 }

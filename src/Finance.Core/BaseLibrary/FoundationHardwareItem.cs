@@ -38,7 +38,7 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("hardware_price")]
 		[StringLength(255, ErrorMessage = "硬件价格长度不能超出255字符")]
-		public string HardwarePrice { get; set; }
+		public decimal HardwarePrice { get; set; }
 
 		/// <summary>
 		/// 硬件状态

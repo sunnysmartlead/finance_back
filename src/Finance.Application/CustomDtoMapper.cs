@@ -231,7 +231,7 @@ namespace Finance
 
             configuration.CreateMap<Logisticscost, LogisticscostDto>();
             configuration.CreateMap<LogisticscostDto, Logisticscost>();
-            
+
             configuration.CreateMap<Material, ProductMaterialInfo>()
                 .ForMember(p => p.MaterialCode, p => p.MapFrom(o => o.Sap))
                 .ForMember(p => p.MaterialName, p => p.MapFrom(o => o.MaterialName))
