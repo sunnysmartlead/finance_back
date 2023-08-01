@@ -18,7 +18,7 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Decimal> FoundationHardwareId { get; set; }
         public string HardwareBusiness { get; set; }
         public string HardwareName { get; set; }
-        public string HardwarePrice { get; set; }
+        public decimal HardwarePrice { get; set; }
         public string HardwareState { get; set; }
     }
 }
