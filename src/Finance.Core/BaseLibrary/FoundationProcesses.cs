@@ -27,7 +27,7 @@ namespace Finance.BaseLibrary
         [StringLength(255, ErrorMessage = "工序名称")]
         public string processName { get; set; }
 
-	
+
 
 
 	}
