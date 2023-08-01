@@ -1,27 +1,27 @@
 {
   "Files": [
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE.xlsx",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE.xlsx",
       "PackagePath": "staticwebassets\\Excel\\NRE.xlsx"
     },
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE实验费模板.xlsx",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE实验费模板.xlsx",
       "PackagePath": "staticwebassets\\Excel\\NRE实验费模板.xlsx"
     },
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\成本信息表模板.xlsx",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\成本信息表模板.xlsx",
       "PackagePath": "staticwebassets\\Excel\\成本信息表模板.xlsx"
     },
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\报价审核表模板.xlsx",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\报价审核表模板.xlsx",
       "PackagePath": "staticwebassets\\Excel\\报价审核表模板.xlsx"
     },
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.js",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.js",
       "PackagePath": "staticwebassets\\swagger\\ui\\abp.js"
     },
     {
-      "Id": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.swagger.js",
+      "Id": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.swagger.js",
       "PackagePath": "staticwebassets\\swagger\\ui\\abp.swagger.js"
     },
     {

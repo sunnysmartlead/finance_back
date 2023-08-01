@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "GtDQTaLs3uwqbQfMbXVo/tQvyeLQgnNP2WUAVADQoDY=",
+  "Hash": "MBZCw7Z8l1qVC7tLL38m5IBg6eWDgtMdT2recNe/NR4=",
   "Source": "Finance.Web.Host",
   "BasePath": "_content/Finance.Web.Host",
   "Mode": "Default",
@@ -10,17 +10,17 @@
     {
       "Name": "Finance.Web.Host\\wwwroot",
       "Source": "Finance.Web.Host",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "Pattern": "**"
     }
   ],
   "Assets": [
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE.xlsx",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE.xlsx",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "Excel/NRE.xlsx",
       "AssetKind": "All",
@@ -34,10 +34,10 @@
       "OriginalItemSpec": "wwwroot\\Excel\\NRE.xlsx"
     },
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE实验费模板.xlsx",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\NRE实验费模板.xlsx",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "Excel/NRE实验费模板.xlsx",
       "AssetKind": "All",
@@ -51,10 +51,10 @@
       "OriginalItemSpec": "wwwroot\\Excel\\NRE实验费模板.xlsx"
     },
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\报价审核表模板.xlsx",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\报价审核表模板.xlsx",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "Excel/报价审核表模板.xlsx",
       "AssetKind": "All",
@@ -68,10 +68,10 @@
       "OriginalItemSpec": "wwwroot\\Excel\\报价审核表模板.xlsx"
     },
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\Excel\\成本信息表模板.xlsx",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\Excel\\成本信息表模板.xlsx",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "Excel/成本信息表模板.xlsx",
       "AssetKind": "All",
@@ -85,10 +85,10 @@
       "OriginalItemSpec": "wwwroot\\Excel\\成本信息表模板.xlsx"
     },
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.js",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.js",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "swagger/ui/abp.js",
       "AssetKind": "All",
@@ -102,10 +102,10 @@
       "OriginalItemSpec": "wwwroot\\swagger\\ui\\abp.js"
     },
     {
-      "Identity": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.swagger.js",
+      "Identity": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\swagger\\ui\\abp.swagger.js",
       "SourceId": "Finance.Web.Host",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\wwwroot\\",
+      "ContentRoot": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\wwwroot\\",
       "BasePath": "_content/Finance.Web.Host",
       "RelativePath": "swagger/ui/abp.swagger.js",
       "AssetKind": "All",

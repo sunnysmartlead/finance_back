@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "fsRROf0f+9wa8K66ej3jJxQ/vnekBfY/rKSxFwuKqWdLd7ZqqoxiBMWL9+0VGPuMDfhl7j/onvTw07RGh5sMfQ==",
+  "dgSpecHash": "CU4FXSi5lPKxicbv2CGghAasO09+giIPDUP854w5WLaF/9ycYjNH7YnkA2AbZp19f0VBq5F5ao/1JUDC4EqqQA==",
   "success": true,
-  "projectFilePath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
+  "projectFilePath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\18558\\.nuget\\packages\\abp\\7.1.0\\abp.7.1.0.nupkg.sha512",
     "C:\\Users\\18558\\.nuget\\packages\\abp.aspnetcore\\7.1.0\\abp.aspnetcore.7.1.0.nupkg.sha512",
