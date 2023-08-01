@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj": {}
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj": {}
   },
   "projects": {
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\Finance.Application.csproj": {
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\Finance.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\Finance.Application.csproj",
+        "projectUniqueName": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\Finance.Application.csproj",
         "projectName": "Finance.Application",
-        "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\Finance.Application.csproj",
+        "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\Finance.Application.csproj",
         "packagesPath": "C:\\Users\\18558\\.nuget\\packages\\",
-        "outputPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\obj\\",
+        "outputPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\18558\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -28,11 +28,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj"
               },
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj"
               }
             }
           }
@@ -93,14 +93,14 @@
         }
       }
     },
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj": {
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj",
+        "projectUniqueName": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj",
         "projectName": "Finance.Core",
-        "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj",
+        "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj",
         "packagesPath": "C:\\Users\\18558\\.nuget\\packages\\",
-        "outputPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\obj\\",
+        "outputPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\18558\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -175,14 +175,14 @@
         }
       }
     },
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj",
+        "projectUniqueName": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj",
         "projectName": "Finance.EntityFrameworkCore",
-        "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj",
+        "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj",
         "packagesPath": "C:\\Users\\18558\\.nuget\\packages\\",
-        "outputPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\obj\\",
+        "outputPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\18558\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -199,8 +199,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Core\\Finance.Core.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Core\\Finance.Core.csproj"
               }
             }
           }
@@ -253,14 +253,14 @@
         }
       }
     },
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj": {
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj",
+        "projectUniqueName": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj",
         "projectName": "Finance.Web.Core",
-        "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj",
+        "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj",
         "packagesPath": "C:\\Users\\18558\\.nuget\\packages\\",
-        "outputPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\obj\\",
+        "outputPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\18558\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -277,11 +277,11 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\Finance.Application.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Application\\Finance.Application.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\Finance.Application.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Application\\Finance.Application.csproj"
               },
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.EntityFrameworkCore\\Finance.EntityFrameworkCore.csproj"
               }
             }
           }
@@ -338,14 +338,14 @@
         }
       }
     },
-    "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj": {
+    "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
+        "projectUniqueName": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
         "projectName": "Finance.Web.Host",
-        "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
+        "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\Finance.Web.Host.csproj",
         "packagesPath": "C:\\Users\\18558\\.nuget\\packages\\",
-        "outputPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Host\\obj\\",
+        "outputPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Host\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\18558\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -362,8 +362,8 @@
           "net6.0": {
             "targetAlias": "net6.0",
             "projectReferences": {
-              "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj": {
-                "projectPath": "D:\\kingshuo\\finance_backSy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj"
+              "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj": {
+                "projectPath": "D:\\kingshuo\\lmq\\finance_backMy\\src\\Finance.Web.Core\\Finance.Web.Core.csproj"
               }
             }
           }

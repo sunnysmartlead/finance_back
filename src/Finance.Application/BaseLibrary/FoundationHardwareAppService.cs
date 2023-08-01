@@ -150,6 +150,8 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.LastModificationTime = DateTime.Now;
                     entityItem = await _foundationFoundationHardwareItemRepository.InsertAsync(foundationHardwareItem);
                     ObjectMapper.Map<FoundationHardwareItem, FoundationHardwareItemDto>(foundationHardwareItem, new FoundationHardwareItemDto());
+
+
                 }
             }
             return result;
