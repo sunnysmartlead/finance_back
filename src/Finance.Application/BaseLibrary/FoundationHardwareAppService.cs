@@ -125,6 +125,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await this._foundationHardwareRepository.InsertAsync(entity);
+            var foundationDevice = _foundationHardwareRepository.InsertAndGetId(entity);
             var result = ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto());
             if (input.ListHardware != null)
             {
@@ -134,7 +135,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
 
                     FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
-                    foundationHardwareItem.Id = entity.Id;
+                    foundationHardwareItem.Id = foundationDevice;
                     foundationHardwareItem.CreationTime = DateTime.Now;
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
@@ -150,6 +151,8 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.LastModificationTime = DateTime.Now;
                     entityItem = await _foundationFoundationHardwareItemRepository.InsertAsync(foundationHardwareItem);
                     ObjectMapper.Map<FoundationHardwareItem, FoundationHardwareItemDto>(foundationHardwareItem, new FoundationHardwareItemDto());
+
+
                 }
             }
             return result;

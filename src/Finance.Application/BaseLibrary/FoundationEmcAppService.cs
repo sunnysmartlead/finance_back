@@ -75,7 +75,7 @@ namespace Finance.BaseLibrary
         public virtual async Task<List<FoundationEmcDto>> GetListAllAsync(GetFoundationEmcsInput input)
         {
             // 设置查询条件
-            var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == true);
+            var query = this._foundationEmcRepository.GetAll();
             if (!string.IsNullOrEmpty(input.Name))
             {
                 query = query.Where(t => t.Name.Contains(input.Name));

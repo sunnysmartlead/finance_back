@@ -16,5 +16,7 @@ namespace Finance.BaseLibrary
         public System.DateTime CreationTime { get; set; }
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
         public string Name { get; set; }
+        public FoundationReliableProcessHoursDto FoundationReliableProcessHoursDto { get; set; }
+
     }
 }

@@ -7,5 +7,6 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class GetFoundationWorkingHoursInput: PagedInputDto
     {
+        public string ProcessName { get; set; }
     }
 }

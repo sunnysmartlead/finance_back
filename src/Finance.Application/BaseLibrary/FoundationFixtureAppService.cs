@@ -128,6 +128,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await this._foundationFixtureRepository.InsertAsync(entity);
+            var foundationDevice = _foundationFixtureRepository.InsertAndGetId(entity);
             var result = ObjectMapper.Map<FoundationFixture, FoundationFixtureDto>(entity, new FoundationFixtureDto());
             if (input.FixtureList != null)
             {
@@ -137,7 +138,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationFixtureItemDto, FoundationFixtureItem>(deviceItem, new FoundationFixtureItem());
 
                     FoundationFixtureItem foundationFixtureItem = new FoundationFixtureItem();
-                    foundationFixtureItem.FoundationFixtureId = entity.Id;
+                    foundationFixtureItem.FoundationFixtureId = foundationDevice;
                     foundationFixtureItem.CreationTime = DateTime.Now;
                     foundationFixtureItem.FixtureName = entityItem.FixtureName;
                     foundationFixtureItem.FixturePrice = entityItem.FixturePrice;
