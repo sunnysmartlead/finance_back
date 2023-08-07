@@ -13,7 +13,7 @@ namespace Finance.Processes
 		/// 
 		/// </summary>
 		[Column("audit_flow_id")]
-		public decimal? AuditFlowId { get; set; }
+		public long? AuditFlowId { get; set; }
 
 		/// <summary>
 		/// 分类
@@ -80,7 +80,7 @@ namespace Finance.Processes
 		/// 
 		/// </summary>
 		[Column("product_id")]
-		public decimal? ProductId { get; set; }
+		public long? ProductId { get; set; }
 
 		/// <summary>
 		/// 备注·

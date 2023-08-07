@@ -14,14 +14,14 @@ namespace Finance.Processes
 		/// </summary>
 		[Column("audit_flow_id")]
 		[StringLength(255, ErrorMessage = "AuditFlowId长度不能超出255字符")]
-		public string AuditFlowId { get; set; }
+		public long AuditFlowId { get; set; }
 
 		/// <summary>
 		/// 
 		/// </summary>
 		[Column("product_id")]
 		[StringLength(255, ErrorMessage = "ProductId长度不能超出255字符")]
-		public string ProductId { get; set; }
+		public long ProductId { get; set; }
 
 		/// <summary>
 		/// UPH数据

@@ -39,7 +39,7 @@ namespace Finance.Processes
         /// 工时工序导入id
         /// </summary>
         [Column("process_hours_enter_id")]
-        public decimal? ProcessHoursEnterId { get; set; }
+        public long? ProcessHoursEnterId { get; set; }
 
 
     }

@@ -12,13 +12,13 @@ namespace Finance.Processes
 		/// 流程id
 		/// </summary>
 		[Column("audit_flow_id")]
-		public decimal? AuditFlowId { get; set; }
+		public long? AuditFlowId { get; set; }
 
 		/// <summary>
 		/// 零件id
 		/// </summary>
 		[Column("product_id")]
-		public decimal? ProductId { get; set; }
+		public long? ProductId { get; set; }
 
 		/// <summary>
 		/// UPH参数

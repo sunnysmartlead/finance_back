@@ -13,7 +13,7 @@ namespace Finance.Processes
 		/// 流程id
 		/// </summary>
 		[Column("audit_flow_id")]
-		public decimal? AuditFlowId { get; set; }
+		public long? AuditFlowId { get; set; }
 
 		/// <summary>
 		/// 工装治具总价
@@ -104,7 +104,7 @@ namespace Finance.Processes
 		/// 零件id
 		/// </summary>
 		[Column("product_id")]
-		public decimal? ProductId { get; set; }
+		public long? ProductId { get; set; }
 
 		/// <summary>
 		/// 软件单价
