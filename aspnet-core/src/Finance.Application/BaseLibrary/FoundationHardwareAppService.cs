@@ -15,6 +15,10 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class FoundationHardwareAppService : ApplicationService
     {
+        /// <summary>
+        /// 日志类型
+        /// </summary>
+        private readonly int logType = 7;
         private readonly IRepository<FoundationHardware, long> _foundationHardwareRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
@@ -135,7 +139,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
 
                     FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
-                    foundationHardwareItem.Id = foundationDevice;
+                    foundationHardwareItem.FoundationHardwareId = foundationDevice;
                     foundationHardwareItem.CreationTime = DateTime.Now;
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
@@ -155,6 +159,7 @@ namespace Finance.BaseLibrary
 
                 }
             }
+            await this.CreateLog("创建软硬件项目1条");
             return result;
         }
 
@@ -169,7 +174,7 @@ namespace Finance.BaseLibrary
             FoundationHardware entity = await _foundationHardwareRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationHardwareRepository.UpdateAsync(entity);
-            return ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity,new FoundationHardwareDto());
+             ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity,new FoundationHardwareDto());
 
             if (input.ListHardware != null)
             {
@@ -179,7 +184,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
 
                     FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
-                    foundationHardwareItem.Id = entity.Id;
+                    foundationHardwareItem.FoundationHardwareId = entity.Id;
                     foundationHardwareItem.CreationTime = DateTime.Now;
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
@@ -197,6 +202,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationHardwareItem, FoundationHardwareItemDto>(foundationHardwareItem, new FoundationHardwareItemDto());
                 }
             }
+            await this.CreateLog(" 编辑软硬件项目1条");
             return ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto()); ;
         }
 
@@ -208,6 +214,32 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationHardwareRepository.DeleteAsync(s => s.Id == id);
+            await this.CreateLog(" 删除软硬件项目1条");
+        }
+        /// <summary>
+        /// 添加日志
+        /// </summary>
+        private async Task<bool> CreateLog(string Remark)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
+
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.Remark = Remark;
+                entity.Type = logType;
+
+
+            }
+            entity = await _foundationLogsRepository.InsertAsync(entity);
+            return true;
         }
     }
 }

@@ -3,8 +3,12 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
+using Finance.PriceEval.Dto;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
 using NPOI.SS.UserModel;
+using Spire.Pdf.Exporting.XPS.Schema;
 using Spire.Pdf.General.Paper.Uof;
 using System;
 using System.Collections.Generic;
@@ -12,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Finance.BaseLibrary
 {
@@ -23,13 +28,13 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 3;
+        private readonly int logType = 1;
         private readonly IRepository<FoundationProcedure, long> _foundationProcedureRepository;
-   
+
 
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
-     
+
         /// <summary>
         /// .ctor
         /// </summary>
@@ -52,7 +57,7 @@ namespace Finance.BaseLibrary
         public virtual async Task<FoundationProcedureDto> GetAsyncById(long id)
         {
             FoundationProcedure entity = await _foundationProcedureRepository.GetAsync(id);
-            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity,new FoundationProcedureDto());
+            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
 
         /// <summary>
@@ -88,7 +93,7 @@ namespace Finance.BaseLibrary
             {
                 query = query.Where(t => t.Name.Contains(input.ProcessName));
             }
-        
+
             // 查询数据
             var list = query.ToList();
             //数据转换
@@ -103,6 +108,42 @@ namespace Finance.BaseLibrary
             }
             // 数据返回
             return dtos;
+        }
+
+
+        /// <summary>
+        /// 导出FoundationProcedure
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> FoundationProcedureDownloadStream(GetFoundationProceduresInput input)
+        {
+            var dtoAll = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false).ToList();
+            var memoryStream = new MemoryStream();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationProcedure>, List<FoundationProcedureDto>>(dtoAll, new List<FoundationProcedureDto>());
+            var values = new List<DownloadFoundationProcedureDto>() { };
+            foreach (var item in dtos)
+            {
+                var s = new DownloadFoundationProcedureDto()
+                {
+                    InstallationName = item.InstallationName,
+                    InstallationPrice = item.InstallationPrice,
+                    InstallationSupplier = item.InstallationSupplier,
+                    ProcessName = item.ProcessName,
+                    ProcessNumber = item.ProcessNumber,
+                    TestName = item.TestName,
+                    TestPrice = item.TestPrice
+                };
+                values.Add(s);
+            }
+            var memoryStream1 = new MemoryStream();
+            memoryStream1.SaveAs(values, sheetName: "Sheet1");
+            memoryStream1.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream1, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FoundationProcedure" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
         }
 
         /// <summary>
@@ -120,13 +161,20 @@ namespace Finance.BaseLibrary
             stream.Close();
 
             //尝试获取第一个sheet
-            var sheet = workbook.GetSheetAt(3);
-            List<FoundationProcedureDto> list = new List<FoundationProcedureDto>();
+            var sheet = workbook.GetSheetAt(0);
             //判断是否获取到 sheet
             if (sheet != null)
             {
+                   var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
+                var list = query.ToList();
+                var totalCount = query.Count();
+                var dtos = ObjectMapper.Map<List<FoundationProcedure>, List<FoundationProcedureDto>>(list, new List<FoundationProcedureDto>());
+                foreach (var item in dtos)
+                {
+                    await _foundationProcedureRepository.DeleteAsync(s => s.Id == item.Id);
+                }
                 //跳过表头
-                for (int i = 2; i < 1000; i++)//100为自定义，实际循环中不会达到
+                for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
                 {
                     var initRow = sheet.GetRow(i);
                     if (initRow == null) break;
@@ -140,13 +188,13 @@ namespace Finance.BaseLibrary
                     {
                         FoundationProcedureDto entity = new FoundationProcedureDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(2).ToString();
-                        entity.ProcessNumber = initRow.GetCell(3).ToString();
-                        entity.InstallationName = initRow.GetCell(4).ToString();
-                        entity.InstallationPrice = decimal.Parse(initRow.GetCell(5).ToString());
-                        entity.InstallationSupplier = initRow.GetCell(6).ToString();
-                        entity.TestName = initRow.GetCell(7).ToString();
-                        entity.TestPrice = decimal.Parse(initRow.GetCell(8).ToString());
+                        entity.ProcessName = initRow.GetCell(0).ToString();
+                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.InstallationName = initRow.GetCell(2).ToString();
+                        entity.InstallationPrice = decimal.Parse(initRow.GetCell(3).ToString());
+                        entity.InstallationSupplier = initRow.GetCell(4).ToString();
+                        entity.TestName = initRow.GetCell(5).ToString();
+                        entity.TestPrice = decimal.Parse(initRow.GetCell(6).ToString());
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
@@ -154,10 +202,23 @@ namespace Finance.BaseLibrary
                             entity.CreatorUserId = AbpSession.UserId.Value;
                             entity.LastModifierUserId = AbpSession.UserId.Value;
                         }
-                        var entity2 = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(entity, new FoundationProcedure());
-                        var result = await this._foundationProcedureRepository.InsertAsync(entity2);
+                        try
+                        {
+                            var entity2 = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(entity, new FoundationProcedure());
+                            var result = await this._foundationProcedureRepository.InsertAsync(entity2);
+                        }
+                        catch (Exception ex)
+                        {
+                            string str = ex.Message;
+                        }
+
                     }
+               
                 }
+
+                // 获取总数
+                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+
             }
             return true;
         }
@@ -171,9 +232,9 @@ namespace Finance.BaseLibrary
         public virtual async Task<FoundationProcedureDto> GetEditorAsyncById(long id)
         {
             FoundationProcedure entity = await _foundationProcedureRepository.GetAsync(id);
-            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity,new FoundationProcedureDto());
+            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
-    
+
         /// <summary>
         /// 创建
         /// </summary>
@@ -181,7 +242,7 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationProcedureDto> CreateAsync(FoundationProcedureDto input)
         {
-          
+
             var entity = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(input, new FoundationProcedure());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -192,7 +253,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await _foundationProcedureRepository.InsertAsync(entity);
-            await this.CreateLog("add");
+            await this.CreateLog(" 创建工装项目1条");
             return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
 
@@ -206,8 +267,14 @@ namespace Finance.BaseLibrary
         {
             FoundationProcedure entity = await _foundationProcedureRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
+            entity.LastModificationTime = DateTime.Now;
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+            }
             entity = await _foundationProcedureRepository.UpdateAsync(entity);
-            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity,new FoundationProcedureDto());
+            await this.CreateLog(" 修改工装项目1条");
+            return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
 
         /// <summary>
@@ -218,30 +285,28 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationProcedureRepository.DeleteAsync(s => s.Id == id);
+            await this.CreateLog(" 删除工装项目1条");
         }
 
         /// <summary>
         /// 添加日志
         /// </summary>
-        private async Task<bool> CreateLog(string type)
+        private async Task<bool> CreateLog(string Remark)
         {
             FoundationLogs entity = new FoundationLogs()
             {
                 IsDeleted = false,
                 DeletionTime = DateTime.Now,
                 LastModificationTime = DateTime.Now,
-                Remark = "test",
-                Type = logType,
-                Version = "001"
             };
             if (AbpSession.UserId != null)
             {
                 entity.LastModifierUserId = AbpSession.UserId.Value;
-                if ("add".Equals(type))
-                {
-                    entity.CreatorUserId = AbpSession.UserId.Value;
+           
+                entity.CreatorUserId = AbpSession.UserId.Value;
                     entity.CreationTime = DateTime.Now;
-                }
+                entity.Remark = Remark;
+                entity.Type = logType;
             }
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;

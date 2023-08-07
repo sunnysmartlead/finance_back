@@ -21,6 +21,7 @@ namespace Finance.BaseLibrary
         public string SoftwareName { get; set; }
         public decimal SoftwarePrice { get; set; }
         public string SoftwareState { get; set; }
+        public string SoftwareBusiness { get; set; }
         public string LastModifierUserName { get; set; }
 
         public List<FoundationHardwareItemDto> ListHardware;
