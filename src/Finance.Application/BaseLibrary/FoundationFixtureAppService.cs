@@ -2,6 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
+using Spire.Pdf.General.Paper.Uof;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,11 @@ namespace Finance.BaseLibrary
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
         private readonly IRepository<FoundationFixtureItem, long> _foundationFoundationFixtureItemRepository;
+
+        /// <summary>
+        /// 日志类型
+        /// </summary>
+        private readonly int logType = 6;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -157,6 +163,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationFixtureItem, FoundationFixtureItemDto>(foundationFixtureItem, new FoundationFixtureItemDto());
                 }
             }
+            await this.CreateLog(" 创建治具项目1条");
             return result;
         }
 
@@ -198,6 +205,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationFixtureItem, FoundationFixtureItemDto>(foundationFixtureItem, new FoundationFixtureItemDto());
                 }
             }
+            await this.CreateLog(" 编辑治具项目1条");
             return ObjectMapper.Map<FoundationFixture, FoundationFixtureDto>(entity,new FoundationFixtureDto());
         }
 
@@ -209,6 +217,34 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationFixtureRepository.DeleteAsync(s => s.Id == id);
+            await this.CreateLog(" 删除治具项目1条");
+        }
+
+
+        /// <summary>
+        /// 添加日志
+        /// </summary>
+        private async Task<bool> CreateLog(string Remark)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
+
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.Remark = Remark;
+                entity.Type = logType;
+
+
+            }
+            entity = await _foundationLogsRepository.InsertAsync(entity);
+            return true;
         }
     }
 }

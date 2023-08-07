@@ -19,7 +19,7 @@ namespace Finance.BaseLibrary
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
 
-        public List<FoundationDeviceItemDto> DeviceList { get; set; }
+        public List<FoundationDeviceItemDto> DeviceList { get; set; } = new List<FoundationDeviceItemDto>();
 
         /// <summary>
         /// 维护人
