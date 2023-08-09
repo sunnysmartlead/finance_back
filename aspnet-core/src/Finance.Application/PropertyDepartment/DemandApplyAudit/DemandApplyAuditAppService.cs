@@ -1,0 +1,244 @@
+﻿using Abp.AutoMapper;
+using Abp.Domain.Repositories;
+using Finance.Audit;
+using Finance.DemandApplyAudit;
+using Finance.Entering;
+using Finance.Ext;
+using Finance.PriceEval;
+using Finance.ProjectManagement.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
+using Finance.PropertyDepartment.UnitPriceLibrary.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using NPOI.HPSF;
+using Spire.Pdf.Exporting.XPS.Schema;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Finance.PropertyDepartment.DemandApplyAudit
+{
+    /// <summary>
+    /// 营销部录入审核
+    /// </summary>
+    public class DemandApplyAuditAppService : FinanceAppServiceBase
+    {
+        /// <summary>
+        /// 核价团队  其中包含(核价人员以及对应完成时间)
+        /// </summary>
+        public readonly IRepository<PricingTeam, long> _resourcePricingTeam;
+        /// <summary>
+        /// 营销部审核中项目设计方案
+        /// </summary>
+        public readonly IRepository<DesignSolution, long> _resourceDesignScheme;
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        /// <summary>
+        /// 产品信息
+        /// </summary>
+        public readonly IRepository<ProductInformation, long> _resourceProductInformation;
+        /// <summary>
+        /// 核价表 此表是核价流程的主表，其他的核价信息，作为附表，引用此表的Id为外键。
+        /// </summary>
+        public readonly IRepository<PriceEvaluation, long> _resourcePriceEvaluation;
+        private readonly IRepository<FileManagement, long> _fileManagementRepository;
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="pricingTeam"></param>
+        /// <param name="resourceDesignScheme"></param>
+        /// <param name="resourceSchemeTable"></param>
+        /// <param name="resourceProductInformation"></param>
+        /// <param name="resourcePriceEvaluation"></param>
+        /// <param name="fileManagementRepository"></param>
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> pricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ProductInformation, long> resourceProductInformation, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository)
+        {
+            _resourcePricingTeam = pricingTeam;
+            _resourceDesignScheme = resourceDesignScheme;
+            _resourceSchemeTable = resourceSchemeTable;
+            _resourceProductInformation = resourceProductInformation;
+            _resourcePriceEvaluation = resourcePriceEvaluation;
+            _fileManagementRepository = fileManagementRepository;
+        }
+        /// <summary>
+        /// 营销部审核录入
+        /// </summary>
+        /// <param name="auditEntering"></param>
+        /// <returns></returns>
+        public async Task AuditEntering(AuditEntering auditEntering)
+        {
+            try
+            {
+                // 核价团队  其中包含(核价人员以及对应完成时间)
+                PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
+                pricingTeam.AuditFlowId = auditEntering.AuditFlowId;
+                await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
+                // 营销部审核中项目设计方案
+                List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
+                designSchemes.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
+                await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
+                //现在数据库里有的数据项
+                List<DesignSolution> DesignSchemeNow = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                //用户传入的数据项和数据库现有数据项的差异的ID
+                List<long> DesignSchemeDiffId = DesignSchemeNow.Where(p => !designSchemes.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
+                //删除 用户在前端删除的 数据项目
+                await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
+                // 营销部审核 方案表
+                List<SolutionTable> schemeTables = ObjectMapper.Map<List<SolutionTable>>(auditEntering.SolutionTableList);
+                schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
+                await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
+                //现在数据库里有的数据项
+                List<SolutionTable> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                //用户传入的数据项和数据库现有数据项的差异的ID
+                List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
+                //删除 用户在前端删除的 数据项目
+                await _resourceSchemeTable.DeleteAsync(p => SolutionTablDiffId.Contains(p.Id));
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+
+        }
+        /// <summary>
+        /// 营销部审核输出
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<AuditEntering> AuditExport(long AuditFlowId)
+        {
+            try
+            {
+                AuditEntering auditEntering = new();
+                PricingTeam pricingTeam = await _resourcePricingTeam.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                //核价团队  其中包含(核价人员以及对应完成时间)
+                auditEntering.PricingTeam = ObjectMapper.Map<PricingTeamDto>(pricingTeam);
+                //核价要求完成时间
+                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                if (auditEntering.PricingTeam == null) { auditEntering.PricingTeam = new(); }
+                if (priceEvaluation != null) { auditEntering.PricingTeam.Deadline = priceEvaluation.Deadline; }
+                // 营销部审核中项目设计方案
+                List<DesignSolution> designSchemes = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                auditEntering.DesignSolutionList = ObjectMapper.Map<List<DesignSolutionDto>>(designSchemes);
+                foreach (DesignSolutionDto designScheme in auditEntering.DesignSolutionList)
+                {
+                    FileManagement fileNames = await _fileManagementRepository.FirstOrDefaultAsync(p => designScheme.FileId == p.Id);
+
+                    if (fileNames is not null) designScheme.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
+                }
+                // 营销部审核 方案表
+                //1.是否保存或者是退回过
+                List<ProductInformation> productInformations = await _resourceProductInformation.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<SolutionTable> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+
+                if (solutionTables.Count is not 0)
+                {
+                    List<SolutionTable> result = (from productInformation in productInformations
+                                                  join solutionTable in solutionTables
+                                                  on productInformation.Id equals solutionTable.Productld into temp
+                                                  from solutionTable in temp.DefaultIfEmpty()
+                                                  where solutionTable != null
+                                                  select new SolutionTable
+                                                  {
+                                                      Id = solutionTable.Id,
+                                                      AuditFlowId = solutionTable.AuditFlowId,
+                                                      Productld = solutionTable.Productld,
+                                                      ModuleName = productInformation.Product,
+                                                      SolutionName = solutionTable.SolutionName,
+                                                      Product = solutionTable.Product,
+                                                      IsCOB = solutionTable.IsCOB,
+                                                      ElecEngineerId = solutionTable.ElecEngineerId,
+                                                      StructEngineerId = solutionTable.StructEngineerId,
+                                                      IsFirst = solutionTable.IsFirst,
+                                                  }
+                                                   ).ToList();
+                    auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(result);
+                }
+                else
+                {
+
+                    auditEntering.SolutionTableList = new();
+                    foreach (ProductInformation productInform in productInformations)
+                    {
+                        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = productInform.Id, ModuleName = productInform.Product });
+                    }
+                }
+                return auditEntering;
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
+        /// 下载模版
+        /// </summary>
+        /// <param name="designSchemeDtos"></param>
+        /// <returns></returns>        
+        public async Task<IActionResult> DownloadTemplate(List<DesignSolutionModel> designSchemeDtos)
+        {
+            var values = new List<Dictionary<string, object>>();
+            foreach (DesignSolutionModel item in designSchemeDtos)
+            {
+                values.Add(new Dictionary<string, object> {
+                    { "方案名称", item.SolutionName },
+                    { "SENSOR", item.Sensor },
+                    { "Serial", item.Serial },
+                    { "lens", item.Lens },
+                    { "ISP", item.ISP },
+                    { "vcsel/LED", item.Vcsel },
+                    { "MCU", item.MCU },
+                    { "线束", item.Harness },
+                    { "支架", item.Stand },
+                    { "传动结构", item.TransmissionStructure },
+                    { "产品类型", item.ProductType },
+                    { "工艺方案", item.ProcessProgram },
+                    { "其他", item.Rests }
+                });
+            }
+            try
+            {
+                var memoryStream = new MemoryStream();
+                await MiniExcel.SaveAsAsync(memoryStream, values);
+                return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = "项目设计方案.xlsx"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
+        /// 导入数据
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<DesignSolutionDto>> ImportData(IFormFile fileName)
+        {
+            try
+            {
+                if (fileName == null || fileName.Length == 0) return new List<DesignSolutionDto>();
+                using (var memoryStream = new MemoryStream())
+                {
+                    await fileName.CopyToAsync(memoryStream);
+                    List<DesignSolutionModel> rows = memoryStream.Query<DesignSolutionModel>().ToList();
+                    return ObjectMapper.Map<List<DesignSolutionDto>>(rows);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+
+        }
+    }
+}

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <VersionPrefix>1.0.0.0</VersionPrefix>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
+    <AssemblyName>Finance.Application</AssemblyName>
+    <PackageId>Finance.Application</PackageId>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <RootNamespace>Finance</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="PriceEval\FileModel\**" />
+    <EmbeddedResource Remove="PriceEval\FileModel\**" />
+    <None Remove="PriceEval\FileModel\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DynamicExpresso.Core" Version="2.16.0" />
+    <PackageReference Include="FreeSpire.XLS" Version="12.7.0" />
+    <PackageReference Include="LinqKit.Core" Version="1.2.2" />
+    <PackageReference Include="MiniExcel" Version="1.28.0" />
+    <PackageReference Include="Rougamo.Fody" Version="1.2.0" />
+    <PackageReference Include="Z.EntityFramework.Plus.EFCore" Version="6.14.4" />
+    <PackageReference Include="NPOI" Version="2.5.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Finance.Core\Finance.Core.csproj" />
+    <ProjectReference Include="..\Finance.EntityFrameworkCore\Finance.EntityFrameworkCore.csproj" />
+  </ItemGroup>
+</Project>
