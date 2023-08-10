@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance.BaseLibrary
 {
-    [Table("FTWorkingHour")]
+    [Table("FWorkingHour")]
 	public class FTWorkingHour : FullAuditedEntity<long>
     {
 
