@@ -29,6 +29,7 @@ using Finance.MakeOffers;
 using Finance.MultiTenancy;
 using Finance.Nre;
 using Finance.PriceEval;
+using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductionControl;
 using Finance.ProjectManagement;
@@ -203,7 +204,7 @@ namespace Finance.EntityFrameworkCore
         #region 基础库新增表
         public virtual DbSet<BomEnter> BomEnter { get; set; }
         public virtual DbSet<BomEnterTotal> BomEnterTotal { get; set; }
-        public virtual DbSet<FProcesses> FProcesses { get; set; }
+        public virtual DbSet<FoundationProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<ProcessHoursEnter> ProcessHoursEnter { get; set; }
         public virtual DbSet<ProcessHoursEnterDevice> ProcessHoursEnterDevice { get; set; }
