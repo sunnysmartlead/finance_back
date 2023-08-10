@@ -121,7 +121,10 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationEmcDto> CreateAsync(FoundationEmcDto input)
         {
-        
+
+            var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name));
+            var list = query.ToList();
+           
             var entity = ObjectMapper.Map<FoundationEmcDto, FoundationEmc>(input, new FoundationEmc());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)

@@ -228,15 +228,20 @@ namespace Finance.BaseLibrary
                             FoundationDeviceItemDto foundationDeviceItemDto = new FoundationDeviceItemDto();
                             foundationDeviceItemDto.DeviceName = initRow.GetCell(pindex).ToString();
                             foundationDeviceItemDto.DeviceStatus = initRow.GetCell(pindex + 1).ToString();
-                            foundationDeviceItemDto.DevicePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
+                            if (initRow.GetCell(pindex + 2) != null && !string.IsNullOrEmpty(initRow.GetCell(pindex + 2).ToString()))
+                            {
+                                foundationDeviceItemDto.DevicePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
+                            }
                             foundationDeviceItemDto.DeviceProvider = initRow.GetCell(pindex + 3).ToString();
                             entity.DeviceList.Add(foundationDeviceItemDto);
                         }
                         list.Add(entity);
                     }
 
-                    if (null != list) {
-                        foreach (var Item in list) {
+                    if (null != list)
+                    {
+                        foreach (var Item in list)
+                        {
                             var entity = ObjectMapper.Map<FoundationDeviceDto, FoundationDevice>(Item, new FoundationDevice());
                             entity.CreationTime = DateTime.Now;
                             if (AbpSession.UserId != null)
@@ -276,7 +281,7 @@ namespace Finance.BaseLibrary
                                     ObjectMapper.Map<FoundationDeviceItem, FoundationDeviceItemDto>(foundationDeviceItem, new FoundationDeviceItemDto());
                                 }
                             }
-                      
+
 
                         }
                         await this.CreateLog(" 导入设备项目" + list.Count + "条");
@@ -292,7 +297,7 @@ namespace Finance.BaseLibrary
 
 
         /// <summary>
-        /// 导出FoundationDevice
+        /// 导出设备信息
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
