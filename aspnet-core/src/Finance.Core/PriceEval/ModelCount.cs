@@ -27,18 +27,6 @@ namespace Finance.PriceEval
         [Required]
         public virtual long PriceEvaluationId { get; set; }
 
-        ///// <summary>
-        ///// 梯度
-        ///// </summary>
-        //[Required]
-        //public virtual decimal Kv { get; set; }
-
-        /// <summary>
-        /// 车型
-        /// </summary>
-        [Required]
-        public virtual string CarModel { get; set; }
-
         /// <summary>
         /// 序号（正序排序，从1开始）
         /// </summary>
@@ -75,24 +63,7 @@ namespace Finance.PriceEval
         public virtual string Pixel { get; set; }
 
         /// <summary>
-        /// 我司角色
-        /// </summary>
-        public virtual string OurRole { get; set; }
-
-        /// <summary>
-        /// 市场份额（%）
-        /// </summary>
-        [Required]
-        public virtual decimal MarketShare { get; set; }
-
-        /// <summary>
-        /// 模组搭载率
-        /// </summary>
-        [Required]
-        public virtual decimal ModuleCarryingRate { get; set; }
-
-        /// <summary>
-        /// 单车产品数量
+        /// 单车产品数量（二开应该被注释掉，为防止报错保留）
         /// </summary>
         [Required]
         public virtual int SingleCarProductsQuantity { get; set; }
@@ -124,6 +95,12 @@ namespace Finance.PriceEval
         /// </summary>
         [Column(TypeName = "CLOB")]
         public virtual string TableAllJson { get; set; }
+
+        /// <summary>
+        /// 合计数量（模组数量合计专用，单零件全产品全年份合计数量）
+        /// </summary>
+        [Required]
+        public virtual decimal SumQuantity { get; set; }
     }
 
 

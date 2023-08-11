@@ -39,11 +39,11 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;       
         /// <summary>
-        /// 产品信息
+        /// 模组数量
         /// </summary>
-        public readonly IRepository<ProductInformation, long> _resourceProductInformation;
+        public readonly IRepository<ModelCount, long> _resourceModelCount;
         /// <summary>
         /// 核价表 此表是核价流程的主表，其他的核价信息，作为附表，引用此表的Id为外键。
         /// </summary>
@@ -55,15 +55,15 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="pricingTeam"></param>
         /// <param name="resourceDesignScheme"></param>
         /// <param name="resourceSchemeTable"></param>
-        /// <param name="resourceProductInformation"></param>
+        /// <param name="resourceModelCount"></param>
         /// <param name="resourcePriceEvaluation"></param>
         /// <param name="fileManagementRepository"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> pricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ProductInformation, long> resourceProductInformation, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository)
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> pricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository)
         {
             _resourcePricingTeam = pricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
             _resourceSchemeTable = resourceSchemeTable;
-            _resourceProductInformation = resourceProductInformation;
+            _resourceModelCount = resourceModelCount;
             _resourcePriceEvaluation = resourcePriceEvaluation;
             _fileManagementRepository = fileManagementRepository;
         }
@@ -136,14 +136,15 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                List<ProductInformation> productInformations = await _resourceProductInformation.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<ModelCount>  modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<SolutionTable> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
                 if (solutionTables.Count is not 0)
                 {
-                    List<SolutionTable> result = (from productInformation in productInformations
+                    //跟modelCount联查,modelCount中删除的也会在联查中过滤
+                    List<SolutionTable> result = (from modelCount in modelCounts
                                                   join solutionTable in solutionTables
-                                                  on productInformation.Id equals solutionTable.Productld into temp
+                                                  on modelCount.Id equals solutionTable.Productld into temp
                                                   from solutionTable in temp.DefaultIfEmpty()
                                                   where solutionTable != null
                                                   select new SolutionTable
@@ -151,7 +152,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                                                       Id = solutionTable.Id,
                                                       AuditFlowId = solutionTable.AuditFlowId,
                                                       Productld = solutionTable.Productld,
-                                                      ModuleName = productInformation.Product,
+                                                      ModuleName = modelCount.Product,
                                                       SolutionName = solutionTable.SolutionName,
                                                       Product = solutionTable.Product,
                                                       IsCOB = solutionTable.IsCOB,
@@ -160,15 +161,37 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                                                       IsFirst = solutionTable.IsFirst,
                                                   }
                                                    ).ToList();
+                    //退回的时候 如果 录入页面新增数据 此linq会获取
+                    List<SolutionTable> addresult = (from modelCount in modelCounts
+                                                  join solutionTable in solutionTables
+                                                  on modelCount.Id equals solutionTable.Productld into temp
+                                                  from solutionTable in temp.DefaultIfEmpty()
+                                                  where solutionTable == null
+                                                  select new SolutionTable
+                                                  {
+                                                      Id = 0,
+                                                      AuditFlowId = 0,
+                                                      Productld = modelCount.Id,
+                                                      ModuleName = modelCount.Product,
+                                                      SolutionName = "",
+                                                      Product = "",
+                                                      IsCOB = false,
+                                                      ElecEngineerId = 0,
+                                                      StructEngineerId = 0,
+                                                      IsFirst = false,
+                                                  }
+                                                   ).ToList();
+
+                    result.AddRange(addresult);
                     auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(result);
                 }
                 else
                 {
 
                     auditEntering.SolutionTableList = new();
-                    foreach (ProductInformation productInform in productInformations)
+                    foreach (ModelCount modelCount in modelCounts)
                     {
-                        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = productInform.Id, ModuleName = productInform.Product });
+                        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
                     }
                 }
                 return auditEntering;

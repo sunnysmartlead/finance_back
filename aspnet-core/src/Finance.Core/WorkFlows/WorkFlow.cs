@@ -55,6 +55,15 @@ namespace Finance.WorkFlows
         /// 操作角色
         /// </summary>
         public virtual string RoleId { get; set; }
+
+        public virtual NodeType NodeType { get; set; }
+    }
+
+    public enum NodeType : byte
+    {
+        Ordinary,
+        Start,
+        End
     }
 
     /// <summary>

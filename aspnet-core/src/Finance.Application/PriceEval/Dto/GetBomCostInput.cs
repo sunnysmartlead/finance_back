@@ -25,7 +25,13 @@ namespace Finance.PriceEval.Dto
         public virtual long ProductId { get; set; }
 
         /// <summary>
-        /// 投入量
+        /// 梯度Id
+        /// </summary>
+        [Required]
+        public virtual long GradientId { get; set; }
+
+        /// <summary>
+        /// 投入量 （二开项目中：恒定输入0）
         /// </summary>
         [Required]
         public virtual int InputCount { get; set; }
@@ -35,5 +41,6 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [Required]
         public virtual int Year { get; set; }
+
     }
 }

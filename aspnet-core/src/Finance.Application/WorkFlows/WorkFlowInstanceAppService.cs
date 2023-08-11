@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Authorization.Users;
+using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
@@ -256,6 +257,15 @@ namespace Finance.WorkFlows
                 NodeInstanceId = changeNode.Id
             });
 
+            //如果是归档节点
+            if (changeNode.NodeType == NodeType.End)
+            {
+                //就把当前操作人写入节点中，在待办中不出现这些用户的信息
+                var operatedUserIds = changeNode.OperatedUserIds.StrToList();
+                operatedUserIds.Add(AbpSession.UserId.Value.ToString());
+                changeNode.OperatedUserIds = string.Join(",", operatedUserIds);
+                return;
+            }
 
 
             //获取被激活的线，并将状态置为当前
@@ -390,13 +400,17 @@ namespace Finance.WorkFlows
                 p.n.CreationTime,
                 RoleId = p.n.RoleId.StrToList(),
                 p.w.WorkflowState,
-                WorkFlowInstanceId = p.w.Id
+                WorkFlowInstanceId = p.w.Id,
+                p.n.NodeType,
+                p.n.OperatedUserIds,
             });
 
 
             if (roleIds.Any())
             {
-                dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds));
+                dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
+                                                                            //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                 .Where(p => p.NodeType != NodeType.End || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
 
                 //foreach (var o in roleIds)
                 //{
@@ -536,13 +550,31 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task<PagedResultDto<FinanceDictionaryDetailListDto>> GetEvalDataByNodeInstanceId(long nodeInstanceId)
         {
-            var data = from n in _nodeInstanceRepository.GetAll()
-                       join d in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryId equals d.FinanceDictionaryId
-                       where n.Id == nodeInstanceId
-                       select d;
-            var count = await data.CountAsync();
-            var result = await data.ToListAsync();
-            return new PagedResultDto<FinanceDictionaryDetailListDto>(count, ObjectMapper.Map<List<FinanceDictionaryDetailListDto>>(result));
+            var node = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
+
+            //先获取目标为它的线
+            var yj = await _lineInstanceRepository.GetAll()
+                .Where(p => p.TargetNodeId == node.NodeId && p.NodeInstanceStatus == NodeInstanceStatus.Passed)
+                .Select(p => p.FinanceDictionaryDetailIds).ToListAsync();
+            if (yj.All(p => p.IsNullOrWhiteSpace()))
+            {
+                var data = from n in _nodeInstanceRepository.GetAll()
+                           join d in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryId equals d.FinanceDictionaryId
+                           where n.Id == nodeInstanceId
+                           select d;
+                var count = await data.CountAsync();
+                var result = await data.ToListAsync();
+                return new PagedResultDto<FinanceDictionaryDetailListDto>(count, ObjectMapper.Map<List<FinanceDictionaryDetailListDto>>(result));
+            }
+            else
+            {
+                var tj = yj.Where(p => !p.IsNullOrWhiteSpace()).SelectMany(p => p.StrToList());
+                var data = _financeDictionaryDetailRepository.GetAll().Where(p => tj.Contains(p.Id));
+                var result = await data.ToListAsync();
+                var count = await data.CountAsync();
+                return new PagedResultDto<FinanceDictionaryDetailListDto>(count, ObjectMapper.Map<List<FinanceDictionaryDetailListDto>>(result));
+            }
+
         }
 
         /// <summary>
@@ -618,6 +650,7 @@ namespace Finance.WorkFlows
             var data = from l in _lineInstanceRepository.GetAll()
                        join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
                        where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
+                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
                        select n;
             return await data.ToListAsync();
         }

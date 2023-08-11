@@ -61,6 +61,11 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<PcsYear> PcsYeay { set; get; }
         public virtual DbSet<ModelCount> ModelCount { set; get; }
         public virtual DbSet<ModelCountYear> ModelCountYeay { set; get; }
+
+        public virtual DbSet<CarModelCount> CarModelCount { set; get; }
+        public virtual DbSet<CarModelCountYear> CarModelCountYear { set; get; }
+
+
         public virtual DbSet<Requirement> Requirement { set; get; }
         public virtual DbSet<ProductInformation> ProductInformation { set; get; }
 

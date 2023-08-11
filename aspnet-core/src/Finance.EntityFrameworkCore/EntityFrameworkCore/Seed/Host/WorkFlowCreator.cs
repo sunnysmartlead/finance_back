@@ -88,6 +88,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Name = "开始",
                     FinanceDictionaryId = string.Empty,
                     Activation = string.Empty,
+                    NodeType= NodeType.Start,
                 },
                 new Node
                 {
@@ -343,6 +344,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 },
                 new Node
                 {
+                    Name="总经理查看中标金额",
+                    FinanceDictionaryId = FinanceConsts.Done,
+                    Activation = $"{MainFlowId}_确认中标金额_{MainFlowId}_总经理查看中标金额",
+                    RoleId = generalManager.Id.ToString()
+                },
+                new Node
+                {
                     Name="报价反馈",
                     FinanceDictionaryId = FinanceConsts.EvalFeedback,
                     Activation = $"{MainFlowId}_系统生成报价审批表报价单_{MainFlowId}_报价反馈",
@@ -353,6 +361,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Name="归档",
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_不合规是否退回_{MainFlowId}_归档 || {MainFlowId}_确认中标金额_{MainFlowId}_归档 || {MainFlowId}_选择是否报价_{MainFlowId}_归档 || {MainFlowId}_报价反馈_{MainFlowId}_归档",
+                    NodeType= NodeType.End,
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id}"
                 },
             };
 
@@ -651,6 +661,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "核价看板",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                    FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Scjgbom},{FinanceConsts.HjkbSelect_Dzjgj},{FinanceConsts.HjkbSelect_Jgbomppxg},{FinanceConsts.HjkbSelect_Scdzbom},{FinanceConsts.HjkbSelect_Dzbomppxg},{FinanceConsts.HjkbSelect_Wlcblr},{FinanceConsts.HjkbSelect_Gsgxtj},{FinanceConsts.HjkbSelect_Cobzzcblr},{FinanceConsts.HjkbSelect_Nremjflr},{FinanceConsts.HjkbSelect_Nrekkxsyflr},{FinanceConsts.HjkbSelect_Nresbj},{FinanceConsts.HjkbSelect_Nreemcsyflr}"
                 },
                 new Line
                 {
@@ -658,7 +669,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "核价看板",
                     Index = 0,
                     FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Shj}",
-                    FinanceDictionaryDetailIds = FinanceConsts.HjkbSelect_Yes
+                    FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Input}"
                 },
                 new Line
                 {
@@ -666,6 +677,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "查看每个方案初版BOM成本",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                },
+                new Line
+                {
+                    SoureNodeId = "核价看板",
+                    TargetNodeId = "核价需求录入",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Input,
                 },
                 new Line
                 {
@@ -776,6 +794,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     SoureNodeId = "确认中标金额",
                     TargetNodeId = "归档",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                },
+                new Line
+                {
+                    SoureNodeId = "确认中标金额",
+                    TargetNodeId = "总经理查看中标金额",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
                 },
