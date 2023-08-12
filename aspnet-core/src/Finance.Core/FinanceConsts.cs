@@ -782,6 +782,11 @@ namespace Finance
         public const string HjkbSelect_Yes = "HjkbSelect_Yes";
 
         /// <summary>
+        /// 核价看板选项 【退回到核价需求录入】
+        /// </summary>
+        public const string HjkbSelect_Input = "HjkbSelect_Input";
+
+        /// <summary>
         /// 核价看板选项 退回到【上传结构BOM】
         /// </summary>
         public const string HjkbSelect_Scjgbom = "HjkbSelect_Scjgbom";

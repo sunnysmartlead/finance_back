@@ -88,6 +88,11 @@ namespace Finance.PriceEval
         protected readonly IRepository<UPHInfo, long> _uphInfoRepository;
         protected readonly IRepository<AllManufacturingCost, long> _allManufacturingCostRepository;
 
+        protected readonly IRepository<Gradient, long> _gradientRepository;
+        protected readonly IRepository<GradientModel, long> _gradientModelRepository;
+        protected readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -115,7 +120,8 @@ namespace Finance.PriceEval
         /// <param name="qualityCostProportionYearInfoRepository"></param>
         /// <param name="uphInfoRepository"></param>
         /// <param name="allManufacturingCostRepository"></param>
-        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository)
+        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -141,6 +147,10 @@ namespace Finance.PriceEval
             _qualityCostProportionYearInfoRepository = qualityCostProportionYearInfoRepository;
             _uphInfoRepository = uphInfoRepository;
             _allManufacturingCostRepository = allManufacturingCostRepository;
+
+            _gradientRepository = gradientRepository;
+            _gradientModelRepository = gradientModelRepository;
+            _gradientModelYearRepository = gradientModelYearRepository;
         }
 
 
@@ -559,8 +569,10 @@ namespace Finance.PriceEval
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 //获取总年数
-                var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
-                    .OrderBy(p => p.Year).Select(p => new { p.Year, p.Quantity }).ToListAsync();
+                //var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
+                //    .OrderBy(p => p.Year).Select(p => new { p.Year, p.Quantity }).ToListAsync();
+                var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
+                    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
 
                 //获取数据
                 var material = await yearCount.SelectAsync(async p => await GetData(p.Year));
@@ -1328,7 +1340,7 @@ namespace Finance.PriceEval
                 .Where(p => p.AuditFlowId == input.AuditFlowId)
                 .Select(p => new YearListDto { Id = p.Year, Name = $"{p.Year}年" })
                 .Distinct()
-                .OrderBy(p=>p.Id)
+                .OrderBy(p => p.Id)
                 .ToListAsync();
             if (data.Count > 0)
             {
@@ -1395,7 +1407,7 @@ namespace Finance.PriceEval
         public async virtual Task<ListResultDto<GoTable>> GetGoTable(GetGoTableInput input)
         {
             //获取总年数
-            var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId).Select(p => p.Year).OrderBy(p=>p).ToListAsync();
+            var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId).Select(p => p.Year).OrderBy(p => p).ToListAsync();
             var dtoList = (await yearCount.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { Year = p, ProductId = input.ProductId, AuditFlowId = input.AuditFlowId, InputCount = input.InputCount }))).ToList();
             var dto = dtoList.Select(p => new GoTable { Year = p.Year, Value = p.TotalCost }).ToList();
             return new ListResultDto<GoTable>(dto);
