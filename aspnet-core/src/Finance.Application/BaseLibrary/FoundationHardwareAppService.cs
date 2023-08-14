@@ -2,8 +2,15 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
+using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -15,6 +22,10 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class FoundationHardwareAppService : ApplicationService
     {
+        /// <summary>
+        /// 日志类型
+        /// </summary>
+        private readonly int logType = 7;
         private readonly IRepository<FoundationHardware, long> _foundationHardwareRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
@@ -135,7 +146,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
 
                     FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
-                    foundationHardwareItem.Id = foundationDevice;
+                    foundationHardwareItem.FoundationHardwareId = foundationDevice;
                     foundationHardwareItem.CreationTime = DateTime.Now;
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
@@ -155,6 +166,7 @@ namespace Finance.BaseLibrary
 
                 }
             }
+            await this.CreateLog("创建软硬件项目1条");
             return result;
         }
 
@@ -169,7 +181,7 @@ namespace Finance.BaseLibrary
             FoundationHardware entity = await _foundationHardwareRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationHardwareRepository.UpdateAsync(entity);
-            return ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity,new FoundationHardwareDto());
+             ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity,new FoundationHardwareDto());
 
             if (input.ListHardware != null)
             {
@@ -179,7 +191,7 @@ namespace Finance.BaseLibrary
                     var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
 
                     FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
-                    foundationHardwareItem.Id = entity.Id;
+                    foundationHardwareItem.FoundationHardwareId = entity.Id;
                     foundationHardwareItem.CreationTime = DateTime.Now;
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
@@ -197,6 +209,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationHardwareItem, FoundationHardwareItemDto>(foundationHardwareItem, new FoundationHardwareItemDto());
                 }
             }
+            await this.CreateLog(" 编辑软硬件项目1条");
             return ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto()); ;
         }
 
@@ -208,6 +221,244 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationHardwareRepository.DeleteAsync(s => s.Id == id);
+            await this.CreateLog(" 删除软硬件项目1条");
+        }
+
+
+        /// <summary>
+        /// 软硬件导入
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public async Task<bool> UploadFoundationHardware(IFormFile file)
+        {
+            try
+            {
+                //打开上传文件的输入流
+                Stream stream = file.OpenReadStream();
+
+                //根据文件流创建excel数据结构
+                IWorkbook workbook = WorkbookFactory.Create(stream);
+                stream.Close();
+
+                //尝试获取第一个sheet
+                var sheet = workbook.GetSheetAt(0);
+                //判断是否获取到 sheet
+                if (sheet != null)
+                {
+                    var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
+                    var list1 = query.ToList();
+                    var dtos = ObjectMapper.Map<List<FoundationHardware>, List<FoundationHardwareDto>>(list1, new List<FoundationHardwareDto>());
+                    foreach (var item in dtos)
+                    {
+                        await _foundationHardwareRepository.DeleteAsync(s => s.Id == item.Id);
+                        await _foundationFoundationHardwareItemRepository.DeleteAsync(s => s.FoundationHardwareId == item.Id);
+                    }
+                    int lastRowNum = sheet.LastRowNum;
+                    List<FoundationHardwareDto> list = new List<FoundationHardwareDto>();
+                    //跳过表头
+                    for (int i = 1; i <= lastRowNum; i++)
+                    {
+                        var initRow = sheet.GetRow(i);
+                        FoundationHardwareDto entity = new FoundationHardwareDto();
+                        entity.IsDeleted = false;
+                        entity.ProcessName = initRow.GetCell(0).ToString();
+                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+
+                        var lastColNum = initRow.LastCellNum - 5;
+                        var deviceCountt = lastColNum / 4;
+                        for (int j = 0; j < deviceCountt; j++)
+                        {
+                            int pindex = j * 4 + 2;
+                            FoundationHardwareItemDto foundationHardwareDto = new FoundationHardwareItemDto();
+                            foundationHardwareDto.HardwareName = initRow.GetCell(pindex).ToString();
+                            foundationHardwareDto.HardwareState = initRow.GetCell(pindex + 1).ToString();
+                            if (initRow.GetCell(pindex + 2) != null && !string.IsNullOrEmpty(initRow.GetCell(pindex + 2).ToString()))
+                            {
+                                foundationHardwareDto.HardwarePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
+                            }
+                            foundationHardwareDto.HardwareBusiness = initRow.GetCell(pindex + 3).ToString();
+                            entity.ListHardware.Add(foundationHardwareDto);
+                        }
+                        entity.SoftwareName = initRow.GetCell(2 + deviceCountt * 4).ToString();
+                        entity.SoftwareState = initRow.GetCell(3 + deviceCountt * 4).ToString();
+                        entity.SoftwarePrice = decimal.Parse(initRow.GetCell(4 + deviceCountt * 4).ToString());
+                        list.Add(entity);
+                    }
+
+                    if (null != list)
+                    {
+                        foreach (var Item in list)
+                        {
+                            var entity = ObjectMapper.Map<FoundationHardwareDto, FoundationHardware>(Item, new FoundationHardware());
+                            entity.CreationTime = DateTime.Now;
+                            if (AbpSession.UserId != null)
+                            {
+                                entity.CreatorUserId = AbpSession.UserId.Value;
+                                entity.LastModificationTime = DateTime.Now;
+                                entity.LastModifierUserId = AbpSession.UserId.Value;
+                            }
+                            entity.LastModificationTime = DateTime.Now;
+                            entity = await this._foundationHardwareRepository.InsertAsync(entity);
+                            var foundationDevice = _foundationHardwareRepository.InsertAndGetId(entity);
+                            var result = ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto());
+                            if (Item.ListHardware != null)
+                            {
+                                await _foundationFoundationHardwareItemRepository.DeleteAsync(t => t.FoundationHardwareId == result.Id);
+                                foreach (var deviceItem in Item.ListHardware)
+                                {
+                                    var entityItem = ObjectMapper.Map<FoundationHardwareItemDto, FoundationHardwareItem>(deviceItem, new FoundationHardwareItem());
+
+                                    FoundationHardwareItem foundationHardwareItem = new FoundationHardwareItem();
+                                    foundationHardwareItem.FoundationHardwareId = foundationDevice;
+                                    foundationHardwareItem.CreationTime = DateTime.Now;
+                                    foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
+                                    foundationHardwareItem.HardwareName = entityItem.HardwareName;
+                                    foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
+                                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
+                                    if (AbpSession.UserId != null)
+                                    {
+                                        foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
+                                        foundationHardwareItem.LastModificationTime = DateTime.Now;
+                                        foundationHardwareItem.LastModifierUserId = AbpSession.UserId.Value;
+
+                                    }
+                                    foundationHardwareItem.LastModificationTime = DateTime.Now;
+                                    entityItem = await _foundationFoundationHardwareItemRepository.InsertAsync(foundationHardwareItem);
+                                    ObjectMapper.Map<FoundationHardwareItem, FoundationHardwareItemDto>(foundationHardwareItem, new FoundationHardwareItemDto());
+                                }
+                            }
+
+
+                        }
+                        await this.CreateLog(" 导入软硬件项目" + list.Count + "条");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("数据解析失败！");
+            }
+            return true;
+        }
+
+
+        /// <summary>
+        /// 导出软硬件
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> FoundationHardwareDownloadStream(GetFoundationDevicesInput input)
+        {
+            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
+            // 查询数据
+            var list = query.ToList();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationHardware>, List<FoundationHardwareDto>>(list, new List<FoundationHardwareDto>());
+            foreach (var item in dtos)
+            {
+                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == item.Id).ToList();
+
+                //数据转换
+                var dtosItem = ObjectMapper.Map<List<FoundationHardwareItem>, List<FoundationHardwareItemDto>>(FoundationDeviceItemlist, new List<FoundationHardwareItemDto>());
+                item.ListHardware = dtosItem;
+                if (user != null)
+                {
+                    item.LastModifierUserName = user.Name;
+                }
+            }
+
+            if (dtos == null || dtos.Count == 0)
+            {
+                throw new Exception("没有相关数据！");
+            }
+
+            // 设置表头
+            List<DynamicExcelColumn> cols = new List<DynamicExcelColumn>();
+            cols.Add(new DynamicExcelColumn("ProcessNumber") { Index = 0, Name = "工序编号", Width = 30 });
+            cols.Add(new DynamicExcelColumn("ProcessName") { Index = 1, Name = "工序名称", Width = 30 });
+            if (dtos[0].ListHardware != null && dtos[0].ListHardware.Count > 0)
+            {
+                List<FoundationHardwareItemDto> DeviceList = dtos[0].ListHardware;
+                for (int i = 0; i < DeviceList.Count; i++)
+                {
+                    int pindex = i * 4 + 2;
+                    cols.Add(new DynamicExcelColumn("DeviceName" + i) { Name = string.Format("硬件{0}名称", i + 1), Index = pindex, Width = 30 });
+                    cols.Add(new DynamicExcelColumn("DeviceStatus" + i) { Name = string.Format("硬件{0}状态", i + 1), Index = pindex + 1, Width = 30 });
+                    cols.Add(new DynamicExcelColumn("DevicePrice" + i) { Name = string.Format("硬件{0}单价", i + 1), Index = pindex + 2, Width = 30 });
+                    cols.Add(new DynamicExcelColumn("DeviceProvider" + i) { Name = string.Format("硬件{0}供应商", i + 1), Index = pindex + 3, Width = 30 });
+                }
+            }
+            int a = dtos[0].ListHardware.Count * 4 + 2;
+
+            cols.Add(new DynamicExcelColumn("FixtureGaugeName") { Index = a, Name = "软件名称", Width = 30 });
+            cols.Add(new DynamicExcelColumn("FixtureGaugeState") { Index = a + 1, Name = "软件状态", Width = 30 });
+            cols.Add(new DynamicExcelColumn("FixtureGaugePrice") { Index = a + 2, Name = "软件单价", Width = 30 });
+            var config = new OpenXmlConfiguration
+            {
+                DynamicColumns = cols.ToArray()
+            };
+
+            // 设置值
+            var values = new List<Dictionary<string, object>>();
+            for (int i = 0; i < dtos.Count; i++)
+            {
+                FoundationHardwareDto foundationHardwareDto = dtos[i];
+                // 填充数据
+                var value = new Dictionary<string, object>()
+                {
+                    ["ProcessNumber"] = foundationHardwareDto.ProcessNumber,
+                    ["ProcessName"] = foundationHardwareDto.ProcessName,
+                    ["FixtureGaugeName"] = foundationHardwareDto.SoftwareName,
+                    ["FixtureGaugePrice"] = foundationHardwareDto.SoftwarePrice,
+                    ["FixtureGaugeState"] = foundationHardwareDto.SoftwareState
+                };
+                for (int j = 0; j < foundationHardwareDto.ListHardware.Count; j++)
+                {
+                    FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
+                    value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
+                    value["DeviceStatus" + j] = foundationFixtureItemDto.HardwareState;
+                    value["DevicePrice" + j] = foundationFixtureItemDto.HardwarePrice;
+                    value["DeviceProvider" + j] = foundationFixtureItemDto.HardwareBusiness;
+                }
+                values.Add(value);
+            }
+
+            var memoryStream = new MemoryStream();
+            //MiniExcel.SaveAs(memoryStream, values.ToArray(), configuration: config);
+            memoryStream.SaveAs(values.ToArray(), configuration: config);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FoundationHardware" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
+        }
+
+        /// <summary>
+        /// 添加日志
+        /// </summary>
+        private async Task<bool> CreateLog(string Remark)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
+
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.Remark = Remark;
+                entity.Type = logType;
+
+
+            }
+            entity = await _foundationLogsRepository.InsertAsync(entity);
+            return true;
         }
     }
 }

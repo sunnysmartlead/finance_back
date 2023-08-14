@@ -12,18 +12,6 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class CreateModelCountDto
     {
-        ///// <summary>
-        ///// 梯度
-        ///// </summary>
-        //[Required]
-        //public virtual decimal Kv { get; set; }
-
-        /// <summary>
-        /// 车型
-        /// </summary>
-        [Required]
-        public virtual string CarModel { get; set; }
-
         /// <summary>
         /// 序号（正序排序，从1开始）
         /// </summary>
@@ -60,33 +48,16 @@ namespace Finance.PriceEval.Dto
         public virtual string Pixel { get; set; }
 
         /// <summary>
-        /// 我司角色
-        /// </summary>
-        public virtual string OurRole { get; set; }
-
-        /// <summary>
-        /// 市场份额（%）
-        /// </summary>
-        [Required]
-        public virtual decimal MarketShare { get; set; }
-
-        /// <summary>
-        /// 模组搭载率
-        /// </summary>
-        [Required]
-        public virtual decimal ModuleCarryingRate { get; set; }
-
-        /// <summary>
-        /// 单车产品数量
-        /// </summary>
-        [Required]
-        public virtual int SingleCarProductsQuantity { get; set; }
-
-        /// <summary>
         /// 年份
         /// </summary>
         [Required]
         public virtual List<CreateModelCountYearDto> ModelCountYearList { get; set; }
+
+        /// <summary>
+        /// 合计数量（模组数量合计专用，单零件全产品全年份合计数量）
+        /// </summary>
+        [Required]
+        public virtual decimal SumQuantity { get; set; }
     }
 
     /// <summary>

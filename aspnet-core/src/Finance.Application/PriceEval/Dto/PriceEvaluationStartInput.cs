@@ -171,7 +171,13 @@ namespace Finance.PriceEval.Dto
         public virtual List<CreatePcsDto> Pcs { set; get; }
 
         /// <summary>
-        /// 模组数量
+        /// 车型模组数量
+        /// </summary>
+        [Required]
+        public virtual List<CreateCarModelCountDto> CarModelCount { set; get; }
+
+        /// <summary>
+        /// 模组数量合计
         /// </summary>
         [Required]
         public virtual List<CreateModelCountDto> ModelCount { set; get; }

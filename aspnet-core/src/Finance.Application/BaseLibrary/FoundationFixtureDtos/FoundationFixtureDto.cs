@@ -18,11 +18,11 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
         public string FixtureGaugeBusiness { get; set; }
         public string FixtureGaugeName { get; set; }
-        public string FixtureGaugePrice { get; set; }
+        public decimal FixtureGaugePrice { get; set; }
         public string FixtureGaugeState { get; set; }
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
-        public List<FoundationFixtureItemDto> FixtureList { get; set; }
+        public List<FoundationFixtureItemDto> FixtureList { get; set; } = new List<FoundationFixtureItemDto>();
         /// <summary>
         /// 维护人
         /// </summary>

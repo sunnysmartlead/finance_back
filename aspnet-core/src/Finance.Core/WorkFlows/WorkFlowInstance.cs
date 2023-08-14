@@ -88,6 +88,11 @@ namespace Finance.WorkFlows
         public virtual string RoleId { get; set; }
 
         /// <summary>
+        /// 已操作用户的Id
+        /// </summary>
+        public virtual string OperatedUserIds { get; set; }
+
+        /// <summary>
         /// 工作流实例Id
         /// </summary>
         public virtual long WorkFlowInstanceId { get; set; }
@@ -112,7 +117,11 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual string FinanceDictionaryDetailIds { get; set; }
 
-        
+        /// <summary>
+        /// 节点类型
+        /// </summary>
+        public virtual NodeType NodeType { get; set; }
+
     }
 
     /// <summary>

@@ -169,6 +169,13 @@ namespace Finance
             configuration.CreateMap<ShareCount, ShareCountInput>();
             configuration.CreateMap<ShareCountInput, ShareCount>();
 
+            configuration.CreateMap<CreateCarModelCountDto, CarModelCount>();
+            configuration.CreateMap<CreateCarModelCountYearDto, CarModelCountYear>();
+            configuration.CreateMap<CarModelCount, CreateCarModelCountDto>();
+            configuration.CreateMap<CarModelCountYear, CreateCarModelCountYearDto>();
+
+
+
 
             //ProductDevelopmentInput
             configuration.CreateMap<StructureBomDto, StructureBomInfo>();

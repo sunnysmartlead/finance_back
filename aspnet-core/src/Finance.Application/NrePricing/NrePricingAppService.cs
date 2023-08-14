@@ -515,6 +515,7 @@ namespace Finance.NerPricing
                         item.Cost = mouldInventory1.Cost;//费用
                         item.PeopleId = mouldInventory1.PeopleId;//提交人id
                         item.IsSubmit = mouldInventory1.IsSubmit;//是否提交
+                        item.Remark = mouldInventory1.Remark;//备注
                         User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
                         if (user is not null) item.PeopleName = user.Name;//提交人名称
                     }
@@ -570,7 +571,7 @@ namespace Finance.NerPricing
 
         }
         /// <summary>
-        /// 资源部录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
+        /// 资源部模具费录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
         /// </summary>
         /// <returns></returns>
         private async Task<bool> GetResourcesManagement(long auditFlowId)
@@ -595,6 +596,14 @@ namespace Finance.NerPricing
                 item.IsSubmit = false;
                 await _resourceMouldInventory.UpdateAsync(item);
             }         
+        }
+        /// <summary>
+        /// 资源部模具费 审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task ResourceDepartmentMoldFeeReview(ToExamineDto toExamineDto)
+        {
+
         }
         /// <summary>
         /// 产品部-电子工程师 录入
@@ -668,10 +677,8 @@ namespace Finance.NerPricing
         /// <exception cref="NotImplementedException"></exception>
         public async Task PostProductDepartmentSingle(ProductDepartmentSingleDto price)
         {
-            ProductDepartmentModel productDepartmentModel = new();
-            productDepartmentModel = price.ProductDepartmentModels;
             //判断 该方案 是否已经录入
-            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(productDepartmentModel.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProductDepartment.ToString()));
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProductDepartment.ToString()));
             if (nreIsSubmits.Count is not 0)
             {
 
@@ -680,29 +687,29 @@ namespace Finance.NerPricing
             try
             {
 
-                List<LaboratoryFee> laboratoryFees = ObjectMapper.Map<List<LaboratoryFee>>(productDepartmentModel.laboratoryFeeModels);
+                List<LaboratoryFee> laboratoryFees = ObjectMapper.Map<List<LaboratoryFee>>(price.ProductDepartmentModels);
                 //删除原数据
-                await _resourceLaboratoryFee.DeleteAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(productDepartmentModel.SolutionId));
+                await _resourceLaboratoryFee.DeleteAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.SolutionId));
                 foreach (LaboratoryFee laboratoryFee in laboratoryFees)
                 {
                     laboratoryFee.AuditFlowId = price.AuditFlowId;
-                    laboratoryFee.SolutionId = productDepartmentModel.SolutionId;
+                    laboratoryFee.SolutionId = price.SolutionId;
                     await _resourceLaboratoryFee.InsertOrUpdateAsync(laboratoryFee);
-                }
-                #region 录入完成之后
-                await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = productDepartmentModel.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
-                #endregion
-                if (await this.GetProductDepartment(price.AuditFlowId))
-                {
-                    if (AbpSession.UserId is null)
-                    {
-                        throw new FriendlyException("请先登录");
-                    }
-
                 }
                 if (price.IsSubmit)
                 {
-                    //流程流转
+                    #region 录入完成之后
+                    await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = price.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
+                    #endregion
+                    if (await this.GetProductDepartment(price.AuditFlowId))
+                    {
+                        if (AbpSession.UserId is null)
+                        {
+                            throw new FriendlyException("请先登录");
+                        }
+                        #region 流程流转
+                        #endregion
+                    }
                 }
             }
             catch (Exception e)
@@ -1014,6 +1021,14 @@ namespace Finance.NerPricing
             {
                 throw new FriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// Nre 品保部=>环境实验费 录入 审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task ExperimentItemsReview(ToExamineDto toExamineDto)
+        {
+
         }
         /// <summary>
         /// Nre 品保部=>环境实验费 录入过的值(单个方案)

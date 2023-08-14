@@ -4,7 +4,6 @@ using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.ObjectMapping;
 using Abp.Runtime.Session;
-using Finance.Audit;
 using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
 using Finance.Entering;
@@ -21,7 +20,6 @@ using Finance.Roles.Dto;
 using Finance.Users;
 using Finance.Users.Dto;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Tsp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -101,7 +99,16 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// </summary>
         private readonly IRepository<Gradient, long> _gradient;
         /// <summary>
-        ///  构造函数
+        /// 梯度模组
+        /// </summary>
+        private readonly IRepository<GradientModel, long> _gradientModel;
+        /// <summary>
+        /// 梯度模组年份
+        /// </summary>
+        private readonly IRepository<GradientModelYear, long> _gradientModelYear;
+
+        /// <summary>
+        /// 构造函数
         /// </summary>
         /// <param name="resourceFinanceDictionaryDetail"></param>
         /// <param name="electronicBomInfo"></param>
@@ -121,6 +128,8 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <param name="resourceSchemeTable"></param>
         /// <param name="sharedMaterialWarehouse"></param>
         /// <param name="gradientRepository"></param>
+        /// <param name="gradientModelRepository"></param>
+        /// <param name="gradientModelYearRepository"></param>
         public ElectronicStructuralMethod(
             IRepository<FinanceDictionaryDetail,
             string> resourceFinanceDictionaryDetail,
@@ -140,7 +149,9 @@ namespace Finance.PropertyDepartment.Entering.Method
             IUserAppService userAppService,
             IRepository<SolutionTable, long> resourceSchemeTable,
             IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse,
-            IRepository<Gradient, long> gradientRepository) : base(repository)
+            IRepository<Gradient, long> gradientRepository,
+            IRepository<GradientModel, long> gradientModelRepository,
+            IRepository<GradientModelYear, long> gradientModelYearRepository) : base(repository)
         {
             _resourceFinanceDictionaryDetail = resourceFinanceDictionaryDetail;
             _resourceElectronicBomInfo = electronicBomInfo;
@@ -159,6 +170,8 @@ namespace Finance.PropertyDepartment.Entering.Method
             _resourceSchemeTable = resourceSchemeTable;
             _sharedMaterialWarehouse = sharedMaterialWarehouse;
             _gradient = gradientRepository;
+            _gradientModel= gradientModelRepository;
+            _gradientModelYear = gradientModelYearRepository;
         }
 
         /// <summary>
@@ -204,6 +217,30 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                            Kv = gradient.GradientValue
                                                        }).ToList();
             return gradientModels;
+        }
+        /// <summary>
+        /// 根据流程号 和梯度  获取 模组走量
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="kv"></param>
+        /// <returns></returns>
+        internal async Task<List<GradientModelYear>> NumberOfModules(long auditFlowId,decimal kv)
+        {
+            List<Gradient> gradients = await _gradient.GetAllListAsync(g => g.AuditFlowId == auditFlowId&&g.GradientValue.Equals(kv));
+            List<GradientModel> gradientModels = await _gradientModel.GetAllListAsync(gm => gm.AuditFlowId == auditFlowId);
+            List<GradientModelYear> gradientModelYears = await _gradientModelYear.GetAllListAsync(gmy => gmy.AuditFlowId == auditFlowId);
+            List<GradientModelYear> gradientModelsAll = (from gradient in gradients
+                                                    join gradientModel in gradientModels
+                                                    on gradient.Id equals gradientModel.GradientId
+                                                    join gradientModelYear in gradientModelYears
+                                                    on gradientModel.Id equals gradientModelYear.GradientModelId
+                                                    select new GradientModelYear
+                                                    {
+                                                        Year = gradientModelYear.Year,
+                                                        Count = gradientModelYear.Count,
+                                                        UpDown = gradientModelYear.UpDown,
+                                                    }).ToList();
+            return gradientModelsAll;
         }
         /// <summary>
         /// 电子BOM单价录入
@@ -260,10 +297,11 @@ namespace Finance.PropertyDepartment.Entering.Method
                         electronicDto.MaterialsUseCount = new List<YearOrValueKvMode>();
                         foreach (GradientValueModel gradientItem in gradient)
                         {
+                            List<GradientModelYear> gradientModelYears = await NumberOfModules(auditFlowId, gradientItem.Kv);
                             YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
                             yearOrValueKvMode.YearOrValueModes = new();
                             yearOrValueKvMode.Kv = gradientItem.Kv;
-                            foreach (ModelCountYear modelCountYear in modelCountYearList)
+                            foreach (GradientModelYear modelCountYear in gradientModelYears)
                             {
                                 //公共物料库中装配数量乘以每年的走量
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
@@ -272,7 +310,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)BomInfo.AssemblyQuantity;
-                                decimal modelCountYearQuantity = modelCountYear.Quantity;
+                                decimal modelCountYearQuantity = modelCountYear.Count;
                                 decimal value = bomAssemblyQuantity * modelCountYearQuantity + sharedMaterialWarehousesModeCount;
                                 YearOrValueMode yearOrValueMode = new YearOrValueMode { Year = modelCountYear.Year, UpDown = modelCountYear.UpDown, Value = value };
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
@@ -464,10 +502,11 @@ namespace Finance.PropertyDepartment.Entering.Method
                         construction.MaterialsUseCount = new List<YearOrValueKvMode>();
                         foreach (GradientValueModel gradientItem in gradient)
                         {
+                            List<GradientModelYear> gradientModelYears = await NumberOfModules(auditFlowId, gradientItem.Kv);
                             YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
                             yearOrValueKvMode.YearOrValueModes = new List<YearOrValueMode>();
                             yearOrValueKvMode.Kv = gradientItem.Kv;
-                            foreach (ModelCountYear modelCountYear in modelCountYearList)
+                            foreach (GradientModelYear modelCountYear in gradientModelYears)
                             {
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
@@ -475,7 +514,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)construction.AssemblyQuantity;
-                                decimal modelCountYearQuantity = modelCountYear.Quantity;
+                                decimal modelCountYearQuantity = modelCountYear.Count;
                                 decimal value = bomAssemblyQuantity * modelCountYearQuantity + sharedMaterialWarehousesModeCount;
                                 YearOrValueMode yearOrValueMode = new YearOrValueMode { Year = modelCountYear.Year, UpDown = modelCountYear.UpDown, Value = value };
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);

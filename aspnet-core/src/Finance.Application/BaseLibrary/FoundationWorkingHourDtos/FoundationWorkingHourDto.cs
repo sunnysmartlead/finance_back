@@ -20,6 +20,6 @@ namespace Finance.BaseLibrary
         public string ProcessNumber { get; set; }
         public string LastModifierUserName { get; set; }
 
-        public List<FoundationWorkingHourItemDto> ListFoundationWorkingHour { get; set; }
+        public List<FoundationWorkingHourItemDto> ListFoundationWorkingHour { get; set; } = new List<FoundationWorkingHourItemDto>();
     }
 }
