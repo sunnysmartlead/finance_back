@@ -672,10 +672,8 @@ namespace Finance.NerPricing
         /// <exception cref="NotImplementedException"></exception>
         public async Task PostProductDepartmentSingle(ProductDepartmentSingleDto price)
         {
-            ProductDepartmentModel productDepartmentModel = new();
-            productDepartmentModel = price.ProductDepartmentModels;
             //判断 该方案 是否已经录入
-            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(productDepartmentModel.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProductDepartment.ToString()));
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProductDepartment.ToString()));
             if (nreIsSubmits.Count is not 0)
             {
 
@@ -684,29 +682,29 @@ namespace Finance.NerPricing
             try
             {
 
-                List<LaboratoryFee> laboratoryFees = ObjectMapper.Map<List<LaboratoryFee>>(productDepartmentModel.laboratoryFeeModels);
+                List<LaboratoryFee> laboratoryFees = ObjectMapper.Map<List<LaboratoryFee>>(price.ProductDepartmentModels);
                 //删除原数据
-                await _resourceLaboratoryFee.DeleteAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(productDepartmentModel.SolutionId));
+                await _resourceLaboratoryFee.DeleteAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.SolutionId));
                 foreach (LaboratoryFee laboratoryFee in laboratoryFees)
                 {
                     laboratoryFee.AuditFlowId = price.AuditFlowId;
-                    laboratoryFee.SolutionId = productDepartmentModel.SolutionId;
+                    laboratoryFee.SolutionId = price.SolutionId;
                     await _resourceLaboratoryFee.InsertOrUpdateAsync(laboratoryFee);
-                }
-                #region 录入完成之后
-                await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = productDepartmentModel.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
-                #endregion
-                if (await this.GetProductDepartment(price.AuditFlowId))
-                {
-                    if (AbpSession.UserId is null)
-                    {
-                        throw new FriendlyException("请先登录");
-                    }
-
                 }
                 if (price.IsSubmit)
                 {
-                    //流程流转
+                    #region 录入完成之后
+                    await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = price.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
+                    #endregion
+                    if (await this.GetProductDepartment(price.AuditFlowId))
+                    {
+                        if (AbpSession.UserId is null)
+                        {
+                            throw new FriendlyException("请先登录");
+                        }
+                        #region 流程流转
+                        #endregion
+                    }
                 }
             }
             catch (Exception e)
