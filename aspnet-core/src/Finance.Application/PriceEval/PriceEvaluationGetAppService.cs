@@ -2,6 +2,7 @@
 using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
+using Abp.Json;
 using Abp.Linq.Extensions;
 using Finance.Audit;
 using Finance.Audit.Dto;
@@ -20,6 +21,7 @@ using Finance.ProductDevelopment;
 using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.PropertyDepartment.Entering.Method;
+using Finance.PropertyDepartment.Entering.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
@@ -37,7 +39,7 @@ namespace Finance.PriceEval
     /// <summary>
     /// 获取核价
     /// </summary>
-    [ParameterValidator]
+    //[ParameterValidator]
     public class PriceEvaluationGetAppService : FinanceAppServiceBase
     {
         /// <summary>
@@ -92,36 +94,14 @@ namespace Finance.PriceEval
         protected readonly IRepository<GradientModel, long> _gradientModelRepository;
         protected readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
 
+        protected readonly IRepository<EditItem, long> _editItemRepository;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="financeDictionaryDetailRepository"></param>
-        /// <param name="priceEvaluationRepository"></param>
-        /// <param name="pcsRepository"></param>
-        /// <param name="pcsYearRepository"></param>
-        /// <param name="modelCountRepository"></param>
-        /// <param name="modelCountYearRepository"></param>
-        /// <param name="requirementRepository"></param>
-        /// <param name="electronicBomInfoRepository"></param>
-        /// <param name="structureBomInfoRepository"></param>
-        /// <param name="enteringElectronicRepository"></param>
-        /// <param name="structureElectronicRepository"></param>
-        /// <param name="lossRateInfoRepository"></param>
-        /// <param name="lossRateYearInfoRepository"></param>
-        /// <param name="exchangeRateRepository"></param>
-        /// <param name="manufacturingCostInfoRepository"></param>
-        /// <param name="yearInfoRepository"></param>
-        /// <param name="workingHoursInfoRepository"></param>
-        /// <param name="rateEntryInfoRepository"></param>
-        /// <param name="productionControlInfoRepository"></param>
-        /// <param name="qualityCostProportionEntryInfoRepository"></param>
-        /// <param name="userInputInfoRepository"></param>
-        /// <param name="qualityCostProportionYearInfoRepository"></param>
-        /// <param name="uphInfoRepository"></param>
-        /// <param name="allManufacturingCostRepository"></param>
         public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
-          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository)
+          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
+     IRepository<EditItem, long> editItemRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -151,6 +131,8 @@ namespace Finance.PriceEval
             _gradientRepository = gradientRepository;
             _gradientModelRepository = gradientModelRepository;
             _gradientModelYearRepository = gradientModelYearRepository;
+
+            _editItemRepository = editItemRepository;
         }
 
 
@@ -565,14 +547,15 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<Material>> GetBomCost(GetBomCostInput input)
         {
+            var gradient = await _gradientRepository.GetAsync(input.GradientId);
             //全生命周期处理
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 //获取总年数
-                //var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
-                //    .OrderBy(p => p.Year).Select(p => new { p.Year, p.Quantity }).ToListAsync();
-                var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
-                    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
+                var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
+                    .OrderBy(p => p.Year).Select(p => new { p.Year, p.Quantity }).ToListAsync();
+                //var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
+                //    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
 
                 //获取数据
                 var material = await yearCount.SelectAsync(async p => await GetData(p.Year));
@@ -656,7 +639,7 @@ namespace Finance.PriceEval
                                      Sap = eb.SapItemNum,
                                      MaterialName = eb.SapItemName,
                                      AssemblyCount = eb.AssemblyQuantity,//装配数量
-                                     //SystemiginalCurrency = ec.IginalCurrency,//ec.SystemiginalCurrency,
+                                     SystemiginalCurrency = ec.SystemiginalCurrency,//ec.SystemiginalCurrency,
                                      CurrencyText = ec.Currency,
                                      ExchangeRateValue = er.ExchangeRateValue,
                                      LossRate = lriy.Rate,//损耗率
@@ -693,7 +676,7 @@ namespace Finance.PriceEval
                                     Sap = sb.SapItemNum,
                                     MaterialName = sb.MaterialName,
                                     AssemblyCount = sb.AssemblyQuantity,//装配数量
-                                    //SystemiginalCurrency = se.IginalCurrency,//se.Sop,
+                                    SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
                                     CurrencyText = se.Currency,
                                     ExchangeRateValue = er.ExchangeRateValue,
                                     LossRate = lriy.Rate,//损耗率
@@ -709,9 +692,9 @@ namespace Finance.PriceEval
                 electronicAndStructureList.ForEach(item =>
                 {
                     item.Year = year;
-                    item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year);
-                    item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);
-                    item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year);
+                    item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, gradient.GradientValue);
+                    item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year, gradient.GradientValue);
+                    item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, gradient.GradientValue);
                     item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）
                     item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
                     item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
@@ -1272,9 +1255,9 @@ namespace Finance.PriceEval
         /// <param name="isAll"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetMaterialPrice(string json, int year)
+        private static decimal GetMaterialPrice(string json, int year, decimal gradientValue)
         {
-            return GetYearValue(json, year);
+            return GetYearValue(json, year, gradientValue);
         }
 
         /// <summary>
@@ -1284,9 +1267,9 @@ namespace Finance.PriceEval
         /// <param name="isAll"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetExchangeRate(string json, int year)
+        private static decimal GetExchangeRate(string json, int year, decimal gradientValue)
         {
-            return GetYearValue(json, year);
+            return GetYearValue(json, year, gradientValue);
         }
 
         /// <summary>
@@ -1295,9 +1278,10 @@ namespace Finance.PriceEval
         /// <param name="json"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetYearValue(string json, int year)
+        private static decimal GetYearValue(string json, int year, decimal gradientValue)
         {
-            var list = EnteringMapper.JsonToList(json);
+            //var list = EnteringMapper.JsonToList(json);
+            var list = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(json).FirstOrDefault(p => p.Kv == gradientValue).YearOrValueModes;
             var query = list.Where(p => p.Year == year);
             if (query.Any())
             {
@@ -1542,6 +1526,54 @@ namespace Finance.PriceEval
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
         }
 
+
+        /// <summary>
+        /// 核价看板页面，设置是否客供。填写BOM的Id和是否客供
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task SetIsCustomerSupply(SetIsCustomerSupplyInput input)
+        {
+            var pe = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+            pe.BomIsCustomerSupplyJson = input.BomIsCustomerSupplyList.ToJsonString();
+        }
+
+        /// <summary>
+        /// 核价看板，梯度下拉框获取梯度接口
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public virtual async Task<PagedResultDto<GradientListDto>> GetGradient(long auditFlowId)
+        {
+            var entity = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            return new PagedResultDto<GradientListDto>(entity.Count, ObjectMapper.Map<List<GradientListDto>>(entity));
+        }
+
+        /// <summary>
+        /// 设置核价看板修改项
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task SetEditItem(SetEditItemInput input)
+        {
+            var entity = await _editItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+            if (entity is null)
+            {
+                await _editItemRepository.InsertAsync(new EditItem
+                {
+                    AuditFlowId = input.AuditFlowId,
+                    EditItemJson = input.EditItem.ToJsonString(),
+                });
+            }
+            else
+            {
+                entity.EditItemJson = input.EditItem.ToJsonString();
+            }
+
+        }
         #endregion
+
+
+
     }
 }

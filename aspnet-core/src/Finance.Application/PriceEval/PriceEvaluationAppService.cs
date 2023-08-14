@@ -68,6 +68,7 @@ namespace Finance.PriceEval
         private readonly IRepository<CarModelCount, long> _carModelCountRepository;
         private readonly IRepository<CarModelCountYear, long> _carModelCountYearRepository;
 
+        private readonly IRepository<EditItem, long> _editItemRepository;
 
 
         /// <summary>
@@ -85,9 +86,9 @@ namespace Finance.PriceEval
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
-           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository)
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, IRepository<EditItem, long> editItemRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, editItemRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;

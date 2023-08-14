@@ -29,7 +29,6 @@ using Finance.MakeOffers;
 using Finance.MultiTenancy;
 using Finance.Nre;
 using Finance.PriceEval;
-using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductionControl;
 using Finance.ProjectManagement;
@@ -79,6 +78,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GradientModel> GradientModel { set; get; }
         public virtual DbSet<GradientModelYear> GradientModelYear { set; get; }
         public virtual DbSet<ShareCount> ShareCount { set; get; }
+        public virtual DbSet<EditItem> EditItem { set; get; }
 
 
         public virtual DbSet<UserInputInfo> UserInputInfo { get; set; }
@@ -207,17 +207,6 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<InstanceHistory> InstanceHistory { get; set; }
 
         #region 基础库新增表
-        public virtual DbSet<BomEnter> BomEnter { get; set; }
-        public virtual DbSet<BomEnterTotal> BomEnterTotal { get; set; }
-        public virtual DbSet<FoundationProcesses> FProcesses { get; set; }
-        public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
-        public virtual DbSet<ProcessHoursEnter> ProcessHoursEnter { get; set; }
-        public virtual DbSet<ProcessHoursEnterDevice> ProcessHoursEnterDevice { get; set; }
-        public virtual DbSet<ProcessHoursEnterFixture> ProcessHoursEnterFixture { get; set; }
-        public virtual DbSet<ProcessHoursEnterFrock> ProcessHoursEnterFrock { get; set; }
-        public virtual DbSet<ProcessHoursEnteritem> ProcessHoursEnteritem { get; set; }
-        public virtual DbSet<ProcessHoursEnterLine> ProcessHoursEnterLine { get; set; }
-        public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
         /// <summary>
         /// 基础库--设备库
         /// </summary>
