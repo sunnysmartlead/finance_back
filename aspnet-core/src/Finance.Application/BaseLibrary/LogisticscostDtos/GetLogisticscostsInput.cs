@@ -7,5 +7,7 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class GetLogisticscostsInput: PagedInputDto
     {
+        public long? AuditFlowId { get; set; }
+        public long? ProductId { get; set; }
     }
 }

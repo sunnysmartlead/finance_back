@@ -2,8 +2,12 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
+using Finance.Processes;
+using Microsoft.AspNetCore.Http;
+using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
@@ -90,7 +94,7 @@ namespace Finance.BaseLibrary
             var dtos = ObjectMapper.Map<List<FoundationEmc>, List<FoundationEmcDto>>(list, new List<FoundationEmcDto>());
             foreach (var item in dtos)
             {
-                var user = this._userRepository.GetAll().Where(u => u.Id == item.CreatorUserId).ToList().FirstOrDefault();
+                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
                 if (user != null)
                 {
                     item.LastModifierUserName = user.Name;
@@ -117,7 +121,10 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationEmcDto> CreateAsync(FoundationEmcDto input)
         {
-        
+
+            var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name));
+            var list = query.ToList();
+           
             var entity = ObjectMapper.Map<FoundationEmcDto, FoundationEmc>(input, new FoundationEmc());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -128,7 +135,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await _foundationEmcRepository.InsertAsync(entity);
-            await this.CreateLog("add");
+            await this.CreateLog(" 创建EMC项目1条");
             return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity, new FoundationEmcDto());
         }
 
@@ -142,7 +149,13 @@ namespace Finance.BaseLibrary
         {
             FoundationEmc entity = await _foundationEmcRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
+            entity.LastModificationTime = DateTime.Now;
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+            }
             entity = await _foundationEmcRepository.UpdateAsync(entity);
+            await this.CreateLog(" 编辑EMC项目1条");
             return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity,new FoundationEmcDto());
         }
 
@@ -154,31 +167,106 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationEmcRepository.DeleteAsync(s => s.Id == id);
+            await this.CreateLog(" 删除EMC项目1条");
         }
+
+
+
+        /// <summary>
+        /// 数据导入
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public async Task<bool> UploadFoundationEmc(IFormFile file)
+        {
+            //打开上传文件的输入流
+            Stream stream = file.OpenReadStream();
+
+            //根据文件流创建excel数据结构
+            IWorkbook workbook = WorkbookFactory.Create(stream);
+            stream.Close();
+
+            //尝试获取第一个sheet
+            var sheet = workbook.GetSheetAt(0);
+            //判断是否获取到 sheet
+            if (sheet != null)
+            {
+                var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false);
+                var list = query.ToList();
+                var dtos = ObjectMapper.Map<List<FoundationEmc>, List<FoundationEmcDto>>(list, new List<FoundationEmcDto>());
+                foreach (var item in dtos)
+                {
+                    await _foundationEmcRepository.DeleteAsync(s => s.Id == item.Id);
+                }
+                //跳过表头
+                for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
+                {
+                    var initRow = sheet.GetRow(i);
+                    if (initRow == null) break;
+                    var s1 = initRow.GetCell(1);
+                    var s2 = initRow.GetCell(2);
+                    if (null == initRow.GetCell(1) || string.IsNullOrEmpty(initRow.GetCell(2).ToString()))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        FoundationEmcDto entity = new FoundationEmcDto();
+                        entity.IsDeleted = false;
+                        entity.Classification = initRow.GetCell(0).ToString();
+                        entity.Name = initRow.GetCell(1).ToString();
+                        entity.Unit = initRow.GetCell(2).ToString();
+                        entity.Price = decimal.Parse(initRow.GetCell(3).ToString());
+                        entity.Laboratory = initRow.GetCell(4).ToString();
+                        entity.CreationTime = DateTime.Now;
+                        entity.LastModificationTime = DateTime.Now;
+                        if (AbpSession.UserId != null)
+                        {
+                            entity.CreatorUserId = AbpSession.UserId.Value;
+                            entity.LastModifierUserId = AbpSession.UserId.Value;
+                        }
+                        try
+                        {
+                            var entity2 = ObjectMapper.Map<FoundationEmcDto, FoundationEmc>(entity, new FoundationEmc());
+                            var result = await this._foundationEmcRepository.InsertAsync(entity2);
+                        }
+                        catch (Exception ex)
+                        {
+                            string str = ex.Message;
+                        }
+                    }
+                }
+            
+                // 获取总数
+                var totalCount = query.Count();
+                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+            }
+            return true;
+        }
+
 
 
         /// <summary>
         /// 添加日志
         /// </summary>
-        private async Task<bool> CreateLog(string type)
+        private async Task<bool> CreateLog(string Remark)
         {
             FoundationLogs entity = new FoundationLogs()
             {
                 IsDeleted = false,
                 DeletionTime = DateTime.Now,
                 LastModificationTime = DateTime.Now,
-                Remark = "test",
-                Type = logType,
-                Version = "001"
+             
             };
             if (AbpSession.UserId != null)
             {
                 entity.LastModifierUserId = AbpSession.UserId.Value;
-                if ("add".Equals(type))
-                {
-                    entity.CreatorUserId = AbpSession.UserId.Value;
-                    entity.CreationTime = DateTime.Now;
-                }
+
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.Remark = Remark;
+                entity.Type = logType;
+
+
             }
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;

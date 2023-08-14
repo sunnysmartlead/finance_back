@@ -48,5 +48,6 @@ namespace Finance.BaseLibrary
 		public string SoftwareState { get; set; }
 
 
-	}
+
+    }
 }
