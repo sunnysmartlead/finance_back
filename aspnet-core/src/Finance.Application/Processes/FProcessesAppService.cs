@@ -146,7 +146,8 @@ namespace Finance.Processes
             {
                 var query = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
                 var list = query.ToList();
-                foreach (var item in list)
+                var dtos = ObjectMapper.Map<List<FProcesses>, List<FProcessesDto>>(list, new List<FProcessesDto>());
+                foreach (var item in dtos)
                 {
                     await _fProcessesRepository.DeleteAsync(s => s.Id == item.Id);
                 }
@@ -163,20 +164,21 @@ namespace Finance.Processes
                     }
                     else
                     {
-                        FProcesses p = new FProcesses();
-                        p.IsDeleted = false;
-                        p.ProcessNumber = initRow.GetCell(0).ToString();
-                        p.ProcessName = initRow.GetCell(1).ToString();
-                        p.CreationTime = DateTime.Now;
-                        p.LastModificationTime = DateTime.Now;
+                        FProcessesDto entity = new FProcessesDto();
+                        entity.IsDeleted = false;
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
+                        entity.CreationTime = DateTime.Now;
+                        entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
                         {
-                            p.CreatorUserId = AbpSession.UserId.Value;
-                            p.LastModifierUserId = AbpSession.UserId.Value;
+                            entity.CreatorUserId = AbpSession.UserId.Value;
+                            entity.LastModifierUserId = AbpSession.UserId.Value;
                         }
                         try
                         {
-                            var result = await this._fProcessesRepository.InsertAsync(p);
+                            var entity2 = ObjectMapper.Map<FProcessesDto, FProcesses>(entity, new FProcesses());
+                            var result = await this._fProcessesRepository.InsertAsync(entity2);
                         }
                         catch (Exception ex)
                         {
@@ -187,7 +189,7 @@ namespace Finance.Processes
            
                 // 获取总数
                 var totalCount = query.Count();
-                 this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
             }
             return true;
         }
@@ -204,8 +206,9 @@ namespace Finance.Processes
             var memoryStream = new MemoryStream();
             //数据转换
             var list = dtoAll.ToList();
+            var dtos = ObjectMapper.Map<List<FProcesses>, List<FProcessesDto>>(list, new List<FProcessesDto>());
             var values = new List<DownloadFProcessesDto>() { };
-            foreach (var item in list)
+            foreach (var item in dtos)
             {
                 var s = new DownloadFProcessesDto()
                 {
@@ -274,7 +277,7 @@ namespace Finance.Processes
                 entity.LastModifierUserId = AbpSession.UserId.Value;
             }
             entity = await _fProcessesRepository.UpdateAsync(entity);
-            this.CreateLog("编辑工序项目1条");
+            await this.CreateLog("编辑工序项目1条");
             FProcessesDto f = new FProcessesDto();
             f.CreationTime = DateTime.Now;
             f.Id= input.Id;
@@ -293,7 +296,7 @@ namespace Finance.Processes
         public virtual async Task DeleteAsync(long id)
         {
             await _fProcessesRepository.DeleteAsync(s => s.Id == id);
-            this.CreateLog("删除工序项目1条");
+            await this.CreateLog("删除工序项目1条");
         }
 
         /// <summary>
@@ -313,12 +316,11 @@ namespace Finance.Processes
                 entity.LastModifierUserId = AbpSession.UserId.Value;
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
-            
+                entity.Remark = Remark;
+                entity.Type = logType;
 
 
             }
-            entity.Remark = Remark;
-            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }
