@@ -1,5 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
 using Finance.Authorization.Users;
@@ -464,6 +466,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle(long auditFlowId, long solutionId)
         {
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
@@ -538,6 +541,7 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="price"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)        {
 
             ResourcesManagementModel resourcesManagementModel = new();
@@ -545,6 +549,7 @@ namespace Finance.NerPricing
             MouldInventory MouldInventorys = ObjectMapper.Map<MouldInventory>(resourcesManagementModel.MouldInventory);              
             MouldInventorys.AuditFlowId = price.AuditFlowId;
             MouldInventorys.SolutionId = resourcesManagementModel.SolutionId;
+            MouldInventorys.PeopleId = AbpSession.GetUserId();//提交人ID
             await _resourceMouldInventory.InsertOrUpdateAsync(MouldInventorys);//录入模具清单            
             #region 方案页面录入完成之后
             MouldInventoryPartModel mouldInventoryPartModel= await GetInitialResourcesManagementSingle(price.AuditFlowId, resourcesManagementModel.SolutionId);          
@@ -1365,32 +1370,33 @@ namespace Finance.NerPricing
         /// <summary>
         ///获取 Nre 核价表
         /// </summary>
-        /// <param name="Id"></param>
-        /// <param name="ProductId"></param>
+        /// <param name="auditFlowId"></param>
+        /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<PricingFormDto> GetPricingForm(long Id, long ProductId)
+        public async Task<PricingFormDto> GetPricingForm(long auditFlowId, long solutionId)
         {
             try
             {
-                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == Id);
-                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == Id);
+                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
                 PricingFormDto pricingFormDto = new();
                 if (priceEvaluation is not null)
                 {
                     pricingFormDto.ProjectName = priceEvaluation.ProjectName;
                     pricingFormDto.ClientName = priceEvaluation.CustomerName;
                 }
+                //获取合计属性
                 pricingFormDto.RequiredCapacity = modelCount.Sum(p => p.ModelTotal).ToString();
                 //手板件费用
-                List<HandPieceCost> handPieceCosts = await _resourceHandPieceCost.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                List<HandPieceCost> handPieceCosts = await _resourceHandPieceCost.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                 pricingFormDto.HandPieceCost = ObjectMapper.Map<List<HandPieceCostModel>>(handPieceCosts);
                 //模具费用
-                List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(ProductId));
+                List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 pricingFormDto.MouldInventory = ObjectMapper.Map<List<MouldInventoryModel>>(mouldInventories);
                 //工装费用 (工装费用+测试线费用)              
                 List<ToolingCostModel> workingHoursInfosGZ = new();
                 //工装费用=>工装费用
-                List<WorkingHoursInfo> workingHours = await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                List<WorkingHoursInfo> workingHours = await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                 workingHoursInfosGZ = workingHours.Where(p => p.ToolingName is not null).GroupBy(m => new { m.ToolingName, m.ToolingPrice }).Select(a => new ToolingCostModel
                 {
                     WorkName = a.Key.ToolingName,
@@ -1409,7 +1415,7 @@ namespace Finance.NerPricing
                 }).ToList();
                 pricingFormDto.ToolingCost.AddRange(workingHoursInfosCSX);
                 //治具费用               
-                List<EquipmentInfo> equipmentInfosZj = (from a in await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId))
+                List<EquipmentInfo> equipmentInfosZj = (from a in await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId))
                                                         join b in await _resourceEquipmentInfo.GetAllListAsync(p => p.Part.Equals(Part.Fixture)) on a.Id equals b.WorkHoursId
                                                         select new EquipmentInfo
                                                         {
@@ -1429,11 +1435,11 @@ namespace Finance.NerPricing
                          Cost = a.Key.UnitPrice * a.Sum(c => c.Number),
                      }).ToList();
                 pricingFormDto.FixtureCost = productionEquipmentCostModelsZj;
-                //检具费用
-                List<QADepartmentQC> qADepartmentQCs = await _resourceQADepartmentQC.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                //检具费用(有变化,工装治具)
+                List<QADepartmentQC> qADepartmentQCs = await _resourceQADepartmentQC.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                 pricingFormDto.QAQCDepartments = ObjectMapper.Map<List<QADepartmentQCModel>>(qADepartmentQCs);
                 //生产设备费用 
-                List<EquipmentInfo> equipmentInfos = (from a in await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId))
+                List<EquipmentInfo> equipmentInfos = (from a in await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId))
                                                       join b in await _resourceEquipmentInfo.GetAllListAsync(p => p.Part.Equals(Part.Equipment)) on a.Id equals b.WorkHoursId
                                                       select new EquipmentInfo
                                                       {
@@ -1456,14 +1462,14 @@ namespace Finance.NerPricing
                 //实验费用
                 {
                     //-产品部-电子工程师录入的试验费用
-                    List<LaboratoryFee> laboratoryFees = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                    List<LaboratoryFee> laboratoryFees = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                     //-品保部录入的实验费用
-                    List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(ProductId));
+                    List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                     pricingFormDto.LaboratoryFeeModels = ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
                     pricingFormDto.LaboratoryFeeModels.AddRange(ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests));
                 }
                 //测试软件费用
-                List<WorkingHoursInfo> workingHoursInfos = await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                List<WorkingHoursInfo> workingHoursInfos = await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                 //测试软件费用=>硬件费用
                 List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { SoftwareProject = "硬件费用", Cost = workingHoursInfos.Sum(p => p.HardwareTotalPrice) } } };
                 pricingFormDto.SoftwareTestingCost = softwareTestingCots;
@@ -1472,7 +1478,7 @@ namespace Finance.NerPricing
                 //测试软件费用=>开图软件费用
                 pricingFormDto.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "开图软件费用", Cost = workingHoursInfos.Sum(p => p.MappingDevelopmentFee) });
                 //差旅费
-                List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId))
+                List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId))
                     .Join(_financeDictionaryDetailRepository.GetAll(), t => t.ReasonsId, p => p.Id, (t, p) => new TravelExpenseModel
                     {
                         ReasonsId = t.ReasonsId,
@@ -1485,7 +1491,7 @@ namespace Finance.NerPricing
                     }).ToList();
                 pricingFormDto.TravelExpense = travelExpenses;
                 //其他费用
-                List<RestsCost> rests = await _resourceRestsCost.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.ProductId.Equals(ProductId));
+                List<RestsCost> rests = await _resourceRestsCost.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(solutionId));
                 pricingFormDto.RestsCost = ObjectMapper.Map<List<RestsCostModel>>(rests);
                 //(不含税人民币) NRE 总费用
                 pricingFormDto.RMBAllCost = pricingFormDto.HandPieceCost.Sum(p => p.Cost)//手板件总费用
@@ -1498,7 +1504,7 @@ namespace Finance.NerPricing
                                          + pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost)//测试软件总费用
                                          + pricingFormDto.TravelExpense.Sum(p => p.Cost)//差旅费总费用
                                          + pricingFormDto.RestsCost.Sum(p => p.Cost);//其他费用总费用
-                int year = await GetYear(Id);
+                int year = await GetYear(auditFlowId);
                 //获取汇率
                 ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals("USD"));
                 List<YearOrValueMode> yearOrValueModes = JsonExchangeRateValue(exchangeRate.ExchangeRateValue);
