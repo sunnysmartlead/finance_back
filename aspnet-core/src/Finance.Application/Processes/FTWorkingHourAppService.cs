@@ -77,6 +77,14 @@ namespace Finance.Processes
         public virtual async Task<FTWorkingHourDto> CreateAsync(FTWorkingHourDto input)
         {
             var entity = ObjectMapper.Map<FTWorkingHourDto, FTWorkingHour>(input,new FTWorkingHour());
+            entity.CreationTime = DateTime.Now;
+            entity.Isdeleted1 = 0;
+            if (AbpSession.UserId != null)
+            {
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.LastModificationTime = DateTime.Now;
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+            }
             entity = await _fTWorkingHourRepository.InsertAsync(entity);
             return ObjectMapper.Map<FTWorkingHour, FTWorkingHourDto>(entity,new FTWorkingHourDto());
         }

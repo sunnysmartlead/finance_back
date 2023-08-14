@@ -18,8 +18,8 @@ namespace Finance.BaseLibrary
 		/// <summary>
 		/// 
 		/// </summary>
-		[Column("IsDeleted")]
-		public decimal Isdeleted { get; set; }
+		[Column("IsDeleted1")]
+		public decimal Isdeleted1 { get; set; }
 
 		/// <summary>
 		/// 
