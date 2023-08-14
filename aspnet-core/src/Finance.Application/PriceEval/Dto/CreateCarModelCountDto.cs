@@ -8,10 +8,15 @@ using System.Threading.Tasks;
 namespace Finance.PriceEval.Dto
 {
     /// <summary>
-    /// 创建 模组数量 的参数
+    /// 车型下的模组数量
     /// </summary>
-    public class CreateModelCountDto
+    public class CreateCarModelCountDto
     {
+        /// <summary>
+        /// 车型
+        /// </summary>
+        public virtual string CarModel { get; set; }
+
         /// <summary>
         /// 序号（正序排序，从1开始）
         /// </summary>
@@ -48,22 +53,38 @@ namespace Finance.PriceEval.Dto
         public virtual string Pixel { get; set; }
 
         /// <summary>
-        /// 年份
+        /// 我司角色
         /// </summary>
-        [Required]
-        public virtual List<CreateModelCountYearDto> ModelCountYearList { get; set; }
+        public virtual string OurRole { get; set; }
 
         /// <summary>
-        /// 合计数量（模组数量合计专用，单零件全产品全年份合计数量）
+        /// 市场份额（%）
         /// </summary>
         [Required]
-        public virtual decimal SumQuantity { get; set; }
+        public virtual decimal MarketShare { get; set; }
+
+        /// <summary>
+        /// 模组搭载率
+        /// </summary>
+        [Required]
+        public virtual decimal ModuleCarryingRate { get; set; }
+
+        /// <summary>
+        /// 单车产品数量
+        /// </summary>
+        [Required]
+        public virtual int SingleCarProductsQuantity { get; set; }
+ 
+        /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual List<CreateCarModelCountYearDto> CarModelCountYearList { get; set; }
     }
 
     /// <summary>
-    /// 创建 终端走量年份 的参数
+    /// 车型下的模组数量年份
     /// </summary>
-    public class CreateModelCountYearDto
+    public class CreateCarModelCountYearDto 
     {
         /// <summary>
         /// 年份
@@ -84,6 +105,5 @@ namespace Finance.PriceEval.Dto
         [Required]
         [Range(1, long.MaxValue)]
         public virtual int Quantity { get; set; }
-
     }
 }

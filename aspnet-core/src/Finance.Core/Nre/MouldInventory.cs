@@ -56,5 +56,10 @@ namespace Finance.Nre
         /// 是否提交 true/1 提交  false/0 未提交
         /// </summary>
         public bool IsSubmit { get; set; }
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public string Remark { get; set; }
+
     }
 }

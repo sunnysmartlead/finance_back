@@ -61,6 +61,13 @@ namespace Finance.PriceEval
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         private readonly IRepository<ShareCount, long> _shareCountRepository;
 
+        //protected readonly IRepository<Gradient, long> _gradientRepository;
+        //protected readonly IRepository<GradientModel, long> _gradientModelRepository;
+        //protected readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
+
+        private readonly IRepository<CarModelCount, long> _carModelCountRepository;
+        private readonly IRepository<CarModelCountYear, long> _carModelCountYearRepository;
+
 
 
         /// <summary>
@@ -77,8 +84,10 @@ namespace Finance.PriceEval
             IRepository<ProductInformation, long> productInformationRepository, IRepository<Department, long> departmentRepository, NrePricingAppService nrePricingAppService, IRepository<AuditFlow, long> auditFlowRepository, IRepository<FileManagement, long> fileManagementRepository, AuditFlowAppService flowAppService, IRepository<NreIsSubmit, long> productIsSubmit,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
-            IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository)
-            : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository)
+            IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository)
+            : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -94,6 +103,9 @@ namespace Finance.PriceEval
             _gradientModelRepository = gradientModelRepository;
             _gradientModelYearRepository = gradientModelYearRepository;
             _shareCountRepository = shareCountRepository;
+
+            _carModelCountRepository = carModelCountRepository;
+            _carModelCountYearRepository = carModelCountYearRepository;
         }
 
 
@@ -110,9 +122,9 @@ namespace Finance.PriceEval
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
             long auditFlowId;
-            var check = from m in input.ModelCount
-                        join p in input.ProductInformation on m.Product equals p.Product
-                        select m;
+            //var check = from m in input.ModelCount
+            //            join p in input.ProductInformation on m.Product equals p.Product
+            //            select m;
             //if (check.Count() != input.ModelCount.Count)
             //{
             //    throw new FriendlyException($"产品信息和模组数量没有正确对应！");
@@ -144,6 +156,22 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
             }
+
+
+            ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
+            //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
+
+            //var gradientCheck = from m in modelCountDto
+            //                    join p in input.GradientModel on m.PartNumber equals p.Number
+            //                    select m;
+
+            //var dfd = gradientCheck.Count();
+            //var yh35dfd = modelCountDto.Count();
+
+            //if (gradientCheck.Count() != modelCountDto.Count() || modelCountDto.Count() != input.GradientModel.Count)
+            //{
+            //    throw new FriendlyException($"模组数量和梯度模组没有正确对应！");
+            //}
 
 
 
@@ -198,17 +226,39 @@ namespace Finance.PriceEval
                 }
             }
 
-            //模组数量
+
+            //车型下的模组数量
+            foreach (var createCarModelCountDto in input.CarModelCount)
+            {
+                var carModelCount = ObjectMapper.Map<CarModelCount>(createCarModelCountDto);
+                carModelCount.PriceEvaluationId = priceEvaluationId;
+                carModelCount.AuditFlowId = auditFlowId;
+                var productId = await _carModelCountRepository.InsertAndGetIdAsync(carModelCount);
+
+                foreach (var createModelCountYearDto in createCarModelCountDto.CarModelCountYearList)
+                {
+                    var carModelCountYear = ObjectMapper.Map<CarModelCountYear>(createModelCountYearDto);
+                    carModelCountYear.AuditFlowId = auditFlowId;
+                    await _carModelCountYearRepository.InsertAsync(carModelCountYear);
+                }
+            }
+
+            var modelCountIds = new List<(string number, long productId)>();
+
+            //模组数量合计
             foreach (var createModelCountDto in input.ModelCount)
             {
                 var modelCount = ObjectMapper.Map<ModelCount>(createModelCountDto);
                 modelCount.PriceEvaluationId = priceEvaluationId;
                 modelCount.AuditFlowId = auditFlowId;
-                var ProductId = await _modelCountRepository.InsertAndGetIdAsync(modelCount);
+                var productId = await _modelCountRepository.InsertAndGetIdAsync(modelCount);
+
+                modelCountIds.Add((createModelCountDto.PartNumber, productId));
+
                 foreach (var createModelCountYearDto in createModelCountDto.ModelCountYearList)
                 {
                     var modelCountYear = ObjectMapper.Map<ModelCountYear>(createModelCountYearDto);
-                    modelCountYear.ProductId = ProductId;
+                    modelCountYear.ProductId = productId;
                     modelCountYear.AuditFlowId = auditFlowId;
                     await _modelCountYearRepository.InsertAsync(modelCountYear);
                 }
@@ -244,11 +294,13 @@ namespace Finance.PriceEval
 
             //梯度
             var gradients = ObjectMapper.Map<List<Gradient>>(input.Gradient);
+            var gradientIds = new List<(long id, decimal gradientValue)>();
             foreach (var gradient in gradients)
             {
                 gradient.PriceEvaluationId = priceEvaluationId;
                 gradient.AuditFlowId = auditFlowId;
-                await _gradientRepository.InsertAsync(gradient);
+                var id = await _gradientRepository.InsertAndGetIdAsync(gradient);
+                gradientIds.Add((id, gradient.GradientValue));
             }
 
             //梯度模组
@@ -257,6 +309,8 @@ namespace Finance.PriceEval
                 var entity = ObjectMapper.Map<GradientModel>(gradientModel);
                 entity.PriceEvaluationId = priceEvaluationId;
                 entity.AuditFlowId = auditFlowId;
+                entity.GradientId = gradientIds.First(p => p.gradientValue == gradientModel.GradientValue).id;
+                entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
                 var gradientModelId = await _gradientModelRepository.InsertAndGetIdAsync(entity);
                 var gradientModelYears = ObjectMapper.Map<List<GradientModelYear>>(gradientModel.GradientModelYear);
                 foreach (var gradient in gradientModelYears)
@@ -264,6 +318,7 @@ namespace Finance.PriceEval
                     gradient.PriceEvaluationId = priceEvaluationId;
                     gradient.AuditFlowId = auditFlowId;
                     gradient.GradientModelId = gradientModelId;
+                    gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
                     await _gradientModelYearRepository.InsertAsync(gradient);
                 }
             }
@@ -320,6 +375,14 @@ namespace Finance.PriceEval
                        return dto;
                    }).ToList();
 
+            var carModelCountDto = (await _carModelCountRepository.GetAll().Where(p => p.AuditFlowId == auditFlowId)
+                   .Join(_carModelCountYearRepository.GetAll(), p => p.Id, p => p.CarModelCountId, (carModelCount, carModelCountYear) => new { carModelCount, carModelCountYear }).ToListAsync()).GroupBy(p => p.carModelCount).Select(p =>
+                   {
+                       var dto = ObjectMapper.Map<CreateCarModelCountDto>(p.Key);
+                       dto.CarModelCountYearList = ObjectMapper.Map<List<CreateCarModelCountYearDto>>(p.Select(o => o.carModelCountYear));
+                       return dto;
+                   }).ToList();
+
             var requirementDto = ObjectMapper.Map<List<CreateRequirementDto>>(await _requirementRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId));
 
 
@@ -349,6 +412,7 @@ namespace Finance.PriceEval
 
             priceEvaluationDto.Pcs = pcsDto;
             priceEvaluationDto.ModelCount = modelCountDto;
+            priceEvaluationDto.CarModelCount = carModelCountDto;
             priceEvaluationDto.Requirement = requirementDto;
             priceEvaluationDto.ProductInformation = productInformationDto;
             priceEvaluationDto.CustomerTargetPrice = customerTargetPriceDto;

@@ -55,6 +55,12 @@ namespace Finance.PriceEval
         public virtual long PriceEvaluationId { get; set; }
 
         /// <summary>
+        /// 主表 模组数量（ModelCount） 的Id
+        /// </summary>
+        [Required]
+        public virtual long ProductId { get; set; }
+
+        /// <summary>
         /// 梯度Id
         /// </summary>
         public virtual long GradientId { get; set; }
@@ -108,6 +114,12 @@ namespace Finance.PriceEval
         public virtual long GradientModelId { get; set; }
 
         /// <summary>
+        /// 主表 模组数量（ModelCount） 的Id
+        /// </summary>
+        [Required]
+        public virtual long ProductId { get; set; }
+
+        /// <summary>
         /// 年份
         /// </summary>
         public virtual int Year { get; set; }
@@ -115,11 +127,11 @@ namespace Finance.PriceEval
         /// <summary>
         /// 年份类型
         /// </summary>
-        public virtual YearType YearType { get; set; }
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 梯度走量
         /// </summary>
-        public virtual decimal Count { get; set; }
+        public virtual int Count { get; set; }
     }
 }

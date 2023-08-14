@@ -512,6 +512,7 @@ namespace Finance.NerPricing
                         item.Cost = mouldInventory1.Cost;//费用
                         item.PeopleId = mouldInventory1.PeopleId;//提交人id
                         item.IsSubmit = mouldInventory1.IsSubmit;//是否提交
+                        item.Remark = mouldInventory1.Remark;//备注
                         User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
                         if (user is not null) item.PeopleName = user.Name;//提交人名称
                     }
@@ -538,8 +539,8 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="price"></param>
         /// <returns></returns>
-        public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)        {
-
+        public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)      
+        {
             ResourcesManagementModel resourcesManagementModel = new();
             resourcesManagementModel = price.ResourcesManagementModels;          
             MouldInventory MouldInventorys = ObjectMapper.Map<MouldInventory>(resourcesManagementModel.MouldInventory);              
@@ -565,7 +566,7 @@ namespace Finance.NerPricing
 
         }
         /// <summary>
-        /// 资源部录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
+        /// 资源部模具费录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
         /// </summary>
         /// <returns></returns>
         private async Task<bool> GetResourcesManagement(long auditFlowId)
@@ -590,6 +591,14 @@ namespace Finance.NerPricing
                 item.IsSubmit = false;
                 await _resourceMouldInventory.UpdateAsync(item);
             }         
+        }
+        /// <summary>
+        /// 资源部模具费 审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task ResourceDepartmentMoldFeeReview(ToExamineDto toExamineDto)
+        {
+
         }
         /// <summary>
         /// 产品部-电子工程师 录入
@@ -1009,6 +1018,14 @@ namespace Finance.NerPricing
             {
                 throw new FriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// Nre 品保部=>环境实验费 录入 审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task ExperimentItemsReview(ToExamineDto toExamineDto)
+        {
+
         }
         /// <summary>
         /// Nre 品保部=>环境实验费 录入过的值(单个方案)

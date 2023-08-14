@@ -9,6 +9,11 @@ namespace Finance.PriceEval.Dto
     public class GradientModelInput
     {
         /// <summary>
+        /// 梯度(K/Y)值
+        /// </summary>
+        public virtual decimal GradientValue { get; set; }
+
+        /// <summary>
         /// 序号
         /// </summary>
         public virtual int Index { get; set; }
@@ -50,7 +55,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 年份类型
         /// </summary>
-        public virtual YearType YearType { get; set; }
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 梯度走量
