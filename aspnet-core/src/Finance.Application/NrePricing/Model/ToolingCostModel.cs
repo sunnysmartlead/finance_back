@@ -12,6 +12,10 @@ namespace Finance.NrePricing.Model
     public class ToolingCostModel
     {
         /// <summary>
+        /// Id
+        /// </summary>
+        public long Id { get; set; }
+        /// <summary>
         /// 工装名称
         /// </summary>      
         public string WorkName { get; set; }

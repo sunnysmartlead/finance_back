@@ -1,36 +1,37 @@
-﻿using System;
+﻿using Abp.Domain.Entities.Auditing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.Nre
 {
     /// <summary>
-    /// Nre 治具费用 实体类
+    /// 检具费用  修改项实体类
     /// </summary>
-    public class FixtureCostModel
+    public class InspectionToolCostModify : FullAuditedEntity<long>
     {
         /// <summary>
-        /// Id
+        /// 修改项的id
         /// </summary>
-        public long Id { get; set; }
+        public long ModifyId { get; set; }
         /// <summary>
-        /// 治具名称
+        /// 项目制程QC量检具
         /// </summary>
-        public string ToolingName { get; set; }
+        public string Qc { get; set; }
         /// <summary>
-        /// 治具单价
-        /// </summary> 
+        /// 单价
+        /// </summary>
         public decimal UnitPrice { get; set; }
         /// <summary>
-        /// 治具数量
-        /// </summary> 
-        public int Number { get; set; }
+        /// 数量
+        /// </summary>
+        public int Count { get; set; }
         /// <summary>
         /// 费用
         /// </summary>
-        public decimal Cost { get; set; }
+        public decimal Cost { get; set; }       
         /// <summary>
         /// 备注
         /// </summary>

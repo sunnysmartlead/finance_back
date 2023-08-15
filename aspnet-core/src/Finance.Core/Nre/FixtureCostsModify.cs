@@ -1,20 +1,21 @@
-﻿using System;
+﻿using Abp.Domain.Entities.Auditing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.Nre
 {
     /// <summary>
-    /// Nre 治具费用 实体类
+    /// 治具费用修改项实体类
     /// </summary>
-    public class FixtureCostModel
+    public class FixtureCostsModify : FullAuditedEntity<long>
     {
         /// <summary>
-        /// Id
+        /// 修改项的id
         /// </summary>
-        public long Id { get; set; }
+        public long ModifyId { get; set; }
         /// <summary>
         /// 治具名称
         /// </summary>
