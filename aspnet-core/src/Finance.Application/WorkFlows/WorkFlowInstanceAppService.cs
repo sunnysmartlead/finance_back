@@ -410,7 +410,7 @@ namespace Finance.WorkFlows
             {
                 dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
                                                                             //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
-                 .Where(p => p.NodeType != NodeType.End || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                 .Where(p => p.NodeType != NodeType.End || p.OperatedUserIds.IsNullOrWhiteSpace() || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
 
                 //foreach (var o in roleIds)
                 //{
@@ -422,6 +422,8 @@ namespace Finance.WorkFlows
             {
                 dto = dto.Where(p => false);
             }
+            //var dfgd = dto is null;
+            //var dfddfdf = dto.Count();
 
             var roles = dto.SelectMany(p => p.RoleId).Select(p => p.To<long>()).Distinct();
 
