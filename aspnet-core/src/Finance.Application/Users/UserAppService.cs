@@ -336,6 +336,7 @@ namespace Finance.Users
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
+        [HttpPost]
         public virtual async Task<PagedResultDto<UserDto>> GetUserListByRoleNames(GetUserListByRoleNamesInput input)
         {
             var users = from u in _userManager.Users
