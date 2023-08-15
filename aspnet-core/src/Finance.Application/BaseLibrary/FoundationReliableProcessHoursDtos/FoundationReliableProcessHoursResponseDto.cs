@@ -19,6 +19,9 @@ namespace Finance.BaseLibrary
 
         public List<FoundationWorkingHourItemDto> sopInfo { get; set; }
 
-
+        public static implicit operator FoundationReliableProcessHoursResponseDto(List<FoundationReliableProcessHoursResponseDto> v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

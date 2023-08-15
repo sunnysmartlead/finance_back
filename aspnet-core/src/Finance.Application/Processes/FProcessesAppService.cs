@@ -89,17 +89,28 @@ namespace Finance.Processes
             // 查询数据
             var list = query.ToList();
             //数据转换
-            var dtos = ObjectMapper.Map<List<FProcesses>, List<FProcessesDto>>(list, new List<FProcessesDto>());
-            foreach (var item in dtos)
-            {
-                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
-                if (user != null)
+            List<FProcessesDto> list1 = new List<FProcessesDto>();
+            if (null != list ) {
+             
+                foreach (var item in list)
                 {
-                    item.LastModifierUserName = user.Name;
+                    FProcessesDto f=  new FProcessesDto();
+                    f.ProcessNumber = item.ProcessNumber;
+                    f.ProcessName = item.ProcessName;
+                    f.Id= item.Id;
+                    f.LastModificationTime= item.LastModificationTime;
+                    var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                    if (user != null)
+                    {
+                        f.LastModifierUserName = user.Name;
+                    }
+                    list1.Add(f);
+
                 }
+
             }
             // 数据返回
-            return dtos;
+            return list1;
         }
         /// <summary>
         /// 获取修改
@@ -223,20 +234,27 @@ namespace Finance.Processes
         /// <returns></returns>
         public virtual async Task<FProcessesDto> CreateAsync(FProcessesDto input)
         {
-
-            var entity = ObjectMapper.Map<FProcessesDto, FProcesses>(input, new FProcesses());
-            entity.CreationTime = DateTime.Now;
+            FProcesses f =  new FProcesses();
+            f.ProcessName = input.ProcessName;
+            f.ProcessNumber = input.ProcessNumber;
+            f.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
-                entity.CreatorUserId = AbpSession.UserId.Value;
-                entity.LastModificationTime = DateTime.Now;
-                entity.LastModifierUserId = AbpSession.UserId.Value;
+                f.CreatorUserId = AbpSession.UserId.Value;
+                f.LastModificationTime = DateTime.Now;
+                f.LastModifierUserId = AbpSession.UserId.Value;
             }
-            entity.LastModificationTime = DateTime.Now;
-            entity = await _fProcessesRepository.InsertAsync(entity);
+            f.LastModificationTime = DateTime.Now;
+            await _fProcessesRepository.InsertAsync(f);
             await this.CreateLog(" 删除工序项目1条");
-
-            return ObjectMapper.Map<FProcesses, FProcessesDto>(entity, new FProcessesDto());
+            FProcessesDto f1 = new FProcessesDto();
+            f1.CreationTime = DateTime.Now;
+      
+            f1.ProcessNumber = input.ProcessNumber;
+            f1.ProcessName = input.ProcessName;
+            f1.LastModifierUserName = input.LastModifierUserName;
+            f1.LastModificationTime = DateTime.Now;
+             return f1;
         }
 
 
@@ -251,7 +269,8 @@ namespace Finance.Processes
         public virtual async Task<FProcessesDto> UpdateAsync(FProcessesDto input)
         {
             FProcesses entity = await _fProcessesRepository.GetAsync(input.Id);
-            entity = ObjectMapper.Map(input, entity);
+            entity.ProcessName= input.ProcessName;
+            entity.ProcessNumber = input.ProcessNumber;
             entity.LastModificationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
@@ -259,7 +278,14 @@ namespace Finance.Processes
             }
             entity = await _fProcessesRepository.UpdateAsync(entity);
             await this.CreateLog("编辑工序项目1条");
-            return ObjectMapper.Map<FProcesses, FProcessesDto>(entity,new FProcessesDto());
+            FProcessesDto f = new FProcessesDto();
+            f.CreationTime = DateTime.Now;
+            f.Id= input.Id;
+            f.ProcessNumber = input.ProcessNumber;
+            f.ProcessName   = input.ProcessName;
+            f.LastModifierUserName = input.LastModifierUserName;
+            f.LastModificationTime = DateTime.Now;
+;            return f;
         }
 
         /// <summary>

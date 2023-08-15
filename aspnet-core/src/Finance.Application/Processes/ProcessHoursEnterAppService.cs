@@ -15,14 +15,26 @@ namespace Finance.Processes
     public class ProcessHoursEnterAppService : ApplicationService
     {
         private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
+        private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDeviceRepository;
+        private readonly IRepository<ProcessHoursEnterFixture, long> _processHoursEnterFixtureRepository;
+        private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrockRepository;
+        private readonly IRepository<ProcessHoursEnteritem, long> _processHoursEnterItemRepository;
+        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLineRepository;
+        private readonly IRepository<ProcessHoursEnterUph, long> _processHoursEnterUphRepository;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterRepository"></param>
         public ProcessHoursEnterAppService(
-            IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
+            IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository)
         {
             _processHoursEnterRepository = processHoursEnterRepository;
+            _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
+            _processHoursEnterFixtureRepository = processHoursEnterFixtureRepository;
+            _processHoursEnterFrockRepository = processHoursEnterFrockRepository;
+            _processHoursEnterItemRepository = processHoursEnterItemRepository;
+            _processHoursEnterLineRepository = processHoursEnterLineRepository;
+            _processHoursEnterUphRepository = processHoursEnterUphRepository;
         }
 
         /// <summary>
