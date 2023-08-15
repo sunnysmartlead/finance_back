@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
+using System.Collections.Generic;
 
 namespace Finance.BaseLibrary
 {
@@ -16,7 +17,11 @@ namespace Finance.BaseLibrary
         public System.DateTime CreationTime { get; set; }
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
         public string Name { get; set; }
-        public FoundationReliableProcessHoursDto FoundationReliableProcessHoursDto { get; set; }
+
+
+        public List<FoundationReliableProcessHoursResponseDto> List { get; set; }
+
+        
 
     }
 }

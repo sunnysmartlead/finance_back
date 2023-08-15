@@ -36,7 +36,7 @@ namespace Finance.BaseLibrary
 		/// 月需求量
 		/// </summary>
 		[Column("monthly_demand_price")]
-		public decimal? MonthlyDemandPrice { get; set; }
+		public decimal? MonthlyDemandPrice { get; set; } 
 
 		/// <summary>
 		/// 单PCS包装价格/元
