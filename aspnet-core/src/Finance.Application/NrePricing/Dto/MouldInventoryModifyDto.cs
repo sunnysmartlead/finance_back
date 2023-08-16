@@ -1,19 +1,20 @@
-﻿using Abp.Domain.Entities.Auditing;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.Nre
+namespace Finance.NrePricing.Dto
 {
-    /// <summary>
-    /// Nre 资源部 模具清单 修改项实体类
+    // <summary>
+    /// Nre 资源部 模具清单 修改项交互类
     /// </summary>
-    [Table("NRE_MIModify")]
-    public class MouldInventoryModify : FullAuditedEntity<long>
+    public class MouldInventoryModifyDto
     {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public long Id { get; set; }
         /// <summary>
         /// 流程号Id
         /// </summary> 
@@ -53,7 +54,7 @@ namespace Finance.Nre
         /// <summary>
         /// 费用
         /// </summary>
-        public decimal Cost { get; set; }      
+        public decimal Cost { get; set; }
         /// <summary>
         /// 提交人 Id
         /// </summary>
@@ -66,6 +67,5 @@ namespace Finance.Nre
         /// 备注
         /// </summary>
         public string Remark { get; set; }
-
     }
 }

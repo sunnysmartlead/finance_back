@@ -1,19 +1,21 @@
-﻿using Abp.Domain.Entities.Auditing;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.Nre
+namespace Finance.NrePricing.Dto
 {
     /// <summary>
-    /// 实验费用 修改项 实体类
+    /// 实验费用 修改项 交互类
     /// </summary>
-    [Table("NRE_EEModify")]
-    public class ExperimentalExpensesModify : FullAuditedEntity<long>
+    public class ExperimentalExpensesModifyDto
     {
+        /// <summary>
+        /// Id
+        /// </summary>
+        public long Id { get; set; }
         /// <summary>
         /// 流程号Id
         /// </summary> 
@@ -65,7 +67,7 @@ namespace Finance.Nre
         /// <summary>
         /// 数量=摸底+DV+PV+单位 后面需要带单位所以是 string
         /// </summary>
-        public string Count { get; set; }      
+        public string Count { get; set; }
         /// <summary>
         /// 总费用
         /// </summary>

@@ -130,6 +130,46 @@ namespace Finance.NerPricing
         /// </summary>
         private static IRepository<ProcessHoursEnter, long> _processHoursEnter;
         /// <summary>
+        /// Nre 项目管理部 手板件 修改项实体类
+        /// </summary>
+        private static IRepository<HandPieceCostModify, long> _handPieceCostModify;
+        /// <summary>
+        /// Nre 资源部 模具清单 修改项实体类
+        /// </summary>
+        private static IRepository<MouldInventoryModify, long> _mouldInventoryModify;
+        /// <summary>
+        /// 工装费用 修改项 实体类
+        /// </summary>
+        private static IRepository<ToolingCostsModify, long> _toolingCostsModify;
+        /// <summary>
+        /// 治具费用修改项实体类
+        /// </summary>
+        private static IRepository<FixtureCostsModify, long> _fixtureCostsModify;
+        /// <summary>
+        /// 检具费用  修改项实体类
+        /// </summary>
+        private static IRepository<InspectionToolCostModify, long> _inspectionToolCostModify;
+        /// <summary>
+        /// 生产设备费用  修改项实体类
+        /// </summary>
+        private static IRepository<ProductionEquipmentCostsModify, long> _productionEquipmentCostsModify;
+        /// <summary>
+        /// 实验费用 修改项 实体类
+        /// </summary>
+        private static IRepository<ExperimentalExpensesModify, long> _experimentalExpensesModify;
+        /// <summary>
+        /// 测试软件费用 修改项 实体类
+        /// </summary>
+        private static IRepository<TestingSoftwareCostsModify, long> _testingSoftwareCostsModify;
+        /// <summary>
+        /// 差旅费 修改项 实体类
+        /// </summary>
+        private static IRepository<TravelExpenseModify, long> _travelExpenseModify;
+        /// <summary>
+        /// 其他费 修改项 实体类
+        /// </summary>
+        private static IRepository<RestsCostModify, long> _restsCostModify;
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="resourceModelCount"></param>
@@ -174,7 +214,17 @@ namespace Finance.NerPricing
             IRepository<ModelCountYear, long> resourceModelCountYear,
             IRepository<StructBomDifferent, long> structBomDifferent,
             IRepository<User, long> user,
-            IRepository<ProcessHoursEnter, long> processHoursEnter)
+            IRepository<ProcessHoursEnter, long> processHoursEnter,
+            IRepository<HandPieceCostModify, long> handPieceCostModify,
+            IRepository<MouldInventoryModify, long> mouldInventoryModify,
+            IRepository<ToolingCostsModify, long> toolingCostsModify,
+            IRepository<FixtureCostsModify, long> fixtureCostsModify,
+            IRepository<InspectionToolCostModify, long> inspectionToolCostModify,
+            IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify,
+            IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify,
+            IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify,
+            IRepository<TravelExpenseModify, long> travelExpenseModify,
+            IRepository<RestsCostModify, long> restsCostModify)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -198,6 +248,16 @@ namespace Finance.NerPricing
             _configStructBomDifferent = structBomDifferent;
             _userRepository = user;
             _processHoursEnter= processHoursEnter;
+            _handPieceCostModify= handPieceCostModify;
+            _mouldInventoryModify= mouldInventoryModify;
+            _toolingCostsModify= toolingCostsModify;
+            _fixtureCostsModify= fixtureCostsModify;
+            _inspectionToolCostModify= inspectionToolCostModify;
+            _productionEquipmentCostsModify= productionEquipmentCostsModify;
+            _experimentalExpensesModify= experimentalExpensesModify;
+            _testingSoftwareCostsModify= testingSoftwareCostsModify;
+            _travelExpenseModify= travelExpenseModify;
+            _restsCostModify= restsCostModify;
         }
 
         /// <summary>
@@ -1557,6 +1617,96 @@ namespace Finance.NerPricing
             {
                 throw new UserFriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 手板件费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AdditionOfCostModificationItemsForHandBoards(HandPieceCostModifyDto handPieceCostModifyDto)
+        {
+            HandPieceCostModify handPieceCostModify = ObjectMapper.Map<HandPieceCostModify>(handPieceCostModifyDto);
+            await _handPieceCostModify.InsertOrUpdateAndGetIdAsync(handPieceCostModify);
+        }
+        /// <summary>
+        /// 模具费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddMoldCostModificationItem(MouldInventoryModifyDto mouldInventoryModifyDto)
+        {
+            MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
+            await _mouldInventoryModify.InsertOrUpdateAndGetIdAsync(mouldInventoryModify);
+        }
+        /// <summary>
+        /// 工装费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddToolingCostModificationItem(ToolingCostsModifyDto toolingCostsModifyDto)
+        {
+            ToolingCostsModify toolingCostsModify = ObjectMapper.Map<ToolingCostsModify>(toolingCostsModifyDto);
+            await _toolingCostsModify.InsertOrUpdateAndGetIdAsync(toolingCostsModify);
+        }
+        /// <summary>
+        /// 治具费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AdditionOfFixtureCostModificationItem(FixtureCostsModifyDto fixtureCostsModifyDto)
+        {
+            FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
+            await _fixtureCostsModify.InsertOrUpdateAndGetIdAsync(fixtureCostsModify);
+        }
+        /// <summary>
+        /// 检具费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddInspectionToolCostModificationItem(InspectionToolCostModifyDto inspectionToolCostModifyDto)
+        {
+            InspectionToolCostModify inspectionToolCostModify = ObjectMapper.Map<InspectionToolCostModify>(inspectionToolCostModifyDto);
+            await _inspectionToolCostModify.InsertOrUpdateAndGetIdAsync(inspectionToolCostModify);
+        }
+        /// <summary>
+        /// 生产设备费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddProductionEquipmentCostModificationItem(ProductionEquipmentCostsModifyDto productionEquipmentCostsModifyDto)
+        {
+            ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
+            await _productionEquipmentCostsModify.InsertOrUpdateAndGetIdAsync(productionEquipmentCostsModify);
+        }
+        /// <summary>
+        /// 实验费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddExperimentalFeeModificationItem(ExperimentalExpensesModifyDto experimentalExpensesModifyDto)
+        {
+            ExperimentalExpensesModify experimentalExpensesModify = ObjectMapper.Map<ExperimentalExpensesModify>(experimentalExpensesModifyDto);
+            await _experimentalExpensesModify.InsertOrUpdateAndGetIdAsync(experimentalExpensesModify);
+        }
+        /// <summary>
+        /// 测试软件费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddingModificationItemsForTestingSoftwareCosts(TestingSoftwareCostsModifyDto testingSoftwareCostsModifyDto)
+        {
+            TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
+            await _testingSoftwareCostsModify.InsertOrUpdateAndGetIdAsync(testingSoftwareCostsModify);
+        }
+        /// <summary>
+        /// 差旅费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task AddTravelExpenseModificationItem(TravelExpenseModifyDto travelExpenseModifyDto)
+        {
+            TravelExpenseModify travelExpenseModify = ObjectMapper.Map<TravelExpenseModify>(travelExpenseModifyDto);
+            await _travelExpenseModify.InsertOrUpdateAndGetIdAsync(travelExpenseModify);
+        }
+        /// <summary>
+        /// 其他费用修改项添加
+        /// </summary>
+        /// <returns></returns>
+        public async Task OtherExpenseModificationItemsAdded(RestsCostModifyDto restsCostModifyDto)
+        {
+            RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
+            await _restsCostModify.InsertOrUpdateAndGetIdAsync(restsCostModify);
         }
     }
 }

@@ -10,10 +10,18 @@ namespace Finance.Nre
 {
     /// <summary>
     /// 生产设备费用 修改项实体类
-    /// </summary>
-    [Table("PeCostsModify")]
+    /// </summary>    
+    [Table("NRE_PECostsModify")]
     public class ProductionEquipmentCostsModify : FullAuditedEntity<long>
     {
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
         /// <summary>
         /// 修改项的id
         /// </summary>

@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 namespace Finance.Nre
 {
     /// <summary>
-    /// 检具费用  修改项实体类
+    /// 工装费用 修改项 实体类
     /// </summary>
-    [Table("NRE_ITModify")]
-    public class InspectionToolCostModify : FullAuditedEntity<long>
+    [Table("NRE_TModify")]
+    public class ToolingCostsModify : FullAuditedEntity<long>
     {
         /// <summary>
         /// 流程号Id
@@ -27,9 +27,13 @@ namespace Finance.Nre
         /// </summary>
         public long ModifyId { get; set; }
         /// <summary>
-        /// 项目制程QC量检具
+        /// 事由外键
         /// </summary>
-        public string Qc { get; set; }
+        public string ReasonsId { get; set; }
+        /// <summary>
+        /// 工装名称
+        /// </summary>
+        public string ToolName { get; set; }
         /// <summary>
         /// 单价
         /// </summary>
@@ -37,11 +41,11 @@ namespace Finance.Nre
         /// <summary>
         /// 数量
         /// </summary>
-        public int Count { get; set; }
+        public int Quantity { get; set; }
         /// <summary>
         /// 费用
         /// </summary>
-        public decimal Cost { get; set; }       
+        public decimal Cost { get; set; }
         /// <summary>
         /// 备注
         /// </summary>
