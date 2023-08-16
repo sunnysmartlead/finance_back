@@ -4,8 +4,13 @@ using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
 using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+using NPOI.XSSF.UserModel;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
@@ -383,6 +388,131 @@ namespace Finance.BaseLibrary
             await this.CreateLog(" 删除工时项目1条");
         }
 
+        /// <summary>
+        /// 合并单元格
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="firstRow">开始行</param>
+        /// <param name="lastRow">结束行</param>
+        /// <param name="firstCol">开始列</param>
+        /// <param name="lastCol">结束列</param>
+        public static void MergedRegion(ISheet sheet, int firstRow, int lastRow, int firstCol, int lastCol)
+        {
+            CellRangeAddress region = new CellRangeAddress(firstRow, lastRow, firstCol, lastCol);
+            sheet.AddMergedRegion(region);
+        }
+
+
+        /// <summary>
+        /// 导出工时信息
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> FoundationWorkingHourDownloadStream(GetFoundationDevicesInput input)
+        {
+            ISheet sheet = wk.CreateSheet("Sheet1");
+            sheet.DefaultRowHeight = 25 * 20;
+            // 表头设置
+            IRow herdRow = sheet.CreateRow(0);
+            CreateCell(herdRow, 0, "序号");
+            sheet.SetColumnWidth(0, 10 * 300);
+            CreateCell(herdRow, 1, "工序编号");
+            sheet.SetColumnWidth(1, 10 * 300);
+            CreateCell(herdRow, 2, "工序名称");
+            sheet.SetColumnWidth(2, 10 * 400);
+
+            int yearCount = 3;
+            int colIndex = 0;
+            for (int i = 0; i < yearCount * 3; i++)
+            {
+                colIndex = i + 3;
+                CreateCell(herdRow, colIndex, string.Empty);
+                sheet.SetColumnWidth(colIndex, 10 * 400);
+            }
+
+            for (int i = 0; i < yearCount; i++)
+            {
+                colIndex = i * 3 + 3;
+                herdRow.GetCell(colIndex).SetCellValue("202" + (i + 3) + "年");
+                MergedRegion(sheet, 0, 0, colIndex, colIndex + 2);
+
+            }
+
+            // 副表头
+            IRow herdRow2 = sheet.CreateRow(1);
+            CreateCell(herdRow2, 0, string.Empty);
+            CreateCell(herdRow2, 1, string.Empty);
+            CreateCell(herdRow2, 2, string.Empty);
+            for (int i = 0; i < yearCount; i++)
+            {
+                colIndex = i * 3 + 3;
+                CreateCell(herdRow2, colIndex, "标准人工工时");
+                CreateCell(herdRow2, colIndex + 1, "标准机器工时");
+                CreateCell(herdRow2, colIndex + 2, "人员数量");
+            }
+            MergedRegion(sheet, 0, 1, 0, 0);
+            MergedRegion(sheet, 0, 1, 1, 1);
+            MergedRegion(sheet, 0, 1, 2, 2);
+
+            for (int i = 2; i < 10; i++)
+            {
+                IRow row = sheet.CreateRow(i);
+                CreateCell(row, 0, $"序号{i}");
+                CreateCell(row, 1, $"工序编号{i}");
+                CreateCell(row, 2, $"工序名称{i}");
+                for (int j = 0; j < yearCount; j++)
+                {
+                    colIndex = j * 3 + 3;
+                    CreateCell(row, colIndex, "bzgrgs" + j);
+                    CreateCell(row, colIndex + 1, "bzjjgs" + j);
+                    CreateCell(row, colIndex + 2, "rysl" + j);
+                }
+            }
+
+            FileStream sw = File.Create("test.xlsx");
+            wk.Write(sw);
+            sw.Close();
+
+
+            return new FileStreamResult(sw, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "foundationWorkingHour" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
+        }
+
+        /// <summary>
+        /// 创建单元格并设置值
+        /// </summary>
+        /// <param name="row">行</param>
+        /// <param name="colIndex">单元格index</param>
+        /// <param name="vaule">值</param>
+        public static void CreateCell(IRow row, int colIndex, string vaule)
+        {
+            ICell cel = row.CreateCell(colIndex);
+            SetICellStyle(cel);
+            cel.SetCellValue(vaule);
+        }
+
+        static IWorkbook wk = new XSSFWorkbook();
+        public static void SetICellStyle(ICell MyCell)
+        {
+            ICellStyle cellStyle = wk.CreateCellStyle();
+            cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+            //文字水平和垂直对齐方式  
+            cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+            cellStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center;
+            //是否换行  
+            //cellStyle.WrapText = true;  //若字符串过大换行填入单元格
+            //缩小字体填充  
+            //cellStyle.ShrinkToFit = true;//若字符串过大缩小字体后填入单元格
+            //IFont font = wk.CreateFont();
+            //设置字体加粗样式
+            //font.Boldweight = short.MaxValue;
+            MyCell.CellStyle = cellStyle;//赋给单元格
+        }
         /// <summary>
         /// 添加日志
         /// </summary>

@@ -47,8 +47,8 @@ namespace Finance.BaseLibrary
 		/// <summary>
 		/// 
 		/// </summary>
-		[Column("product_id")]
-		public long? ProductId { get; set; }
+		[Column("solution_id")]
+		public long? SolutionId { get; set; }
 
 		/// <summary>
 		/// 备注

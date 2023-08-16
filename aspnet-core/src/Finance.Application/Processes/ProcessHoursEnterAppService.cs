@@ -85,10 +85,21 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<ProcessHoursEnterDto> CreateAsync(ProcessHoursEnterDto input)
+        public virtual async Task<ProcessHoursEnterDto> CreateAsync(BomEnterResponseDto input)
         {
-            var entity = ObjectMapper.Map<ProcessHoursEnterDto, ProcessHoursEnter>(input,new ProcessHoursEnter());
+            ProcessHoursEnter entity =   new ProcessHoursEnter();
+            entity.ProcessName= input.ProcessName;
+            entity.ProcessNumber= input.ProcessNumber;
             entity = await _processHoursEnterRepository.InsertAsync(entity);
+            var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
+            if (null != input.DeviceInfo) {
+                
+                
+              
+            
+            }
+         
+
             return ObjectMapper.Map<ProcessHoursEnter, ProcessHoursEnterDto>(entity,new ProcessHoursEnterDto());
         }
 

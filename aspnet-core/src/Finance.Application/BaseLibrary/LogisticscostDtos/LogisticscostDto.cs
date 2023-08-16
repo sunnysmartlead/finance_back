@@ -21,7 +21,7 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Decimal> FreightPrice { get; set; }
         public System.Nullable<System.Decimal> MonthlyDemandPrice { get; set; }
         public System.Nullable<System.Decimal> PackagingPrice { get; set; }
-        public System.Nullable<System.Int64> ProductId { get; set; }
+        public System.Nullable<System.Int64> SolutionId { get; set; }
         public string Remark { get; set; }
         public System.Nullable<System.Decimal> SinglyDemandPrice { get; set; }
         public System.Nullable<System.Decimal> StoragePrice { get; set; }

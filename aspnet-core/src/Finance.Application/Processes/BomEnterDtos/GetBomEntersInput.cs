@@ -8,6 +8,6 @@ namespace Finance.Processes
     public class GetBomEntersInput: PagedInputDto
     {
         public long? AuditFlowId { get; set; }
-        public long? ProductId { get; set; }
+        public long? SolutionId { get; set; }
     }
 }

@@ -71,7 +71,7 @@ namespace Finance.BaseLibrary
         {
     
             var query = (from a in _logisticscostRepository.GetAllList(p =>
-            p.IsDeleted == false && p.ProductId == input.ProductId && p.AuditFlowId == input.AuditFlowId
+            p.IsDeleted == false && p.SolutionId == input.SolutionId && p.AuditFlowId == input.AuditFlowId
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
             query.Count();
@@ -81,7 +81,7 @@ namespace Finance.BaseLibrary
             {
                 LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
 
-                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.ProductId == input.ProductId && t.Classification == item).ToList();
+                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 logisticscostResponse.LogisticscostList = dtosItem;
                 logisticscostResponse.Classification = item;
@@ -113,7 +113,7 @@ namespace Finance.BaseLibrary
         {
            
             //先根据零件和流程删除之前的数据
-            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.ProductId == input.ProductId);
+            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId);
             var list = query.ToList();
             foreach (var item in list)
             {
@@ -126,7 +126,7 @@ namespace Finance.BaseLibrary
                 {
                     var entity = ObjectMapper.Map<LogisticscostDto, Logisticscost>(item1, new Logisticscost());
                     Logisticscost logisticscost =  new Logisticscost();
-                    logisticscost.ProductId =  input.ProductId;
+                    logisticscost.SolutionId =  input.SolutionId;
                     logisticscost.AuditFlowId = input.AuditFlowId;
                     logisticscost.Classification = item.Classification;
                     logisticscost.CreationTime = DateTime.Now;
