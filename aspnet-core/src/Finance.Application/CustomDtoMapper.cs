@@ -174,8 +174,9 @@ namespace Finance
             configuration.CreateMap<CarModelCount, CreateCarModelCountDto>();
             configuration.CreateMap<CarModelCountYear, CreateCarModelCountYearDto>();
 
+            configuration.CreateMap<Gradient, GradientListDto>();
 
-
+            
 
             //ProductDevelopmentInput
             configuration.CreateMap<StructureBomDto, StructureBomInfo>();

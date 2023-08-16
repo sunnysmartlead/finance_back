@@ -79,6 +79,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GradientModel> GradientModel { set; get; }
         public virtual DbSet<GradientModelYear> GradientModelYear { set; get; }
         public virtual DbSet<ShareCount> ShareCount { set; get; }
+        public virtual DbSet<EditItem> EditItem { set; get; }
 
 
         public virtual DbSet<UserInputInfo> UserInputInfo { get; set; }
