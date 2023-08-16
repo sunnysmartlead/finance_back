@@ -277,6 +277,12 @@ namespace Finance.WorkFlows
         public virtual string FinanceDictionaryDetailId { get; set; }
 
         /// <summary>
+        /// 审批评论
+        /// </summary>
+        public virtual string Comment { get; set; }
+
+
+        /// <summary>
         /// 流转到的下一个用户Id
         /// </summary>
         public virtual long NextUserId { get; set; }

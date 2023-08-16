@@ -41,6 +41,11 @@ namespace Finance.PriceEval.Dto
         public virtual string EvalReason { get; set; }
 
         /// <summary>
+        /// 审批评论
+        /// </summary>
+        public virtual string Comment { get; set; }
+
+        /// <summary>
         /// 标题
         /// </summary>
         [Required]

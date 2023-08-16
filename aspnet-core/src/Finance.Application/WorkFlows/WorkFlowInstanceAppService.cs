@@ -254,7 +254,8 @@ namespace Finance.WorkFlows
                 WorkFlowInstanceId = workFlowInstanceId,
                 NodeId = changeNode.NodeId,
                 FinanceDictionaryDetailId = changeNode.FinanceDictionaryDetailId,
-                NodeInstanceId = changeNode.Id
+                NodeInstanceId = changeNode.Id,
+                Comment = input.Comment,
             });
 
             //如果是归档节点

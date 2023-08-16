@@ -220,7 +220,7 @@ namespace Finance.PriceEval
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 Title = input.Title,
-
+                FinanceDictionaryDetailId = input.EvalReason
             });
 
             priceEvaluation.AuditFlowId = auditFlowId;

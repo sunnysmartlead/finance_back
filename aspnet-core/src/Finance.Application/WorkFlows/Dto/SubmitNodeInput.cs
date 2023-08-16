@@ -17,5 +17,10 @@ namespace Finance.WorkFlows.Dto
         /// 审批意见
         /// </summary>
         public virtual string FinanceDictionaryDetailId { get; set; }
+
+        /// <summary>
+        /// 审批评论
+        /// </summary>
+        public virtual string Comment { get; set; }
     }
 }
