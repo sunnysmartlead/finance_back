@@ -664,15 +664,7 @@ namespace Finance.NerPricing
                 item.IsSubmit = false;
                 await _resourceMouldInventory.UpdateAsync(item);
             }         
-        }
-        /// <summary>
-        /// 资源部模具费 审核
-        /// </summary>
-        /// <returns></returns>
-        public async Task ResourceDepartmentMoldFeeReview(ToExamineDto toExamineDto)
-        {
-
-        }
+        }      
         /// <summary>
         /// 产品部-电子工程师 录入
         /// </summary>
@@ -1089,15 +1081,7 @@ namespace Finance.NerPricing
             {
                 throw new FriendlyException(e.Message);
             }
-        }
-        /// <summary>
-        /// Nre 品保部=>环境实验费 录入 审核
-        /// </summary>
-        /// <returns></returns>
-        public async Task ExperimentItemsReview(ToExamineDto toExamineDto)
-        {
-
-        }
+        }         
         /// <summary>
         /// Nre 品保部=>环境实验费 录入过的值(单个方案)
         /// </summary>
@@ -1707,6 +1691,14 @@ namespace Finance.NerPricing
         {
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
             await _restsCostModify.InsertOrUpdateAndGetIdAsync(restsCostModify);
+        }
+        /// <summary>
+        /// NRE审核接口
+        /// </summary>
+        /// <returns></returns>
+        public async Task NREToExamine(NREToExamineToExamineDto toExamineDto)
+        {
+
         }
     }
 }

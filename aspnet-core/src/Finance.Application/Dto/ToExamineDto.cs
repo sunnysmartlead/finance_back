@@ -12,37 +12,14 @@ namespace Finance.Dto
     /// /审批方法通用交互类
     /// </summary>
     public class ToExamineDto
-    {
+    {        
         /// <summary>
-        /// 提交状态 0/拒绝  1/提交 2/保存
+        /// 审批意见
         /// </summary>
-        public IsSubmitType SubmissionStatus { get; set; }
+        public string Opinion { get; set; }
         /// <summary>
-        /// 备注(必填)
+        /// 审批评论
         /// </summary>
-        [FriendlyRequired("备注")]
-        public string Remarks { get; set; }
-    }
-    /// <summary>
-    /// 提交状态
-    /// </summary>
-    public enum IsSubmitType
-    {
-        /// <summary>
-        /// 拒绝
-        /// </summary>
-        [Description("拒绝")]
-        Refuse,
-        /// <summary>
-        /// 提交
-        /// </summary>
-        [Description("提交")]
-        Submit,
-        /// <summary>
-        /// 保存
-        /// </summary>
-        [Description("保存")]
-        Preservation,
-       
-    }
+        public string Comment { get; set; }
+    }   
 }
