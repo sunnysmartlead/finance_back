@@ -2,6 +2,7 @@
 using Abp.Domain.Repositories;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.Entering;
 using Finance.Ext;
 using Finance.PriceEval;
@@ -105,6 +106,15 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             {
                 throw new FriendlyException(ex.Message);
             }
+
+        }
+        /// <summary>
+        /// 产品开发部审核
+        /// </summary>
+        /// <param name="toExamineDto"></param>
+        /// <returns></returns>
+        public async Task ProductDevelopmentDepartmentReview(ToExamineDto toExamineDto)
+        {
 
         }
         /// <summary>

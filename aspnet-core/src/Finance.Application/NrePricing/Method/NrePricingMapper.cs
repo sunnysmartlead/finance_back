@@ -72,6 +72,26 @@ namespace Finance.NrePricing.Method
             configuration.CreateMap<LaboratoryFeeExcelModel, LaboratoryFeeModel>()
                 .ForMember(u => u.IsThirdParty, p => p.MapFrom(o => o.IsThirdParty== YesNO.Yes.GetDescription()))
                 .ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty));
+
+            configuration.CreateMap<HandPieceCostModifyDto, HandPieceCostModify>();
+
+            configuration.CreateMap<MouldInventoryModifyDto, MouldInventoryModify>();
+
+            configuration.CreateMap<ToolingCostsModifyDto, ToolingCostsModify>();
+
+            configuration.CreateMap<FixtureCostsModifyDto, FixtureCostsModify>();
+
+            configuration.CreateMap<InspectionToolCostModifyDto, InspectionToolCostModify>();
+
+            configuration.CreateMap<ProductionEquipmentCostsModifyDto, ProductionEquipmentCostsModify>();
+
+            configuration.CreateMap<ExperimentalExpensesModifyDto, ExperimentalExpensesModify>();
+
+            configuration.CreateMap<TestingSoftwareCostsModifyDto, TestingSoftwareCostsModify>();
+
+            configuration.CreateMap<TravelExpenseModifyDto, TravelExpenseModify>();
+
+            configuration.CreateMap<RestsCostModifyDto, RestsCostModify>();
         }
         /// <summary>
         /// YesNO枚举

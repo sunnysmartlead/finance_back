@@ -29,7 +29,7 @@ namespace Finance.Tests.DemandApplyAudit
                 PricingTeam = new PricingTeamDto() { AuditId = 1, EngineerId = 1, QualityBenchId = 1, EMCId = 1, ProductCostInputId = 1, ProductManageTimeId = 1, TrSubmitTime = DateTime.Now, ElecEngineerTime = DateTime.Now, StructEngineerTime = DateTime.Now, EMCTime = DateTime.Now, QualityBenchTime = DateTime.Now, ResourceElecTime = DateTime.Now, ResourceStructTime = DateTime.Now, MouldWorkHourTime = DateTime.Now, EngineerWorkHourTime = DateTime.Now, ProductManageTime = DateTime.Now, ProductCostInputTime = DateTime.Now, Deadline = DateTime.Now },
                 DesignSolutionList = new List<DesignSolutionDto> { new DesignSolutionDto() {  File = new FileUploadOutputDto { FileId =0, FileName ="0", }, SolutionName = "测试流程", Sensor = "Sensor", Serial = "Serial", Lens = "Lens", ISP = "Lsp", Vcsel = "Vcsel", MCU = "MCU", Harness = "Harness", Stand = "Stand", TransmissionStructure = "TS", ProductType = "ProductType", ProcessProgram= "ProcessProgram", Rests = "Rests", FileId = 0,Id=0 } },
                 SolutionTableList = new List<SolutionTableDto> { new SolutionTableDto() { ModuleName = "测试流程", SolutionName = "方案名称", Product = "产品名称", IsCOB = true, ElecEngineerId = 1, StructEngineerId = 1, IsFirst = true } },
-                IsSubmit = true,
+            
             };
 
 

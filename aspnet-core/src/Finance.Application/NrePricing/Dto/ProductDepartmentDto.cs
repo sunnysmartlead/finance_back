@@ -42,7 +42,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         ///  实验费 实体类
         /// </summary>
-        public ProductDepartmentModel ProductDepartmentModels { get; set; }
+        public LaboratoryFeeModel ProductDepartmentModels { get; set; }
         /// <summary>
         /// 是否提交 true 提价  false 保存
         /// </summary>

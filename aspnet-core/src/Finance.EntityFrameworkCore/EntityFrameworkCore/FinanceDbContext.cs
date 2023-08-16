@@ -102,7 +102,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<MouldInventory> MouldInventory { set; get; }
         public virtual DbSet<QADepartmentQC> QADepartmentQC { set; get; }
         // Nre 品保录入 环境实验费 实体类
-        public virtual DbSet<EnvironmentalExperimentFee> QADepartmentTest { set; get; }
+        public virtual DbSet<EnvironmentalExperimentFee> EnvironmentalExperimentFee { set; get; }
         // Nre 项目管理部 其他费用实体类
         public virtual DbSet<RestsCost> RestsCost { set; get; }
         // 差旅费  实体类
@@ -193,9 +193,45 @@ namespace Finance.EntityFrameworkCore
 
         #region NRE新增表
         /// <summary>
-        /// Nre 品保录入 环境实验费 实体类
-        /// </summary> 
-        public virtual DbSet<EnvironmentalExperimentFee> EnvironmentalExperimentFee { get; set; }
+        /// 实验费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<ExperimentalExpensesModify> ExperimentalExpensesModify { get; set; }
+        /// <summary>
+        /// 治具费用修改项实体类
+        /// </summary>
+        public virtual DbSet<FixtureCostsModify> FixtureCostsModify { get; set; }
+        /// <summary>
+        /// Nre 项目管理部 手板件 修改项实体类
+        /// </summary>
+        public virtual DbSet<HandPieceCostModify> HandPieceCostModify { get; set; }
+        /// <summary>
+        /// 检具费用  修改项实体类
+        /// </summary>
+        public virtual DbSet<InspectionToolCostModify> InspectionToolCostModify { get; set; }
+        /// <summary>
+        /// Nre 资源部 模具清单 修改项实体类
+        /// </summary>
+        public virtual DbSet<MouldInventoryModify> MouldInventoryModify { get; set; }
+        /// <summary>
+        /// 生产设备费用 修改项实体类
+        /// </summary>
+        public virtual DbSet<ProductionEquipmentCostsModify> ProductionEquipmentCostsModify { get; set; }
+        /// <summary>
+        /// Nre 项目管理部 其他费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<RestsCostModify> RestsCostModify { get; set; }
+        /// <summary>
+        /// 测试软件费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<TestingSoftwareCostsModify> TestingSoftwareCostsModify { get; set; }
+        /// <summary>
+        /// 差旅费 修改项 实体类
+        /// </summary>
+        public virtual DbSet<TravelExpenseModify> TravelExpenseModify { get; set; }
+        /// <summary>
+        /// 工装费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<ToolingCostsModify> ToolingCostsModify { get; set; }
         #endregion
 
         //工作流相关的表
@@ -207,18 +243,10 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<LineInstance> LineInstance { get; set; }
         public virtual DbSet<InstanceHistory> InstanceHistory { get; set; }
 
-        #region 基础库新增表
-        public virtual DbSet<BomEnter> BomEnter { get; set; }
-        public virtual DbSet<BomEnterTotal> BomEnterTotal { get; set; }
-        public virtual DbSet<FoundationProcesses> FProcesses { get; set; }
-        public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
-        public virtual DbSet<ProcessHoursEnter> ProcessHoursEnter { get; set; }
-        public virtual DbSet<ProcessHoursEnterDevice> ProcessHoursEnterDevice { get; set; }
-        public virtual DbSet<ProcessHoursEnterFixture> ProcessHoursEnterFixture { get; set; }
-        public virtual DbSet<ProcessHoursEnterFrock> ProcessHoursEnterFrock { get; set; }
-        public virtual DbSet<ProcessHoursEnteritem> ProcessHoursEnteritem { get; set; }
-        public virtual DbSet<ProcessHoursEnterLine> ProcessHoursEnterLine { get; set; }
-        public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
+
+
+
+        // 基础库
         /// <summary>
         /// 基础库--设备库
         /// </summary>
@@ -296,14 +324,48 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<Logisticscost> Logisticscost { get; set; }
         /// <summary>
-        /// 基础库--工序库
+        /// 工序维护表
         /// </summary>
-        public virtual DbSet<FoundationProcesses> FoundationProcesses { get; set; }
+        public virtual DbSet<BaseProcessMaintenance> BaseProcessMaintenance { get; set; }
         /// <summary>
-        /// 基础库标准工艺--工时库明细
+        /// Bom录入
         /// </summary>
-        public virtual DbSet<FoundationTechnologyWorkingHour> FoundationTechnologyWorkingHour { get; set; }
-        #endregion
+        public virtual DbSet<BomEnter> BomEnter { get; set; }
+        /// <summary>
+        /// Bom录入
+        /// </summary>
+        public virtual DbSet<BomEnterTotal> BomEnterTotal { get; set; }
+        /// <summary>
+        /// 工序工时导入
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnter> ProcessHoursEnter { get; set; }
+        /// <summary>
+        /// 工序工时导入设备信息
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnterDevice> ProcessHoursEnterDevice { get; set; }
+        /// <summary>
+        /// 工序工时导入工装治具
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnterFixture> ProcessHoursEnterFixture { get; set; }
+        /// <summary>
+        /// 工序工时导入硬件设备
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnterFrock> ProcessHoursEnterFrock { get; set; }
+        /// <summary>
+        /// 工序工时导入年份数据
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnteritem> ProcessHoursEnteritem { get; set; }
+        /// <summary>
+        /// 工序工时导入线体数量分摊率
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnterLine> ProcessHoursEnterLine { get; set; }
+        /// <summary>
+        /// 工序工时导入UPH率
+        /// </summary>
+        public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
+        public virtual DbSet<FProcesses> FProcesses { get; set; }
+        public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
+
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
         {
@@ -436,6 +498,39 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<ElectronicBomInfoBak>().ToTable("ElectronicBomInfoBak");
             modelBuilder.Entity<StructureBomInfoBak>().ToTable("StructureBomInfoBak");
             modelBuilder.Entity<BoardInfo>().ToTable("BoardInfo");
+
+     // 基础库
+            modelBuilder.Entity<FoundationDevice>().ToTable("FDevice");
+            modelBuilder.Entity<FoundationDeviceItem>().ToTable("FDeviceItem");
+            modelBuilder.Entity<FoundationEmc>().ToTable("FEmc");
+            modelBuilder.Entity<FoundationFixture>().ToTable("FF");
+            modelBuilder.Entity<FoundationFixtureItem>().ToTable("FFiItem");
+            modelBuilder.Entity<FoundationHardware>().ToTable("FH");
+            modelBuilder.Entity<FoundationHardwareItem>().ToTable("FHItem");
+            modelBuilder.Entity<FoundationLogs>().ToTable("FLogs");
+            modelBuilder.Entity<FoundationProcedure>().ToTable("FProcedure");
+            modelBuilder.Entity<Foundationreliable>().ToTable("FR");
+            modelBuilder.Entity<FoundationReliableProcessHours>().ToTable("FRProcessHours");
+            modelBuilder.Entity<FoundationStandardTechnology>().ToTable("FSTechnology");
+            modelBuilder.Entity<FoundationTechnologyDevice>().ToTable("FTDevice");
+            modelBuilder.Entity<FoundationTechnologyFixture>().ToTable("FTFixture");
+            modelBuilder.Entity<FoundationTechnologyFrock>().ToTable("FTFrock");
+            modelBuilder.Entity<FoundationTechnologyHardware>().ToTable("FTHardware");
+            modelBuilder.Entity<FoundationWorkingHour>().ToTable("FWorkingHour");
+            modelBuilder.Entity<FoundationWorkingHourItem>().ToTable("FWorkingHourItem");
+            modelBuilder.Entity<Logisticscost>().ToTable("LogisticsCost");
+            modelBuilder.Entity<BaseProcessMaintenance>().ToTable("BPMaintenance");
+            modelBuilder.Entity<BomEnter>().ToTable("BE");
+            modelBuilder.Entity<BomEnterTotal>().ToTable("BETotal");
+            modelBuilder.Entity<ProcessHoursEnter>().ToTable("PHEnter");
+            modelBuilder.Entity<ProcessHoursEnterDevice>().ToTable("PHEnterDevice");
+            modelBuilder.Entity<ProcessHoursEnterFixture>().ToTable("PHEnterFixture");
+            modelBuilder.Entity<ProcessHoursEnterFrock>().ToTable("PHEnterFrock");
+            modelBuilder.Entity<ProcessHoursEnteritem>().ToTable("PHEnteritem");
+            modelBuilder.Entity<ProcessHoursEnterLine>().ToTable("PHEnterLine");
+            modelBuilder.Entity<ProcessHoursEnterUph>().ToTable("PHEnterUph");
+            modelBuilder.Entity<FProcesses>().ToTable("FProcesses");
+            modelBuilder.Entity<FTWorkingHour>().ToTable("FTSWorkingHour");
 
             base.OnModelCreating(modelBuilder);
         }
