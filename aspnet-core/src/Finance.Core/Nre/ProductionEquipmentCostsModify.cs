@@ -1,20 +1,31 @@
-﻿using System;
+﻿using Abp.Domain.Entities.Auditing;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.Nre
 {
     /// <summary>
-    /// Nre 生产设备费用 模型
-    /// </summary>
-    public class ProductionEquipmentCostModel
+    /// 生产设备费用 修改项实体类
+    /// </summary>    
+    [Table("NRE_PECostsModify")]
+    public class ProductionEquipmentCostsModify : FullAuditedEntity<long>
     {
         /// <summary>
-        /// Id
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
         /// </summary>
-        public long Id { get; set; }
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 修改项的id
+        /// </summary>
+        public long ModifyId { get; set; }
         /// <summary>
         /// 生产设备名
         /// </summary>     

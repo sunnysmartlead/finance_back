@@ -504,6 +504,14 @@ namespace Finance.Entering
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
         } 
+        /// <summary>
+        /// 结构/电子/BOM/单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task BOMUnitPriceReview(BomUnitPriceReviewToExamineDto toExamineDto)
+        {
+
+        }
 
     }
 
