@@ -14,6 +14,7 @@ using Finance.PropertyDepartment.Entering;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -503,14 +504,14 @@ namespace Finance.Entering
         public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
-        } 
-        /// <summary>
-        /// 结构/电子/BOM/单价审核
-        /// </summary>
-        /// <returns></returns>
+        }
+        ///// <summary>
+        ///// 结构/电子/BOM/单价审核
+        ///// </summary>
+        ///// <returns></returns>
         public async Task BOMUnitPriceReview(BomUnitPriceReviewToExamineDto toExamineDto)
         {
-
+            
         }
 
     }
