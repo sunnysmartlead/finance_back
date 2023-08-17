@@ -134,6 +134,7 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId  = AbpSession.UserId.Value;
             }
             entity.LastModificationTime = DateTime.Now;
+            entity.IsDeleted = false;
             entity = await _foundationEmcRepository.InsertAsync(entity);
             await this.CreateLog(" 创建EMC项目1条");
             return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity, new FoundationEmcDto());
@@ -150,6 +151,7 @@ namespace Finance.BaseLibrary
             FoundationEmc entity = await _foundationEmcRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity.LastModificationTime = DateTime.Now;
+            entity.IsDeleted= false;
             if (AbpSession.UserId != null)
             {
                 entity.LastModifierUserId = AbpSession.UserId.Value;

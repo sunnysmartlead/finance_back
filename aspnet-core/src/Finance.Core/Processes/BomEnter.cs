@@ -76,16 +76,16 @@ namespace Finance.Processes
 		[Column("indirect_summary")]
 		public decimal? IndirectSummary { get; set; }
 
-		/// <summary>
-		/// 
-		/// </summary>
-		[Column("product_id")]
-		public long? ProductId { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        [Column("solution_id")]
+        public long? SolutionId { get; set; }
 
-		/// <summary>
-		/// 备注·
-		/// </summary>
-		[Column("remark")]
+        /// <summary>
+        /// 备注·
+        /// </summary>
+        [Column("remark")]
 		[StringLength(255, ErrorMessage = "备注·长度不能超出255字符")]
 		public string Remark { get; set; }
 
