@@ -100,16 +100,16 @@ namespace Finance.Processes
 		[StringLength(255, ErrorMessage = "工序编号长度不能超出255字符")]
 		public string ProcessNumber { get; set; }
 
-		/// <summary>
-		/// 零件id
-		/// </summary>
-		[Column("product_id")]
-		public long? ProductId { get; set; }
+        /// <summary>
+        /// 零件id
+        /// </summary>
+        [Column("solution_id")]
+        public long? SolutionId { get; set; }
 
-		/// <summary>
-		/// 软件单价
-		/// </summary>
-		[Column("software_price")]
+        /// <summary>
+        /// 软件单价
+        /// </summary>
+        [Column("software_price")]
 		public decimal? SoftwarePrice { get; set; }
 
 		/// <summary>
