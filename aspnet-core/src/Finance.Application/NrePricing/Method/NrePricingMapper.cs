@@ -74,24 +74,34 @@ namespace Finance.NrePricing.Method
                 .ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty));
 
             configuration.CreateMap<HandPieceCostModifyDto, HandPieceCostModify>();
+            configuration.CreateMap<HandPieceCostModify, HandPieceCostModifyDto>();
 
             configuration.CreateMap<MouldInventoryModifyDto, MouldInventoryModify>();
+            configuration.CreateMap<MouldInventoryModify, MouldInventoryModifyDto>();
 
             configuration.CreateMap<ToolingCostsModifyDto, ToolingCostsModify>();
+            configuration.CreateMap<ToolingCostsModify, ToolingCostsModifyDto>();
 
             configuration.CreateMap<FixtureCostsModifyDto, FixtureCostsModify>();
+            configuration.CreateMap<FixtureCostsModify, FixtureCostsModifyDto>();
 
             configuration.CreateMap<InspectionToolCostModifyDto, InspectionToolCostModify>();
+            configuration.CreateMap<InspectionToolCostModify, InspectionToolCostModifyDto>();
 
             configuration.CreateMap<ProductionEquipmentCostsModifyDto, ProductionEquipmentCostsModify>();
+            configuration.CreateMap<ProductionEquipmentCostsModify, ProductionEquipmentCostsModifyDto>();
 
             configuration.CreateMap<ExperimentalExpensesModifyDto, ExperimentalExpensesModify>();
+            configuration.CreateMap<ExperimentalExpensesModify, ExperimentalExpensesModifyDto>();
 
             configuration.CreateMap<TestingSoftwareCostsModifyDto, TestingSoftwareCostsModify>();
+            configuration.CreateMap<TestingSoftwareCostsModify, TestingSoftwareCostsModifyDto>();
 
             configuration.CreateMap<TravelExpenseModifyDto, TravelExpenseModify>();
+            configuration.CreateMap<TravelExpenseModify, TravelExpenseModifyDto>();
 
             configuration.CreateMap<RestsCostModifyDto, RestsCostModify>();
+            configuration.CreateMap<RestsCostModify, RestsCostModifyDto>();
         }
         /// <summary>
         /// YesNO枚举

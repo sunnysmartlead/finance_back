@@ -32,16 +32,16 @@ namespace Finance.Nre
         public string ReasonsId { get; set; }
         /// <summary>
         /// 工装名称
-        /// </summary>
-        public string ToolName { get; set; }
+        /// </summary>      
+        public string WorkName { get; set; }
         /// <summary>
-        /// 单价
-        /// </summary>
-        public decimal UnitPrice { get; set; }
+        /// 工装单价
+        /// </summary> 
+        public decimal UnitPriceOfTooling { get; set; }
         /// <summary>
-        /// 数量
-        /// </summary>
-        public int Quantity { get; set; }
+        /// 工装数量
+        /// </summary> 
+        public int ToolingCount { get; set; }
         /// <summary>
         /// 费用
         /// </summary>

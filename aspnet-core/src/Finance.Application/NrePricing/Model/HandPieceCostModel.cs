@@ -17,7 +17,7 @@ namespace Finance.NrePricing.Model
         /// </summary>
         public long Id { get; set; }
         /// <summary>
-        /// 零件名
+        /// 部件名
         /// </summary>
         public string PartName { get; set; }
         /// <summary>
