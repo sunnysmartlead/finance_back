@@ -195,6 +195,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 //是否同意
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.YesOrNo, Id=FinanceConsts.YesOrNo_Yes, DisplayName="同意",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.YesOrNo, Id=FinanceConsts.YesOrNo_No, DisplayName="不同意",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.YesOrNo, Id=FinanceConsts.YesOrNo_Save, DisplayName="保存",},
 
                 //核价原因
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Yp, DisplayName="样品",},
