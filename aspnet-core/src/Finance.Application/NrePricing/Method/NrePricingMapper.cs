@@ -54,11 +54,11 @@ namespace Finance.NrePricing.Method
             ;
             configuration.CreateMap<InitialSalesDepartmentDto, InitialResourcesManagement>();
 
-            configuration.CreateMap<LaboratoryFee, LaboratoryFeeModel>()
-            .ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty ? YesNO.Yes.GetDescription() : YesNO.No.GetDescription()));
-            configuration.CreateMap<EnvironmentalExperimentFee, LaboratoryFeeModel>()
-               .ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty ? YesNO.Yes.GetDescription() : YesNO.No.GetDescription()))
-               .ForMember(u => u.TestItem, p => p.MapFrom(o => o.ProjectName));
+            configuration.CreateMap<LaboratoryFee, LaboratoryFeeModel>();
+            //.ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty ? YesNO.Yes.GetDescription() : YesNO.No.GetDescription()));
+            configuration.CreateMap<EnvironmentalExperimentFee, LaboratoryFeeModel>();
+               //.ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty ? YesNO.Yes.GetDescription() : YesNO.No.GetDescription()))
+               //.ForMember(u => u.TestItem, p => p.MapFrom(o => o.ProjectName));
 
             configuration.CreateMap<TravelExpense, TravelExpenseModel>();
             configuration.CreateMap<RestsCost, RestsCostModel>()
@@ -70,8 +70,8 @@ namespace Finance.NrePricing.Method
                  .ForMember(u => u.IsThirdParty, p => p.MapFrom(o => o.IsThirdParty== YesNO.Yes.GetDescription()));
 
             configuration.CreateMap<LaboratoryFeeExcelModel, LaboratoryFeeModel>()
-                .ForMember(u => u.IsThirdParty, p => p.MapFrom(o => o.IsThirdParty== YesNO.Yes.GetDescription()))
-                .ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty));
+                .ForMember(u => u.IsThirdParty, p => p.MapFrom(o => o.IsThirdParty == YesNO.Yes.GetDescription()));
+                //.ForMember(u => u.IsThirdPartyName, p => p.MapFrom(o => o.IsThirdParty));
 
             configuration.CreateMap<HandPieceCostModifyDto, HandPieceCostModify>();
             configuration.CreateMap<HandPieceCostModify, HandPieceCostModifyDto>();
