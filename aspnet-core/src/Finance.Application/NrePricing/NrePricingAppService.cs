@@ -194,6 +194,16 @@ namespace Finance.NerPricing
         /// <param name="structBomDifferent"></param>
         /// <param name="user"></param>
         /// <param name="processHoursEnter"></param>
+        /// <param name="handPieceCostModify"></param>
+        /// <param name="mouldInventoryModify"></param>
+        /// <param name="toolingCostsModify"></param>
+        /// <param name="fixtureCostsModify"></param>
+        /// <param name="inspectionToolCostModify"></param>
+        /// <param name="productionEquipmentCostsModify"></param>
+        /// <param name="experimentalExpensesModify"></param>
+        /// <param name="testingSoftwareCostsModify"></param>
+        /// <param name="travelExpenseModify"></param>
+        /// <param name="restsCostModify"></param>
         public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount,
             ElectronicStructuralMethod resourceElectronicStructuralMethod,
             IRepository<HandPieceCost, long> resourceHandPieceCost,
