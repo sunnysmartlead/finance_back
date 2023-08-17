@@ -65,7 +65,7 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<MouldInventory, long> _resourceMouldInventory;
         /// <summary> 
-        /// Nre 产品部-电子工程师 实验费 实体类
+        /// Nre 产品部-EMC电子工程师 实验费 实体类
         /// </summary>
         private readonly IRepository<LaboratoryFee, long> _resourceLaboratoryFee;
         /// <summary>
@@ -873,14 +873,14 @@ namespace Finance.NerPricing
                 {
                     Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
                     {
-                    { "试验项目", item.TestItem },
+                    { "试验项目", item.ProjectName },
                     { "是否指定第三方", item.IsThirdParty },
                     { "单价", item.UnitPrice },
-                    { "调整系数", item.Coefficient },
+                    { "调整系数", item.AdjustmentCoefficient },
                     { "计价单位", item.Unit },
-                    { "计数-摸底", item.DataThoroughly },
-                    { "计数-DV", item.DataDV },
-                    { "计数-PV", item.DataPV },
+                    { "计数-摸底", item.CountBottomingOut },
+                    { "计数-DV", item.CountDV },
+                    { "计数-PV", item.CountPV },
                     { "总费用", item.AllCost },
                     { "备注", item.Remark },
                     };
@@ -915,14 +915,14 @@ namespace Finance.NerPricing
                 {
                     Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
                     {
-                    { "试验项目", item.TestItem },
+                    { "试验项目", item.ProjectName },
                     { "是否指定第三方", item.IsThirdParty },
                     { "单价", item.UnitPrice },
-                    { "调整系数", item.Coefficient },
+                    { "调整系数", item.AdjustmentCoefficient },
                     { "计价单位", item.Unit },
-                    { "计数-摸底", item.DataThoroughly },
-                    { "计数-DV", item.DataDV },
-                    { "计数-PV", item.DataPV },
+                    { "计数-摸底", item.CountBottomingOut },
+                    { "计数-DV", item.CountDV },
+                    { "计数-PV", item.CountPV },
                     { "总费用", item.AllCost },
                     { "备注", item.Remark },
                     };
@@ -1568,7 +1568,7 @@ namespace Finance.NerPricing
                     {
                         Id = t.Id,
                         ReasonsId = t.ReasonsId,
-                        ReasonsName = p.DisplayName,
+                        //ReasonsName = p.DisplayName,
                         PeopleCount = t.PeopleCount,
                         CostSky = t.CostSky,
                         SkyCount = t.SkyCount,
@@ -1642,7 +1642,7 @@ namespace Finance.NerPricing
                     }
                 }
                 //工装费用
-               List<ToolingCostsModify> toolingCostsModifies= _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                List<ToolingCostsModify> toolingCostsModifies = _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ToolingCostModel item in pricingFormDto.ToolingCost)
                 {
                     ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
@@ -1652,12 +1652,112 @@ namespace Finance.NerPricing
                         item.UnitPriceOfTooling = modify.UnitPriceOfTooling;
                         item.ToolingCount = modify.ToolingCount;
                         item.Cost = modify.Cost;
-                        item.Remark = modify.Remark;              
+                        item.Remark = modify.Remark;
+                    }
+                }
+                //治具费用
+                List<FixtureCostsModify> fixtureCostsModifies = _fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (FixtureCostModel item in pricingFormDto.FixtureCost)
+                {
+                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.ToolingName = modify.ToolingName;
+                        item.UnitPrice = modify.UnitPrice;
+                        item.Number = modify.Number;
+                        item.Cost = modify.Cost;
+                        item.Remark = modify.Remark;
+                    }
+                }
+                //检具费用
+                List<InspectionToolCostModify> inspectionToolCostModifies = _inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (QADepartmentQCModel item in pricingFormDto.QAQCDepartments)
+                {
+                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.Qc = modify.Qc;
+                        item.UnitPrice = modify.UnitPrice;
+                        item.Count = modify.Count;
+                        item.Cost = modify.Cost;
+                        item.Remark = modify.Remark;
+                    }
+                }
+                //生产设备费用
+                List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = _productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (ProductionEquipmentCostModel item in pricingFormDto.ProductionEquipmentCost)
+                {
+                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.EquipmentName = modify.EquipmentName;
+                        item.Number = modify.Number;
+                        item.UnitPrice = modify.UnitPrice;
+                        item.Cost = modify.Cost;
+                        item.Remark = modify.Remark;
+                    }
+                }
+                //实验费用
+                List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (LaboratoryFeeModel item in pricingFormDto.LaboratoryFeeModels)
+                {
+                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.ProjectName = modify.ProjectName;
+                        item.IsThirdParty = modify.IsThirdParty;
+                        item.UnitPrice = modify.UnitPrice;                      
+                        item.AdjustmentCoefficient = modify.AdjustmentCoefficient;
+                        item.Unit = modify.Unit;
+                        item.CountBottomingOut = modify.CountBottomingOut;
+                        item.CountDV = modify.CountDV;
+                        item.CountPV = modify.CountPV;
+                        item.AllCost = modify.AllCost;                       
+                        item.Remark = modify.Remark;
+                    }
+                }
+                //测试软件费用
+                List<TestingSoftwareCostsModify> testingSoftwareCostsModifies= _testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (SoftwareTestingCotsModel item in pricingFormDto.SoftwareTestingCost)
+                {
+                    TestingSoftwareCostsModify modify = testingSoftwareCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.SoftwareProject = modify.SoftwareProject;
+                        item.CostH = modify.CostH;
+                        item.Hour = modify.Hour;
+                        item.Cost = modify.Cost;                     
+                        item.Remark = modify.Remark;
+                    }
+                }
+                // 差旅费用
+                List<TravelExpenseModify> travelExpenseModifies= _travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (TravelExpenseModel item in pricingFormDto.TravelExpense)
+                {
+                    TravelExpenseModify modify = travelExpenseModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.ReasonsId = modify.ReasonsId;                         
+                        item.PeopleCount = modify.PeopleCount;
+                        item.CostSky = modify.CostSky;
+                        item.SkyCount = modify.SkyCount;
+                        item.Cost = modify.Cost;
+                        item.Remark = modify.Remark;
+                    }
+                }
+                // 其他费用
+                List<RestsCostModify> restsCostModifies=  _restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (RestsCostModel item in pricingFormDto.RestsCost)
+                {
+                    RestsCostModify modify = restsCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    if (modify != null)
+                    {
+                        item.ConstName = modify.ConstName;
+                        item.Cost = modify.Cost;                       
+                        item.Remark = modify.Remark;
                     }
                 }
                 return pricingFormDto;
-                //治具费用
-
             }
             catch (Exception e)
             {
@@ -1786,7 +1886,7 @@ namespace Finance.NerPricing
                     {
                         Id = t.Id,
                         ReasonsId = t.ReasonsId,
-                        ReasonsName = p.DisplayName,
+                        //ReasonsName = p.DisplayName,
                         PeopleCount = t.PeopleCount,
                         CostSky = t.CostSky,
                         SkyCount = t.SkyCount,

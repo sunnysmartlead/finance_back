@@ -31,9 +31,9 @@ namespace Finance.Nre
         /// </summary>
         public string SolutionNum { get; set; }
         /// <summary>
-        /// 实验项目
+        /// 试验项目(根据与客户协定项目)
         /// </summary>
-        public string TestItem { get; set; }
+        public string ProjectName { get; set; }
         /// <summary>
         /// 是否指定第三方
         /// </summary>
@@ -45,26 +45,26 @@ namespace Finance.Nre
         /// <summary>
         /// 调整系数
         /// </summary>
-        public decimal Coefficient { get; set; }
+        public decimal AdjustmentCoefficient { get; set; }
         /// <summary>
         /// 计价单位
         /// </summary>
-        public decimal Unit { get; set; }
+        public string Unit { get; set; }
         /// <summary>
-        /// 时间-摸底
+        /// 计数-摸底
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
-        public decimal DataThoroughly { get; set; }
+        public decimal CountBottomingOut { get; set; }
         /// <summary>
-        /// 时间-DV
+        /// 计数-DV
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
-        public decimal DataDV { get; set; }
+        public decimal CountDV { get; set; }
         /// <summary>
-        /// 时间-PV
+        /// 计数-PV
         /// </summary>
         [Column(TypeName = "decimal(18,2)")]
-        public decimal DataPV { get; set; }
+        public decimal CountPV { get; set; }
         /// <summary>
         /// 总费用
         /// </summary>

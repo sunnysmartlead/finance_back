@@ -31,7 +31,7 @@ namespace Finance.NrePricing.Method
 
 
             configuration.CreateMap<RestsCostModel, RestsCost>()
-                  .ForMember(u => u.ConstName, p => p.MapFrom(o => o.Rroject)); ;
+                  .ForMember(u => u.ConstName, p => p.MapFrom(o => o.ConstName)); ;
             configuration.CreateMap<MouldInventoryModel, MouldInventory>();
             configuration.CreateMap<MouldInventory, MouldInventoryModel>();
             configuration.CreateMap<TravelExpenseModel, TravelExpense>();
@@ -62,7 +62,7 @@ namespace Finance.NrePricing.Method
 
             configuration.CreateMap<TravelExpense, TravelExpenseModel>();
             configuration.CreateMap<RestsCost, RestsCostModel>()
-                 .ForMember(u => u.Rroject, p => p.MapFrom(o => o.ConstName));
+                 .ForMember(u => u.ConstName, p => p.MapFrom(o => o.ConstName));
 
             configuration.CreateMap<InitialResourcesManagement, ReturnSalesDepartmentDto>();
 

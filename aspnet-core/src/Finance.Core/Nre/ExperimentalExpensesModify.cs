@@ -27,17 +27,13 @@ namespace Finance.Nre
         /// </summary>
         public long ModifyId { get; set; }
         /// <summary>
-        /// 实验项目
+        /// 试验项目(根据与客户协定项目)
         /// </summary>
-        public string TestItem { get; set; }
+        public string ProjectName { get; set; }
         /// <summary>
-        /// 是否指定第三方 (是 true   否 false)
+        /// 是否指定第三方
         /// </summary>
         public bool IsThirdParty { get; set; }
-        /// <summary>
-        /// 是否指定第三方 (true/是 false/否)
-        /// </summary>
-        public string IsThirdPartyName { get; set; }
         /// <summary>
         /// 单价
         /// </summary>
@@ -45,27 +41,26 @@ namespace Finance.Nre
         /// <summary>
         /// 调整系数
         /// </summary>
-        public decimal Coefficient { get; set; }
+        public decimal AdjustmentCoefficient { get; set; }
         /// <summary>
         /// 计价单位
         /// </summary>
-        public decimal Unit { get; set; }
+        public string Unit { get; set; }
         /// <summary>
-        /// 时间-摸底
+        /// 计数-摸底
         /// </summary>
-        public decimal DataThoroughly { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CountBottomingOut { get; set; }
         /// <summary>
-        /// 时间-DV
+        /// 计数-DV
         /// </summary>
-        public decimal DataDV { get; set; }
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CountDV { get; set; }
         /// <summary>
-        /// 时间-PV
+        /// 计数-PV
         /// </summary>
-        public decimal DataPV { get; set; }
-        /// <summary>
-        /// 数量=摸底+DV+PV+单位 后面需要带单位所以是 string
-        /// </summary>
-        public string Count { get; set; }      
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CountPV { get; set; }
         /// <summary>
         /// 总费用
         /// </summary>
