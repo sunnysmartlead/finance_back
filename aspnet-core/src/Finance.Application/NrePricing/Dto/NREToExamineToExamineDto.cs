@@ -17,7 +17,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 审核界面类型
         /// </summary>
-        public BOMCHECKTYPE BomCheckType { get; set; }
+        public NRECHECKTYPE NreCheckType { get; set; }
         /// <summary>
         /// 回退单个的id,//只有模具费 需要 单挑退回其余都不需要 可传空
         /// </summary>

@@ -553,6 +553,7 @@ namespace Finance
         public const string YesOrNo = "YesOrNo";
         public const string YesOrNo_Yes = "YesOrNo_Yes";
         public const string YesOrNo_No = "YesOrNo_No";
+        public const string YesOrNo_Save = "YesOrNo_Save";
 
         public const string Done = "Done";
 
