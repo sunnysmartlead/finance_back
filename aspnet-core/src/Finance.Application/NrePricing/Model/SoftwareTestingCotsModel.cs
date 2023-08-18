@@ -28,6 +28,10 @@ namespace Finance.NrePricing.Model
         /// </summary>
         public decimal Hour  { get; set; }
         /// <summary>
+        /// 数量
+        /// </summary>
+        public int Count { get; set; }
+        /// <summary>
         /// 费用
         /// </summary>
         public decimal Cost { get; set; }

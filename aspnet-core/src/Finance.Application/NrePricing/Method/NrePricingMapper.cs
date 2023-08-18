@@ -102,6 +102,9 @@ namespace Finance.NrePricing.Method
 
             configuration.CreateMap<RestsCostModifyDto, RestsCostModify>();
             configuration.CreateMap<RestsCostModify, RestsCostModifyDto>();
+
+            configuration.CreateMap<PricingFormDto, ModifyItemPricingFormDto>();
+            configuration.CreateMap<ModifyItemPricingFormDto, PricingFormDto>();
         }
         /// <summary>
         /// YesNO枚举
