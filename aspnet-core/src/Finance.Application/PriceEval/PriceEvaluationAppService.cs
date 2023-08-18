@@ -507,7 +507,7 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<MemoryStream> NreTableDownloadStream(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingForm(input.AuditFlowId, input.ProductId);
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
@@ -553,7 +553,7 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingForm(input.AuditFlowId, input.ProductId);
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
 
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);

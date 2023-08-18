@@ -16,9 +16,9 @@ namespace Finance.NrePricing.Model
         /// </summary>
         public long Id { get; set; }
         /// <summary>
-        /// 项目
+        /// 费用名称
         /// </summary>
-        public string Rroject { get; set; }
+        public string ConstName { get; set; }
         /// <summary>
         /// 费用
         /// </summary>

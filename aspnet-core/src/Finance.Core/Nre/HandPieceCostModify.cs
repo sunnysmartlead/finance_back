@@ -25,7 +25,11 @@ namespace Finance.Nre
         /// <summary>
         /// 修改项的id
         /// </summary>
-        public long ModifyId { get; set; }     
+        public long ModifyId { get; set; }
+        /// <summary>
+        /// 部件名
+        /// </summary>
+        public string PartName { get; set; }
         /// <summary>
         /// 料号
         /// </summary>

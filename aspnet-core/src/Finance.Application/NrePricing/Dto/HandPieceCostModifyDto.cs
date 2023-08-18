@@ -28,6 +28,10 @@ namespace Finance.NrePricing.Dto
         /// </summary>
         public long ModifyId { get; set; }
         /// <summary>
+        /// 部件名
+        /// </summary>
+        public string PartName { get; set; }
+        /// <summary>
         /// 料号
         /// </summary>
         public string PartNumber { get; set; }

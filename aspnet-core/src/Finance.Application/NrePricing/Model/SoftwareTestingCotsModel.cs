@@ -12,6 +12,10 @@ namespace Finance.NrePricing.Model
     public class SoftwareTestingCotsModel
     {
         /// <summary>
+        /// Id
+        /// </summary>
+        public long Id { get; set; }
+        /// <summary>
         /// 软件项目
         /// </summary>
         public string SoftwareProject { get; set; }
