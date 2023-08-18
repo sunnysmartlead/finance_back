@@ -108,6 +108,7 @@ namespace Finance.Processes
                  
 
 
+
                     var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
 
                     List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
@@ -156,6 +157,7 @@ namespace Finance.Processes
         {
             await _bomEnterRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
 
+
             await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
 
             List<BomEnterDto> LogisticscostList = input.ListBomEnter;
@@ -192,7 +194,9 @@ namespace Finance.Processes
                 {
                     BomEnterTotal bomEnterTotal = new BomEnterTotal();
 
+
                     bomEnterTotal.SolutionId = input.SolutionId;
+
 
                     bomEnterTotal.AuditFlowId = input.AuditFlowId;
                     bomEnterTotal.Classification = input.Classification;
