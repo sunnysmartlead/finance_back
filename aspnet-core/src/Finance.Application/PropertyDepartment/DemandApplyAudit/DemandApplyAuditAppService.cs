@@ -5,10 +5,13 @@ using Finance.DemandApplyAudit;
 using Finance.Dto;
 using Finance.Entering;
 using Finance.Ext;
+using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Model;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
@@ -40,7 +43,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;       
+        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
         /// <summary>
         /// 模组数量
         /// </summary>
@@ -50,24 +53,35 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// </summary>
         public readonly IRepository<PriceEvaluation, long> _resourcePriceEvaluation;
         private readonly IRepository<FileManagement, long> _fileManagementRepository;
+
+        /// <summary>
+        /// 工作流服务
+        /// </summary>
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="pricingTeam"></param>
+        /// <param name="resourcePricingTeam"></param>
         /// <param name="resourceDesignScheme"></param>
         /// <param name="resourceSchemeTable"></param>
         /// <param name="resourceModelCount"></param>
         /// <param name="resourcePriceEvaluation"></param>
         /// <param name="fileManagementRepository"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> pricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository)
+        /// <param name="workflowInstanceAppService"></param>
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService)
         {
-            _resourcePricingTeam = pricingTeam;
+            _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
             _resourceSchemeTable = resourceSchemeTable;
             _resourceModelCount = resourceModelCount;
             _resourcePriceEvaluation = resourcePriceEvaluation;
             _fileManagementRepository = fileManagementRepository;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
+
+
+
         /// <summary>
         /// 营销部审核录入
         /// </summary>
@@ -101,6 +115,14 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
                 //删除 用户在前端删除的 数据项目
                 await _resourceSchemeTable.DeleteAsync(p => SolutionTablDiffId.Contains(p.Id));
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = auditEntering.NodeInstanceId,
+                    FinanceDictionaryDetailId = auditEntering.Opinion,
+                    Comment = auditEntering.Comment,
+                });
             }
             catch (Exception ex)
             {
@@ -115,7 +137,13 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <returns></returns>
         public async Task ProductDevelopmentDepartmentReview(ToExamineDto toExamineDto)
         {
-
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = toExamineDto.NodeInstanceId,
+                FinanceDictionaryDetailId = toExamineDto.Opinion,
+                Comment = toExamineDto.Comment,
+            });
         }
         /// <summary>
         /// 营销部审核输出
@@ -146,7 +174,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                List<ModelCount>  modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<SolutionTable> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
                 if (solutionTables.Count is not 0)
@@ -173,23 +201,23 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                                                    ).ToList();
                     //退回的时候 如果 录入页面新增数据 此linq会获取
                     List<SolutionTable> addresult = (from modelCount in modelCounts
-                                                  join solutionTable in solutionTables
-                                                  on modelCount.Id equals solutionTable.Productld into temp
-                                                  from solutionTable in temp.DefaultIfEmpty()
-                                                  where solutionTable == null
-                                                  select new SolutionTable
-                                                  {
-                                                      Id = 0,
-                                                      AuditFlowId = 0,
-                                                      Productld = modelCount.Id,
-                                                      ModuleName = modelCount.Product,
-                                                      SolutionName = "",
-                                                      Product = "",
-                                                      IsCOB = false,
-                                                      ElecEngineerId = 0,
-                                                      StructEngineerId = 0,
-                                                      IsFirst = false,
-                                                  }
+                                                     join solutionTable in solutionTables
+                                                     on modelCount.Id equals solutionTable.Productld into temp
+                                                     from solutionTable in temp.DefaultIfEmpty()
+                                                     where solutionTable == null
+                                                     select new SolutionTable
+                                                     {
+                                                         Id = 0,
+                                                         AuditFlowId = 0,
+                                                         Productld = modelCount.Id,
+                                                         ModuleName = modelCount.Product,
+                                                         SolutionName = "",
+                                                         Product = "",
+                                                         IsCOB = false,
+                                                         ElecEngineerId = 0,
+                                                         StructEngineerId = 0,
+                                                         IsFirst = false,
+                                                     }
                                                    ).ToList();
 
                     result.AddRange(addresult);
