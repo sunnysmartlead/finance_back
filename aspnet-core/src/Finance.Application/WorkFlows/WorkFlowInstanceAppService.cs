@@ -238,125 +238,134 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
-            //获取全部的线和节点
-            var workFlowInstanceId = await _nodeInstanceRepository.GetAll().Where(p => p.Id == input.NodeInstanceId).Select(p => p.WorkFlowInstanceId).FirstAsync();
-            var nodeInstance = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == workFlowInstanceId);
-            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == workFlowInstanceId);
+            //try
+            //{
+                //获取全部的线和节点
+                var workFlowInstanceId = await _nodeInstanceRepository.GetAll().Where(p => p.Id == input.NodeInstanceId).Select(p => p.WorkFlowInstanceId).FirstAsync();
+                var nodeInstance = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == workFlowInstanceId);
+                var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == workFlowInstanceId);
 
-            //将信息写入节点中
-            var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
-            changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
+                //将信息写入节点中
+                var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
+                changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
-            //给业务节点增加历史记录
-            await _instanceHistoryRepository.InsertAsync(new InstanceHistory
-            {
-                WorkFlowId = changeNode.WorkFlowId,
-                WorkFlowInstanceId = workFlowInstanceId,
-                NodeId = changeNode.NodeId,
-                FinanceDictionaryDetailId = changeNode.FinanceDictionaryDetailId,
-                NodeInstanceId = changeNode.Id,
-                Comment = input.Comment,
-            });
-
-            //如果是归档节点
-            if (changeNode.NodeType == NodeType.End)
-            {
-                //就把当前操作人写入节点中，在待办中不出现这些用户的信息
-                var operatedUserIds = changeNode.OperatedUserIds.StrToList();
-                operatedUserIds.Add(AbpSession.UserId.Value.ToString());
-                changeNode.OperatedUserIds = string.Join(",", operatedUserIds);
-                return;
-            }
-
-
-            //获取被激活的线，并将状态置为当前
-            var activeLine = lineInstance.Where(p => p.SoureNodeId == changeNode.NodeId)
-                .Where(p => p.FinanceDictionaryDetailId.StrToList().Contains(input.FinanceDictionaryDetailId));
-            foreach (var item in activeLine)
-            {
-                item.NodeInstanceStatus = NodeInstanceStatus.Current;
-                item.IsCurrent = true;
-            }
-
-            //获取被激活的线连接的节点，执行表达式，判断节点是否被激活。如果被激活，则改变此节点的状态为当前，并且把前面的线状态改为已经过
-            //如果未被激活，不执行任何操作
-            var business2Node = nodeInstance.Where(p => activeLine.Select(o => o.TargetNodeId).Contains(p.NodeId));
-
-            //如果当前节点没有后续的连线，就把当前节点设置为已经过
-            if (!lineInstance.Any(p => p.SoureNodeId == changeNode.NodeId))
-            {
-                changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
-
-                //先获取目标为它们的线
-                var targetBusiness2NodeLines1 = lineInstance.Where(p => p.TargetNodeId == changeNode.NodeId);
-
-                foreach (var line in targetBusiness2NodeLines1.Where(p => p.IsCurrent))
+                //给业务节点增加历史记录
+                await _instanceHistoryRepository.InsertAsync(new InstanceHistory
                 {
-                    line.NodeInstanceStatus = NodeInstanceStatus.Passed;
-                    line.IsCurrent = false;
+                    WorkFlowId = changeNode.WorkFlowId,
+                    WorkFlowInstanceId = workFlowInstanceId,
+                    NodeId = changeNode.NodeId,
+                    FinanceDictionaryDetailId = changeNode.FinanceDictionaryDetailId,
+                    NodeInstanceId = changeNode.Id,
+                    Comment = input.Comment,
+                });
+
+                //如果是归档节点
+                if (changeNode.NodeType == NodeType.End)
+                {
+                    //就把当前操作人写入节点中，在待办中不出现这些用户的信息
+                    var operatedUserIds = changeNode.OperatedUserIds.StrToList();
+                    operatedUserIds.Add(AbpSession.UserId.Value.ToString());
+                    changeNode.OperatedUserIds = string.Join(",", operatedUserIds);
+                    return;
                 }
-            }
-
-            //判断这些节点是否被激活
-            foreach (var item in business2Node)
-            {
-                //先获取目标为它们的线
-                var targetBusiness2NodeLines = lineInstance.Where(p => p.TargetNodeId == item.NodeId);
-
-                //将线转条件数组
-                //var parameters = targetBusiness2NodeLines.Select(p => new DynamicExpresso.Parameter($"{p.LineId}", typeof(bool), p.IsCurrent)).ToArray();
-                var parameters = targetBusiness2NodeLines.Select(p => new DynamicExpresso.Parameter($"{p.LineId}", typeof(bool), p.NodeInstanceStatus == NodeInstanceStatus.Current || p.NodeInstanceStatus == NodeInstanceStatus.Passed)).ToArray();
 
 
-                //执行条件
-                var target = new Interpreter();
-                var result = target.Eval<bool>(item.Activation, parameters);
-
-                //如果节点被激活
-                if (result)
+                //获取被激活的线，并将状态置为当前
+                var activeLine = lineInstance.Where(p => p.SoureNodeId == changeNode.NodeId)
+                    .Where(p => p.FinanceDictionaryDetailId.StrToList().Contains(input.FinanceDictionaryDetailId));
+                foreach (var item in activeLine)
                 {
-                    //把当前节点设置为已经过
+                    item.NodeInstanceStatus = NodeInstanceStatus.Current;
+                    item.IsCurrent = true;
+                }
+
+                //获取被激活的线连接的节点，执行表达式，判断节点是否被激活。如果被激活，则改变此节点的状态为当前，并且把前面的线状态改为已经过
+                //如果未被激活，不执行任何操作
+                var business2Node = nodeInstance.Where(p => activeLine.Select(o => o.TargetNodeId).Contains(p.NodeId));
+
+                //如果当前节点没有后续的连线，就把当前节点设置为已经过
+                if (!lineInstance.Any(p => p.SoureNodeId == changeNode.NodeId))
+                {
                     changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
 
+                    //先获取目标为它们的线
+                    var targetBusiness2NodeLines1 = lineInstance.Where(p => p.TargetNodeId == changeNode.NodeId);
 
-                    //状态改为当前，填充数据变为空
-                    item.NodeInstanceStatus = NodeInstanceStatus.Current;
-                    item.FinanceDictionaryDetailId = string.Empty;
-
-                    //多路退回
-                    if (targetBusiness2NodeLines.Select(p => p.FinanceDictionaryDetailIds).Any(p => !p.IsNullOrWhiteSpace()))
-                    {
-                        item.FinanceDictionaryDetailIds = string.Join(",", targetBusiness2NodeLines.Where(p => !p.FinanceDictionaryDetailIds.IsNullOrWhiteSpace()).SelectMany(p => p.FinanceDictionaryDetailIds.StrToList()));
-                    }
-
-                    foreach (var line in targetBusiness2NodeLines.Where(p => p.IsCurrent))
+                    foreach (var line in targetBusiness2NodeLines1.Where(p => p.IsCurrent))
                     {
                         line.NodeInstanceStatus = NodeInstanceStatus.Passed;
                         line.IsCurrent = false;
+                    }
+                }
+
+                //判断这些节点是否被激活
+                foreach (var item in business2Node)
+                {
+                    //先获取目标为它们的线
+                    var targetBusiness2NodeLines = lineInstance.Where(p => p.TargetNodeId == item.NodeId);
+
+                    //将线转条件数组
+                    //var parameters = targetBusiness2NodeLines.Select(p => new DynamicExpresso.Parameter($"{p.LineId}", typeof(bool), p.IsCurrent)).ToArray();
+                    var parameters = targetBusiness2NodeLines.Select(p => new DynamicExpresso.Parameter($"{p.LineId}", typeof(bool), p.NodeInstanceStatus == NodeInstanceStatus.Current || p.NodeInstanceStatus == NodeInstanceStatus.Passed)).ToArray();
 
 
-                        //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
-                        if (line.LineType == LineType.Reset)
+                    //执行条件
+                    var target = new Interpreter();
+                    var result = target.Eval<bool>(item.Activation, parameters);
+
+                    //如果节点被激活
+                    if (result)
+                    {
+                        //把当前节点设置为已经过
+                        changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
+
+                        //状态改为当前，填充数据变为空
+                        item.NodeInstanceStatus = NodeInstanceStatus.Current;
+                        item.FinanceDictionaryDetailId = string.Empty;
+
+                        //多路退回
+                        if (targetBusiness2NodeLines.Select(p => p.FinanceDictionaryDetailIds).Any(p => !p.IsNullOrWhiteSpace()))
                         {
-                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id);
-                            if (route.Any())
+                            item.FinanceDictionaryDetailIds = string.Join(",", targetBusiness2NodeLines.Where(p => !p.FinanceDictionaryDetailIds.IsNullOrWhiteSpace()).SelectMany(p => p.FinanceDictionaryDetailIds.StrToList()));
+                        }
+
+                        foreach (var line in targetBusiness2NodeLines.Where(p => p.IsCurrent))
+                        {
+                            line.NodeInstanceStatus = NodeInstanceStatus.Passed;
+                            line.IsCurrent = false;
+
+
+                            //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
+                            if (line.LineType == LineType.Reset)
                             {
-                                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
-                                lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
+                                var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id);
+                                if (route.Any())
+                                {
+                                    var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
+                                    lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    //如果节点不被激活，就看两点之间的线是否激活，如果激活，就把当前节点设置为已经过
-                    var line = lineInstance.FirstOrDefault(p => p.SoureNodeId == changeNode.NodeId && p.TargetNodeId == item.NodeId);
-                    if (line is not null && line.IsCurrent)
+                    else
                     {
-                        changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+                        //如果节点不被激活，就看两点之间的线是否激活，如果激活，就把当前节点设置为已经过
+                        var line = lineInstance.FirstOrDefault(p => p.SoureNodeId == changeNode.NodeId && p.TargetNodeId == item.NodeId);
+                        if (line is not null && line.IsCurrent)
+                        {
+                            changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+                        }
                     }
                 }
-            }
+
+            //}
+            //catch (Exception e)
+            //{
+
+            //    throw;
+            //}
         }
 
 
@@ -648,14 +657,24 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task<List<NodeInstance>> GetTargetNodeByNodeId(long nodeInstanceId)
         {
-            var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
+            //try
+            //{
+                var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
 
-            var data = from l in _lineInstanceRepository.GetAll()
-                       join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
-                       where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
-                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
-                       select n;
-            return await data.ToListAsync();
+                var data = from l in _lineInstanceRepository.GetAll()
+                           join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
+                           where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
+                           && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
+                           select n;
+                return await data.ToListAsync();
+
+
+            //}
+            //catch (Exception e)
+            //{
+
+            //    throw;
+            //}
         }
     }
 }
