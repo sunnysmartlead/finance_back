@@ -12,7 +12,12 @@ namespace Finance.Dto
     /// /审批方法通用交互类
     /// </summary>
     public class ToExamineDto
-    {        
+    {
+        /// <summary>
+        /// 节点实例Id
+        /// </summary>
+        public virtual long NodeInstanceId { get; set; }
+
         /// <summary>
         /// 审批意见
         /// </summary>
