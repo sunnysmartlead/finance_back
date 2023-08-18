@@ -1,16 +1,11 @@
 ﻿using Abp.Authorization;
 using Abp.Domain.Repositories;
-using Abp.Domain.Uow;
-using Abp.UI;
 using Finance.Audit;
-using Finance.DemandApplyAudit;
-using Finance.Dto;
 using Finance.Entering.Model;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment;
-using Finance.PropertyDepartment.Entering;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
@@ -18,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Finance.Authorization.Roles.StaticRoleNames;
 using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.Entering
@@ -503,7 +497,15 @@ namespace Finance.Entering
         public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
-        } 
+        }
+        /// <summary>
+        /// 结构/电子/BOM/单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async Task BOMUnitPriceReview(BomUnitPriceReviewToExamineDto toExamineDto)
+        {
+            
+        }
 
     }
 

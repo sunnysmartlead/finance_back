@@ -36,6 +36,16 @@ namespace Finance.PriceEval.Dto
         //public virtual long AuditFlowId { get; set; }
 
         /// <summary>
+        /// 核价原因
+        /// </summary>
+        public virtual string EvalReason { get; set; }
+
+        /// <summary>
+        /// 审批评论
+        /// </summary>
+        public virtual string Comment { get; set; }
+
+        /// <summary>
         /// 标题
         /// </summary>
         [Required]
@@ -376,7 +386,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 国家类型
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string CountryType { get; set; }
 
         /// <summary>

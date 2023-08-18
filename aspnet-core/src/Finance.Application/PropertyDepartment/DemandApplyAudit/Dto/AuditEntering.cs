@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities.Auditing;
+using Finance.Dto;
 using Finance.Ext;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.DemandApplyAudit.Method;
@@ -14,7 +15,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
     /// <summary>
     /// 营销部审核 录入类
     /// </summary>
-    public class AuditEntering
+    public class AuditEntering: ToExamineDto
     {
         /// <summary>
         /// 流程Id
@@ -35,11 +36,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>  
         [FriendlyRequired("方案表")]
         public List<SolutionTableDto> SolutionTableList { get; set; }        
-        /// <summary>
-        /// true 为提价  false为保存
-        /// </summary>
         
-        public bool IsSubmit { get; set; }
     }
     /// <summary>
     /// 营销部审核中项目设计方案

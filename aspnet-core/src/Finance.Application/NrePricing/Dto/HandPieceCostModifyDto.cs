@@ -1,21 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.NrePricing.Dto
 {
     /// <summary>
-    /// 手板件费用 模型
+    /// 手板件 修改项 交互类
     /// </summary>
-    public class HandPieceCostModel
+    public class HandPieceCostModifyDto
     {
         /// <summary>
         /// Id
         /// </summary>
         public long Id { get; set; }
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 修改项的id
+        /// </summary>
+        public long ModifyId { get; set; }
         /// <summary>
         /// 部件名
         /// </summary>

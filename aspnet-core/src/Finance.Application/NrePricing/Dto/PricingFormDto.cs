@@ -79,4 +79,50 @@ namespace Finance.NrePricing.Dto
         /// </summary>
         public decimal USDAllCost { get; set; }
     }
+    /// <summary>
+    /// Nre 核价表 交互类 加修改项
+    /// </summary>
+    public class ModifyItemPricingFormDto: PricingFormDto
+    {
+        /// <summary>
+        /// 手板件费用修改项
+        /// </summary>
+        public List<HandPieceCostModifyDto> HandPieceCostModifyDtos { get; set; }
+        /// <summary>
+        /// 模具费用修改项
+        /// </summary>
+        public List<MouldInventoryModifyDto> MouldInventoryModifyDtos { get; set; }
+        /// <summary>
+        /// 工装费用修改项
+        /// </summary>
+        public List<ToolingCostsModifyDto> ToolingCostsModifyDtos { get; set; }
+        /// <summary>
+        /// 治具费用修改项
+        /// </summary>
+        public List<FixtureCostsModifyDto> FixtureCostsModifyDtos { get; set; }
+        /// <summary>
+        /// 检具费用修改项
+        /// </summary>
+        public List<InspectionToolCostModifyDto> InspectionToolCostModifyDtos { get; set; }
+        /// <summary>
+        /// 生产设备费用修改项
+        /// </summary>
+        public List<ProductionEquipmentCostsModifyDto> ProductionEquipmentCostsModifyDtos { get; set; }
+        /// <summary>
+        /// 实验费用修改项
+        /// </summary>
+        public List<ExperimentalExpensesModifyDto> ExperimentalExpensesModifyDtos { get; set; }
+        /// <summary>
+        /// 测试软件费用修改项
+        /// </summary>
+        public List<TestingSoftwareCostsModifyDto> TestingSoftwareCostsModifyDtos { get; set; }
+        /// <summary>
+        /// 差旅费用修改项
+        /// </summary>
+        public List<TravelExpenseModifyDto> TravelExpenseModifyDtos { get; set; }
+        /// <summary>
+        /// 其他费用修改项
+        /// </summary>
+        public List<RestsCostModifyDto> RestsCostModifyDtos { get; set; }
+    }
 }

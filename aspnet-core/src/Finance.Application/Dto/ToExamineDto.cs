@@ -1,6 +1,7 @@
 ﻿using Finance.Ext;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,15 +12,14 @@ namespace Finance.Dto
     /// /审批方法通用交互类
     /// </summary>
     public class ToExamineDto
-    {
+    {        
         /// <summary>
-        /// 是否同意
+        /// 审批意见
         /// </summary>
-        public bool AgreeOrNot { get; set; }
+        public string Opinion { get; set; }
         /// <summary>
-        /// 备注(必填)
+        /// 审批评论
         /// </summary>
-        [FriendlyRequired("备注")]
-        public string Remarks { get; set; }
-    }
+        public string Comment { get; set; }
+    }   
 }

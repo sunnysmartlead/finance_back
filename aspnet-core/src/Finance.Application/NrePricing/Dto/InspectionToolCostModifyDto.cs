@@ -1,29 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.NrePricing.Dto
 {
     /// <summary>
-    /// 手板件费用 模型
+    /// 检具费用  修改项交互类
     /// </summary>
-    public class HandPieceCostModel
+    public class InspectionToolCostModifyDto
     {
         /// <summary>
         /// Id
         /// </summary>
         public long Id { get; set; }
         /// <summary>
-        /// 部件名
-        /// </summary>
-        public string PartName { get; set; }
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
         /// <summary>
-        /// 料号
+        /// 方案的id
         /// </summary>
-        public string PartNumber { get; set; }
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 修改项的id
+        /// </summary>
+        public long ModifyId { get; set; }
+        /// <summary>
+        /// 项目制程QC量检具
+        /// </summary>
+        public string Qc { get; set; }
         /// <summary>
         /// 单价
         /// </summary>
@@ -31,7 +38,7 @@ namespace Finance.NrePricing.Model
         /// <summary>
         /// 数量
         /// </summary>
-        public int Quantity { get; set; }
+        public int Count { get; set; }
         /// <summary>
         /// 费用
         /// </summary>

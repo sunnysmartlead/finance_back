@@ -4,17 +4,33 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.NrePricing.Model
+namespace Finance.NrePricing.Dto
 {
     /// <summary>
-    /// Nre 工装费用 实体类
+    /// 工装费用 修改项 交互类
     /// </summary>
-    public class ToolingCostModel
+    public class ToolingCostsModifyDto
     {
         /// <summary>
         /// Id
         /// </summary>
-        public long Id { get; set; }
+        public long  Id { get; set; }
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 修改项的id
+        /// </summary>
+        public long ModifyId { get; set; }
+        /// <summary>
+        /// 事由外键
+        /// </summary>
+        public string ReasonsId { get; set; }
         /// <summary>
         /// 工装名称
         /// </summary>      

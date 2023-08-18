@@ -340,5 +340,10 @@ namespace Finance.PriceEval
         /// </summary>
         //[Required]
         public virtual decimal ExchangeRate { get; set; }
+
+        /// <summary>
+        /// BOM是否客供Json
+        /// </summary>
+        public virtual string BomIsCustomerSupplyJson { get; set;}
     }
 }

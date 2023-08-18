@@ -8,6 +8,7 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
+using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.FinanceParameter;
@@ -22,6 +23,7 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Method;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
@@ -30,6 +32,7 @@ using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.PerformanceData;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -68,6 +71,10 @@ namespace Finance.PriceEval
         private readonly IRepository<CarModelCount, long> _carModelCountRepository;
         private readonly IRepository<CarModelCountYear, long> _carModelCountYearRepository;
 
+        private readonly IRepository<EditItem, long> _editItemRepository;
+
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
 
         /// <summary>
@@ -85,9 +92,10 @@ namespace Finance.PriceEval
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
-           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository)
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, IRepository<EditItem, long> editItemRepository,
+           WorkflowInstanceAppService workflowInstanceAppService)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, editItemRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -106,6 +114,8 @@ namespace Finance.PriceEval
 
             _carModelCountRepository = carModelCountRepository;
             _carModelCountYearRepository = carModelCountYearRepository;
+
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -121,6 +131,17 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+
+            if (input.EvalReason.IsNullOrWhiteSpace())
+            {
+                input.EvalReason = FinanceConsts.EvalReason_Fabg;
+            }
+
+            if (input.CountryType.IsNullOrWhiteSpace())
+            {
+                input.CountryType = "空";
+            }
+
             long auditFlowId;
             //var check = from m in input.ModelCount
             //            join p in input.ProductInformation on m.Product equals p.Product
@@ -188,13 +209,20 @@ namespace Finance.PriceEval
             }
             priceEvaluation.DraftingDepartmentId = user.DepartmentId;
 
-            long flowId = await _flowAppService.SavaNewAuditFlowInfo(new Audit.Dto.AuditFlowDto()
+            //long flowId = await _flowAppService.SavaNewAuditFlowInfo(new Audit.Dto.AuditFlowDto()
+            //{
+            //    QuoteProjectName = input.ProjectName,
+            //    QuoteProjectNumber = input.ProjectCode
+            //});
+            //auditFlowId = flowId;
+
+            auditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
             {
-                QuoteProjectName = input.ProjectName,
-                QuoteProjectNumber = input.ProjectCode
+                WorkflowId = WorkFlowCreator.MainFlowId,
+                Title = input.Title,
+                FinanceDictionaryDetailId = input.EvalReason
             });
-            //long flowId = 0;
-            auditFlowId = flowId;
+
             priceEvaluation.AuditFlowId = auditFlowId;
             var priceEvaluationId = await _priceEvaluationRepository.InsertAndGetIdAsync(priceEvaluation);
 
@@ -479,7 +507,7 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<MemoryStream> NreTableDownloadStream(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingForm(input.AuditFlowId, input.ProductId);
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
@@ -525,7 +553,7 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingForm(input.AuditFlowId, input.ProductId);
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
 
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);

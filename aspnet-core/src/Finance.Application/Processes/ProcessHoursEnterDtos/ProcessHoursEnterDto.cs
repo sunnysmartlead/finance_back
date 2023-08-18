@@ -35,5 +35,18 @@ namespace Finance.Processes
         public string TestLineName { get; set; }
         public System.Nullable<System.Decimal> TestLineNumber { get; set; }
         public System.Nullable<System.Decimal> TestLinePrice { get; set; }
+
+        public List<ProcessHoursEnterDeviceDto> ListProcessHoursEnterDeviceDtos { get; set; } 
+
+        public List<ProcessHoursEnterFixtureDto> ListProcessHoursEnterFixtureDto { get; set; }
+
+
+        public List<ProcessHoursEnterFrock> ListProcessHoursEnterFrock { get; set; }
+
+        public List<ProcessHoursEnteritemDto> ListProcessHoursEnteritemDto { get; set; }
+
+        public List<ProcessHoursEnterLineDto> ListProcessHoursEnterLineDto { get; set; }
+
+        public List<ProcessHoursEnterUphDto> ListProcessHoursEnterUphDto { get; set; }
     }
 }

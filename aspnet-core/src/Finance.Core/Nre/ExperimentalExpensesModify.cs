@@ -1,5 +1,4 @@
 ﻿using Abp.Domain.Entities.Auditing;
-using Castle.MicroKernel.SubSystems.Conversion;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,26 +9,23 @@ using System.Threading.Tasks;
 namespace Finance.Nre
 {
     /// <summary>
-    /// 实验费  实体类
+    /// 实验费用 修改项 实体类
     /// </summary>
-    public class LaboratoryFee : FullAuditedEntity<long>
+    [Table("NRE_EEModify")]
+    public class ExperimentalExpensesModify : FullAuditedEntity<long>
     {
         /// <summary>
         /// 流程号Id
         /// </summary> 
         public long AuditFlowId { get; set; }
         /// <summary>
-        /// 零件的id
-        /// </summary>
-        public long ProductId { get; set; }
-        /// <summary>
-        /// 方案表ID
+        /// 方案的id
         /// </summary>
         public long SolutionId { get; set; }
         /// <summary>
-        /// 方案号
+        /// 修改项的id
         /// </summary>
-        public string SolutionNum { get; set; }
+        public long ModifyId { get; set; }
         /// <summary>
         /// 试验项目(根据与客户协定项目)
         /// </summary>

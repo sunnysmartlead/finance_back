@@ -79,6 +79,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GradientModel> GradientModel { set; get; }
         public virtual DbSet<GradientModelYear> GradientModelYear { set; get; }
         public virtual DbSet<ShareCount> ShareCount { set; get; }
+        public virtual DbSet<EditItem> EditItem { set; get; }
 
 
         public virtual DbSet<UserInputInfo> UserInputInfo { get; set; }
@@ -101,7 +102,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<MouldInventory> MouldInventory { set; get; }
         public virtual DbSet<QADepartmentQC> QADepartmentQC { set; get; }
         // Nre 品保录入 环境实验费 实体类
-        public virtual DbSet<EnvironmentalExperimentFee> QADepartmentTest { set; get; }
+        public virtual DbSet<EnvironmentalExperimentFee> EnvironmentalExperimentFee { set; get; }
         // Nre 项目管理部 其他费用实体类
         public virtual DbSet<RestsCost> RestsCost { set; get; }
         // 差旅费  实体类
@@ -192,9 +193,45 @@ namespace Finance.EntityFrameworkCore
 
         #region NRE新增表
         /// <summary>
-        /// Nre 品保录入 环境实验费 实体类
-        /// </summary> 
-        public virtual DbSet<EnvironmentalExperimentFee> EnvironmentalExperimentFee { get; set; }
+        /// 实验费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<ExperimentalExpensesModify> ExperimentalExpensesModify { get; set; }
+        /// <summary>
+        /// 治具费用修改项实体类
+        /// </summary>
+        public virtual DbSet<FixtureCostsModify> FixtureCostsModify { get; set; }
+        /// <summary>
+        /// Nre 项目管理部 手板件 修改项实体类
+        /// </summary>
+        public virtual DbSet<HandPieceCostModify> HandPieceCostModify { get; set; }
+        /// <summary>
+        /// 检具费用  修改项实体类
+        /// </summary>
+        public virtual DbSet<InspectionToolCostModify> InspectionToolCostModify { get; set; }
+        /// <summary>
+        /// Nre 资源部 模具清单 修改项实体类
+        /// </summary>
+        public virtual DbSet<MouldInventoryModify> MouldInventoryModify { get; set; }
+        /// <summary>
+        /// 生产设备费用 修改项实体类
+        /// </summary>
+        public virtual DbSet<ProductionEquipmentCostsModify> ProductionEquipmentCostsModify { get; set; }
+        /// <summary>
+        /// Nre 项目管理部 其他费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<RestsCostModify> RestsCostModify { get; set; }
+        /// <summary>
+        /// 测试软件费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<TestingSoftwareCostsModify> TestingSoftwareCostsModify { get; set; }
+        /// <summary>
+        /// 差旅费 修改项 实体类
+        /// </summary>
+        public virtual DbSet<TravelExpenseModify> TravelExpenseModify { get; set; }
+        /// <summary>
+        /// 工装费用 修改项 实体类
+        /// </summary>
+        public virtual DbSet<ToolingCostsModify> ToolingCostsModify { get; set; }
         #endregion
 
         //工作流相关的表

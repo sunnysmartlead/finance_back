@@ -109,6 +109,7 @@ namespace Finance.Processes
         /// 软件单价
         /// </summary>
         [Column("software_price")]
+
 		public decimal SoftwarePrice { get; set; }
 
 		/// <summary>
