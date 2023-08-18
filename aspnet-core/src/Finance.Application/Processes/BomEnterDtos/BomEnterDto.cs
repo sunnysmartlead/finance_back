@@ -27,7 +27,9 @@ namespace Finance.Processes
         public System.Nullable<System.Decimal> IndirectLaborPrice { get; set; }
         public System.Nullable<System.Decimal> IndirectManufacturingCosts { get; set; }
         public System.Nullable<System.Decimal> IndirectSummary { get; set; }
-        public long? SolutionId { get; set; }
+
+        public long SolutionId { get; set; }
+
         public string Remark { get; set; }
         public System.Nullable<System.Decimal> TotalCost { get; set; }
         public string Year { get; set; }

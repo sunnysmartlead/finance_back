@@ -7,3 +7,4 @@ bin/
 aspnet-core/src/Finance.Web.Host/App_Data/Logs/
 aspnet-core/src/Finance.Web.Mvc/App_Data/Logs/
 aspnet-core/src/Finance.Migrator/Logs/Logs.txt
+/.idea

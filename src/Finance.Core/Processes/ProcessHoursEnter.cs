@@ -39,14 +39,13 @@ namespace Finance.Processes
 		/// 检具数量
 		/// </summary>
 		[Column("fixture_number")]
-		[StringLength(255, ErrorMessage = "检具数量长度不能超出255字符")]
-		public string FixtureNumber { get; set; }
+		public decimal FixtureNumber { get; set; }
 
 		/// <summary>
 		/// 检具单价
 		/// </summary>
 		[Column("fixture_price")]
-		public decimal? FixturePrice { get; set; }
+		public decimal FixturePrice { get; set; }
 
 		/// <summary>
 		/// 工装名称
@@ -59,25 +58,25 @@ namespace Finance.Processes
 		/// 工装数量
 		/// </summary>
 		[Column("frock_number")]
-		public decimal? FrockNumber { get; set; }
+		public decimal FrockNumber { get; set; }
 
 		/// <summary>
 		/// 工装单价
 		/// </summary>
 		[Column("frock_price")]
-		public decimal? FrockPrice { get; set; }
+		public decimal FrockPrice { get; set; }
 
 		/// <summary>
 		/// 软硬件总价
 		/// </summary>
 		[Column("hardware_device_total_price")]
-		public decimal? HardwareDeviceTotalPrice { get; set; }
+		public decimal HardwareDeviceTotalPrice { get; set; }
 
 		/// <summary>
 		/// 硬件总价
 		/// </summary>
 		[Column("hardware_total_price")]
-		public decimal? HardwareTotalPrice { get; set; }
+		public decimal HardwareTotalPrice { get; set; }
 
 		/// <summary>
 		/// 开图软件
@@ -123,13 +122,13 @@ namespace Finance.Processes
 		/// 测试线数量
 		/// </summary>
 		[Column("test_line_number")]
-		public decimal? TestLineNumber { get; set; }
+		public decimal TestLineNumber { get; set; }
 
 		/// <summary>
 		/// 测试线单价
 		/// </summary>
 		[Column("test_line_price")]
-		public decimal? TestLinePrice { get; set; }
+		public decimal TestLinePrice { get; set; }
 
 
 	}
