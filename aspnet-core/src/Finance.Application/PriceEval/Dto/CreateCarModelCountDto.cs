@@ -78,7 +78,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 年份
         /// </summary>
-        public virtual List<CreateCarModelCountYearDto> CarModelCountYearList { get; set; }
+        public virtual List<CreateCarModelCountYearDto> ModelCountYearList { get; set; }
     }
 
     /// <summary>

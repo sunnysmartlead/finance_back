@@ -263,7 +263,7 @@ namespace Finance.PriceEval
                 carModelCount.AuditFlowId = auditFlowId;
                 var productId = await _carModelCountRepository.InsertAndGetIdAsync(carModelCount);
 
-                foreach (var createModelCountYearDto in createCarModelCountDto.CarModelCountYearList)
+                foreach (var createModelCountYearDto in createCarModelCountDto.ModelCountYearList)
                 {
                     var carModelCountYear = ObjectMapper.Map<CarModelCountYear>(createModelCountYearDto);
                     carModelCountYear.AuditFlowId = auditFlowId;
@@ -407,7 +407,7 @@ namespace Finance.PriceEval
                    .Join(_carModelCountYearRepository.GetAll(), p => p.Id, p => p.CarModelCountId, (carModelCount, carModelCountYear) => new { carModelCount, carModelCountYear }).ToListAsync()).GroupBy(p => p.carModelCount).Select(p =>
                    {
                        var dto = ObjectMapper.Map<CreateCarModelCountDto>(p.Key);
-                       dto.CarModelCountYearList = ObjectMapper.Map<List<CreateCarModelCountYearDto>>(p.Select(o => o.carModelCountYear));
+                       dto.ModelCountYearList = ObjectMapper.Map<List<CreateCarModelCountYearDto>>(p.Select(o => o.carModelCountYear));
                        return dto;
                    }).ToList();
 
