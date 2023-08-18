@@ -20,7 +20,7 @@ namespace Finance.Processes
         public string DevelopTotalPrice { get; set; }
         public System.Nullable<System.Decimal> DeviceTotalPrice { get; set; }
         public string FixtureName { get; set; }
-        public string FixtureNumber { get; set; }
+        public decimal FixtureNumber { get; set; }
         public System.Nullable<System.Decimal> FixturePrice { get; set; }
         public string FrockName { get; set; }
         public System.Nullable<System.Decimal> FrockNumber { get; set; }

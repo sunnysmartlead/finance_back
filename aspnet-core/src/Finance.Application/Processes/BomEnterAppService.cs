@@ -107,7 +107,7 @@ namespace Finance.Processes
 
                  
 
-                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.ProductId == input.SolutionId && t.Classification == item).ToList();
+                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
                     List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
                     foreach (var dtosItemTotal in queryItemTotal)
                     {
@@ -153,7 +153,7 @@ namespace Finance.Processes
         public virtual async Task CreateAsync(BomEnterDto input)
         {
             await _bomEnterRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
-            await _bomEnterTotalRepository.DeleteAsync(s => s.ProductId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
             List<BomEnterDto> LogisticscostList = input.ListBomEnter;
         
                 foreach (var item1 in input.ListBomEnter)
@@ -187,7 +187,7 @@ namespace Finance.Processes
                 foreach (var item1 in input.ListBomEnterTotal)
                 {
                     BomEnterTotal bomEnterTotal = new BomEnterTotal();
-                    bomEnterTotal.ProductId = input.SolutionId;
+                    bomEnterTotal.SolutionId = input.SolutionId;
                     bomEnterTotal.AuditFlowId = input.AuditFlowId;
                     bomEnterTotal.Classification = input.Classification;
                     bomEnterTotal.CreationTime = DateTime.Now;
