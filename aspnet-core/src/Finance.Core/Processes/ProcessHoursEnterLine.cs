@@ -17,8 +17,8 @@ namespace Finance.Processes
 		/// <summary>
 		/// 零件id
 		/// </summary>
-		[Column("product_id")]
-		public long? ProductId { get; set; }
+		[Column("solution_id")]
+		public long SolutionId { get; set; }
 
 		/// <summary>
 		/// UPH参数

@@ -83,5 +83,12 @@ namespace Finance.BaseLibrary
 		public string Year { get; set; }
 
 
-	}
+        /// <summary>
+        ///  0 保存  1 提交
+        /// </summary>
+        [Column("status")]
+        public long Status { get; set; }
+
+
+    }
 }
