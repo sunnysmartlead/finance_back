@@ -13,15 +13,13 @@ namespace Finance.Processes
 		/// 
 		/// </summary>
 		[Column("audit_flow_id")]
-		[StringLength(255, ErrorMessage = "AuditFlowId长度不能超出255字符")]
 		public long AuditFlowId { get; set; }
 
 		/// <summary>
 		/// 
 		/// </summary>
-		[Column("product_id")]
-		[StringLength(255, ErrorMessage = "ProductId长度不能超出255字符")]
-		public long ProductId { get; set; }
+		[Column("solution_id")]
+		public long SolutionId { get; set; }
 
 		/// <summary>
 		/// UPH数据

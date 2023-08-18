@@ -25,8 +25,8 @@ namespace Finance.Processes
 		/// <summary>
 		/// 
 		/// </summary>
-		[Column("product_id")]
-		public long? ProductId { get; set; }
+			[Column("solution_id")]
+    	public long SolutionId { get; set; }
 
 		/// <summary>
 		/// 备注
@@ -48,5 +48,11 @@ namespace Finance.Processes
 		[StringLength(255, ErrorMessage = "年长度不能超出255字符")]
 		public string Year { get; set; }
 
-	}
+        /// <summary>
+        ///  0 保存  1 提交
+        /// </summary>
+        [Column("status")]
+        public long status { get; set; }
+
+    }
 }

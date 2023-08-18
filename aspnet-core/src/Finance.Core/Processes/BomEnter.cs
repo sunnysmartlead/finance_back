@@ -102,6 +102,12 @@ namespace Finance.Processes
 		[StringLength(255, ErrorMessage = "年份长度不能超出255字符")]
 		public string Year { get; set; }
 
+        /// <summary>
+        ///  0 保存  1 提交
+        /// </summary>
+        [Column("status")]
+        public long status { get; set; }
 
-	}
+
+    }
 }
