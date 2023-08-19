@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.BaseLibrary;
 using System;
@@ -308,12 +309,100 @@ namespace Finance.Processes
         /// <param name="id">主键</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<ProcessHoursEnterDto> UpdateAsync(ProcessHoursEnterDto input)
+        public virtual async Task UpdateAsync(ProcessHoursEnterDto input)
         {
-            ProcessHoursEnter entity = await _processHoursEnterRepository.GetAsync(input.Id);
-            entity = ObjectMapper.Map(input, entity);
+            ProcessHoursEnter entity = new ProcessHoursEnter();
+            entity.ProcessName = input.ProcessName;
+            entity.Id = input.Id;
+            entity.ProcessNumber = input.ProcessNumber;
+            entity.SolutionId = input.SolutionId;
+            entity.AuditFlowId = input.AuditFlowId;
+            entity.DeviceTotalPrice = input.DeviceInfo.DeviceTotalCost;
+            entity.HardwareTotalPrice = input.DevelopCostInfo.HardwareTotalPrice;
+            entity.SoftwarePrice = input.DevelopCostInfo.SoftwarePrice;
+            entity.OpenDrawingSoftware = input.DevelopCostInfo.OpenDrawingSoftware;
+            entity.HardwareTotalPrice = input.DevelopCostInfo.HardwareDeviceTotalPrice;
+            entity.FixtureName = input.ToolInfo.FixtureName;
+            entity.FrockPrice = input.ToolInfo.FrockPrice;
+            entity.FixtureNumber = input.ToolInfo.FixtureNumber;
+            entity.FrockPrice = input.ToolInfo.FrockPrice;
+            entity.FrockName = input.ToolInfo.FrockName;
+            entity.FrockNumber = input.ToolInfo.FrockNumber;
+            entity.TestLineName = input.ToolInfo.TestLineName;
+            entity.TestLineNumber = input.ToolInfo.TestLineNumber;
+            entity.TestLinePrice = input.ToolInfo.TestLinePrice;
+            entity.DevelopTotalPrice = input.ToolInfo.DevelopTotalPrice;
+            entity.CreationTime = DateTime.Now;
+            if (AbpSession.UserId != null)
+            {
+                entity.CreatorUserId = AbpSession.UserId.Value;
+                entity.LastModificationTime = DateTime.Now;
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+            }
+            entity.LastModificationTime = DateTime.Now;
             entity = await _processHoursEnterRepository.UpdateAsync(entity);
-            return ObjectMapper.Map<ProcessHoursEnter, ProcessHoursEnterDto>(entity,new ProcessHoursEnterDto());
+            await _processHoursEnterFixtureRepository.DeleteAsync(s => s.ProcessHoursEnterId == entity.Id);
+            await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == entity.Id);
+            await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == entity.Id);
+            await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == entity.Id);
+            //设备信息
+            if (null != input.DeviceInfo.DeviceArr)
+            {
+                foreach (var DeviceInfoItem in input.DeviceInfo.DeviceArr)
+                {
+                    ProcessHoursEnterDevice processHoursEnterDevice = new ProcessHoursEnterDevice();
+                    processHoursEnterDevice.ProcessHoursEnterId = entity.Id;
+                    processHoursEnterDevice.DeviceNumber = DeviceInfoItem.DeviceNumber;
+                    processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
+                    processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
+                    processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
+                    _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                }
+            }
+            //追溯部分(硬件及软件开发费用)
+            if (null != input.DevelopCostInfo.HardwareInfo)
+            {
+                foreach (var hardwareInfoItem in input.DevelopCostInfo.HardwareInfo)
+                {
+                    ProcessHoursEnterFrock processHoursEnterFrock = new ProcessHoursEnterFrock();
+                    processHoursEnterFrock.ProcessHoursEnterId = entity.Id;
+                    processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
+                    processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
+                    processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
+                    _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
+                }
+            }
+
+            //工装治具部分
+            if (null != input.ToolInfo.ZhiJuArr)
+            {
+                foreach (var zoolInfo in input.ToolInfo.ZhiJuArr)
+                {
+                    ProcessHoursEnterFixture processHoursEnterFixture = new ProcessHoursEnterFixture();
+                    processHoursEnterFixture.ProcessHoursEnterId = entity.Id;
+                    processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
+                    processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
+                    processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
+                    _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
+                }
+            }
+
+            //年
+            if (null != input.SopInfo)
+            {
+                foreach (var year in input.SopInfo)
+                {
+                    foreach (var yearItem in year.Issues)
+                    {
+                        ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
+                        processHoursEnteritem.Year = year.Year;
+                        processHoursEnteritem.LaborHour = yearItem.LaborHour;
+                        processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
+                        processHoursEnteritem.MachineHour = yearItem.MachineHour;
+                        _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -324,6 +413,10 @@ namespace Finance.Processes
         public virtual async Task DeleteAsync(long id)
         {
             await _processHoursEnterRepository.DeleteAsync(s => s.Id == id);
+            await _processHoursEnterFixtureRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
+            await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
+            await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
+            await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
         }
     }
 }
