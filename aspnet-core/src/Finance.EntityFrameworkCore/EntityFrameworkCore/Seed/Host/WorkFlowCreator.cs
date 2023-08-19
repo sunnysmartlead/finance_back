@@ -676,7 +676,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "BOM成本审核",
                     TargetNodeId = "查看每个方案初版BOM成本",
                     Index = 0,
-                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                    FinanceDictionaryDetailId = FinanceConsts.BomEvalSelect_Yes,
                 },
                 new Line
                 {

@@ -232,25 +232,25 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 模具费分摊 
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool AllocationOfMouldCost { set; get; }
 
         /// <summary>
         /// 治具费分摊 
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool AllocationOfFixtureCost { set; get; }
 
         /// <summary>
         /// 工装费分摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool FrockCost { set; get; }
 
         /// <summary>
         /// 专用设备费分摊
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool AllocationOfEquipmentCost { set; get; }
 
         ///// <summary>
@@ -262,31 +262,31 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 检具费用分摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool FixtureCost { set; get; }
 
         /// <summary>
         /// 实验费分摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool ExperimentCost { set; get; }
 
         /// <summary>
         /// 测试软件费分摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool TestCost { set; get; }
 
         /// <summary>
         /// 差旅费摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool TravelCost { set; get; }
 
         /// <summary>
         /// 其他费用分摊（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual bool OtherCost { set; get; }
 
         ///// <summary>
@@ -298,7 +298,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 落地工厂（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【LandingFactory】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string LandingFactory { set; get; }
 
         /// <summary>
