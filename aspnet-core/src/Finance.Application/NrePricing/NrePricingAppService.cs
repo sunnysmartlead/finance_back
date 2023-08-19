@@ -1663,6 +1663,11 @@ namespace Finance.NerPricing
                 //模具费用
                 List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 modify.MouldInventory = ObjectMapper.Map<List<MouldInventoryModel>>(mouldInventories);
+                foreach (MouldInventoryModel item in modify.MouldInventory)
+                {
+                    User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
+                    if (user is not null) item.PeopleName = user.Name;//提交人名称              
+                }
                 List<ProcessHoursEnter> processHours = await _processHoursEnter.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 //工装费用 (工装费用+测试线费用)              
                 List<ToolingCostModel> workingHoursInfosGZ = new();
