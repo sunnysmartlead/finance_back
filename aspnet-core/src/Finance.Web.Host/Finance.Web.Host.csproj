@@ -48,6 +48,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup> 
+    <Content Update="wwwroot\Excel\NRE产品部EMC电性能实验费模版.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content> 
     <Content Update="wwwroot\Excel\NRE环境实验费模版.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

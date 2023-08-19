@@ -815,11 +815,11 @@ namespace Finance.NerPricing
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public IActionResult PostProductDepartmentDownloadExcel(string FileName = "NRE产品部EMC+电性能实验费模版下载")
+        public IActionResult PostProductDepartmentDownloadExcel(string FileName = "NRE产品部EMC电性能实验费模版下载")
         {
             try
             {
-                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE产品部EMC+电性能实验费模版.xlsx";
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE产品部EMC电性能实验费模版.xlsx";
                 return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 {
                     FileDownloadName = $"{FileName}.xlsx"
