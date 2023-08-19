@@ -9,6 +9,8 @@ using Finance.ProductDevelopment;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,6 +53,10 @@ namespace Finance.Entering
         /// 流程流转服务
         /// </summary>
         internal readonly AuditFlowAppService _flowAppService;
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -63,7 +69,7 @@ namespace Finance.Entering
             IRepository<EnteringElectronic, long> enteringElectronic,
             IRepository<StructureElectronic, long> structureElectronic,
             IRepository<ElecBomDifferent, long> elecBomDifferent,
-            IRepository<StructBomDifferent, long> structBomDifferent)
+            IRepository<StructBomDifferent, long> structBomDifferent, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _resourceModelCount = modelCount;
             _resourceModelCountYear = modelCountYear;
@@ -75,6 +81,7 @@ namespace Finance.Entering
             _configStructureElectronic = structureElectronic;
             _configElecBomDifferent = elecBomDifferent;
             _configStructBomDifferent = structBomDifferent;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
         /// <summary>
@@ -235,6 +242,14 @@ namespace Finance.Entering
                 //电子料单价录入确认
                 await _resourceElectronicStructuralMethod.ElectronicMaterialEntering(electronicDto);
             }
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = electronicDto.NodeInstanceId,
+                FinanceDictionaryDetailId = electronicDto.Opinion,
+                Comment = electronicDto.Comment,
+            });
+
         }   
         /// <summary>
         /// 电子料单价录入  判断是否全部提交完毕  true 所有零件已录完   false  没有录完
@@ -426,6 +441,14 @@ namespace Finance.Entering
             {
                 await _resourceElectronicStructuralMethod.StructuralMemberEntering(structuralMemberEnteringModel);
             }
+
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = structuralMemberEnteringModel.NodeInstanceId,
+                FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
+                Comment = structuralMemberEnteringModel.Comment,
+            });
         }
         /// <summary>
         /// 结构件单价录入  判断是否全部提交完毕  true 所有零件已录完   false  没有录完

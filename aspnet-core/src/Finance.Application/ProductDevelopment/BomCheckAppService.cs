@@ -5,6 +5,8 @@ using Finance.Dto;
 using Finance.Entering;
 using Finance.ProductDevelopment.Dto;
 using Finance.PropertyDepartment.Entering;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +31,7 @@ namespace Finance.ProductDevelopment
         /// 资源单价录入服务
         /// </summary>
         private readonly ResourceEnteringAppService _resourceEnteringAppService;
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
         /// <summary>
         /// 构造函数
@@ -37,12 +40,13 @@ namespace Finance.ProductDevelopment
         /// <param name="resourceEnteringAppService"></param>
         /// <param name="electronicBomAppService"></param>
         /// <param name="structionBomAppService"></param>
-        public BomCheckAppService(AuditFlowAppService flowAppService, ResourceEnteringAppService resourceEnteringAppService, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService)
+        public BomCheckAppService(AuditFlowAppService flowAppService, ResourceEnteringAppService resourceEnteringAppService, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _flowAppService = flowAppService;
             _resourceEnteringAppService = resourceEnteringAppService;
             _electronicBomAppService = electronicBomAppService;
             _structionBomAppService = structionBomAppService;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
         /// <summary>
@@ -122,6 +126,16 @@ namespace Finance.ProductDevelopment
                     ResourceSubmitLog.IsPostStructural.Remove(bomCheck.AuditFlowId);
                 }
             }
+
+
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = bomCheck.NodeInstanceId,
+                FinanceDictionaryDetailId = bomCheck.Opinion,
+                Comment = bomCheck.Comment,
+            });
+
             returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
 
             return returnDto;
