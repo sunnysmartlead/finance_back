@@ -9,44 +9,19 @@ namespace Finance.Processes
     /// </summary>
     public class ProcessHoursEnterDto: EntityDto<long>
     {
-        public bool IsDeleted { get; set; }
-        public System.Nullable<System.Int64> DeleterUserId { get; set; }
-        public System.Nullable<System.DateTime> DeletionTime { get; set; }
-        public System.Nullable<System.DateTime> LastModificationTime { get; set; }
-        public System.Nullable<System.Int64> LastModifierUserId { get; set; }
-        public System.DateTime CreationTime { get; set; }
-        public System.Nullable<System.Int64> CreatorUserId { get; set; }
-        public System.Nullable<System.Decimal> AuditFlowId { get; set; }
-        public string DevelopTotalPrice { get; set; }
-        public System.Nullable<System.Decimal> DeviceTotalPrice { get; set; }
-        public string FixtureName { get; set; }
-        public decimal FixtureNumber { get; set; }
-        public System.Nullable<System.Decimal> FixturePrice { get; set; }
-        public string FrockName { get; set; }
-        public System.Nullable<System.Decimal> FrockNumber { get; set; }
-        public System.Nullable<System.Decimal> FrockPrice { get; set; }
-        public System.Nullable<System.Decimal> HardwareDeviceTotalPrice { get; set; }
-        public System.Nullable<System.Decimal> HardwareTotalPrice { get; set; }
-        public string OpenDrawingSoftware { get; set; }
+
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
-        public System.Nullable<System.Decimal> ProductId { get; set; }
-        public System.Nullable<System.Decimal> SoftwarePrice { get; set; }
-        public string TestLineName { get; set; }
-        public System.Nullable<System.Decimal> TestLineNumber { get; set; }
-        public System.Nullable<System.Decimal> TestLinePrice { get; set; }
+        public long? AuditFlowId { get; set; }
+        public long? SolutionId { get; set; }
+        //设备
 
-        public List<ProcessHoursEnterDeviceDto> ListProcessHoursEnterDeviceDtos { get; set; } 
+        public ProcessHoursEnterResponseDeviceDto DeviceInfo { get; set; }
+        //追溯部分(硬件及软件开发费用)
+        public ProcessHoursEnterDevelopCostInfoDeviceDto DevelopCostInfo { get; set; }
+        //工装治具部分
+        public ProcessHoursEnterToolInfoDto ToolInfo { get; set; }   
 
-        public List<ProcessHoursEnterFixtureDto> ListProcessHoursEnterFixtureDto { get; set; }
-
-
-        public List<ProcessHoursEnterFrock> ListProcessHoursEnterFrock { get; set; }
-
-        public List<ProcessHoursEnteritemDto> ListProcessHoursEnteritemDto { get; set; }
-
-        public List<ProcessHoursEnterLineDto> ListProcessHoursEnterLineDto { get; set; }
-
-        public List<ProcessHoursEnterUphDto> ListProcessHoursEnterUphDto { get; set; }
+        public List<ProcessHoursEnterSopInfoDto> SopInfo { get; set; }
     }
 }

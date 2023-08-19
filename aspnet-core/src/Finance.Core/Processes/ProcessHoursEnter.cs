@@ -26,7 +26,7 @@ namespace Finance.Processes
 		/// 设备总价
 		/// </summary>
 		[Column("device_total_price")]
-		public decimal? DeviceTotalPrice { get; set; }
+		public decimal DeviceTotalPrice { get; set; }
 
 		/// <summary>
 		/// 检具名称
@@ -123,13 +123,13 @@ namespace Finance.Processes
 		/// 测试线数量
 		/// </summary>
 		[Column("test_line_number")]
-		public decimal? TestLineNumber { get; set; }
+		public decimal TestLineNumber { get; set; }
 
 		/// <summary>
 		/// 测试线单价
 		/// </summary>
 		[Column("test_line_price")]
-		public decimal? TestLinePrice { get; set; }
+		public decimal TestLinePrice { get; set; }
 
 
 	}
