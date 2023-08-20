@@ -267,6 +267,7 @@ namespace Finance.PriceEval
                 {
                     var carModelCountYear = ObjectMapper.Map<CarModelCountYear>(createModelCountYearDto);
                     carModelCountYear.AuditFlowId = auditFlowId;
+                    carModelCountYear.CarModelCountId = productId;
                     await _carModelCountYearRepository.InsertAsync(carModelCountYear);
                 }
             }

@@ -19,13 +19,13 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary>
         public long AuditFlowId { get; set; }
         /// <summary>
-        /// 电子/结构单价表id
+        /// 电子单价表id
         /// </summary>
-        public List<long> UnitPriceId { get; set; }
+        public List<long> ElectronicsUnitPriceId { get; set; }
         /// <summary>
-        /// 确认人id
+        /// 结构单价表id
         /// </summary>
-        public List<long> PeopleId { get; set; }
+        public List<long> StructureUnitPriceId { get; set; } 
         /// <summary>
         /// 审核界面类型
         /// </summary>

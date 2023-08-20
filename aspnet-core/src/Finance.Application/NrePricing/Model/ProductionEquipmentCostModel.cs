@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +33,10 @@ namespace Finance.NrePricing.Model
         /// 费用
         /// </summary>
         public decimal Cost { get; set; }
+        /// <summary>
+        /// 设备状态
+        /// </summary>        
+        public string DeviceStatus { get; set; }
         /// <summary>
         /// 备注
         /// </summary>
