@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.Processes
 {
@@ -63,6 +64,19 @@ namespace Finance.Processes
             //数据转换
 
             return processHoursEnterLines;
+        }
+
+        /// <summary>
+        /// 获取uph枚举列表
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<EnumItem>> GetListByUphEnumItem()
+        {
+            // 设置查询条件
+            var enumItems = EnumHelper.GetEnumItems<OperateTypeCode>();
+
+            return enumItems;
         }
 
         /// <summary>
