@@ -19,7 +19,7 @@ namespace Finance.Processes
    
 
 
-        public List<ProcessHoursEnteritemDto> Issues { get; set; }
+        public List<ProcessHoursEnteritemDto> Issues { get; set; } = new List<ProcessHoursEnteritemDto>();
 
         /// <summary>
         /// 年
