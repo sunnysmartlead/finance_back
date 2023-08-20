@@ -172,7 +172,7 @@ namespace Finance.BaseLibrary
                     entityItem = await _foundationFoundationWorkingHourItemRepository.InsertAsync(foundationWorkingHourItem);
                 }
             }
-            await this.CreateLog(" 新增工时项目1条");
+             this.CreateLog(" 新增工时项目1条");
             return result;
         }
 
@@ -215,7 +215,7 @@ namespace Finance.BaseLibrary
                     entityItem = await _foundationFoundationWorkingHourItemRepository.InsertAsync(foundationWorkingHourItem);
                 }
             }
-            await this.CreateLog(" 编辑工时项目1条");
+            this.CreateLog(" 编辑工时项目1条");
             return result ;
         }
 
@@ -367,7 +367,7 @@ namespace Finance.BaseLibrary
                         }
 
                     }
-                    await this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
+                     this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
                     return foundationWorkingHourDtos;
                 }
             }
@@ -385,7 +385,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationWorkingHourRepository.DeleteAsync(s => s.Id == id);
-            await this.CreateLog(" 删除工时项目1条");
+             this.CreateLog(" 删除工时项目1条");
         }
 
         /// <summary>

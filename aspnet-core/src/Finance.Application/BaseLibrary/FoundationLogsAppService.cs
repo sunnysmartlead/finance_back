@@ -69,7 +69,7 @@ namespace Finance.BaseLibrary
         public virtual async Task<List<FoundationLogsDto>> GetListAllAsync(GetFoundationLogssInput input)
         {
             // 设置查询条件
-            var query = this._foundationLogsRepository.GetAll().Where(t => t.Type == input.Type);
+            var query = this._foundationLogsRepository.GetAll().Where(t => t.Type == input.Type).OrderByDescending(t =>t.Id );
            
             // 查询数据
             var list = query.ToList();
