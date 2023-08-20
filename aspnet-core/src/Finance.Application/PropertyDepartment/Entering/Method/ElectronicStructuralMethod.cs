@@ -310,7 +310,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)BomInfo.AssemblyQuantity;
-                                decimal modelCountYearQuantity = modelCountYear.Count;
+                                decimal modelCountYearQuantity = modelCountYear.Count*1000;
                                 decimal value = bomAssemblyQuantity * modelCountYearQuantity + sharedMaterialWarehousesModeCount;
                                 YearOrValueMode yearOrValueMode = new YearOrValueMode { Year = modelCountYear.Year, UpDown = modelCountYear.UpDown, Value = value };
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
@@ -514,7 +514,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)construction.AssemblyQuantity;
-                                decimal modelCountYearQuantity = modelCountYear.Count;
+                                decimal modelCountYearQuantity = modelCountYear.Count * 1000;
                                 decimal value = bomAssemblyQuantity * modelCountYearQuantity + sharedMaterialWarehousesModeCount;
                                 YearOrValueMode yearOrValueMode = new YearOrValueMode { Year = modelCountYear.Year, UpDown = modelCountYear.UpDown, Value = value };
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
