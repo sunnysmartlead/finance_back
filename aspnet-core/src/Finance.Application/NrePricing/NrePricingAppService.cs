@@ -33,6 +33,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using test;
 using static Finance.Ext.FriendlyRequiredAttribute;
 using File = System.IO.File;
 
@@ -144,11 +145,7 @@ namespace Finance.NerPricing
         /// <summary>
         /// 二开新增硬件部分表
         /// </summary>
-        private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
-        /// <summary>
-        /// 二开新增 获取  线体数量和共线分摊率
-        /// </summary>
-        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLine;      
+        private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;         
         /// <summary>
         /// Nre 项目管理部 手板件 修改项实体类
         /// </summary>
@@ -234,6 +231,7 @@ namespace Finance.NerPricing
         /// <param name="processHoursEnterFrock"></param>
         /// <param name="exchangeRate"></param>
         /// <param name="processHoursEnterLine"></param>
+        /// <param name="workflowInstanceAppService"></param>
         public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount,
             ElectronicStructuralMethod resourceElectronicStructuralMethod,
             IRepository<HandPieceCost, long> resourceHandPieceCost,
@@ -269,11 +267,8 @@ namespace Finance.NerPricing
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice,
             IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
             IRepository<ExchangeRate, long> exchangeRate,
-
             IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
-            WorkflowInstanceAppService workflowInstanceAppService,
-
-            IRepository<ProcessHoursEnterLine, long> processHoursEnterLine)
+            WorkflowInstanceAppService workflowInstanceAppService)
 
         {
             _resourceModelCount = resourceModelCount;
@@ -313,7 +308,6 @@ namespace Finance.NerPricing
             _processHoursEnterFrock = processHoursEnterFrock;
             _configExchangeRate = exchangeRate;
             _processHoursEnterLine = processHoursEnterLine;
-
             _workflowInstanceAppService = workflowInstanceAppService;
 
         }
@@ -1723,6 +1717,11 @@ namespace Finance.NerPricing
                 decimal UphAndValuesd =0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                decimal NumberOfLines = (decimal)(from a in processHoursEnterLines
+                                         where a.Uph.Equals(OperateTypeCode.xtsl.GetDescription())
+                                         select a.Value).FirstOrDefault();
+
+
                 modify.UphAndValues = ObjectMapper.Map<List<UphAndValue>>(processHoursEnterLines);
                 foreach (UphAndValue item in modify.UphAndValues)
                 {
@@ -1822,14 +1821,15 @@ namespace Finance.NerPricing
                                                                               DeviceStatus = b.DeviceStatus,
                                                                               ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                           }).ToList();
-                List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice }).Select(
+                List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice,m.DeviceStatus }).Select(
                     a => new ProductionEquipmentCostModel
                     {
-                        Id = processHoursEnterDevices.Where(p => p.DeviceName == a.Key.DeviceName && p.DevicePrice == a.Key.DevicePrice).Select(p => p.Id).FirstOrDefault(),
+                        Id = processHoursEnterDevices.Where(p => p.DeviceName == a.Key.DeviceName && p.DevicePrice == a.Key.DevicePrice&&p.DeviceStatus==a.Key.DeviceStatus).Select(p => p.Id).FirstOrDefault(),
                         EquipmentName = a.Key.DeviceName,
+                        DeviceStatus=a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber))
+                        Cost = a.Key.DeviceStatus== FinanceConsts.Sbzt_Zy? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber)* NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
                     }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModels;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p=>p.Cost);
