@@ -26,7 +26,7 @@ namespace Finance.Processes
 		/// 设备总价
 		/// </summary>
 		[Column("device_total_price")]
-		public decimal? DeviceTotalPrice { get; set; }
+		public decimal DeviceTotalPrice { get; set; }
 
 		/// <summary>
 		/// 检具名称
@@ -123,14 +123,26 @@ namespace Finance.Processes
 		/// 测试线数量
 		/// </summary>
 		[Column("test_line_number")]
-		public decimal? TestLineNumber { get; set; }
+		public decimal TestLineNumber { get; set; }
 
 		/// <summary>
 		/// 测试线单价
 		/// </summary>
 		[Column("test_line_price")]
-		public decimal? TestLinePrice { get; set; }
+		public decimal TestLinePrice { get; set; }
 
 
-	}
+        /// <summary>
+        /// 追溯软件
+        /// </summary>
+        [Column("traceability_software")]
+        public string TraceabilitySoftware { get; set; }
+
+        /// <summary>
+        /// 追溯软件费用
+        /// </summary>
+        [Column("traceability_software_cost")]
+        public decimal TraceabilitySoftwareCost { get; set; }
+
+    }
 }

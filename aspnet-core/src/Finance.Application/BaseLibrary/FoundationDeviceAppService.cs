@@ -284,7 +284,7 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        await this.CreateLog(" 导入设备项目" + list.Count + "条");
+                        this.CreateLog(" 导入设备项目" + list.Count + "条");
                     }
                 }
             }
@@ -419,7 +419,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationDeviceItem, FoundationDeviceItemDto>(foundationDeviceItem, new FoundationDeviceItemDto());
                 }
             }
-            await this.CreateLog(" 编辑设备项目1条");
+             this.CreateLog(" 编辑设备项目1条");
             return ObjectMapper.Map<FoundationDevice, FoundationDeviceDto>(entity, new FoundationDeviceDto());
         }
 
@@ -431,7 +431,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationDeviceRepository.DeleteAsync(s => s.Id == id);
-            await this.CreateLog(" 删除设备项目1条");
+             this.CreateLog(" 删除设备项目1条");
         }
 
         /// <summary>
@@ -451,11 +451,12 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
-                entity.Remark = Remark;
-                entity.Type = logType;
+             
 
 
             }
+            entity.Remark = Remark;
+            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }

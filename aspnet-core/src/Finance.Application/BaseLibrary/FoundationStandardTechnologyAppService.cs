@@ -359,7 +359,7 @@ namespace Finance.BaseLibrary
                
                 }
 
-            await this.CreateLog(" 新增标准工艺库项目1条");
+             this.CreateLog(" 新增标准工艺库项目1条");
 
 
 
@@ -553,7 +553,7 @@ namespace Finance.BaseLibrary
 
             }
 
-            await this.CreateLog(" 编辑标准工艺库项目1条");
+            this.CreateLog(" 编辑标准工艺库项目1条");
 
             return result;
 
@@ -572,7 +572,7 @@ namespace Finance.BaseLibrary
             await _foundationTechnologyHardwareRepository.DeleteAsync(s => s.FoundationReliableHoursId == id);
             await _foundationTechnologyFixtureRepository.DeleteAsync(s => s.FoundationReliableHoursId == id);
             await _fTWorkingHourRepository.DeleteAsync(s => s.FoundationReliableHoursId == id);
-            await this.CreateLog(" 删除标准工艺库项目1条");
+            this.CreateLog(" 删除标准工艺库项目1条");
 
 
         }
@@ -843,9 +843,10 @@ namespace Finance.BaseLibrary
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
                 entity.CreationTime = DateTime.Now;
-                entity.Remark = Remark;
-                entity.Type = logType;
+                
             }
+            entity.Remark = Remark;
+            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }

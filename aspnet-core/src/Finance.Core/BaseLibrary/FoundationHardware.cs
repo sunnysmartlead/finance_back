@@ -47,6 +47,18 @@ namespace Finance.BaseLibrary
 		[StringLength(255, ErrorMessage = "软件状态长度不能超出255字符")]
 		public string SoftwareState { get; set; }
 
+        /// <summary>
+        /// 追溯软件
+        /// </summary>
+        [Column("traceability_software")]
+        public string TraceabilitySoftware { get; set; }
+
+        /// <summary>
+        /// 追溯软件费用
+        /// </summary>
+        [Column("traceability_software_cost")]
+        public decimal TraceabilitySoftwareCost { get; set; }
+
 
 
     }
