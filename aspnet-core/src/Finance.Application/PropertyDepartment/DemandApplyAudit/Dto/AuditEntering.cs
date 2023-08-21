@@ -77,6 +77,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>      
         public string MCU { get; set; }
         /// <summary>
+        /// 连接器
+        /// </summary>
+        public string Connector { get; set; }
+        /// <summary>
         /// 线束
         /// </summary>        
         public string Harness { get; set; }
@@ -150,6 +154,11 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>
         [ExcelColumnName("MCU")]
         public string MCU { get; set; }
+        /// <summary>
+        /// 连接器
+        /// </summary>
+        [ExcelColumnName("连接器")]
+        public string Connector { get; set; }
         /// <summary>
         /// 线束
         /// </summary>

@@ -257,6 +257,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     { "ISP", item.ISP },
                     { "vcsel/LED", item.Vcsel },
                     { "MCU", item.MCU },
+                    { "连接器", item.Connector },
                     { "线束", item.Harness },
                     { "支架", item.Stand },
                     { "传动结构", item.TransmissionStructure },
