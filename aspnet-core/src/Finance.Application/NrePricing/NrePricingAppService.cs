@@ -1688,6 +1688,16 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                pricingFormDto.HandPieceCostTotal = pricingFormDto.HandPieceCost.Sum(p => p.Cost);
+                pricingFormDto.MouldInventoryTotal = pricingFormDto.MouldInventory.Sum(p => p.Cost);
+                pricingFormDto.ToolingCostTotal = pricingFormDto.ToolingCost.Sum(p => p.Cost);
+                pricingFormDto.FixtureCostTotal = pricingFormDto.FixtureCost.Sum(p => p.Cost);
+                pricingFormDto.QAQCDepartmentsTotal = pricingFormDto.QAQCDepartments.Sum(p => p.Cost);
+                pricingFormDto.ProductionEquipmentCostTotal = pricingFormDto.ProductionEquipmentCost.Sum(p => p.Cost);
+                pricingFormDto.LaboratoryFeeModelsTotal = pricingFormDto.LaboratoryFeeModels.Sum(p => p.AllCost);
+                pricingFormDto.SoftwareTestingCostTotal = pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost);
+                pricingFormDto.TravelExpenseTotal = pricingFormDto.TravelExpense.Sum(p => p.Cost);
+                pricingFormDto.RestsCostTotal = pricingFormDto.RestsCost.Sum(p => p.Cost);
                 return pricingFormDto;
             }
             catch (Exception e)
@@ -1717,9 +1727,8 @@ namespace Finance.NerPricing
                 decimal UphAndValuesd =0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                decimal NumberOfLines = (decimal)(from a in processHoursEnterLines
-                                         where a.Uph.Equals(OperateTypeCode.xtsl.GetDescription())
-                                         select a.Value).FirstOrDefault();
+                decimal NumberOfLines = processHoursEnterLines
+               .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value??0;
 
 
                 modify.UphAndValues = ObjectMapper.Map<List<UphAndValue>>(processHoursEnterLines);
@@ -1858,9 +1867,9 @@ namespace Finance.NerPricing
                 List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = (decimal)processHoursEnterFrocks.Sum(p => p.HardwareDevicePrice) } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
                 //测试软件费用=>追溯软件费用
-                //modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "追溯软件费用", Cost = workingHoursInfos.Sum(p => p.TraceabilityDevelopmentFee) });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "追溯软件费用", Cost = processHours.Sum(p => p.TraceabilitySoftwareCost) });
                 //测试软件费用=>开图软件费用
-                //modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "开图软件费用", Cost = workingHoursInfos.Sum(p => p.MappingDevelopmentFee) });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "开图软件费用", Cost = processHours.Sum(p => p.SoftwarePrice) });
                 modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p=>p.Cost);
                 //差旅费
                 List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))

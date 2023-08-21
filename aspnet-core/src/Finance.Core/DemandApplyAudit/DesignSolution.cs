@@ -45,6 +45,10 @@ namespace Finance.DemandApplyAudit
         /// </summary>
         public string MCU { get; set; }
         /// <summary>
+        /// 连接器
+        /// </summary>
+        public string Connector { get; set; }
+        /// <summary>
         /// 线束
         /// </summary>
         public string Harness { get; set; }
