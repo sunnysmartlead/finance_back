@@ -137,7 +137,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await _foundationreliableRepository.InsertAsync(entity);
-            await this.CreateLog(" 创建环境项目1条");
+            this.CreateLog(" 创建环境项目1条");
             return ObjectMapper.Map<Foundationreliable, FoundationreliableDto>(entity, new FoundationreliableDto());
         }
 
@@ -157,7 +157,7 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
             }
             entity = await _foundationreliableRepository.UpdateAsync(entity);
-            await this.CreateLog(" 编辑环境项目1条");
+            this.CreateLog(" 编辑环境项目1条");
             return ObjectMapper.Map<Foundationreliable, FoundationreliableDto>(entity, new FoundationreliableDto());
         }
 
@@ -176,7 +176,7 @@ namespace Finance.BaseLibrary
                 entity.DeleterUserId = AbpSession.UserId.Value;
             }
             entity = await _foundationreliableRepository.UpdateAsync(entity);
-            await this.CreateLog(" 删除环境项目1条");
+            this.CreateLog(" 删除环境项目1条");
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace Finance.BaseLibrary
                 }
                 // 获取总数
                 var totalCount = query.Count();
-                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
             }
             return true;
         }
@@ -312,9 +312,10 @@ namespace Finance.BaseLibrary
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
                 entity.CreationTime = DateTime.Now;
-                entity.Remark = Remark;
-                entity.Type = logType;
+               
             }
+            entity.Remark = Remark;
+            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }

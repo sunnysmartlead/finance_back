@@ -13,6 +13,8 @@ namespace Finance.Processes
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
 
+
+
         public BomEnterDeviceInfoResponseDto DeviceInfo { get; set; }
         public BomEnterDevelopCostInfoResponseDto DevelopCostInfo { get; set; }
         public BomEnterToolInfoResponseDto ToolInfo { get; set; }

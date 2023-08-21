@@ -1,11 +1,13 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Finance.BaseLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.Processes
 {
@@ -35,6 +37,46 @@ namespace Finance.Processes
             ProcessHoursEnterLine entity = await _processHoursEnterLineRepository.GetAsync(id);
 
             return ObjectMapper.Map<ProcessHoursEnterLine, ProcessHoursEnterLineDto>(entity,new ProcessHoursEnterLineDto());
+        }
+
+
+        /// <summary>
+        /// 列表-根据方案 流程  uph值查询
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<ProcessHoursEnterLineDto>> GetListByUphAsync(GetProcessHoursEnterLinesInput input)
+        {
+            // 设置查询条件
+            var query = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.Uph == input.Uph && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId);
+
+            // 查询数据
+            var list = query.ToList();
+            List<ProcessHoursEnterLineDto> processHoursEnterLines = new List<ProcessHoursEnterLineDto>();
+            foreach (var item in list)
+            {
+                ProcessHoursEnterLineDto processHoursEnterLineDto = new ProcessHoursEnterLineDto();
+                processHoursEnterLineDto.Year = item.Year;
+                processHoursEnterLineDto.Value = item.Value;
+                processHoursEnterLines.Add(processHoursEnterLineDto);
+
+            }
+            //数据转换
+
+            return processHoursEnterLines;
+        }
+
+        /// <summary>
+        /// 获取uph枚举列表
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<EnumItem>> GetListByUphEnumItem()
+        {
+            // 设置查询条件
+            var enumItems = EnumHelper.GetEnumItems<OperateTypeCode>();
+
+            return enumItems;
         }
 
         /// <summary>

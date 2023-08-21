@@ -91,7 +91,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
             if (!string.IsNullOrEmpty(input.ProcessName))
             {
-                query = query.Where(t => t.Name.Contains(input.ProcessName));
+                query = query.Where(t => t.InstallationName.Contains(input.ProcessName));
             }
 
             // 查询数据
@@ -217,7 +217,7 @@ namespace Finance.BaseLibrary
                 }
 
                 // 获取总数
-                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
 
             }
             return true;
@@ -253,7 +253,7 @@ namespace Finance.BaseLibrary
             }
             entity.LastModificationTime = DateTime.Now;
             entity = await _foundationProcedureRepository.InsertAsync(entity);
-            await this.CreateLog(" 创建工装项目1条");
+            this.CreateLog(" 创建工装项目1条");
             return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
 
@@ -273,7 +273,7 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
             }
             entity = await _foundationProcedureRepository.UpdateAsync(entity);
-            await this.CreateLog(" 修改工装项目1条");
+            this.CreateLog(" 修改工装项目1条");
             return ObjectMapper.Map<FoundationProcedure, FoundationProcedureDto>(entity, new FoundationProcedureDto());
         }
 
@@ -305,9 +305,10 @@ namespace Finance.BaseLibrary
            
                 entity.CreatorUserId = AbpSession.UserId.Value;
                     entity.CreationTime = DateTime.Now;
-                entity.Remark = Remark;
-                entity.Type = logType;
+            
             }
+            entity.Remark = Remark;
+            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }
