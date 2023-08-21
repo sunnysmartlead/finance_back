@@ -140,7 +140,7 @@ namespace Finance.NerPricing
         /// <summary>
         /// 二开新增 获取  线体数量和共线分摊率
         /// </summary>
-        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLine;
+        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLine;      
         /// <summary>
         /// Nre 项目管理部 手板件 修改项实体类
         /// </summary>
