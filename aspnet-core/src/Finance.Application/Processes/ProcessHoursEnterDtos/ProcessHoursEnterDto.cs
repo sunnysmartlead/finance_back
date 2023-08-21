@@ -17,7 +17,6 @@ namespace Finance.Processes
         public System.Nullable<System.Int64> LastModifierUserId { get; set; }
         public System.DateTime CreationTime { get; set; }
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
-        public System.Nullable<System.Decimal> AuditFlowId { get; set; }
         public string DevelopTotalPrice { get; set; }
         public System.Nullable<System.Decimal> DeviceTotalPrice { get; set; }
         public string FixtureName { get; set; }
