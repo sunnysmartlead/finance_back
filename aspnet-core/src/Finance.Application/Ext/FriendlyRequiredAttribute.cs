@@ -4,6 +4,7 @@ using Abp.Domain.Uow;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.PriceEval;
+using Finance.WorkFlows;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace Finance.Ext
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public class FriendlyRequiredAttribute : ValidationAttribute
     {
-        private IRepository<AuditFlow, long> _auditFlowRepository;
+        private IRepository<NodeInstance, long> _auditFlowRepository;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>   
@@ -35,7 +36,7 @@ namespace Finance.Ext
         {
             errorName = eroName;
             specialVerification = specialVerifica;
-            _auditFlowRepository = IocManager.Instance.Resolve<IRepository<AuditFlow, long>>();
+            _auditFlowRepository = IocManager.Instance.Resolve<IRepository<NodeInstance, long>>();
             _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<SolutionTable, long>>();
         }
         /// <summary>

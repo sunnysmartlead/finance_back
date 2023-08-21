@@ -107,11 +107,14 @@ namespace Finance.Processes
 
                  
 
-                    List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
-
 
                     var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
 
+
+                    List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
+
+
+                
                     foreach (var dtosItemTotal in queryItemTotal)
                     {
                         BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();

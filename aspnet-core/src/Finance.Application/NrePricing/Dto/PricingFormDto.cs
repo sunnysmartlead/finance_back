@@ -1,6 +1,7 @@
 ﻿using Finance.NrePricing.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance.NrePricing.Dto
 {
@@ -78,6 +79,10 @@ namespace Finance.NrePricing.Dto
         /// (不含税美金) NRE 总费用
         /// </summary>
         public decimal USDAllCost { get; set; }
+        /// <summary>
+        /// 线体数量和共线分摊率的值
+        /// </summary>
+        public List<UphAndValue>  UphAndValues { get; set; }
     }
     /// <summary>
     /// Nre 核价表 交互类 加修改项
@@ -124,5 +129,20 @@ namespace Finance.NrePricing.Dto
         /// 其他费用修改项
         /// </summary>
         public List<RestsCostModifyDto> RestsCostModifyDtos { get; set; }
+    }
+    /// <summary>
+    /// 线体数量和共线分摊率的值
+    /// </summary>
+    public class UphAndValue
+    {
+        /// <summary>
+		/// UPH参数
+		/// </summary>
+        public string Uph { get; set; }
+        /// <summary>
+		/// 值
+		/// </summary>
+		[Column("value")]
+        public decimal Value { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using Finance.Ext;
 using Finance.Nre;
 using Finance.NrePricing.Dto;
 using Finance.NrePricing.Model;
+using Finance.Processes;
 using Finance.ProductDevelopment;
 using System;
 using System.Collections.Generic;
@@ -102,6 +103,12 @@ namespace Finance.NrePricing.Method
 
             configuration.CreateMap<RestsCostModifyDto, RestsCostModify>();
             configuration.CreateMap<RestsCostModify, RestsCostModifyDto>();
+
+            configuration.CreateMap<PricingFormDto, ModifyItemPricingFormDto>();
+            configuration.CreateMap<ModifyItemPricingFormDto, PricingFormDto>();
+
+            configuration.CreateMap<UphAndValue, ProcessHoursEnterLine>();
+            configuration.CreateMap<ProcessHoursEnterLine, UphAndValue>();
         }
         /// <summary>
         /// YesNO枚举
