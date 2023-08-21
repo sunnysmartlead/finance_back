@@ -10,6 +10,8 @@ using Finance.Nre;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.ProductDevelopment.Dto;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -50,7 +52,10 @@ namespace Finance.ProductDevelopment
         private readonly AuditFlowAppService _flowAppService;
         private readonly IObjectMapper _objectMapper;
 
-        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper)
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
+        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _logger=logger;
             _electronicBomInfoRepository=electronicBomInfoRepository;
@@ -64,6 +69,7 @@ namespace Finance.ProductDevelopment
             _productIsSubmit=productIsSubmit;
             _flowAppService=flowAppService;
             _objectMapper=objectMapper;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -255,6 +261,14 @@ namespace Finance.ProductDevelopment
                     await this.InterfaceJump(dto.AuditFlowId);
                 }
             }
+
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = dto.NodeInstanceId,
+                FinanceDictionaryDetailId = dto.Opinion,
+                Comment = dto.Comment,
+            });
         }
 
 

@@ -1,4 +1,5 @@
-﻿using Finance.ProjectManagement.Dto;
+﻿using Finance.Dto;
+using Finance.ProjectManagement.Dto;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,7 +13,7 @@ namespace Finance.PriceEval.Dto
     /// <summary>
     /// 返回营销部录入信息
     /// </summary>
-    public class PriceEvaluationStartInputResult : PriceEvaluationStartInput 
+    public class PriceEvaluationStartInputResult : PriceEvaluationStartInput
     {
         /// <summary>
         /// 核报价流程版本
@@ -27,7 +28,7 @@ namespace Finance.PriceEval.Dto
     /// <summary>
     /// PriceEvaluationStart 方法的输入参数
     /// </summary>
-    public class PriceEvaluationStartInput
+    public class PriceEvaluationStartInput : ToExamineDto
     {
         ///// <summary>
         ///// 审批流程主表Id
@@ -35,15 +36,15 @@ namespace Finance.PriceEval.Dto
         //[Required]
         //public virtual long AuditFlowId { get; set; }
 
-        /// <summary>
-        /// 核价原因
-        /// </summary>
-        public virtual string EvalReason { get; set; }
+        ///// <summary>
+        ///// 核价原因
+        ///// </summary>
+        //public virtual string EvalReason { get; set; }
 
-        /// <summary>
-        /// 审批评论
-        /// </summary>
-        public virtual string Comment { get; set; }
+        ///// <summary>
+        ///// 审批评论
+        ///// </summary>
+        //public virtual string Comment { get; set; }
 
         /// <summary>
         /// 标题
@@ -116,7 +117,7 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual string CustomerNature { get; set; }
 
-      
+
 
 
         /// <summary>

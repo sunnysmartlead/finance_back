@@ -5,7 +5,9 @@ using Abp.UI;
 using Finance.Audit;
 using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.EngineeringDepartment;
+//using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.Infrastructure;
@@ -19,6 +21,8 @@ using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
@@ -134,6 +138,10 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDevice;
         /// <summary>
+        /// 二开新增 获取  线体数量和共线分摊率
+        /// </summary>
+        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLine;
+        /// <summary>
         /// 二开新增硬件部分表
         /// </summary>
         private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
@@ -181,6 +189,11 @@ namespace Finance.NerPricing
         /// 其他费 修改项 实体类
         /// </summary>
         private readonly IRepository<RestsCostModify, long> _restsCostModify;
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -256,7 +269,12 @@ namespace Finance.NerPricing
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice,
             IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
             IRepository<ExchangeRate, long> exchangeRate,
+
+            IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
+            WorkflowInstanceAppService workflowInstanceAppService,
+
             IRepository<ProcessHoursEnterLine, long> processHoursEnterLine)
+
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -295,6 +313,9 @@ namespace Finance.NerPricing
             _processHoursEnterFrock = processHoursEnterFrock;
             _configExchangeRate = exchangeRate;
             _processHoursEnterLine = processHoursEnterLine;
+
+            _workflowInstanceAppService = workflowInstanceAppService;
+
         }
 
         /// <summary>
@@ -437,6 +458,14 @@ namespace Finance.NerPricing
                 //        Opinion = OPINIONTYPE.Submit_Agreee
                 //    });
                 //}
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = price.NodeInstanceId,
+                    FinanceDictionaryDetailId = price.Opinion,
+                    Comment = price.Comment,
+                });
             }
             catch (Exception e)
             {
@@ -675,7 +704,13 @@ namespace Finance.NerPricing
             }
             #endregion
 
-
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = price.NodeInstanceId,
+                FinanceDictionaryDetailId = price.Opinion,
+                Comment = price.Comment,
+            });
         }
         /// <summary>
         /// 资源部模具费录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
@@ -806,10 +841,22 @@ namespace Finance.NerPricing
                         {
                             throw new FriendlyException("请先登录");
                         }
-                        #region 流程流转
-                        #endregion
+
+                        
+
                     }
                 }
+                #region 流程流转
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = price.NodeInstanceId,
+                    FinanceDictionaryDetailId = price.Opinion,
+                    Comment = price.Comment,
+                });
+                #endregion
+
             }
             catch (Exception e)
             {
@@ -1115,6 +1162,15 @@ namespace Finance.NerPricing
                         #endregion
                     }
                 }
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = experimentItems.NodeInstanceId,
+                    FinanceDictionaryDetailId = experimentItems.Opinion,
+                    Comment = experimentItems.Comment,
+                });
+
             }
             catch (Exception e)
             {
@@ -1966,7 +2022,13 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task NREToExamine(NREToExamineToExamineDto toExamineDto)
         {
-
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = toExamineDto.NodeInstanceId,
+                FinanceDictionaryDetailId = toExamineDto.Opinion,
+                Comment = toExamineDto.Comment,
+            });
         }
     }
 }
