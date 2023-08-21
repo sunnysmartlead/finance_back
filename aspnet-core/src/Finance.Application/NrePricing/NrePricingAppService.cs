@@ -7,7 +7,7 @@ using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
 using Finance.EngineeringDepartment;
-using Finance.EntityFrameworkCore.Seed.Host;
+//using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.Infrastructure;
@@ -137,6 +137,10 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDevice;
         /// <summary>
+        /// 二开新增 获取  线体数量和共线分摊率
+        /// </summary>
+        private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLine;
+        /// <summary>
         /// 二开新增硬件部分表
         /// </summary>
         private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
@@ -258,7 +262,9 @@ namespace Finance.NerPricing
             IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture,
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice,
             IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
-            IRepository<ExchangeRate, long> exchangeRate, WorkflowInstanceAppService workflowInstanceAppService)
+            IRepository<ExchangeRate, long> exchangeRate,
+            IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
+            WorkflowInstanceAppService workflowInstanceAppService)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -296,6 +302,7 @@ namespace Finance.NerPricing
             _processHoursEnterDevice = processHoursEnterDevice;
             _processHoursEnterFrock = processHoursEnterFrock;
             _configExchangeRate = exchangeRate;
+            _processHoursEnterLine = processHoursEnterLine;
             _workflowInstanceAppService = workflowInstanceAppService;
         }
 
