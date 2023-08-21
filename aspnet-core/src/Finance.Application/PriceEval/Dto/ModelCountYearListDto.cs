@@ -30,7 +30,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 数量
         /// </summary>
-        public virtual int Quantity { get; set; }
+        public virtual decimal Quantity { get; set; }
 
         /// <summary>
         /// 核价表Json

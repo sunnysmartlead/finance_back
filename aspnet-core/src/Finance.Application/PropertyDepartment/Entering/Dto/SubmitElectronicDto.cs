@@ -1,4 +1,5 @@
-﻿using Finance.Ext;
+﻿using Finance.Dto;
+using Finance.Ext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Finance.PropertyDepartment.Entering.Dto
     /// <summary>
     /// 提交电子物料 交互类
     /// </summary>
-    public class SubmitElectronicDto
+    public class SubmitElectronicDto: ToExamineDto
     {
         /// <summary>
         /// 流程Id

@@ -848,5 +848,14 @@ namespace Finance
         public const string HjkbSelect_Nreemcsyflr = "HjkbSelect_Nreemcsyflr";
 
         #endregion
+
+
+        public const string Sbzt = "Sbzt";
+        public const string Sbzt_Zy = "Sbzt_Zy";
+        public const string Sbzt_Gy = "Sbzt_Gy";
+        public const string Sbzt_Xy = "Sbzt_Xy";
+        public const string Sbzt_Xg = "Sbzt_Xg";
+        public const string Sbzt_Gz = "Sbzt_Gz";
+
     }
 }
