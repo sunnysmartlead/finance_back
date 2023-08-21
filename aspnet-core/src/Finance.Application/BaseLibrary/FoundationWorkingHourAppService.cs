@@ -172,7 +172,7 @@ namespace Finance.BaseLibrary
                     entityItem = await _foundationFoundationWorkingHourItemRepository.InsertAsync(foundationWorkingHourItem);
                 }
             }
-            await this.CreateLog(" 新增工时项目1条");
+             this.CreateLog(" 新增工时项目1条");
             return result;
         }
 
@@ -215,7 +215,7 @@ namespace Finance.BaseLibrary
                     entityItem = await _foundationFoundationWorkingHourItemRepository.InsertAsync(foundationWorkingHourItem);
                 }
             }
-            await this.CreateLog(" 编辑工时项目1条");
+            this.CreateLog(" 编辑工时项目1条");
             return result ;
         }
 
@@ -367,7 +367,7 @@ namespace Finance.BaseLibrary
                         }
 
                     }
-                    await this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
+                     this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
                     return foundationWorkingHourDtos;
                 }
             }
@@ -385,7 +385,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationWorkingHourRepository.DeleteAsync(s => s.Id == id);
-            await this.CreateLog(" 删除工时项目1条");
+             this.CreateLog(" 删除工时项目1条");
         }
 
         /// <summary>
@@ -410,15 +410,16 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public async virtual Task<FileStreamResult> FoundationWorkingHourDownloadStream(GetFoundationDevicesInput input)
         {
+            IWorkbook wk = new XSSFWorkbook();
             ISheet sheet = wk.CreateSheet("Sheet1");
             sheet.DefaultRowHeight = 25 * 20;
             // 表头设置
             IRow herdRow = sheet.CreateRow(0);
-            CreateCell(herdRow, 0, "序号");
+            CreateCell(herdRow, 0, "序号",wk);
             sheet.SetColumnWidth(0, 10 * 300);
-            CreateCell(herdRow, 1, "工序编号");
+            CreateCell(herdRow, 1, "工序编号", wk);
             sheet.SetColumnWidth(1, 10 * 300);
-            CreateCell(herdRow, 2, "工序名称");
+            CreateCell(herdRow, 2, "工序名称", wk);
             sheet.SetColumnWidth(2, 10 * 400);
 
             int yearCount = 3;
@@ -426,7 +427,7 @@ namespace Finance.BaseLibrary
             for (int i = 0; i < yearCount * 3; i++)
             {
                 colIndex = i + 3;
-                CreateCell(herdRow, colIndex, string.Empty);
+                CreateCell(herdRow, colIndex, string.Empty, wk);
                 sheet.SetColumnWidth(colIndex, 10 * 400);
             }
 
@@ -440,15 +441,15 @@ namespace Finance.BaseLibrary
 
             // 副表头
             IRow herdRow2 = sheet.CreateRow(1);
-            CreateCell(herdRow2, 0, string.Empty);
-            CreateCell(herdRow2, 1, string.Empty);
-            CreateCell(herdRow2, 2, string.Empty);
+            CreateCell(herdRow2, 0, string.Empty, wk);
+            CreateCell(herdRow2, 1, string.Empty, wk);
+            CreateCell(herdRow2, 2, string.Empty, wk);
             for (int i = 0; i < yearCount; i++)
             {
                 colIndex = i * 3 + 3;
-                CreateCell(herdRow2, colIndex, "标准人工工时");
-                CreateCell(herdRow2, colIndex + 1, "标准机器工时");
-                CreateCell(herdRow2, colIndex + 2, "人员数量");
+                CreateCell(herdRow2, colIndex, "标准人工工时", wk);
+                CreateCell(herdRow2, colIndex + 1, "标准机器工时", wk);
+                CreateCell(herdRow2, colIndex + 2, "人员数量", wk);
             }
             MergedRegion(sheet, 0, 1, 0, 0);
             MergedRegion(sheet, 0, 1, 1, 1);
@@ -457,15 +458,15 @@ namespace Finance.BaseLibrary
             for (int i = 2; i < 10; i++)
             {
                 IRow row = sheet.CreateRow(i);
-                CreateCell(row, 0, $"序号{i}");
-                CreateCell(row, 1, $"工序编号{i}");
-                CreateCell(row, 2, $"工序名称{i}");
+                CreateCell(row, 0, $"序号{i}", wk);
+                CreateCell(row, 1, $"工序编号{i}", wk);
+                CreateCell(row, 2, $"工序名称{i}", wk);
                 for (int j = 0; j < yearCount; j++)
                 {
                     colIndex = j * 3 + 3;
-                    CreateCell(row, colIndex, "bzgrgs" + j);
-                    CreateCell(row, colIndex + 1, "bzjjgs" + j);
-                    CreateCell(row, colIndex + 2, "rysl" + j);
+                    CreateCell(row, colIndex, "bzgrgs" + j, wk);
+                    CreateCell(row, colIndex + 1, "bzjjgs" + j, wk);
+                    CreateCell(row, colIndex + 2, "rysl" + j, wk);
                 }
             }
 
@@ -486,15 +487,15 @@ namespace Finance.BaseLibrary
         /// <param name="row">行</param>
         /// <param name="colIndex">单元格index</param>
         /// <param name="vaule">值</param>
-        public static void CreateCell(IRow row, int colIndex, string vaule)
+        public static void CreateCell(IRow row, int colIndex, string vaule, IWorkbook wk)
         {
             ICell cel = row.CreateCell(colIndex);
-            SetICellStyle(cel);
+            SetICellStyle(cel,wk);
             cel.SetCellValue(vaule);
         }
 
-        static IWorkbook wk = new XSSFWorkbook();
-        public static void SetICellStyle(ICell MyCell)
+
+        public static void SetICellStyle(ICell MyCell, IWorkbook wk)
         {
             ICellStyle cellStyle = wk.CreateCellStyle();
             cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;

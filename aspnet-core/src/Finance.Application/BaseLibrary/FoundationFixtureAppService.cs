@@ -218,7 +218,7 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        await this.CreateLog(" 导入治具项目" + list.Count + "条");
+                        this.CreateLog(" 导入治具项目" + list.Count + "条");
                     }
                 }
             }
@@ -383,7 +383,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationFixtureItem, FoundationFixtureItemDto>(foundationFixtureItem, new FoundationFixtureItemDto());
                 }
             }
-            await this.CreateLog(" 创建治具项目1条");
+            this.CreateLog(" 创建治具项目1条");
             return result;
         }
 
@@ -425,7 +425,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationFixtureItem, FoundationFixtureItemDto>(foundationFixtureItem, new FoundationFixtureItemDto());
                 }
             }
-            await this.CreateLog(" 编辑治具项目1条");
+            this.CreateLog(" 编辑治具项目1条");
             return ObjectMapper.Map<FoundationFixture, FoundationFixtureDto>(entity,new FoundationFixtureDto());
         }
 
@@ -437,7 +437,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationFixtureRepository.DeleteAsync(s => s.Id == id);
-            await this.CreateLog(" 删除治具项目1条");
+            this.CreateLog(" 删除治具项目1条");
         }
 
 

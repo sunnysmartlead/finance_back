@@ -136,7 +136,7 @@ namespace Finance.BaseLibrary
             entity.LastModificationTime = DateTime.Now;
             entity.IsDeleted = false;
             entity = await _foundationEmcRepository.InsertAsync(entity);
-            await this.CreateLog(" 创建EMC项目1条");
+             this.CreateLog(" 创建EMC项目1条");
             return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity, new FoundationEmcDto());
         }
 
@@ -157,7 +157,7 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
             }
             entity = await _foundationEmcRepository.UpdateAsync(entity);
-            await this.CreateLog(" 编辑EMC项目1条");
+             this.CreateLog(" 编辑EMC项目1条");
             return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity,new FoundationEmcDto());
         }
 
@@ -169,7 +169,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationEmcRepository.DeleteAsync(s => s.Id == id);
-            await this.CreateLog(" 删除EMC项目1条");
+            this.CreateLog(" 删除EMC项目1条");
         }
 
 
@@ -241,7 +241,7 @@ namespace Finance.BaseLibrary
             
                 // 获取总数
                 var totalCount = query.Count();
-                await this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
             }
             return true;
         }
@@ -265,11 +265,12 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
-                entity.Remark = Remark;
-                entity.Type = logType;
+  
 
 
             }
+            entity.Remark = Remark;
+            entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
             return true;
         }
