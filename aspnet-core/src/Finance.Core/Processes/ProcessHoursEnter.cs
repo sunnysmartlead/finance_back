@@ -132,7 +132,7 @@ namespace Finance.Processes
 		public decimal TestLinePrice { get; set; }
 
 
-        ///// <summary>
+      ///// <summary>
         ///// 追溯软件
         ///// </summary>
         //[Column("traceability_software")]
