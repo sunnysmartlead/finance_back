@@ -6,61 +6,61 @@ namespace Finance.Authorization.Roles
         {
             public const string Admin = "Admin";
 
-            public const string SalesMan = "ÓªÏú²¿-ÒµÎñÔ±";//
-            public const string ProjectManager = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿¾­Àí";//
-            public const string ProjectChief = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿¿Î³¤";//
-            public const string MarketProjectMinister = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿²¿³¤";//
+            public const string SalesMan = "Óªï¿½ï¿½ï¿½ï¿½-Òµï¿½ï¿½Ô±";//
+            public const string ProjectManager = "ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½";//
+            public const string ProjectChief = "ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½Î³ï¿½";//
+            public const string MarketProjectMinister = "ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½";//
 
-            public const string MarketProjectManager = "ÊÐ³¡²¿-ÏîÄ¿¾­Àí";//
-            public const string MarketProjectChief = "ÊÐ³¡²¿-ÏîÄ¿¿Î³¤";//
-            public const string ProjectMinister = "ÊÐ³¡²¿-ÏîÄ¿²¿³¤";//
+            public const string MarketProjectManager = "ï¿½Ð³ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½";//
+            public const string MarketProjectChief = "ï¿½Ð³ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½Î³ï¿½";//
+            public const string ProjectMinister = "ï¿½Ð³ï¿½ï¿½ï¿½-ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½";//
 
-            public const string ElectronicsEngineer = "²úÆ·¿ª·¢²¿-µç×Ó¹¤³ÌÊ¦";//
-            public const string ElectronicsBomAuditor = "²úÆ·¿ª·¢²¿-µç×ÓbomÉóºËÔ±";//
-            public const string StructuralEngineer = "²úÆ·¿ª·¢²¿-½á¹¹¹¤³ÌÊ¦";//
-            public const string StructuralBomAuditor = "²úÆ·¿ª·¢²¿-½á¹¹bomÉóºËÔ±";//
-            public const string R_D_TRAuditor = "²úÆ·¿ª·¢²¿-TRÉóºËÔ±";//
-            public const string ElectronicsPriceInputter = "×ÊÔ´¹ÜÀí²¿-µç×Óµ¥¼ÛÂ¼ÈëÔ±";//
-            public const string StructuralPriceInputter = "×ÊÔ´¹ÜÀí²¿-½á¹¹µ¥¼ÛÂ¼ÈëÔ±";//
-            public const string ElectronicsPriceAuditor = "×ÊÔ´¹ÜÀí²¿-µç×Óµ¥¼ÛÉóºËÔ±";//
-            public const string StructuralInput = "×ÊÔ´¹ÜÀí²¿-¶¨ÖÆÀà½á¹¹¼þÂ¼ÈëÔ±";//
-            public const string BomInput = "×ÊÔ´¹ÜÀí²¿-BOMµ¥¼ÛÉóºËÔ±";//
-            public const string ModelInput = "×ÊÔ´¹ÜÀí²¿-Ä£¾ß·ÑÂ¼ÈëÔ±";//
-            public const string ModelEval = "×ÊÔ´¹ÜÀí²¿-Ä£¾ß·ÑÉóºËÔ±";//
+            public const string ElectronicsEngineer = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½Ê¦";//
+            public const string ElectronicsBomAuditor = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½bomï¿½ï¿½ï¿½Ô±";//
+            public const string StructuralEngineer = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½Ê¦";//
+            public const string StructuralBomAuditor = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½á¹¹bomï¿½ï¿½ï¿½Ô±";//
+            public const string R_D_TRAuditor = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-TRï¿½ï¿½ï¿½Ô±";//
+            public const string ElectronicsPriceInputter = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string StructuralPriceInputter = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string ElectronicsPriceAuditor = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string StructuralInput = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹ï¿½ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string BomInput = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-BOMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string ModelInput = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-Ä£ï¿½ß·ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string ModelEval = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-Ä£ï¿½ß·ï¿½ï¿½ï¿½ï¿½Ô±";//
 
 
-            public const string StructuralPriceAuditor = "×ÊÔ´¹ÜÀí²¿-½á¹¹µ¥¼ÛÉóºËÔ±";//
-            public const string LossRateInputter = "¹¤³Ì¼¼Êõ²¿-ËðºÄÂÊÂ¼ÈëÔ±";
-            public const string ManHourInputter = "¹¤³Ì¼¼Êõ²¿-¹¤Ðò¹¤Ê±Â¼ÈëÔ±";//
-            public const string LogisticsCostInputter = "Éú²ú¹ÜÀí²¿-ÎïÁ÷³É±¾Â¼ÈëÔ±";//
-            public const string EnvironmentInput = "Æ·ÖÊ±£Ö¤²¿-»·¾³ÊµÑé·ÑÂ¼ÈëÔ±";//
-            public const string EnvironmentEval = "Æ·ÖÊ±£Ö¤²¿-»·¾³ÊµÑé·ÑÉóºËÔ±";//
-            public const string EmcInput = "²úÆ·¿ª·¢²¿-EMC+µçÐÔÄÜÊµÑé·ÑÂ¼ÈëÔ±";//
-            public const string EmcEval = "²úÆ·¿ª·¢²¿-EMC+µçÐÔÄÜÊµÑé·ÑÉóºËÔ±";//
+            public const string StructuralPriceAuditor = "ï¿½ï¿½Ô´ï¿½ï¿½ï¿½ï¿½-ï¿½á¹¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string LossRateInputter = "ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";
+            public const string ManHourInputter = "ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½Ê±Â¼ï¿½ï¿½Ô±";//
+            public const string LogisticsCostInputter = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string EnvironmentInput = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string EnvironmentEval = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string EmcInput = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-EMC+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";//
+            public const string EmcEval = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-EMC+ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
 
-            public const string TestCostInputter = "Æ·ÖÊ±£Ö¤²¿-ÊµÑé·ÑÓÃÂ¼ÈëÔ±";
-            public const string GageCostInputter = "Æ·ÖÊ±£Ö¤²¿-¼ì¾ß·ÑÓÃÂ¼ÈëÔ±";
-            public const string GeneralManager = "×Ü¾­Àí";//
-            public const string TradeComplianceAuditor = "²ÆÎñ²¿-Ã³Ò×ºÏ¹æÉóºËÔ±";//
-            public const string MarketTRAuditor = "ÊÐ³¡²¿-TRÖ÷·½°¸ÉóºËÔ±";
-            public const string FinanceParamsInputter = "²ÆÎñ²¿-²ÆÎñ²ÎÊýÂ¼ÈëÔ±";
-            public const string FinanceProductCostInputter = "²ÆÎñ²¿-ÖÆÔì³É±¾Â¼ÈëÔ±";//
+            public const string TestCostInputter = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-Êµï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";
+            public const string GageCostInputter = "Æ·ï¿½Ê±ï¿½Ö¤ï¿½ï¿½-ï¿½ï¿½ß·ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";
+            public const string GeneralManager = "ï¿½Ü¾ï¿½ï¿½ï¿½";//
+            public const string TradeComplianceAuditor = "ï¿½ï¿½ï¿½ï¿½-Ã³ï¿½×ºÏ¹ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string MarketTRAuditor = "ï¿½Ð³ï¿½ï¿½ï¿½-TRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";
+            public const string FinanceParamsInputter = "ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ô±";
+            public const string FinanceProductCostInputter = "ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½É±ï¿½Â¼ï¿½ï¿½Ô±";//
 
-            public const string FinanceAdmin = "²ÆÎñ²¿-Êý¾Ý¹ÜÀíÔ±";
-            public const string BomConsultant = "²úÆ·¿ª·¢²¿-BOM²éÔÄÕß";
-            public const string FinanceEval = "²ÆÎñ²¿-ÖÐ±ê½ð¶îÉóºËÔ±";//
-            public const string FinanceTableAdmin = "²ÆÎñ²¿-ºË¼Û±í¹éµµ¹ÜÀíÔ±";//
+            public const string FinanceAdmin = "ï¿½ï¿½ï¿½ï¿½-ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½Ô±";
+            public const string BomConsultant = "ï¿½ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-BOMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+            public const string FinanceEval = "ï¿½ï¿½ï¿½ï¿½-ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±";//
+            public const string FinanceTableAdmin = "ï¿½ï¿½ï¿½ï¿½-ï¿½Ë¼Û±ï¿½éµµï¿½ï¿½ï¿½ï¿½Ô±";//
 
-            public const string EvalTableAdmin = "±¨¼ÛÉóºË±í¹éµµ¹ÜÀíÔ±";//
+            public const string EvalTableAdmin = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë±ï¿½éµµï¿½ï¿½ï¿½ï¿½Ô±";//
 
 
             public const string Timeliness = "Timeliness";
-            public const string ProjectPriceAuditor = "ÏîÄ¿²¿-ºË¼ÛÉóºËÔ±";
-            public const string FinancePriceAuditor = "²ÆÎñ²¿-ºË¼ÛÉóºËÔ±";//
+            public const string ProjectPriceAuditor = "ï¿½ï¿½Ä¿ï¿½ï¿½-ï¿½Ë¼ï¿½ï¿½ï¿½ï¿½Ô±";
+            public const string FinancePriceAuditor = "ï¿½ï¿½ï¿½ï¿½-ï¿½Ë¼ï¿½ï¿½ï¿½ï¿½Ô±";//
 
-            public const string ProjectSupervisor = "ÏîÄ¿¿Î³¤";
+            public const string ProjectSupervisor = "ï¿½ï¿½Ä¿ï¿½Î³ï¿½";
 
-            public const string CostSplit = "³É±¾²ð·ÖÔ±";//
+            public const string CostSplit = "ï¿½É±ï¿½ï¿½ï¿½ï¿½Ô±";//
 
         }
 

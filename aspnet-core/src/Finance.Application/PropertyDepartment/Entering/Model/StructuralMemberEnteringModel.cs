@@ -1,5 +1,4 @@
-﻿using Finance.Dto;
-using Finance.Ext;
+﻿using Finance.Ext;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using System;
@@ -14,7 +13,7 @@ namespace Finance.Entering.Model
     /// <summary>
     /// 结构件单价录入 模型
     /// </summary>
-    public class StructuralMemberEnteringModel: ToExamineDto
+    public class StructuralMemberEnteringModel
     {
         /// <summary>
         /// 流程Id

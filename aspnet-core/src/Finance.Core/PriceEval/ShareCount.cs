@@ -37,7 +37,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 分摊数量
         /// </summary>
-        public virtual decimal Count { get; set; }
+        public virtual int Count { get; set; }
 
     }
 }

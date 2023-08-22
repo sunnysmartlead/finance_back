@@ -595,7 +595,7 @@ namespace Finance.PriceEval
                         Moq = p.Key.Moq,
                         AvailableInventory = p.Key.AvailableInventory,
                         Remarks = p.Key.Remarks,
-                        MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity), //* p.Key.AssemblyCount.To<decimal>(),
+                        MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount * o.Quantity).To<decimal>(), //* p.Key.AssemblyCount.To<decimal>(),
 
                     }).ToList();
                 foreach (var item in dto)

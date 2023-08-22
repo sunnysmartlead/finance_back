@@ -1,5 +1,4 @@
-﻿using Finance.Dto;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -42,7 +41,7 @@ namespace Finance.ProductDevelopment.Dto
     /// <summary>
     /// Bom审核输入Dto
     /// </summary>
-    public class BomCheckDto: ToExamineDto
+    public class BomCheckDto
     {
         /// <summary>
         /// 审核流程Id

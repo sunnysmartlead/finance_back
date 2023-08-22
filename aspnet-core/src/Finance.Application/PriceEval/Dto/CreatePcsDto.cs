@@ -72,6 +72,6 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [Required]
         [Range(0, long.MaxValue)]
-        public virtual decimal Quantity { get; set; }
+        public virtual int Quantity { get; set; }
     }
 }

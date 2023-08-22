@@ -124,7 +124,7 @@ namespace Finance.PriceEval
         /// 数量
         /// </summary>
         [Required]
-        public virtual decimal Quantity { get; set; }
+        public virtual int Quantity { get; set; }
 
     }
 }

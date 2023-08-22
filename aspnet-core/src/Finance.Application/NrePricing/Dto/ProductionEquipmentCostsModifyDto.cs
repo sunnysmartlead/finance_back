@@ -32,10 +32,6 @@ namespace Finance.NrePricing.Dto
         /// </summary>     
         public string EquipmentName { get; set; }
         /// <summary>
-        /// 设备状态
-        /// </summary>        
-        public string DeviceStatus { get; set; }
-        /// <summary>
         /// 数量
         /// </summary>        
         public int Number { get; set; }

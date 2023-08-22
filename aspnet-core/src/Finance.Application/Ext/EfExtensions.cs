@@ -127,37 +127,6 @@ namespace Finance.Ext
                 throw new FriendlyException(ex.Message);
             }
         }
-        /// <summary>
-        /// 插入一条数据的时候如果 数据id在数据库存在则修改不存在则添加
-        /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <typeparam name="TPrimaryKey"></typeparam>
-        /// <param name="repository"></param>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        public static async Task<TEntity> BulkInsertOrUpdateAsync<TEntity, TPrimaryKey>(this IRepository<TEntity, TPrimaryKey> repository, TEntity entity) where TEntity : class, IEntity<TPrimaryKey> where TPrimaryKey : struct, IEquatable<TPrimaryKey>
-        {
-            try
-            {
-                var dbContext = repository.GetDbContext();
-                var entitySet = dbContext.Set<TEntity>();
-                var existingEntity = await entitySet.FindAsync(entity.Id);
-                if (existingEntity != null)
-                {
-                    dbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
-                }
-                else
-                {
-                    await entitySet.AddAsync(entity);
-                }
-                await dbContext.SaveChangesAsync();
-                return entity;
-            }
-            catch (Exception ex)
-            {
-                throw new FriendlyException(ex.Message);
-            }
-        }
     }
 
 

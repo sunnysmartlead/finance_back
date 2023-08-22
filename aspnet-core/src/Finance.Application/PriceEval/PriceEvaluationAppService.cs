@@ -132,9 +132,9 @@ namespace Finance.PriceEval
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
 
-            if (input.Opinion.IsNullOrWhiteSpace())
+            if (input.EvalReason.IsNullOrWhiteSpace())
             {
-                input.Opinion = FinanceConsts.EvalReason_Fabg;
+                input.EvalReason = FinanceConsts.EvalReason_Fabg;
             }
 
             if (input.CountryType.IsNullOrWhiteSpace())
@@ -220,7 +220,7 @@ namespace Finance.PriceEval
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 Title = input.Title,
-                FinanceDictionaryDetailId = input.Opinion
+                FinanceDictionaryDetailId = input.EvalReason
             });
 
             priceEvaluation.AuditFlowId = auditFlowId;

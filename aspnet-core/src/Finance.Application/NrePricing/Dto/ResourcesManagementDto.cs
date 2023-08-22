@@ -1,5 +1,4 @@
-﻿using Finance.Dto;
-using Finance.NrePricing.Model;
+﻿using Finance.NrePricing.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +24,7 @@ namespace Finance.NrePricing.Dto
     /// <summary>
     ///Nre核价  资源部录入 交互类
     /// </summary>
-    public class ResourcesManagementSingleDto: ToExamineDto
+    public class ResourcesManagementSingleDto
     {      
         /// <summary>
         /// 流程Id

@@ -17,10 +17,6 @@ namespace Finance.DemandApplyAudit
         /// </summary>
         public virtual long AuditFlowId { get; set; }
         /// <summary>
-        /// 方案的id
-        /// </summary>
-        public long SolutionId { get; set; }
-        /// <summary>
         /// 方案名称
         /// </summary>
         public string SolutionName { get; set; }
@@ -48,10 +44,6 @@ namespace Finance.DemandApplyAudit
         /// MCU
         /// </summary>
         public string MCU { get; set; }
-        /// <summary>
-        /// 连接器
-        /// </summary>
-        public string Connector { get; set; }
         /// <summary>
         /// 线束
         /// </summary>

@@ -1,5 +1,4 @@
-﻿using Finance.Dto;
-using Finance.Ext;
+﻿using Finance.Ext;
 using Finance.NrePricing.Model;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -28,7 +27,7 @@ namespace Finance.NrePricing.Dto
     /// <summary>
     /// Nre 品保部=>试验项目 录入 模型(单个零件)
     /// </summary>
-    public class ExperimentItemsSingleDto: ToExamineDto
+    public class ExperimentItemsSingleDto
     {
         /// <summary>
         /// 流程Id

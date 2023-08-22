@@ -1,7 +1,5 @@
-﻿using Castle.MicroKernel.SubSystems.Conversion;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
@@ -49,26 +47,27 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 调整系数
         /// </summary>
-        public decimal AdjustmentCoefficient { get; set; }
+        public decimal Coefficient { get; set; }
         /// <summary>
         /// 计价单位
         /// </summary>
-        public string Unit { get; set; }
+        public decimal Unit { get; set; }
         /// <summary>
-        /// 计数-摸底
+        /// 时间-摸底
         /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal CountBottomingOut { get; set; }
+        public decimal DataThoroughly { get; set; }
         /// <summary>
-        /// 计数-DV
+        /// 时间-DV
         /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal CountDV { get; set; }
+        public decimal DataDV { get; set; }
         /// <summary>
-        /// 计数-PV
+        /// 时间-PV
         /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal CountPV { get; set; }
+        public decimal DataPV { get; set; }
+        /// <summary>
+        /// 数量=摸底+DV+PV+单位 后面需要带单位所以是 string
+        /// </summary>
+        public string Count { get; set; }
         /// <summary>
         /// 总费用
         /// </summary>

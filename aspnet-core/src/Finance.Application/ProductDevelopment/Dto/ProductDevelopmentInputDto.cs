@@ -1,7 +1,6 @@
 ﻿
 using Abp.UI;
 using AutoMapper;
-using Finance.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -211,7 +210,7 @@ namespace Finance.ProductDevelopment.Dto
 
 
 
-    public class ProductDevelopmentInputDto: ToExamineDto
+    public class ProductDevelopmentInputDto
     {
         /// 审批流程表ID
         /// </summary>

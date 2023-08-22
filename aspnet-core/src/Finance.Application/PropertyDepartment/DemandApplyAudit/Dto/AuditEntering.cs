@@ -48,10 +48,6 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>
         public long  Id { get; set; }
         /// <summary>
-        /// 方案的id
-        /// </summary>
-        public long SolutionId { get; set; }
-        /// <summary>
         /// 方案名称
         /// </summary>
         [FriendlyRequired("设计方案-方案名称")]
@@ -80,10 +76,6 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// MCU
         /// </summary>      
         public string MCU { get; set; }
-        /// <summary>
-        /// 连接器
-        /// </summary>
-        public string Connector { get; set; }
         /// <summary>
         /// 线束
         /// </summary>        
@@ -158,11 +150,6 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>
         [ExcelColumnName("MCU")]
         public string MCU { get; set; }
-        /// <summary>
-        /// 连接器
-        /// </summary>
-        [ExcelColumnName("连接器")]
-        public string Connector { get; set; }
         /// <summary>
         /// 线束
         /// </summary>

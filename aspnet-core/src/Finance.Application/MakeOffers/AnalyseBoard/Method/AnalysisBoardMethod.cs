@@ -1395,7 +1395,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
                 motionMessageModel.Sop = new();
                 foreach (var year in YearList)
                 {
-                    var quantity = _resourceModelCountYear.GetAllList(p => p.AuditFlowId.Equals(processId) && p.Year.Equals(year)).Sum(p => p.Quantity);
+                    int quantity = _resourceModelCountYear.GetAllList(p => p.AuditFlowId.Equals(processId) && p.Year.Equals(year)).Sum(p => p.Quantity);
                     motionMessageModel.Sop.Add(new SopOrValueMode() { Year = year, Value = quantity });
                 }
                 quotationListDto.MotionMessage = new List<MotionMessageModel>();
@@ -1714,7 +1714,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
         /// <param name="partId">零件id</param>
         /// <param name="year">年份</param>
         /// <returns></returns>
-        private async Task<decimal> SalesQuantity(long processId, long partId, int year)
+        private async Task<int> SalesQuantity(long processId, long partId, int year)
         {
             ModelCountYear modelCount = new ModelCountYear();
             if (partId is 0)
@@ -1852,7 +1852,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             if (!string.IsNullOrWhiteSpace(modelCountYear.TableJson)) priceEvaluationTableDto = JsonConvert.DeserializeObject<PriceEvaluationTableDto>(modelCountYear.TableJson);
             if (priceEvaluationTableDto.TotalCost is not 0.0M) unitCost = priceEvaluationTableDto.TotalCost;
             //销售数量  某一年
-            var salesQuantity = await SalesQuantity(processId, partId, year); ;
+            int salesQuantity = await SalesQuantity(processId, partId, year); ;
             return unitCost * salesQuantity;
         }
         /// <summary>
