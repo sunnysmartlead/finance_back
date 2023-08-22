@@ -91,7 +91,8 @@ namespace Finance.Processes
             foreach (var item in list)
             {
                 ProcessHoursEnterDto processHoursEnter =   new ProcessHoursEnterDto();
-               
+                processHoursEnter.AuditFlowId = item.AuditFlowId;
+                processHoursEnter.SolutionId = item.SolutionId;
                 processHoursEnter.Id = item.Id;
                 processHoursEnter.ProcessNumber = item.ProcessNumber;
                 processHoursEnter.ProcessName   = item.ProcessName;
