@@ -1,4 +1,5 @@
-﻿using Finance.Ext;
+﻿using Finance.Dto;
+using Finance.Ext;
 using Finance.NrePricing.Model;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Finance.NrePricing.Dto
     /// <summary>
     /// 产品部-电子工程师 录入 交互类(单个零件)
     /// </summary>
-    public class ProductDepartmentSingleDto
+    public class ProductDepartmentSingleDto: ToExamineDto
     {
         /// <summary>
         /// 流程Id

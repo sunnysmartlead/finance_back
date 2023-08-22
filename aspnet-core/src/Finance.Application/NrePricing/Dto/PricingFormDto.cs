@@ -36,41 +36,82 @@ namespace Finance.NrePricing.Dto
         /// </summary>
         public List<HandPieceCostModel> HandPieceCost { get; set; }
         /// <summary>
+        /// <summary>
+        /// 手板件费用合计
+        /// </summary>
+        public decimal HandPieceCostTotal { get; set; }
+        /// <summary>
         /// 模具清单 (模具费用)
         /// </summary>
         public List<MouldInventoryModel> MouldInventory { get; set; }
+        /// <summary>
+        /// 模具清单 (模具费用)合计
+        /// </summary>
+        public decimal MouldInventoryTotal { get; set; }
         /// <summary>
         /// 工装费用
         /// </summary>
         public List<ToolingCostModel> ToolingCost { get; set; }
         /// <summary>
+        /// 工装费用合计
+        /// </summary>
+        public decimal ToolingCostTotal { get; set; }
+        /// <summary>
         /// 治具费用
         /// </summary>
         public List<FixtureCostModel> FixtureCost { get; set; }
+        /// <summary>
+        /// 治具费用合计
+        /// </summary>
+        public decimal FixtureCostTotal { get; set; }
         /// <summary>
         ///  检具费用
         /// </summary>
         public List<QADepartmentQCModel> QAQCDepartments { get; set; }
         /// <summary>
+        ///  检具费用合计
+        /// </summary>
+        public decimal QAQCDepartmentsTotal { get; set; }
+        /// <summary>
         /// 生产设备费用
         /// </summary>
         public List<ProductionEquipmentCostModel> ProductionEquipmentCost { get; set; }
+        /// <summary>
+        /// 生产设备费用合计
+        /// </summary>
+        public decimal ProductionEquipmentCostTotal { get; set; }
         /// <summary>
         /// 实验费 模型
         /// </summary>
         public List<LaboratoryFeeModel> LaboratoryFeeModels { get; set; }
         /// <summary>
+        /// 实验费 模型合计
+        /// </summary>
+        public decimal LaboratoryFeeModelsTotal { get; set; }
+        /// <summary>
         /// 测试软件费用
         /// </summary>
         public List<SoftwareTestingCotsModel> SoftwareTestingCost { get; set; }
+        /// <summary>
+        /// 测试软件费用合计
+        /// </summary>
+        public decimal SoftwareTestingCostTotal { get; set; }
         /// <summary>
         /// 差旅费
         /// </summary>
         public List<TravelExpenseModel> TravelExpense { get; set; }
         /// <summary>
+        /// 差旅费合计
+        /// </summary>
+        public decimal TravelExpenseTotal { get; set; }
+        /// <summary>
         /// 其他费用
         /// </summary>
         public List<RestsCostModel> RestsCost { get; set; }
+        /// <summary>
+        /// 其他费用合计
+        /// </summary>
+        public decimal RestsCostTotal { get; set; }
         /// <summary>
         /// (不含税人民币) NRE 总费用
         /// </summary>
@@ -82,12 +123,12 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 线体数量和共线分摊率的值
         /// </summary>
-        public List<UphAndValue>  UphAndValues { get; set; }
+        public List<UphAndValue> UphAndValues { get; set; }
     }
     /// <summary>
     /// Nre 核价表 交互类 加修改项
     /// </summary>
-    public class ModifyItemPricingFormDto: PricingFormDto
+    public class ModifyItemPricingFormDto : PricingFormDto
     {
         /// <summary>
         /// 手板件费用修改项

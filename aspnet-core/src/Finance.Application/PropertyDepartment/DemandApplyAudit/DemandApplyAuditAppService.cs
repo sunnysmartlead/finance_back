@@ -7,6 +7,7 @@ using Finance.Entering;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.PriceEval;
+using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Model;
@@ -58,7 +59,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// 工作流服务
         /// </summary>
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -69,7 +73,8 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="resourcePriceEvaluation"></param>
         /// <param name="fileManagementRepository"></param>
         /// <param name="workflowInstanceAppService"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService)
+        /// <param name="fileCommonService"></param>
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService)
         {
             _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
@@ -78,6 +83,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _resourcePriceEvaluation = resourcePriceEvaluation;
             _fileManagementRepository = fileManagementRepository;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _fileCommonService = fileCommonService;
         }
 
 
@@ -257,6 +263,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     { "ISP", item.ISP },
                     { "vcsel/LED", item.Vcsel },
                     { "MCU", item.MCU },
+                    { "连接器", item.Connector },
                     { "线束", item.Harness },
                     { "支架", item.Stand },
                     { "传动结构", item.TransmissionStructure },
@@ -300,6 +307,18 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 throw new FriendlyException(ex.Message);
             }
 
+        }
+        /// <summary>
+        /// 根据流程号和方案号下载3D爆炸图
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="solutionId"></param>
+        /// <returns></returns>
+        public async Task<FileResult> DownloadExplosives(long auditFlowId, long solutionId)
+        {
+            // 营销部审核中项目设计方案
+            DesignSolution designScheme = await _resourceDesignScheme.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
+            return await _fileCommonService.DownloadFile(designScheme.FileId);
         }
     }
 }
