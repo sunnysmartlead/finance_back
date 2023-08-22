@@ -398,7 +398,7 @@ namespace Finance.Processes
                     {
                         ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
                         processHoursEnteritem.Year = year.Year;
-                        processHoursEnteritem.Id = entity.Id;
+                        processHoursEnteritem.ProcessHoursEnterId = entity.Id;
                         processHoursEnteritem.LaborHour = yearItem.LaborHour;
                         processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritem.MachineHour = yearItem.MachineHour;
