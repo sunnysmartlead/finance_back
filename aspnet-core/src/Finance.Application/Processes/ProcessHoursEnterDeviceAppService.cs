@@ -15,14 +15,16 @@ namespace Finance.Processes
     public class ProcessHoursEnterDeviceAppService : ApplicationService
     {
         private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDeviceRepository;
+        private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterDeviceRepository"></param>
         public ProcessHoursEnterDeviceAppService(
-            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository)
+            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
         {
             _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
+            _processHoursEnterRepository = processHoursEnterRepository;
         }
 
         /// <summary>
@@ -56,6 +58,37 @@ namespace Finance.Processes
             return new PagedResultDto<ProcessHoursEnterDeviceDto>(totalCount, dtos);
         }
 
+        /// <summary>
+        /// 列表-无分页功能
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<ProcessHoursEnterDeviceDto>> GetListByAuditFlowIdOrSolutionId(GetProcessHoursEntersInput input)
+        {
+            // 设置查询条件
+            var query = this._processHoursEnterRepository.GetAll();
+         
+            // 查询数据
+            var list = query.ToList();
+
+            List<ProcessHoursEnterDeviceDto> listProcessHoursEnterDeviceDto = new List<ProcessHoursEnterDeviceDto>();
+            //数据转换
+            foreach (var item in list)
+            {
+                var processHoursEnterDevicr = this._processHoursEnterDeviceRepository.GetAll().Where(u => u.ProcessHoursEnterId == item.Id && u.DeviceStatus.Equals("专用")).ToList();
+                foreach (var item1 in processHoursEnterDevicr)
+                {
+                    ProcessHoursEnterDeviceDto p = new ProcessHoursEnterDeviceDto();
+                    p.ProcessHoursEnterId = item1.Id;
+                    p.DeviceName    = item1.DeviceName;
+                    p.DeviceStatus = item1.DeviceStatus;
+                    p.DevicePrice = item1.DevicePrice;
+                    listProcessHoursEnterDeviceDto.Add(p);
+                }
+            }
+            // 数据返回
+            return listProcessHoursEnterDeviceDto;
+        }
         /// <summary>
         /// 获取修改
         /// </summary>
