@@ -17,6 +17,10 @@ namespace Finance.DemandApplyAudit
         /// </summary>
         public virtual long AuditFlowId { get; set; }
         /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
         /// 方案名称
         /// </summary>
         public string SolutionName { get; set; }
