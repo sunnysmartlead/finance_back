@@ -145,7 +145,7 @@ namespace Finance.NerPricing
         /// <summary>
         /// 二开新增硬件部分表
         /// </summary>
-        private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;         
+        private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
         /// <summary>
         /// Nre 项目管理部 手板件 修改项实体类
         /// </summary>
@@ -836,7 +836,7 @@ namespace Finance.NerPricing
                             throw new FriendlyException("请先登录");
                         }
 
-                        
+
 
                     }
                 }
@@ -1724,11 +1724,11 @@ namespace Finance.NerPricing
                     modify.ClientName = priceEvaluation.CustomerName;
                 }
                 //线体数量和共线分摊率的 乘积
-                decimal UphAndValuesd =0M;
+                decimal UphAndValuesd = 0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 decimal NumberOfLines = processHoursEnterLines
-               .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value??0;
+               .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value ?? 0;
 
 
                 modify.UphAndValues = ObjectMapper.Map<List<UphAndValue>>(processHoursEnterLines);
@@ -1741,7 +1741,7 @@ namespace Finance.NerPricing
                 //手板件费用
                 List<HandPieceCost> handPieceCosts = await _resourceHandPieceCost.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 modify.HandPieceCost = ObjectMapper.Map<List<HandPieceCostModel>>(handPieceCosts);
-                modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p=>p.Cost);
+                modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p => p.Cost);
                 //模具费用
                 List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 modify.MouldInventory = ObjectMapper.Map<List<MouldInventoryModel>>(mouldInventories);
@@ -1750,7 +1750,7 @@ namespace Finance.NerPricing
                     User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
                     if (user is not null) item.PeopleName = user.Name;//提交人名称              
                 }
-                modify.MouldInventoryTotal = modify.MouldInventory.Sum(p=>p.Cost);
+                modify.MouldInventoryTotal = modify.MouldInventory.Sum(p => p.Cost);
                 List<ProcessHoursEnter> processHours = await _processHoursEnter.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 //工装费用 (工装费用+测试线费用)              
                 List<ToolingCostModel> workingHoursInfosGZ = new();
@@ -1761,7 +1761,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber)* UphAndValuesd
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
@@ -1771,10 +1771,10 @@ namespace Finance.NerPricing
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
-                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber))* UphAndValuesd,
+                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd,
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
-                modify.ToolingCostTotal = modify.ToolingCost.Sum(p=>p.Cost);
+                modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
                 //治具费用               
                 List<ProcessHoursEnterFixture> processHoursEnterFixtures = (from a in processHours
                                                                             join b in await _processHoursEnterFixture.GetAllListAsync() on a.Id equals b.ProcessHoursEnterId
@@ -1793,10 +1793,10 @@ namespace Finance.NerPricing
                          ToolingName = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Number = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber))* UphAndValuesd
+                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd
                      }).ToList();
                 modify.FixtureCost = productionEquipmentCostModelsZj;
-                modify.FixtureCostTotal = modify.FixtureCost.Sum(p=>p.Cost);
+                modify.FixtureCostTotal = modify.FixtureCost.Sum(p => p.Cost);
                 //检具费用(有变化,工装治具)
                 //List<ProcessHoursEnter> processHours= await _processHoursEnter.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));            
                 //modify.QAQCDepartments = (from a in processHours
@@ -1817,7 +1817,7 @@ namespace Finance.NerPricing
                          Count = (int)a.Sum(c => c.FixtureNumber),
                          Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd
                      }).ToList();
-                modify.QAQCDepartmentsTotal = modify.QAQCDepartments.Sum(p=>p.Cost);
+                modify.QAQCDepartmentsTotal = modify.QAQCDepartments.Sum(p => p.Cost);
                 //生产设备费用 
                 List<ProcessHoursEnterDevice> processHoursEnterDevices = (from a in processHours
                                                                           join b in await _processHoursEnterDevice.GetAllListAsync() on a.Id equals b.ProcessHoursEnterId
@@ -1830,18 +1830,18 @@ namespace Finance.NerPricing
                                                                               DeviceStatus = b.DeviceStatus,
                                                                               ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                           }).ToList();
-                List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice,m.DeviceStatus }).Select(
+                List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice, m.DeviceStatus }).Select(
                     a => new ProductionEquipmentCostModel
                     {
-                        Id = processHoursEnterDevices.Where(p => p.DeviceName == a.Key.DeviceName && p.DevicePrice == a.Key.DevicePrice&&p.DeviceStatus==a.Key.DeviceStatus).Select(p => p.Id).FirstOrDefault(),
+                        Id = processHoursEnterDevices.Where(p => p.DeviceName == a.Key.DeviceName && p.DevicePrice == a.Key.DevicePrice && p.DeviceStatus == a.Key.DeviceStatus).Select(p => p.Id).FirstOrDefault(),
                         EquipmentName = a.Key.DeviceName,
-                        DeviceStatus=a.Key.DeviceStatus,
+                        DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus== FinanceConsts.Sbzt_Zy? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber)* NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
                     }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModels;
-                modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p=>p.Cost);
+                modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
                 //实验费用
                 {
                     //-产品部-电子工程师录入的试验费用
@@ -1850,7 +1850,7 @@ namespace Finance.NerPricing
                     List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                     modify.LaboratoryFeeModels = ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
                     modify.LaboratoryFeeModels.AddRange(ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests));
-                    modify.LaboratoryFeeModelsTotal = modify.LaboratoryFeeModels.Sum(p=>p.AllCost);
+                    modify.LaboratoryFeeModelsTotal = modify.LaboratoryFeeModels.Sum(p => p.AllCost);
                 }
                 //测试软件费用                 
                 //测试软件费用=>硬件费用               
@@ -1870,7 +1870,7 @@ namespace Finance.NerPricing
                 modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "追溯软件费用", Cost = processHours.Sum(p => p.TraceabilitySoftwareCost) });
                 //测试软件费用=>开图软件费用
                 modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { SoftwareProject = "开图软件费用", Cost = processHours.Sum(p => p.SoftwarePrice) });
-                modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p=>p.Cost);
+                modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p => p.Cost);
                 //差旅费
                 List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))
                     .Join(_financeDictionaryDetailRepository.GetAll(), t => t.ReasonsId, p => p.Id, (t, p) => new TravelExpenseModel
@@ -1885,11 +1885,11 @@ namespace Finance.NerPricing
                         Remark = t.Remark,
                     }).ToList();
                 modify.TravelExpense = travelExpenses;
-                modify.TravelExpenseTotal = modify.TravelExpense.Sum(p=>p.Cost);
+                modify.TravelExpenseTotal = modify.TravelExpense.Sum(p => p.Cost);
                 //其他费用
                 List<RestsCost> rests = await _resourceRestsCost.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 modify.RestsCost = ObjectMapper.Map<List<RestsCostModel>>(rests);
-                modify.RestsCostTotal = modify.RestsCost.Sum(p=>p.Cost);
+                modify.RestsCostTotal = modify.RestsCost.Sum(p => p.Cost);
                 //(不含税人民币) NRE 总费用
                 modify.RMBAllCost = modify.HandPieceCost.Sum(p => p.Cost)//手板件总费用
                                          + modify.MouldInventory.Sum(p => p.Cost)//模具清单总费用
@@ -1952,7 +1952,7 @@ namespace Finance.NerPricing
         public async Task AdditionOfCostModificationItemsForHandBoards(HandPieceCostModifyDto handPieceCostModifyDto)
         {
             HandPieceCostModify handPieceCostModify = ObjectMapper.Map<HandPieceCostModify>(handPieceCostModifyDto);
-            await _handPieceCostModify.InsertOrUpdateAndGetIdAsync(handPieceCostModify);
+            await _handPieceCostModify.BulkInsertOrUpdateAsync(handPieceCostModify);
         }
         /// <summary>
         /// 模具费用修改项添加
@@ -1961,7 +1961,7 @@ namespace Finance.NerPricing
         public async Task AddMoldCostModificationItem(MouldInventoryModifyDto mouldInventoryModifyDto)
         {
             MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
-            await _mouldInventoryModify.InsertOrUpdateAndGetIdAsync(mouldInventoryModify);
+            await _mouldInventoryModify.BulkInsertOrUpdateAsync(mouldInventoryModify);
         }
         /// <summary>
         /// 工装费用修改项添加
@@ -1970,7 +1970,7 @@ namespace Finance.NerPricing
         public async Task AddToolingCostModificationItem(ToolingCostsModifyDto toolingCostsModifyDto)
         {
             ToolingCostsModify toolingCostsModify = ObjectMapper.Map<ToolingCostsModify>(toolingCostsModifyDto);
-            await _toolingCostsModify.InsertOrUpdateAndGetIdAsync(toolingCostsModify);
+            await _toolingCostsModify.BulkInsertOrUpdateAsync(toolingCostsModify);
         }
         /// <summary>
         /// 治具费用修改项添加
@@ -1979,7 +1979,7 @@ namespace Finance.NerPricing
         public async Task AdditionOfFixtureCostModificationItem(FixtureCostsModifyDto fixtureCostsModifyDto)
         {
             FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
-            await _fixtureCostsModify.InsertOrUpdateAndGetIdAsync(fixtureCostsModify);
+            await _fixtureCostsModify.BulkInsertOrUpdateAsync(fixtureCostsModify);
         }
         /// <summary>
         /// 检具费用修改项添加
@@ -1988,7 +1988,7 @@ namespace Finance.NerPricing
         public async Task AddInspectionToolCostModificationItem(InspectionToolCostModifyDto inspectionToolCostModifyDto)
         {
             InspectionToolCostModify inspectionToolCostModify = ObjectMapper.Map<InspectionToolCostModify>(inspectionToolCostModifyDto);
-            await _inspectionToolCostModify.InsertOrUpdateAndGetIdAsync(inspectionToolCostModify);
+            await _inspectionToolCostModify.BulkInsertOrUpdateAsync(inspectionToolCostModify);
         }
         /// <summary>
         /// 生产设备费用修改项添加
@@ -1997,7 +1997,7 @@ namespace Finance.NerPricing
         public async Task AddProductionEquipmentCostModificationItem(ProductionEquipmentCostsModifyDto productionEquipmentCostsModifyDto)
         {
             ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
-            await _productionEquipmentCostsModify.InsertOrUpdateAndGetIdAsync(productionEquipmentCostsModify);
+            await _productionEquipmentCostsModify.BulkInsertOrUpdateAsync(productionEquipmentCostsModify);
         }
         /// <summary>
         /// 实验费用修改项添加
@@ -2006,7 +2006,7 @@ namespace Finance.NerPricing
         public async Task AddExperimentalFeeModificationItem(ExperimentalExpensesModifyDto experimentalExpensesModifyDto)
         {
             ExperimentalExpensesModify experimentalExpensesModify = ObjectMapper.Map<ExperimentalExpensesModify>(experimentalExpensesModifyDto);
-            await _experimentalExpensesModify.InsertOrUpdateAndGetIdAsync(experimentalExpensesModify);
+            await _experimentalExpensesModify.BulkInsertOrUpdateAsync(experimentalExpensesModify);
         }
         /// <summary>
         /// 测试软件费用修改项添加
@@ -2015,7 +2015,7 @@ namespace Finance.NerPricing
         public async Task AddingModificationItemsForTestingSoftwareCosts(TestingSoftwareCostsModifyDto testingSoftwareCostsModifyDto)
         {
             TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
-            await _testingSoftwareCostsModify.InsertOrUpdateAndGetIdAsync(testingSoftwareCostsModify);
+            await _testingSoftwareCostsModify.BulkInsertOrUpdateAsync(testingSoftwareCostsModify);
         }
         /// <summary>
         /// 差旅费用修改项添加
@@ -2024,7 +2024,7 @@ namespace Finance.NerPricing
         public async Task AddTravelExpenseModificationItem(TravelExpenseModifyDto travelExpenseModifyDto)
         {
             TravelExpenseModify travelExpenseModify = ObjectMapper.Map<TravelExpenseModify>(travelExpenseModifyDto);
-            await _travelExpenseModify.InsertOrUpdateAndGetIdAsync(travelExpenseModify);
+            await _travelExpenseModify.BulkInsertOrUpdateAsync(travelExpenseModify);
         }
         /// <summary>
         /// 其他费用修改项添加
@@ -2033,7 +2033,7 @@ namespace Finance.NerPricing
         public async Task OtherExpenseModificationItemsAdded(RestsCostModifyDto restsCostModifyDto)
         {
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
-            await _restsCostModify.InsertOrUpdateAndGetIdAsync(restsCostModify);
+            await _restsCostModify.BulkInsertOrUpdateAsync(restsCostModify);
         }
         /// <summary>
         /// NRE审核接口

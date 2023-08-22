@@ -11,6 +11,7 @@ using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -520,7 +521,7 @@ namespace Finance.Entering
         public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
-        }
+        }    
         /// <summary>
         /// 结构/电子/BOM/单价审核
         /// </summary>

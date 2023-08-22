@@ -48,6 +48,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>
         public long  Id { get; set; }
         /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
         /// 方案名称
         /// </summary>
         [FriendlyRequired("设计方案-方案名称")]
