@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
@@ -1727,6 +1728,37 @@ namespace Finance.NerPricing
                 decimal UphAndValuesd = 0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+
+                if (processHoursEnterLines.Count is not 0)
+                {
+                    //先判断线体数量是否一致 如果一致 则继续判断共线分摊率
+                    var xtsl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription())).ToList();
+                    if (xtsl.Select(x => x.Value).Distinct().Count() == 1)
+                    {
+                        //每一年的值都一样  
+                        List<ProcessHoursEnterLine> gxftl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.gxftl.GetDescription())).ToList();
+                        //继续判断共线分摊率
+                        if (gxftl.Select(x => x.Value).Distinct().Count() == 1)
+                        {
+                            //获取值最大年份的那一年
+                            var maxYear = gxftl.Max(p => p.Year);
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxYear)).ToList();
+                        }
+                        else
+                        {
+                            //获取值最大的那年
+                            ProcessHoursEnterLine maxGxftl = gxftl.OrderByDescending(p => p.Value).FirstOrDefault();
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxGxftl.Year)).ToList();
+                        }
+                    }
+                    else
+                    {
+                        //获取值最大的那年
+                        ProcessHoursEnterLine maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
+                        processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxXtsl.Year)).ToList();
+                    }
+                }
+
                 decimal NumberOfLines = processHoursEnterLines
                .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value ?? 0;
 
