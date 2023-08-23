@@ -178,6 +178,17 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
             }
 
+            if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的产品名称！");
+            }
+
+            if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的客户零件号！");
+            }
 
             ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
             //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
@@ -318,7 +329,7 @@ namespace Finance.PriceEval
             {
                 customerTargetPrice.PriceEvaluationId = priceEvaluationId;
                 customerTargetPrice.AuditFlowId = auditFlowId;
-                gradient.ProductId = modelCountIds.First(p => p.product == customerTargetPrice.Product).productId;
+                customerTargetPrice.ProductId = modelCountIds.First(p => p.product == customerTargetPrice.Product).productId;
                 await _customerTargetPriceRepository.InsertAsync(customerTargetPrice);
             }
 
