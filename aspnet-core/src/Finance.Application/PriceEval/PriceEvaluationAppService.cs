@@ -272,7 +272,7 @@ namespace Finance.PriceEval
                 }
             }
 
-            var modelCountIds = new List<(string number, long productId)>();
+            var modelCountIds = new List<(string number, string product, long productId)>();
 
             //模组数量合计
             foreach (var createModelCountDto in input.ModelCount)
@@ -282,7 +282,7 @@ namespace Finance.PriceEval
                 modelCount.AuditFlowId = auditFlowId;
                 var productId = await _modelCountRepository.InsertAndGetIdAsync(modelCount);
 
-                modelCountIds.Add((createModelCountDto.PartNumber, productId));
+                modelCountIds.Add((createModelCountDto.PartNumber, createModelCountDto.Product, productId));
 
                 foreach (var createModelCountYearDto in createModelCountDto.ModelCountYearList)
                 {
@@ -318,6 +318,7 @@ namespace Finance.PriceEval
             {
                 customerTargetPrice.PriceEvaluationId = priceEvaluationId;
                 customerTargetPrice.AuditFlowId = auditFlowId;
+                gradient.ProductId = modelCountIds.First(p => p.product == customerTargetPrice.Product).productId;
                 await _customerTargetPriceRepository.InsertAsync(customerTargetPrice);
             }
 
