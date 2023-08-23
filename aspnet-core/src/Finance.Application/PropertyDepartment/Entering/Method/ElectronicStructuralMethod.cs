@@ -89,7 +89,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// 共用物料库
         /// </summary>
@@ -147,7 +147,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
             IUserAppService userAppService,
-            IRepository<SolutionTable, long> resourceSchemeTable,
+            IRepository<Solution, long> resourceSchemeTable,
             IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse,
             IRepository<Gradient, long> gradientRepository,
             IRepository<GradientModel, long> gradientModelRepository,
@@ -179,7 +179,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// </summary>
         internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId)
         {
-            List<SolutionTable> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
             result = result.OrderBy(p => p.ModuleName).ToList();
             List<SolutionModel> partModel = (from a in result
                                              select new SolutionModel
@@ -193,9 +193,9 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <summary>
         /// 根据筛选条件获取方案列表
         /// </summary>
-        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<SolutionTable, bool> filter)
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<Solution, bool> filter)
         {
-            List<SolutionTable> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
             result = result.OrderBy(p => p.ModuleName).ToList();
             List<SolutionModel> partModel = (from a in result
                                              where filter(a)

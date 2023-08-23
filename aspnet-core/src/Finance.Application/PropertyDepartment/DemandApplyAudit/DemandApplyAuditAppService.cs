@@ -44,7 +44,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// 模组数量
         /// </summary>
@@ -74,7 +74,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="fileManagementRepository"></param>
         /// <param name="workflowInstanceAppService"></param>
         /// <param name="fileCommonService"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<SolutionTable, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService)
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService)
         {
             _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
@@ -110,11 +110,11 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
                 #region 方案表
                 // 营销部审核 方案表
-                List<SolutionTable> schemeTables = ObjectMapper.Map<List<SolutionTable>>(auditEntering.SolutionTableList);
+                List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
                 schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
                 schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
                 //现在数据库里有的数据项
-                List<SolutionTable> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                List<Solution> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 //用户传入的数据项和数据库现有数据项的差异的ID
                 List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
                 //删除 用户在前端删除的 数据项目
@@ -123,7 +123,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 #region 设计方案
                 foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
                 {
-                    SolutionTable solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
+                    Solution solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
                     if (solution != null)
                     {
                         design.SolutionId = solution.Id;
@@ -201,17 +201,17 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
                 List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
-                List<SolutionTable> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<Solution> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
                 if (solutionTables.Count is not 0)
                 {
                     //跟modelCount联查,modelCount中删除的也会在联查中过滤
-                    List<SolutionTable> result = (from modelCount in modelCounts
+                    List<Solution> result = (from modelCount in modelCounts
                                                   join solutionTable in solutionTables
                                                   on modelCount.Id equals solutionTable.Productld into temp
                                                   from solutionTable in temp.DefaultIfEmpty()
                                                   where solutionTable != null
-                                                  select new SolutionTable
+                                                  select new Solution
                                                   {
                                                       Id = solutionTable.Id,
                                                       AuditFlowId = solutionTable.AuditFlowId,
@@ -226,12 +226,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                                                   }
                                                    ).ToList();
                     //退回的时候 如果 录入页面新增数据 此linq会获取
-                    List<SolutionTable> addresult = (from modelCount in modelCounts
+                    List<Solution> addresult = (from modelCount in modelCounts
                                                      join solutionTable in solutionTables
                                                      on modelCount.Id equals solutionTable.Productld into temp
                                                      from solutionTable in temp.DefaultIfEmpty()
                                                      where solutionTable == null
-                                                     select new SolutionTable
+                                                     select new Solution
                                                      {
                                                          Id = 0,
                                                          AuditFlowId = 0,

@@ -26,7 +26,7 @@ namespace Finance.Ext
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>   
-        private IRepository<SolutionTable, long> _resourceSchemeTable;
+        private IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -37,7 +37,7 @@ namespace Finance.Ext
             errorName = eroName;
             specialVerification = specialVerifica;
             _auditFlowRepository = IocManager.Instance.Resolve<IRepository<WorkflowInstance, long>>();
-            _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<SolutionTable, long>>();
+            _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<Solution, long>>();
         }
         /// <summary>
         /// 验证的属性名称
