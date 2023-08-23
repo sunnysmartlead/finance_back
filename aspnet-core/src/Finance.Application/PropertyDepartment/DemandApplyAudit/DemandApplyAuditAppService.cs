@@ -142,12 +142,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 #endregion
                 #region 工作流
                 //嵌入工作流
-                //await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-                //{
-                //    NodeInstanceId = auditEntering.NodeInstanceId,
-                //    FinanceDictionaryDetailId = auditEntering.Opinion,
-                //    Comment = auditEntering.Comment,
-                //});
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = auditEntering.NodeInstanceId,
+                    FinanceDictionaryDetailId = auditEntering.Opinion,
+                    Comment = auditEntering.Comment,
+                });
                 #endregion
             }
             catch (Exception ex)
