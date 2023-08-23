@@ -2,6 +2,10 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
+using Finance.Audit;
+using Finance.PriceEval;
+using Finance.PriceEval.Dto;
+using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.Users.Dto;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.SS.Formula.Functions;
@@ -21,14 +25,24 @@ namespace Finance.BaseLibrary
     public class LogisticscostAppService : ApplicationService
     {
         private readonly IRepository<Logisticscost, long> _logisticscostRepository;
+        private readonly IRepository<Gradient, long> _gradientRepository;
+        private readonly IRepository<GradientModel, long> _gradientModelRepository;
+        private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="logisticscostRepository"></param>
         public LogisticscostAppService(
-            IRepository<Logisticscost, long> logisticscostRepository)
+            IRepository<Logisticscost, long> logisticscostRepository,
+            IRepository<Gradient, long> gradientRepository ,
+             IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository
+            )
         {
             _logisticscostRepository = logisticscostRepository;
+            _gradientRepository = gradientRepository;
+            _gradientModelRepository = gradientModelRepository;
+            _gradientModelYearRepository = gradientModelYearRepository;
+
         }
 
         /// <summary>
@@ -88,8 +102,48 @@ namespace Finance.BaseLibrary
                 logisticscostResponseList.Add(logisticscostResponse);
             }
 
+            if (null == logisticscostResponseList || logisticscostResponseList.Count<1)
+            {
+
+                List<Gradient>  data= _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId).Result.ToList();
+                foreach (var item in data)
+                {
+                    LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
+                    logisticscostResponse.Classification = item.GradientValue.ToString();
+
+                    var data1 = from m in _gradientModelRepository.GetAll()
+                               join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
+                               join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
+                               where y.ProductId == input.SolutionId
+                                select new GradientModelYearListDto
+                               {
+                                   Id = y.Id,
+                                   AuditFlowId = y.AuditFlowId,
+                                   PriceEvaluationId = y.PriceEvaluationId,
+                                   GradientModelId = y.GradientModelId,
+                                   ProductId = y.ProductId,
+                                   GradientValue = g.GradientValue,
+                                   Year = y.Year,
+                                   UpDown = y.UpDown,
+                                   Count = y.Count
+                               };
+                    List <LogisticscostDto> logisticscostDtos= new List<LogisticscostDto>();
+                    foreach (var item1 in data1)
+                    {
+                        LogisticscostDto logisticscostDto = new LogisticscostDto();
+                        logisticscostDto.Year = item1.Year.ToString();
+                        logisticscostDtos.Add(logisticscostDto);
+                    }
+                    logisticscostResponse.LogisticscostList = logisticscostDtos;
+                    logisticscostResponseList.Add(logisticscostResponse);
+                    }
+
+            }
+
             // 数据返回
             return logisticscostResponseList;
+
+
         }
 
 
