@@ -167,7 +167,7 @@ namespace Finance.EntityFrameworkCore
         /// <summary>
         /// 营销部审核 方案表
         /// </summary>
-        public virtual DbSet<Solution> SolutionTable { get; set; }
+        public virtual DbSet<Solution> Solution { get; set; }
         /// <summary>
         /// 时效性页面
         /// </summary>
