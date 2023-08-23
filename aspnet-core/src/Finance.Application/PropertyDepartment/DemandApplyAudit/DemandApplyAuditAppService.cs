@@ -97,38 +97,58 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         {
             try
             {
+                //判断项目设计方案和方案是否一对一 如果不 则全段传值错误
+                bool exists = auditEntering.SolutionTableList.Select(a => a.Product).SequenceEqual(auditEntering.DesignSolutionList.Select(b => b.SolutionName));
+                if (!exists)
+                {
+                    throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
+                }
+              
                 // 核价团队  其中包含(核价人员以及对应完成时间)
                 PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
                 pricingTeam.AuditFlowId = auditEntering.AuditFlowId;
                 await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
-                // 营销部审核中项目设计方案
-                List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
-                designSchemes.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
-                await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
-                //现在数据库里有的数据项
-                List<DesignSolution> DesignSchemeNow = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
-                //用户传入的数据项和数据库现有数据项的差异的ID
-                List<long> DesignSchemeDiffId = DesignSchemeNow.Where(p => !designSchemes.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
-                //删除 用户在前端删除的 数据项目
-                await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
+                #region 方案表
                 // 营销部审核 方案表
                 List<SolutionTable> schemeTables = ObjectMapper.Map<List<SolutionTable>>(auditEntering.SolutionTableList);
                 schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
-                await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
+                schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
                 //现在数据库里有的数据项
                 List<SolutionTable> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 //用户传入的数据项和数据库现有数据项的差异的ID
                 List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
                 //删除 用户在前端删除的 数据项目
                 await _resourceSchemeTable.DeleteAsync(p => SolutionTablDiffId.Contains(p.Id));
-
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                #endregion
+                #region 设计方案
+                foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
                 {
-                    NodeInstanceId = auditEntering.NodeInstanceId,
-                    FinanceDictionaryDetailId = auditEntering.Opinion,
-                    Comment = auditEntering.Comment,
-                });
+                    SolutionTable solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
+                    if (solution != null)
+                    {
+                        design.SolutionId = solution.Id;
+                    }
+                }
+                // 营销部审核中项目设计方案
+                List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
+                designSchemes.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
+                designSchemes = await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
+                //现在数据库里有的数据项
+                List<DesignSolution> DesignSchemeNow = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                //用户传入的数据项和数据库现有数据项的差异的ID
+                List<long> DesignSchemeDiffId = DesignSchemeNow.Where(p => !designSchemes.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
+                //删除 用户在前端删除的 数据项目
+                await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
+                #endregion
+                #region 工作流
+                //嵌入工作流
+                //await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                //{
+                //    NodeInstanceId = auditEntering.NodeInstanceId,
+                //    FinanceDictionaryDetailId = auditEntering.Opinion,
+                //    Comment = auditEntering.Comment,
+                //});
+                #endregion
             }
             catch (Exception ex)
             {
