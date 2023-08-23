@@ -26,13 +26,13 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Method
         {
             configuration.CreateMap<PricingTeamDto, PricingTeam>();
             configuration.CreateMap<DesignSolutionDto, DesignSolution>();
-            configuration.CreateMap<SolutionTable, SolutionTableDto>()
+            configuration.CreateMap<Solution, SolutionTableDto>()
                 .ForMember(u=>u.StructEngineerId , options => options.MapFrom(input => ternary(input.StructEngineerId)))
               .ForMember(u => u.ElecEngineerId, options => options.MapFrom(input => ternary(input.ElecEngineerId)));
 
             configuration.CreateMap<PricingTeam, PricingTeamDto>();
             configuration.CreateMap<DesignSolution, DesignSolutionDto>();
-            configuration.CreateMap<SolutionTableDto, SolutionTable>();
+            configuration.CreateMap<SolutionTableDto, Solution>();
 
             configuration.CreateMap<DesignSolutionModel, DesignSolutionDto>();
         }        
