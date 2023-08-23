@@ -10,7 +10,7 @@ namespace Finance.DemandApplyAudit
     /// <summary>
     /// 营销部审核 方案表
     /// </summary>
-    public class SolutionTable : FullAuditedEntity<long>
+    public class Solution : FullAuditedEntity<long>
     {
         /// <summary>
         /// 流程Id

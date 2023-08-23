@@ -4,8 +4,8 @@ using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
 using Finance.Authorization.Users;
+using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
-using Finance.Dto;
 using Finance.EngineeringDepartment;
 //using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
@@ -27,9 +27,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
-using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -147,6 +149,10 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
         /// <summary>
+        /// 二开新增 基础库--实验库环境
+        /// </summary>
+        private readonly IRepository<Foundationreliable, long> _foundationreliable;
+        /// <summary>
         /// Nre 项目管理部 手板件 修改项实体类
         /// </summary>
         private readonly IRepository<HandPieceCostModify, long> _handPieceCostModify;
@@ -188,9 +194,10 @@ namespace Finance.NerPricing
         private readonly IRepository<RestsCostModify, long> _restsCostModify;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
-
-
+        /// <summary>
+        /// 环境实验费录入 服务
+        /// </summary>
+        private readonly FoundationreliableAppService _foundationreliableAppService;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -232,6 +239,8 @@ namespace Finance.NerPricing
         /// <param name="exchangeRate"></param>
         /// <param name="processHoursEnterLine"></param>
         /// <param name="workflowInstanceAppService"></param>
+        /// <param name="foundationreliable"></param>
+        /// <param name="foundationreliableAppService"></param>
         public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount,
             ElectronicStructuralMethod resourceElectronicStructuralMethod,
             IRepository<HandPieceCost, long> resourceHandPieceCost,
@@ -268,7 +277,9 @@ namespace Finance.NerPricing
             IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
             IRepository<ExchangeRate, long> exchangeRate,
             IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
-            WorkflowInstanceAppService workflowInstanceAppService)
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<Foundationreliable, long> foundationreliable, 
+            FoundationreliableAppService foundationreliableAppService)
 
         {
             _resourceModelCount = resourceModelCount;
@@ -309,7 +320,8 @@ namespace Finance.NerPricing
             _configExchangeRate = exchangeRate;
             _processHoursEnterLine = processHoursEnterLine;
             _workflowInstanceAppService = workflowInstanceAppService;
-
+            _foundationreliable = foundationreliable;
+            _foundationreliableAppService = foundationreliableAppService;
         }
 
         /// <summary>
@@ -326,7 +338,7 @@ namespace Finance.NerPricing
         /// <summary>
         /// 根据筛选条件获取方案列表
         /// </summary>
-        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<SolutionTable, bool> filter)
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<Solution, bool> filter)
         {
             //总共的方案
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, filter);
@@ -1209,15 +1221,47 @@ namespace Finance.NerPricing
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public IActionResult PostExperimentItemsSingleDownloadExcel(string FileName = "NRE环境实验费模版下载")
+        public async Task<IActionResult> PostExperimentItemsSingleDownloadExcel(string FileName = "NRE环境实验费模版下载")
         {
             try
             {
-                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE环境实验费模版.xlsx";
-                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                List<FoundationreliableDto> foundationreliables = await _foundationreliableAppService.GetListAllAsync(new GetFoundationreliablesInput() { MaxResultCount =9999 });
+
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE环境实验费模版.xlsx";             
+                //创建Excel工作簿
+                var workbook = new XSSFWorkbook(templatePath);
+                ISheet sheet = workbook.GetSheetAt(0);
+                //列数据约束
+                workbook.SetConstraint(sheet, 0,2, foundationreliables.Select(p=>p.Name).ToArray());
+                ISheet sheet2 = workbook.CreateSheet("环境实验库");
+                // 添加表头
+                IRow headerRow = sheet2.CreateRow(0);
+                headerRow.CreateCell(0).SetCellValue("实验分类");
+                headerRow.CreateCell(1).SetCellValue("实验名称");
+                headerRow.CreateCell(2).SetCellValue("单价");
+                headerRow.CreateCell(3).SetCellValue("计价单位");
+                headerRow.CreateCell(4).SetCellValue("工序维护人");
+                headerRow.CreateCell(5).SetCellValue("工序维护时间");
+                int index = 1;
+                foreach (FoundationreliableDto item in foundationreliables)
+                {   // 添加数据
+                    IRow dataRow = sheet2.CreateRow(index++);
+                    dataRow.CreateCell(0).SetCellValue(item.Classification);
+                    dataRow.CreateCell(1).SetCellValue(item.Name);
+                    dataRow.CreateCell(2).SetCellValue(item.Price.ToString());
+                    dataRow.CreateCell(3).SetCellValue(item.Unit);
+                    dataRow.CreateCell(4).SetCellValue(item.LastModifierUserName);
+                    dataRow.CreateCell(5).SetCellValue(item.CreationTime);
+                }                                                               
+                // 保存工作簿
+                using (MemoryStream fileStream = new MemoryStream())
                 {
-                    FileDownloadName = $"{FileName}.xlsx"
-                };
+                    workbook.Write(fileStream);
+                    return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    {
+                        FileDownloadName = $"{FileName}.xlsx"
+                    };
+                }
             }
             catch (Exception e)
             {
@@ -1727,6 +1771,37 @@ namespace Finance.NerPricing
                 decimal UphAndValuesd = 0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+
+                if (processHoursEnterLines.Count is not 0)
+                {
+                    //先判断线体数量是否一致 如果一致 则继续判断共线分摊率
+                    var xtsl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription())).ToList();
+                    if (xtsl.Select(x => x.Value).Distinct().Count() == 1)
+                    {
+                        //每一年的值都一样  
+                        List<ProcessHoursEnterLine> gxftl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.gxftl.GetDescription())).ToList();
+                        //继续判断共线分摊率
+                        if (gxftl.Select(x => x.Value).Distinct().Count() == 1)
+                        {
+                            //获取值最大年份的那一年
+                            var maxYear = gxftl.Max(p => p.Year);
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxYear)).ToList();
+                        }
+                        else
+                        {
+                            //获取值最大的那年
+                            ProcessHoursEnterLine maxGxftl = gxftl.OrderByDescending(p => p.Value).FirstOrDefault();
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxGxftl.Year)).ToList();
+                        }
+                    }
+                    else
+                    {
+                        //获取值最大的那年
+                        ProcessHoursEnterLine maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
+                        processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxXtsl.Year)).ToList();
+                    }
+                }
+
                 decimal NumberOfLines = processHoursEnterLines
                .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value ?? 0;
 

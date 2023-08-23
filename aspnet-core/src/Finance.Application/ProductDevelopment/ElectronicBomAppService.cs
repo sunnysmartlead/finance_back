@@ -38,7 +38,7 @@ namespace Finance.ProductDevelopment
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
         private readonly IRepository<ProductInformation, long> _productInformationRepository;
         private readonly IRepository<BoardInfo, long> _boardInfoRepository;
-        private readonly IRepository<SolutionTable, long> _solutionTableRepository;
+        private readonly IRepository<Solution, long> _solutionTableRepository;
         /// <summary>
         ///  零件是否全部录入 依据实体类
         /// </summary>
@@ -55,7 +55,7 @@ namespace Finance.ProductDevelopment
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
 
-        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
+        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _logger=logger;
             _electronicBomInfoRepository=electronicBomInfoRepository;

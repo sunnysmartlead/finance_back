@@ -22,11 +22,11 @@ namespace Finance.Ext
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
     public class FriendlyRequiredAttribute : ValidationAttribute
     {
-        private IRepository<NodeInstance, long> _auditFlowRepository;
+        private IRepository<WorkflowInstance, long> _auditFlowRepository;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>   
-        private IRepository<SolutionTable, long> _resourceSchemeTable;
+        private IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -36,8 +36,8 @@ namespace Finance.Ext
         {
             errorName = eroName;
             specialVerification = specialVerifica;
-            _auditFlowRepository = IocManager.Instance.Resolve<IRepository<NodeInstance, long>>();
-            _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<SolutionTable, long>>();
+            _auditFlowRepository = IocManager.Instance.Resolve<IRepository<WorkflowInstance, long>>();
+            _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<Solution, long>>();
         }
         /// <summary>
         /// 验证的属性名称
