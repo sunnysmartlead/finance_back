@@ -98,7 +98,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             try
             {
                 //判断项目设计方案和方案是否一对一 如果不 则全段传值错误
-                bool exists = auditEntering.SolutionTableList.Select(a => a.Product).SequenceEqual(auditEntering.DesignSolutionList.Select(b => b.SolutionName));
+                bool exists = auditEntering.SolutionTableList.All(a => auditEntering.DesignSolutionList.Any(b => b.SolutionName == a.Product));
                 if (!exists)
                 {
                     throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
