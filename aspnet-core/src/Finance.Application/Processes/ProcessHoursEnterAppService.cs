@@ -91,8 +91,7 @@ namespace Finance.Processes
             foreach (var item in list)
             {
                 ProcessHoursEnterDto processHoursEnter =   new ProcessHoursEnterDto();
-                processHoursEnter.AuditFlowId = item.AuditFlowId;
-                processHoursEnter.SolutionId = item.SolutionId;
+               
                 processHoursEnter.Id = item.Id;
                 processHoursEnter.ProcessNumber = item.ProcessNumber;
                 processHoursEnter.ProcessName   = item.ProcessName;
@@ -294,7 +293,7 @@ namespace Finance.Processes
                     {
                         ProcessHoursEnteritem processHoursEnteritem =   new ProcessHoursEnteritem();
                         processHoursEnteritem.Year = year.Year;
-                        processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
+                        processHoursEnteritem.Id = foundationDevice;
                         processHoursEnteritem.LaborHour= yearItem.LaborHour;
                         processHoursEnteritem.PersonnelNumber= yearItem.PersonnelNumber;
                         processHoursEnteritem.MachineHour= yearItem.MachineHour;
@@ -399,7 +398,7 @@ namespace Finance.Processes
                     {
                         ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
                         processHoursEnteritem.Year = year.Year;
-                        processHoursEnteritem.ProcessHoursEnterId = entity.Id;
+                        processHoursEnteritem.Id = entity.Id;
                         processHoursEnteritem.LaborHour = yearItem.LaborHour;
                         processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritem.MachineHour = yearItem.MachineHour;
