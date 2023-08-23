@@ -133,5 +133,7 @@ namespace Finance.PriceEval
         /// 梯度走量
         /// </summary>
         public virtual decimal Count { get; set; }
+
+
     }
 }

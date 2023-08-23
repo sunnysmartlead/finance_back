@@ -6,61 +6,61 @@ namespace Finance.Authorization.Roles
         {
             public const string Admin = "Admin";
 
-            public const string SalesMan = "ÓªÏú²¿-ÒµÎñÔ±";//
-            public const string ProjectManager = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿¾­Àí";//
-            public const string ProjectChief = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿¿Î³¤";//
-            public const string MarketProjectMinister = "ÏîÄ¿¹ÜÀí²¿-ÏîÄ¿²¿³¤";//
+            public const string SalesMan = "è¥é”€éƒ¨-ä¸šåŠ¡å‘˜";//
+            public const string ProjectManager = "é¡¹ç›®ç®¡ç†éƒ¨-é¡¹ç›®ç»ç†";//
+            public const string ProjectChief = "é¡¹ç›®ç®¡ç†éƒ¨-é¡¹ç›®è¯¾é•¿";//
+            public const string MarketProjectMinister = "é¡¹ç›®ç®¡ç†éƒ¨-é¡¹ç›®éƒ¨é•¿";//
 
-            public const string MarketProjectManager = "ÊĞ³¡²¿-ÏîÄ¿¾­Àí";//
-            public const string MarketProjectChief = "ÊĞ³¡²¿-ÏîÄ¿¿Î³¤";//
-            public const string ProjectMinister = "ÊĞ³¡²¿-ÏîÄ¿²¿³¤";//
+            public const string MarketProjectManager = "å¸‚åœºéƒ¨-é¡¹ç›®ç»ç†";//
+            public const string MarketProjectChief = "å¸‚åœºéƒ¨-é¡¹ç›®è¯¾é•¿";//
+            public const string ProjectMinister = "å¸‚åœºéƒ¨-é¡¹ç›®éƒ¨é•¿";//
 
-            public const string ElectronicsEngineer = "²úÆ·¿ª·¢²¿-µç×Ó¹¤³ÌÊ¦";//
-            public const string ElectronicsBomAuditor = "²úÆ·¿ª·¢²¿-µç×ÓbomÉóºËÔ±";//
-            public const string StructuralEngineer = "²úÆ·¿ª·¢²¿-½á¹¹¹¤³ÌÊ¦";//
-            public const string StructuralBomAuditor = "²úÆ·¿ª·¢²¿-½á¹¹bomÉóºËÔ±";//
-            public const string R_D_TRAuditor = "²úÆ·¿ª·¢²¿-TRÉóºËÔ±";//
-            public const string ElectronicsPriceInputter = "×ÊÔ´¹ÜÀí²¿-µç×Óµ¥¼ÛÂ¼ÈëÔ±";//
-            public const string StructuralPriceInputter = "×ÊÔ´¹ÜÀí²¿-½á¹¹µ¥¼ÛÂ¼ÈëÔ±";//
-            public const string ElectronicsPriceAuditor = "×ÊÔ´¹ÜÀí²¿-µç×Óµ¥¼ÛÉóºËÔ±";//
-            public const string StructuralInput = "×ÊÔ´¹ÜÀí²¿-¶¨ÖÆÀà½á¹¹¼şÂ¼ÈëÔ±";//
-            public const string BomInput = "×ÊÔ´¹ÜÀí²¿-BOMµ¥¼ÛÉóºËÔ±";//
-            public const string ModelInput = "×ÊÔ´¹ÜÀí²¿-Ä£¾ß·ÑÂ¼ÈëÔ±";//
-            public const string ModelEval = "×ÊÔ´¹ÜÀí²¿-Ä£¾ß·ÑÉóºËÔ±";//
+            public const string ElectronicsEngineer = "äº§å“å¼€å‘éƒ¨-ç”µå­å·¥ç¨‹å¸ˆ";//
+            public const string ElectronicsBomAuditor = "äº§å“å¼€å‘éƒ¨-ç”µå­bomå®¡æ ¸å‘˜";//
+            public const string StructuralEngineer = "äº§å“å¼€å‘éƒ¨-ç»“æ„å·¥ç¨‹å¸ˆ";//
+            public const string StructuralBomAuditor = "äº§å“å¼€å‘éƒ¨-ç»“æ„bomå®¡æ ¸å‘˜";//
+            public const string R_D_TRAuditor = "äº§å“å¼€å‘éƒ¨-TRå®¡æ ¸å‘˜";//
+            public const string ElectronicsPriceInputter = "èµ„æºç®¡ç†éƒ¨-ç”µå­å•ä»·å½•å…¥å‘˜";//
+            public const string StructuralPriceInputter = "èµ„æºç®¡ç†éƒ¨-ç»“æ„å•ä»·å½•å…¥å‘˜";//
+            public const string ElectronicsPriceAuditor = "èµ„æºç®¡ç†éƒ¨-ç”µå­å•ä»·å®¡æ ¸å‘˜";//
+            public const string StructuralInput = "èµ„æºç®¡ç†éƒ¨-å®šåˆ¶ç±»ç»“æ„ä»¶å½•å…¥å‘˜";//
+            public const string BomInput = "èµ„æºç®¡ç†éƒ¨-BOMå•ä»·å®¡æ ¸å‘˜";//
+            public const string ModelInput = "èµ„æºç®¡ç†éƒ¨-æ¨¡å…·è´¹å½•å…¥å‘˜";//
+            public const string ModelEval = "èµ„æºç®¡ç†éƒ¨-æ¨¡å…·è´¹å®¡æ ¸å‘˜";//
 
 
-            public const string StructuralPriceAuditor = "×ÊÔ´¹ÜÀí²¿-½á¹¹µ¥¼ÛÉóºËÔ±";//
-            public const string LossRateInputter = "¹¤³Ì¼¼Êõ²¿-ËğºÄÂÊÂ¼ÈëÔ±";
-            public const string ManHourInputter = "¹¤³Ì¼¼Êõ²¿-¹¤Ğò¹¤Ê±Â¼ÈëÔ±";//
-            public const string LogisticsCostInputter = "Éú²ú¹ÜÀí²¿-ÎïÁ÷³É±¾Â¼ÈëÔ±";//
-            public const string EnvironmentInput = "Æ·ÖÊ±£Ö¤²¿-»·¾³ÊµÑé·ÑÂ¼ÈëÔ±";//
-            public const string EnvironmentEval = "Æ·ÖÊ±£Ö¤²¿-»·¾³ÊµÑé·ÑÉóºËÔ±";//
-            public const string EmcInput = "²úÆ·¿ª·¢²¿-EMC+µçĞÔÄÜÊµÑé·ÑÂ¼ÈëÔ±";//
-            public const string EmcEval = "²úÆ·¿ª·¢²¿-EMC+µçĞÔÄÜÊµÑé·ÑÉóºËÔ±";//
+            public const string StructuralPriceAuditor = "èµ„æºç®¡ç†éƒ¨-ç»“æ„å•ä»·å®¡æ ¸å‘˜";//
+            public const string LossRateInputter = "å·¥ç¨‹æŠ€æœ¯éƒ¨-æŸè€—ç‡å½•å…¥å‘˜";
+            public const string ManHourInputter = "å·¥ç¨‹æŠ€æœ¯éƒ¨-å·¥åºå·¥æ—¶å½•å…¥å‘˜";//
+            public const string LogisticsCostInputter = "ç”Ÿäº§ç®¡ç†éƒ¨-ç‰©æµæˆæœ¬å½•å…¥å‘˜";//
+            public const string EnvironmentInput = "å“è´¨ä¿è¯éƒ¨-ç¯å¢ƒå®éªŒè´¹å½•å…¥å‘˜";//
+            public const string EnvironmentEval = "å“è´¨ä¿è¯éƒ¨-ç¯å¢ƒå®éªŒè´¹å®¡æ ¸å‘˜";//
+            public const string EmcInput = "å“è´¨ä¿è¯éƒ¨-EMC+ç”µæ€§èƒ½å®éªŒè´¹å½•å…¥å‘˜";//
+            public const string EmcEval = "å“è´¨ä¿è¯éƒ¨-EMC+ç”µæ€§èƒ½å®éªŒè´¹å®¡æ ¸å‘˜";//
 
-            public const string TestCostInputter = "Æ·ÖÊ±£Ö¤²¿-ÊµÑé·ÑÓÃÂ¼ÈëÔ±";
-            public const string GageCostInputter = "Æ·ÖÊ±£Ö¤²¿-¼ì¾ß·ÑÓÃÂ¼ÈëÔ±";
-            public const string GeneralManager = "×Ü¾­Àí";//
-            public const string TradeComplianceAuditor = "²ÆÎñ²¿-Ã³Ò×ºÏ¹æÉóºËÔ±";//
-            public const string MarketTRAuditor = "ÊĞ³¡²¿-TRÖ÷·½°¸ÉóºËÔ±";
-            public const string FinanceParamsInputter = "²ÆÎñ²¿-²ÆÎñ²ÎÊıÂ¼ÈëÔ±";
-            public const string FinanceProductCostInputter = "²ÆÎñ²¿-ÖÆÔì³É±¾Â¼ÈëÔ±";//
+            public const string TestCostInputter = "å“è´¨ä¿è¯éƒ¨-å®éªŒè´¹ç”¨å½•å…¥å‘˜";
+            public const string GageCostInputter = "å“è´¨ä¿è¯éƒ¨-æ£€å…·è´¹ç”¨å½•å…¥å‘˜";
+            public const string GeneralManager = "æ€»ç»ç†";//
+            public const string TradeComplianceAuditor = "è´¢åŠ¡éƒ¨-è´¸æ˜“åˆè§„å®¡æ ¸å‘˜";//
+            public const string MarketTRAuditor = "å¸‚åœºéƒ¨-TRä¸»æ–¹æ¡ˆå®¡æ ¸å‘˜";
+            public const string FinanceParamsInputter = "è´¢åŠ¡éƒ¨-è´¢åŠ¡å‚æ•°å½•å…¥å‘˜";
+            public const string FinanceProductCostInputter = "è´¢åŠ¡éƒ¨-åˆ¶é€ æˆæœ¬å½•å…¥å‘˜";//
 
-            public const string FinanceAdmin = "²ÆÎñ²¿-Êı¾İ¹ÜÀíÔ±";
-            public const string BomConsultant = "²úÆ·¿ª·¢²¿-BOM²éÔÄÕß";
-            public const string FinanceEval = "²ÆÎñ²¿-ÖĞ±ê½ğ¶îÉóºËÔ±";//
-            public const string FinanceTableAdmin = "²ÆÎñ²¿-ºË¼Û±í¹éµµ¹ÜÀíÔ±";//
+            public const string FinanceAdmin = "è´¢åŠ¡éƒ¨-æ•°æ®ç®¡ç†å‘˜";
+            public const string BomConsultant = "äº§å“å¼€å‘éƒ¨-BOMæŸ¥é˜…è€…";
+            public const string FinanceEval = "è´¢åŠ¡éƒ¨-ä¸­æ ‡é‡‘é¢å®¡æ ¸å‘˜";//
+            public const string FinanceTableAdmin = "è´¢åŠ¡éƒ¨-æ ¸ä»·è¡¨å½’æ¡£ç®¡ç†å‘˜";//
 
-            public const string EvalTableAdmin = "±¨¼ÛÉóºË±í¹éµµ¹ÜÀíÔ±";//
+            public const string EvalTableAdmin = "æŠ¥ä»·å®¡æ ¸è¡¨å½’æ¡£ç®¡ç†å‘˜";//
 
 
             public const string Timeliness = "Timeliness";
-            public const string ProjectPriceAuditor = "ÏîÄ¿²¿-ºË¼ÛÉóºËÔ±";
-            public const string FinancePriceAuditor = "²ÆÎñ²¿-ºË¼ÛÉóºËÔ±";//
+            public const string ProjectPriceAuditor = "é¡¹ç›®éƒ¨-æ ¸ä»·å®¡æ ¸å‘˜";
+            public const string FinancePriceAuditor = "è´¢åŠ¡éƒ¨-æ ¸ä»·å®¡æ ¸å‘˜";//
 
-            public const string ProjectSupervisor = "ÏîÄ¿¿Î³¤";
+            public const string ProjectSupervisor = "é¡¹ç›®è¯¾é•¿";
 
-            public const string CostSplit = "³É±¾²ğ·ÖÔ±";//
+            public const string CostSplit = "æˆæœ¬æ‹†åˆ†å‘˜";//
 
         }
 

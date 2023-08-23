@@ -19,6 +19,11 @@ namespace Finance.PriceEval.Dto
         public virtual long AuditFlowId { get; set; }
 
         /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+
+        /// <summary>
         /// 模组数量Id（即零件Id）
         /// </summary>
         [Required]
@@ -35,5 +40,10 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [Required]
         public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
     }
 }

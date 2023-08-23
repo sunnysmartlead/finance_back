@@ -319,6 +319,17 @@ namespace Finance.EntityFrameworkCore
         /// 基础库--工时库明细
         /// </summary>
         public virtual DbSet<FoundationWorkingHourItem> FoundationWorkingHourItem { get; set; }
+
+        /// <summary>
+        /// 项目自建表
+        /// </summary>
+        public virtual DbSet<ProjectSelf> ProjectSelf { get; set; }
+
+        /// <summary>
+        /// 基础库日志
+        /// </summary>
+        public virtual DbSet<BaseStoreLog> BaseStoreLog { get; set; }
+
         /// <summary>
         /// 物流信息录入
         /// </summary>
