@@ -35,7 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using Finance.PriceEval.Dto.ProjectSelf;
 
 namespace Finance
 {
@@ -279,6 +279,12 @@ namespace Finance
 
             configuration.CreateMap<Logisticscost, LogisticscostDto>();
             configuration.CreateMap<LogisticscostDto, Logisticscost>();
+
+            //项目自建表
+            configuration.CreateMap<CreateProjectSelfInput, ProjectSelf>();
+            configuration.CreateMap<UpdateProjectSelfInput, ProjectSelf>();
+            configuration.CreateMap<ProjectSelf, ProjectSelfListDto>();
+
         }
     }
 }

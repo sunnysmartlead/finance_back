@@ -24,6 +24,23 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual long ProductId { get; set; }
 
+
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+
+        /// <summary>
+        /// 年份
+        /// </summary>
+        [Required]
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
         /// <summary>
         /// 是否为全生命周期核价表
         /// </summary>

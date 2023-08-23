@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Finance.PriceEval
 {
     /// <summary>
-    /// 模组数量
+    /// 模组数量合计
     /// </summary>
     [Table("Pe_ModelCount")]
     public class ModelCount : FullAuditedEntity<long>
