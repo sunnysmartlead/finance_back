@@ -6,61 +6,61 @@ namespace Finance.Authorization.Roles
         {
             public const string Admin = "Admin";
 
-            public const string SalesMan = "Ӫ����-ҵ��Ա";//
-            public const string ProjectManager = "��Ŀ����-��Ŀ����";//
-            public const string ProjectChief = "��Ŀ����-��Ŀ�γ�";//
-            public const string MarketProjectMinister = "��Ŀ����-��Ŀ����";//
+            public const string SalesMan = "营销部-业务员";//
+            public const string ProjectManager = "项目管理部-项目经理";//
+            public const string ProjectChief = "项目管理部-项目课长";//
+            public const string MarketProjectMinister = "项目管理部-项目部长";//
 
-            public const string MarketProjectManager = "�г���-��Ŀ����";//
-            public const string MarketProjectChief = "�г���-��Ŀ�γ�";//
-            public const string ProjectMinister = "�г���-��Ŀ����";//
+            public const string MarketProjectManager = "市场部-项目经理";//
+            public const string MarketProjectChief = "市场部-项目课长";//
+            public const string ProjectMinister = "市场部-项目部长";//
 
-            public const string ElectronicsEngineer = "��Ʒ������-���ӹ���ʦ";//
-            public const string ElectronicsBomAuditor = "��Ʒ������-����bom���Ա";//
-            public const string StructuralEngineer = "��Ʒ������-�ṹ����ʦ";//
-            public const string StructuralBomAuditor = "��Ʒ������-�ṹbom���Ա";//
-            public const string R_D_TRAuditor = "��Ʒ������-TR���Ա";//
-            public const string ElectronicsPriceInputter = "��Դ����-���ӵ���¼��Ա";//
-            public const string StructuralPriceInputter = "��Դ����-�ṹ����¼��Ա";//
-            public const string ElectronicsPriceAuditor = "��Դ����-���ӵ������Ա";//
-            public const string StructuralInput = "��Դ����-������ṹ��¼��Ա";//
-            public const string BomInput = "��Դ����-BOM�������Ա";//
-            public const string ModelInput = "��Դ����-ģ�߷�¼��Ա";//
-            public const string ModelEval = "��Դ����-ģ�߷����Ա";//
+            public const string ElectronicsEngineer = "产品开发部-电子工程师";//
+            public const string ElectronicsBomAuditor = "产品开发部-电子bom审核员";//
+            public const string StructuralEngineer = "产品开发部-结构工程师";//
+            public const string StructuralBomAuditor = "产品开发部-结构bom审核员";//
+            public const string R_D_TRAuditor = "产品开发部-TR审核员";//
+            public const string ElectronicsPriceInputter = "资源管理部-电子单价录入员";//
+            public const string StructuralPriceInputter = "资源管理部-结构单价录入员";//
+            public const string ElectronicsPriceAuditor = "资源管理部-电子单价审核员";//
+            public const string StructuralInput = "资源管理部-定制类结构件录入员";//
+            public const string BomInput = "资源管理部-BOM单价审核员";//
+            public const string ModelInput = "资源管理部-模具费录入员";//
+            public const string ModelEval = "资源管理部-模具费审核员";//
 
 
-            public const string StructuralPriceAuditor = "��Դ����-�ṹ�������Ա";//
-            public const string LossRateInputter = "���̼�����-�����¼��Ա";
-            public const string ManHourInputter = "���̼�����-����ʱ¼��Ա";//
-            public const string LogisticsCostInputter = "��������-�����ɱ�¼��Ա";//
-            public const string EnvironmentInput = "Ʒ�ʱ�֤��-����ʵ���¼��Ա";//
-            public const string EnvironmentEval = "Ʒ�ʱ�֤��-����ʵ������Ա";//
-            public const string EmcInput = "��Ʒ������-EMC+������ʵ���¼��Ա";//
-            public const string EmcEval = "��Ʒ������-EMC+������ʵ������Ա";//
+            public const string StructuralPriceAuditor = "资源管理部-结构单价审核员";//
+            public const string LossRateInputter = "工程技术部-损耗率录入员";
+            public const string ManHourInputter = "工程技术部-工序工时录入员";//
+            public const string LogisticsCostInputter = "生产管理部-物流成本录入员";//
+            public const string EnvironmentInput = "品质保证部-环境实验费录入员";//
+            public const string EnvironmentEval = "品质保证部-环境实验费审核员";//
+            public const string EmcInput = "品质保证部-EMC+电性能实验费录入员";//
+            public const string EmcEval = "品质保证部-EMC+电性能实验费审核员";//
 
-            public const string TestCostInputter = "Ʒ�ʱ�֤��-ʵ�����¼��Ա";
-            public const string GageCostInputter = "Ʒ�ʱ�֤��-��߷���¼��Ա";
-            public const string GeneralManager = "�ܾ���";//
-            public const string TradeComplianceAuditor = "����-ó�׺Ϲ����Ա";//
-            public const string MarketTRAuditor = "�г���-TR���������Ա";
-            public const string FinanceParamsInputter = "����-�������¼��Ա";
-            public const string FinanceProductCostInputter = "����-����ɱ�¼��Ա";//
+            public const string TestCostInputter = "品质保证部-实验费用录入员";
+            public const string GageCostInputter = "品质保证部-检具费用录入员";
+            public const string GeneralManager = "总经理";//
+            public const string TradeComplianceAuditor = "财务部-贸易合规审核员";//
+            public const string MarketTRAuditor = "市场部-TR主方案审核员";
+            public const string FinanceParamsInputter = "财务部-财务参数录入员";
+            public const string FinanceProductCostInputter = "财务部-制造成本录入员";//
 
-            public const string FinanceAdmin = "����-���ݹ���Ա";
-            public const string BomConsultant = "��Ʒ������-BOM������";
-            public const string FinanceEval = "����-�б������Ա";//
-            public const string FinanceTableAdmin = "����-�˼۱�鵵����Ա";//
+            public const string FinanceAdmin = "财务部-数据管理员";
+            public const string BomConsultant = "产品开发部-BOM查阅者";
+            public const string FinanceEval = "财务部-中标金额审核员";//
+            public const string FinanceTableAdmin = "财务部-核价表归档管理员";//
 
-            public const string EvalTableAdmin = "������˱�鵵����Ա";//
+            public const string EvalTableAdmin = "报价审核表归档管理员";//
 
 
             public const string Timeliness = "Timeliness";
-            public const string ProjectPriceAuditor = "��Ŀ��-�˼����Ա";
-            public const string FinancePriceAuditor = "����-�˼����Ա";//
+            public const string ProjectPriceAuditor = "项目部-核价审核员";
+            public const string FinancePriceAuditor = "财务部-核价审核员";//
 
-            public const string ProjectSupervisor = "��Ŀ�γ�";
+            public const string ProjectSupervisor = "项目课长";
 
-            public const string CostSplit = "�ɱ����Ա";//
+            public const string CostSplit = "成本拆分员";//
 
         }
 
