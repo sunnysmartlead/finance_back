@@ -27,6 +27,12 @@ namespace Finance.PriceEval
         public virtual long PriceEvaluationId { get; set; }
 
         /// <summary>
+        /// 主表 模组数量（ModelCount） 的Id
+        /// </summary>
+        [Required]
+        public virtual long ProductId { get; set; }
+
+        /// <summary>
         /// 梯度
         /// </summary>
         [Required]
