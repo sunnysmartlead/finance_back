@@ -1,4 +1,4 @@
-﻿using Abp.Domain.Repositories;
+using Abp.Domain.Repositories;
 using Finance.PriceEval.Dto;
 using Microsoft.EntityFrameworkCore;
 using NPOI.SS.Formula.Functions;
