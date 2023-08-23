@@ -9,6 +9,8 @@ using Finance.Ext;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.ProductDevelopment.Dto;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -48,7 +50,9 @@ namespace Finance.ProductDevelopment
         private readonly ProductDevelopmentInputAppService _productDevelopmentInputAppService;
         private readonly IObjectMapper _objectMapper;
 
-        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper)
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _logger=logger;
             _structureBomInfoRepository=structureBomInfoRepository;
@@ -60,6 +64,7 @@ namespace Finance.ProductDevelopment
             _flowAppService=flowAppService;
             _productDevelopmentInputAppService=productDevelopmentInputAppService;
             _objectMapper=objectMapper;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -325,6 +330,14 @@ namespace Finance.ProductDevelopment
                     await this.InterfaceJump(dto.AuditFlowId);
                 }
             }
+
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = dto.NodeInstanceId,
+                FinanceDictionaryDetailId = dto.Opinion,
+                Comment = dto.Comment,
+            });
         }
 
         /// <summary>

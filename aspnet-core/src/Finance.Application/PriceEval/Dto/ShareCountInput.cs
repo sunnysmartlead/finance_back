@@ -17,6 +17,6 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 分摊数量
         /// </summary>
-        public virtual int Count { get; set; }
+        public virtual decimal Count { get; set; }
     }
 }

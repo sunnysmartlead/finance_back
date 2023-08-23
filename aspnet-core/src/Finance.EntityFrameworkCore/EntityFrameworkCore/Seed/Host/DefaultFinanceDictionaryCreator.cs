@@ -70,6 +70,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                  new FinanceDictionary { Id=FinanceConsts.HjkbSelect,DisplayName="核价看板选项",},
                  new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="电子BOM单价审核选项",},
 
+                 new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="设备状态",},
+
             };
 
             var noDb = financeDictionaryList.Where(p => !_context.FinanceDictionary.Contains(p));
@@ -264,6 +266,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect, Id = FinanceConsts.ElectronicBomEvalSelect_Yes, DisplayName="同意",},
                 //new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect, Id = FinanceConsts.ElectronicBomEvalSelect_Scjgbom, DisplayName="上传结构BOM",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect, Id = FinanceConsts.ElectronicBomEvalSelect_Dzbomppxg, DisplayName="电子BOM匹配修改",},
+           
+                //设备状态
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Zy, DisplayName="专用",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Gy, DisplayName="共用",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Xy, DisplayName="现有",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Xg, DisplayName="新购",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Gz, DisplayName="改造",},
             };
 
             var noDbDetail = financeDictionaryDetailList.Where(p => !_context.FinanceDictionaryDetail.Contains(p));

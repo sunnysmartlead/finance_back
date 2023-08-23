@@ -251,7 +251,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 需求量
         /// </summary>
-        public virtual int RequiredCount { get; set; }
+        public virtual decimal RequiredCount { get; set; }
 
         /// <summary>
         /// 物料（SuperType，超级大种类，区分结构料、电子料、SMT外协等信息）
@@ -499,7 +499,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 数量（模组年数量）
         /// </summary>
-        internal virtual int Quantity { get; set; }
+        internal virtual decimal Quantity { get; set; }
 
         /// <summary>
         /// 年份
@@ -663,7 +663,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 梯度K/Y（模组数量）
         /// </summary>
-        public virtual int GradientKy { get; set; }
+        public virtual decimal GradientKy { get; set; }
 
         /// <summary>
         /// 月需求量

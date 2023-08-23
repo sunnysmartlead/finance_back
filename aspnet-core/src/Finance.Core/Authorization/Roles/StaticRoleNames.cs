@@ -35,8 +35,8 @@ namespace Finance.Authorization.Roles
             public const string LogisticsCostInputter = "��������-�����ɱ�¼��Ա";//
             public const string EnvironmentInput = "Ʒ�ʱ�֤��-����ʵ���¼��Ա";//
             public const string EnvironmentEval = "Ʒ�ʱ�֤��-����ʵ������Ա";//
-            public const string EmcInput = "Ʒ�ʱ�֤��-EMC+������ʵ���¼��Ա";//
-            public const string EmcEval = "Ʒ�ʱ�֤��-EMC+������ʵ������Ա";//
+            public const string EmcInput = "��Ʒ������-EMC+������ʵ���¼��Ա";//
+            public const string EmcEval = "��Ʒ������-EMC+������ʵ������Ա";//
 
             public const string TestCostInputter = "Ʒ�ʱ�֤��-ʵ�����¼��Ա";
             public const string GageCostInputter = "Ʒ�ʱ�֤��-��߷���¼��Ա";

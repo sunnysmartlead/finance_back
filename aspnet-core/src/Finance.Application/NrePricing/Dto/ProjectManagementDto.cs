@@ -1,4 +1,5 @@
-﻿using Finance.NrePricing.Model;
+﻿using Finance.Dto;
+using Finance.NrePricing.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Finance.NrePricing.Dto
     /// <summary>
     /// Nre核价 项目管理部 交互类(单个零件)
     /// </summary>
-    public class ProjectManagementDtoSingle
+    public class ProjectManagementDtoSingle: ToExamineDto
     {
         /// <summary>
         /// 流程Id
