@@ -141,11 +141,12 @@ namespace Finance.Processes
                 List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
 
                 if (null == logisticscostResponseList || logisticscostResponseList.Count <1) {
-                    BomEnterDto logisticscostResponse = new BomEnterDto();
+              
                     foreach (var item in ListGradient)
                     {
-                        List<BomEnterDto> bomEnterDto = new List<BomEnterDto>();
                   
+                        List<BomEnterDto> bomEnterDto = new List<BomEnterDto>();
+                        BomEnterDto logisticscostResponse = new BomEnterDto();
                         foreach (var dtosItem in data)
                         {
                             BomEnterDto bomEnterDto1 = new BomEnterDto();
@@ -172,16 +173,15 @@ namespace Finance.Processes
                         }
                         logisticscostResponse.ListBomEnter = bomEnterDto;
                         logisticscostResponse.ListBomEnterTotal = ListbomEnterDto;
-
-                        logisticscostResponseList.Add(logisticscostResponse);
                         logisticscostResponse.Classification = item.GradientValue.ToString();
+                        logisticscostResponseList.Add(logisticscostResponse);
 
 
                     }
 
 
                     }
-                // 数据返回
+                // 数据返回 
                 return logisticscostResponseList;
             }
             catch (Exception)
@@ -248,31 +248,29 @@ namespace Finance.Processes
                     bomEnter.LastModificationTime = DateTime.Now;
                     await _bomEnterRepository.InsertAsync(bomEnter);
 
-                    foreach (var ListBomEnterTotalItem in item.ListBomEnterTotal)
-                    {
-                        BomEnterTotal bomEnterTotal = new BomEnterTotal();
-
-
-                        bomEnterTotal.SolutionId = entitySolution.Id;
-                        bomEnterTotal.AuditFlowId = input.AuditFlowId;
-                        bomEnterTotal.Classification = ListBomEnterItem.Classification;
-                        bomEnterTotal.CreationTime = DateTime.Now;
-                        bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
-                        bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
-                        bomEnterTotal.Year = ListBomEnterTotalItem.Year;
-                        bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
-                        if (AbpSession.UserId != null)
-                        {
-                            bomEnterTotal.CreatorUserId = AbpSession.UserId.Value;
-                            bomEnterTotal.LastModificationTime = DateTime.Now;
-                            bomEnterTotal.LastModifierUserId = AbpSession.UserId.Value;
-                        }
-                        bomEnterTotal.LastModificationTime = DateTime.Now;
-                        await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
-                    }
+                   
 
                 }
-
+                foreach (var ListBomEnterTotalItem in item.ListBomEnterTotal)
+                {
+                    BomEnterTotal bomEnterTotal = new BomEnterTotal();
+                    bomEnterTotal.SolutionId = entitySolution.Id;
+                    bomEnterTotal.AuditFlowId = input.AuditFlowId;
+                    bomEnterTotal.Classification = item.Classification;
+                    bomEnterTotal.CreationTime = DateTime.Now;
+                    bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
+                    bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                    bomEnterTotal.Year = ListBomEnterTotalItem.Year;
+                    bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                    if (AbpSession.UserId != null)
+                    {
+                        bomEnterTotal.CreatorUserId = AbpSession.UserId.Value;
+                        bomEnterTotal.LastModificationTime = DateTime.Now;
+                        bomEnterTotal.LastModifierUserId = AbpSession.UserId.Value;
+                    }
+                    bomEnterTotal.LastModificationTime = DateTime.Now;
+                    await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
+                }
             }
 
 
