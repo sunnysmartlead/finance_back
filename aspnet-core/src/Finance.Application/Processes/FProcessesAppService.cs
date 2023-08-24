@@ -23,7 +23,7 @@ namespace Finance.Processes
     /// </summary>
     public class FProcessesAppService : ApplicationService
     {
-        private readonly int logType = 4;
+        private readonly LogType logType = LogType.WorkingProcedure;
         private readonly IRepository<FProcesses, long> _fProcessesRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;

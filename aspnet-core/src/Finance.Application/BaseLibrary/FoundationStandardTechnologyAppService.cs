@@ -27,7 +27,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 10;
+        private readonly LogType logType = LogType.GrossProfitMargin;
         private readonly IRepository<FoundationStandardTechnology, long> _foundationStandardTechnologyRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;

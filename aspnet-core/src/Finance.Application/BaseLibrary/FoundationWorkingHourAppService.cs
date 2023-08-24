@@ -33,7 +33,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 8;
+        private readonly LogType logType = LogType.TimeLibrary;
         /// <summary>
         /// .ctor
         /// </summary>

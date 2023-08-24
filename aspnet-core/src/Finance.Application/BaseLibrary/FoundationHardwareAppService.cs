@@ -25,7 +25,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 7;
+        private readonly LogType logType = LogType.HardwareAndSoftware;
         private readonly IRepository<FoundationHardware, long> _foundationHardwareRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
