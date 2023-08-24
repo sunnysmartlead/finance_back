@@ -3,6 +3,9 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
+using Finance.DemandApplyAudit;
+using Finance.PriceEval;
+using Finance.PriceEval.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,18 +22,27 @@ namespace Finance.Processes
         private readonly IRepository<BomEnter, long> _bomEnterRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<BomEnterTotal, long> _bomEnterTotalRepository;
+        private readonly DataInputAppService _dataInputAppService;
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="bomEnterRepository"></param>
         public BomEnterAppService(
             IRepository<BomEnterTotal, long> foundationFoundationWorkingHourItemRepository,
+            DataInputAppService dataInputAppService,
             IRepository<User, long> userRepository,
+              IRepository<Solution, long> resourceSchemeTable,
             IRepository<BomEnter, long> bomEnterRepository)
         {
             _bomEnterRepository = bomEnterRepository;
             _bomEnterTotalRepository = foundationFoundationWorkingHourItemRepository;
             _userRepository = userRepository;
+            _dataInputAppService = dataInputAppService;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
         /// <summary>
@@ -75,8 +87,11 @@ namespace Finance.Processes
 
             try
             {
-            var query = (from a in _bomEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.SolutionId == input.SolutionId && p.AuditFlowId == input.AuditFlowId
+                Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+                //有数据的返回
+                var query = (from a in _bomEnterRepository.GetAllList(p =>
+         p.IsDeleted == false && p.SolutionId == entity.Productld && p.AuditFlowId == input.AuditFlowId
          ).Select(c => c.Classification).Distinct()
                              select a).ToList();
                 var dtos = ObjectMapper.Map<List<String>, List<String>>(query, new List<String>());
@@ -85,7 +100,7 @@ namespace Finance.Processes
                 {
                     BomEnterDto logisticscostResponse = new BomEnterDto();
 
-                    var queryItem = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
+                    var queryItem = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
                     List<BomEnterDto> bomEnterDto =   new List<BomEnterDto>();
                     foreach (var dtosItem in queryItem)
                     {
@@ -104,7 +119,7 @@ namespace Finance.Processes
                         bomEnterDto1.DirectDepreciation = dtosItem.DirectDepreciation;
                         bomEnterDto.Add(bomEnterDto1);
                     }
-                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
+                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
 
                     List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();  
                     foreach (var dtosItemTotal in queryItemTotal)
@@ -121,12 +136,50 @@ namespace Finance.Processes
                     logisticscostResponseList.Add(logisticscostResponse);
                 }
 
+                //没有数据的情况下
+                List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
+                List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
 
                 if (null == logisticscostResponseList) {
-                    
-                
-                
-                }
+                    BomEnterDto logisticscostResponse = new BomEnterDto();
+                    foreach (var item in ListGradient)
+                    {
+                        List<BomEnterDto> bomEnterDto = new List<BomEnterDto>();
+                  
+                        foreach (var dtosItem in data)
+                        {
+                            BomEnterDto bomEnterDto1 = new BomEnterDto();
+                            bomEnterDto1.Year = dtosItem.Year.ToString();
+                            bomEnterDto1.IndirectSummary = 0;
+                            bomEnterDto1.IndirectManufacturingCosts = 0;
+                            bomEnterDto1.IndirectLaborPrice = 0;
+                            bomEnterDto1.IndirectDepreciation = 0;
+                            bomEnterDto1.DirectSummary = 0;
+                            bomEnterDto1.DirectManufacturingCosts = 0;
+                            bomEnterDto1.DirectLineChangeCost =0;
+                            bomEnterDto1.DirectLaborPrice = 0;
+                            bomEnterDto1.DirectDepreciation = 0;
+                            bomEnterDto.Add(bomEnterDto1);
+                        }
+                        List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
+                        foreach (var dtosItemTotal in data)
+                        {
+                            BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();
+                            bomEnterTotal.Year = dtosItemTotal.Year.ToString();
+                            bomEnterTotal.TotalCost = 0;
+                            ListbomEnterDto.Add(bomEnterTotal);
+                        }
+                        logisticscostResponse.ListBomEnter = bomEnterDto;
+                        logisticscostResponse.ListBomEnterTotal = ListbomEnterDto;
+
+                        logisticscostResponseList.Add(logisticscostResponse);
+                        logisticscostResponse.Classification = item.GradientValue.ToString();
+
+
+                    }
+
+
+                    }
                 // 数据返回
                 return logisticscostResponseList;
             }
@@ -156,17 +209,18 @@ namespace Finance.Processes
         /// <returns></returns>
         public virtual async Task CreateAsync(BomEnterDto input)
         {
-            await _bomEnterRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
+            Solution entitySolution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+            await _bomEnterRepository.DeleteAsync(s => s.SolutionId == entitySolution.Productld && s.AuditFlowId == input.AuditFlowId);
 
 
-            await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == input.SolutionId && s.AuditFlowId == input.AuditFlowId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == entitySolution.Productld && s.AuditFlowId == input.AuditFlowId);
 
             List<BomEnterDto> LogisticscostList = input.ListBomEnter;
         
                 foreach (var item1 in input.ListBomEnter)
                 {
                     BomEnter bomEnter = new BomEnter();
-                    bomEnter.SolutionId = input.SolutionId;
+                    bomEnter.SolutionId = entitySolution.Productld;
                     bomEnter.AuditFlowId = input.AuditFlowId;
                     bomEnter.Classification = input.Classification;
                     bomEnter.CreationTime = DateTime.Now;
@@ -196,7 +250,7 @@ namespace Finance.Processes
                     BomEnterTotal bomEnterTotal = new BomEnterTotal();
 
 
-                    bomEnterTotal.SolutionId = input.SolutionId;
+                    bomEnterTotal.SolutionId = entitySolution.Productld;
 
 
                     bomEnterTotal.AuditFlowId = input.AuditFlowId;
@@ -219,7 +273,32 @@ namespace Finance.Processes
           
         
         }
+        /// <summary>
+        /// 提交
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task<String> CreateSubmitAsync(long auditFlowId)
+        {
+            var query = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
 
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            int quantity = result.Count - query.Count();
+            if (quantity > 0)
+            {
+                return "还有" + quantity + "个方案没有提交，请先提交";
+            }
+            else
+            {
+
+                //提交完成  可以在这里做审核处理
+                return "提交完成";
+
+            }
+
+
+        }
 
         /// <summary>
         /// 编辑
