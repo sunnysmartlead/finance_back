@@ -121,6 +121,12 @@ namespace Finance.Processes
                     logisticscostResponseList.Add(logisticscostResponse);
                 }
 
+
+                if (null == logisticscostResponseList) {
+                    
+                
+                
+                }
                 // 数据返回
                 return logisticscostResponseList;
             }
@@ -210,6 +216,7 @@ namespace Finance.Processes
                     await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
                 }
             
+          
         
         }
 

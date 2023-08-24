@@ -95,9 +95,10 @@ namespace Finance.BaseLibrary
         /// <returns>结果</returns>
         public virtual async Task<List<LogisticscostResponseDto>> GetListAllAsync(GetLogisticscostsInput input)
         {
-    
+
+            Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
             var query = (from a in _logisticscostRepository.GetAllList(p =>
-            p.IsDeleted == false && p.SolutionId == input.SolutionId && p.AuditFlowId == input.AuditFlowId
+            p.IsDeleted == false && p.SolutionId == entity.Productld && p.AuditFlowId == input.AuditFlowId
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
             query.Count();
@@ -106,7 +107,7 @@ namespace Finance.BaseLibrary
                         join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
                         join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
                         join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
-                        where y.ProductId == input.SolutionId// && m.ProductId == productId && my.ProductId == productId
+                        where y.ProductId == entity.Productld// && m.ProductId == productId && my.ProductId == productId
                         && y.Year == my.Year && y.UpDown == my.UpDown
                         select new GradientModelYearListDto
                         {
@@ -127,7 +128,7 @@ namespace Finance.BaseLibrary
             {
                 LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
 
-                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
+                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 foreach (var dtosItem1 in dtosItem)
                 {
@@ -193,9 +194,10 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task CreateAsync(LogisticscostDto input)
         {
-           
+
+            Solution entitySolution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
             //先根据零件和流程删除之前的数据
-            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId);
+            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entitySolution.Productld);
             var list = query.ToList();
             foreach (var item in list)
             {
@@ -208,7 +210,7 @@ namespace Finance.BaseLibrary
                 {
                     var entity = ObjectMapper.Map<LogisticscostDto, Logisticscost>(item1, new Logisticscost());
                     Logisticscost logisticscost =  new Logisticscost();
-                    logisticscost.SolutionId =  input.SolutionId;
+                    logisticscost.SolutionId = entitySolution.Productld;
                     logisticscost.AuditFlowId = input.AuditFlowId;
                     logisticscost.Status = input.Status;
                     logisticscost.Classification = item.Classification;
@@ -242,7 +244,6 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<String> CreateSubmitAsync(long auditFlowId)
         {
-
             var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
 
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
