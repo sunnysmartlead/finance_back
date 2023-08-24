@@ -33,7 +33,7 @@ namespace Finance.EngineeringDepartment
         [Column("PRODUCT")]
         public string Product { get; set; }
         /// <summary>
-        /// 产品种类
+        /// 产品大类
         /// </summary>
         [Required]
         [Column("SUPERTYPE")]

@@ -7,6 +7,7 @@ using Abp.EntityFrameworkCore.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
 using AutoMapper;
+using Finance.BaseLibrary;
 using Finance.EntityFrameworkCore;
 using Finance.Ext;
 using Finance.FinanceMaintain;
@@ -20,6 +21,7 @@ using Newtonsoft.Json;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
+using Spire.Pdf.General.Paper.Uof;
 using Spire.Xls;
 using System;
 using System.Collections.Generic;
@@ -35,7 +37,14 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
     /// </summary>
     public class UnitPriceLibraryAppService : ApplicationService, IUnitPriceLibraryAppService
     {
-
+        /// <summary>
+        /// 日志类型-毛利率
+        /// </summary>
+        private readonly LogType GrossProfitMarginType = LogType.GrossProfitMargin;
+        /// <summary>
+        /// 日志类型-汇率
+        /// </summary>
+        private readonly LogType ExchangeRateType = LogType.ExchangeRate;
         /// <summary>
         /// 基础单价库实体类
         /// </summary>
@@ -57,6 +66,11 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         private readonly IRepository<SharedMaterialWarehouse, long> _sharedMaterialWarehouse;
         /// <summary>
+        /// 基础库--日志表
+        /// </summary>
+        private readonly IRepository<FoundationLogs, long> _foundationLogs;
+    
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="configUInitPriceForm"></param>
@@ -64,13 +78,15 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="configExchangeRate"></param>
         /// <param name="provider"></param>
         /// <param name="sharedMaterialWarehouse"></param>
-        public UnitPriceLibraryAppService(IRepository<UInitPriceForm, long> configUInitPriceForm, IRepository<GrossMarginForm, long> configGrossMarginForm, IRepository<ExchangeRate, long> configExchangeRate, IDbContextProvider<FinanceDbContext> provider, IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse)
+        /// <param name="foundationLogs"></param>
+        public UnitPriceLibraryAppService(IRepository<UInitPriceForm, long> configUInitPriceForm, IRepository<GrossMarginForm, long> configGrossMarginForm, IRepository<ExchangeRate, long> configExchangeRate, IDbContextProvider<FinanceDbContext> provider, IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse, IRepository<FoundationLogs, long> foundationLogs)
         {
             _configUInitPriceForm = configUInitPriceForm;
             _configGrossMarginForm = configGrossMarginForm;
             _configExchangeRate = configExchangeRate;
             _provider = provider;
             _sharedMaterialWarehouse = sharedMaterialWarehouse;
+            _foundationLogs= foundationLogs;
         }
 
 
@@ -673,6 +689,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                 if (entity == null)
                 {
                     await _configGrossMarginForm.InsertAsync(prop);
+                    await CreateLog("添加了毛利率方案1条", GrossProfitMarginType);
                 }
                 else
                 {
@@ -680,6 +697,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                     entity.GrossMarginName = prop.GrossMarginName;
                     entity.IsDefaultn = price.IsDefaultn;
                     await _configGrossMarginForm.UpdateAsync(entity);
+                    await CreateLog("编辑毛利率方案1条", GrossProfitMarginType);
                 }
             }
             catch (Exception e)
@@ -699,6 +717,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             {
                 if (entity.IsDefaultn) throw new FriendlyException("不能删除默认的毛利率");
                 await _configGrossMarginForm.DeleteAsync(entity);
+                await CreateLog("删除毛利率方案1条", GrossProfitMarginType);
             }
         }
         /// <summary>
@@ -715,12 +734,14 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                 {
                     var prop = ObjectMapper.Map<ExchangeRate>(exchangeRate);
                     await _configExchangeRate.InsertAsync(prop);
+                    await CreateLog("添加汇率1条", ExchangeRateType);
                 }
                 else
                 {
                     entity.ExchangeRateKind = exchangeRate.ExchangeRateKind;
                     entity.ExchangeRateValue = JsonConvert.SerializeObject(exchangeRate.ExchangeRateValue);
                     await _configExchangeRate.UpdateAsync(entity);
+                    await CreateLog("编辑汇率1条", ExchangeRateType);
                 }
             }
             catch (Exception e)
@@ -763,7 +784,34 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             if (entity != null)
             {
                 await _configExchangeRate.DeleteAsync(entity);
+                await CreateLog("删除汇率1条", ExchangeRateType);
             }
+        }
+        /// <summary>
+        /// 添加日志
+        /// </summary>
+        private async Task<bool> CreateLog(string Remark, LogType logType)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
+
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+
+                entity.CreatorUserId = AbpSession.UserId.Value;
+
+
+
+            }
+            entity.Remark = Remark;
+            entity.Type = logType;
+            entity = await _foundationLogs.InsertAsync(entity);
+            return true;
         }
     }
 
