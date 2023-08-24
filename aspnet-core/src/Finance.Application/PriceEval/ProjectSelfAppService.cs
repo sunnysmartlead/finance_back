@@ -114,6 +114,16 @@ namespace Finance.PriceEval
             await base.DeleteAsync(input);
         }
 
+        /// <summary>
+        /// 修改基本库日志
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task UpdateBaseStoreLog(UpdateBaseStoreLogInput input)
+        {
+            var entity = await _baseStoreLogRepository.GetAsync(input.Id);
+            entity.Text = input.Text;
+        }
 
         /// <summary>
         /// 获取基础库日志
