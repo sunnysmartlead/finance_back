@@ -3,6 +3,7 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.Audit;
+using Finance.DemandApplyAudit;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
@@ -30,6 +31,10 @@ namespace Finance.BaseLibrary
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         private readonly IRepository<ModelCount, long> _modelCountRepository;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
+                /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -39,6 +44,7 @@ namespace Finance.BaseLibrary
             IRepository<Gradient, long> gradientRepository ,
             IRepository<ModelCount, long> modelCountRepository,
             IRepository<ModelCountYear, long> modelCountYearRepository,
+            IRepository<Solution, long> resourceSchemeTable,
              IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository
             )
         {
@@ -48,6 +54,7 @@ namespace Finance.BaseLibrary
             _gradientModelYearRepository = gradientModelYearRepository;
             _modelCountRepository = modelCountRepository;
             _modelCountYearRepository = modelCountYearRepository;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
         /// <summary>
@@ -94,6 +101,26 @@ namespace Finance.BaseLibrary
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
             query.Count();
+
+            var data1 = from m in _gradientModelRepository.GetAll()
+                        join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
+                        join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
+                        join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
+                        where y.ProductId == input.SolutionId// && m.ProductId == productId && my.ProductId == productId
+                        && y.Year == my.Year && y.UpDown == my.UpDown
+                        select new GradientModelYearListDto
+                        {
+                            Id = y.Id,
+                            AuditFlowId = y.AuditFlowId,
+                            PriceEvaluationId = y.PriceEvaluationId,
+                            GradientModelId = y.GradientModelId,
+                            ProductId = y.ProductId,
+                            GradientValue = g.GradientValue,
+                            Year = y.Year,
+                            UpDown = y.UpDown,
+                            Count = y.Count,
+                            YearMountCount = my.Quantity
+                        };
             var dtos = ObjectMapper.Map<List<String>, List<String>>(query, new List<String>());
             List<LogisticscostResponseDto> logisticscostResponseList = new List<LogisticscostResponseDto>();
             foreach (var item in dtos)
@@ -102,7 +129,19 @@ namespace Finance.BaseLibrary
 
                 var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
-                logisticscostResponse.LogisticscostList = dtosItem;
+                foreach (var dtosItem1 in dtosItem)
+                {
+                    if (null != data1)
+                    {
+                        dtosItem1.YearMountCount = data1.ToList()[0].YearMountCount;
+                    }
+                    else {
+                        dtosItem1.YearMountCount = 0;
+                    }
+                   
+                }
+
+                    logisticscostResponse.LogisticscostList = dtosItem;
                 logisticscostResponse.Classification = item;
                 logisticscostResponseList.Add(logisticscostResponse);
             }
@@ -115,28 +154,6 @@ namespace Finance.BaseLibrary
                 {
                     LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
                     logisticscostResponse.Classification = item.GradientValue.ToString();
-
-               
-
-                    var data1 = from m in _gradientModelRepository.GetAll()
-                               join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
-                               join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
-                               join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
-                               where y.ProductId == input.SolutionId// && m.ProductId == productId && my.ProductId == productId
-                               && y.Year == my.Year && y.UpDown == my.UpDown
-                               select new GradientModelYearListDto
-                               {
-                                   Id = y.Id,
-                                   AuditFlowId = y.AuditFlowId,
-                                   PriceEvaluationId = y.PriceEvaluationId,
-                                   GradientModelId = y.GradientModelId,
-                                   ProductId = y.ProductId,
-                                   GradientValue = g.GradientValue,
-                                   Year = y.Year,
-                                   UpDown = y.UpDown,
-                                   Count = y.Count,
-                                   YearMountCount = my.Quantity
-                               };
                     List <LogisticscostDto> logisticscostDtos= new List<LogisticscostDto>();
                     foreach (var item1 in data1)
                     {
@@ -223,11 +240,24 @@ namespace Finance.BaseLibrary
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task CreateSubmitAsync(LogisticscostDto input)
+        public virtual async Task<String> CreateSubmitAsync(long auditFlowId)
         {
 
-            // 设置查询条件
-            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId);
+            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
+
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            int quantity = result.Count - query.Count();
+            if (quantity > 0)
+            {
+                return "还有" + quantity + "个方案没有提交，请先提交";
+            }
+            else {
+
+                //提交完成  可以在这里做审核处理
+                return "提交完成";
+
+            }
+           
 
         }
 
