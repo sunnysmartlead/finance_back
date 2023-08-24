@@ -161,6 +161,13 @@ namespace Finance.BaseLibrary
                         LogisticscostDto logisticscostDto = new LogisticscostDto();
                         logisticscostDto.Year = item1.Year.ToString();
                         logisticscostDto.YearMountCount = item1.YearMountCount;
+                        logisticscostDto.FreightPrice = 0;
+                        logisticscostDto.MonthlyDemandPrice= 0;
+                        logisticscostDto.PackagingPrice= 0;
+                        logisticscostDto.StoragePrice= 0;
+                        logisticscostDto.SinglyDemandPrice= 0;
+                        logisticscostDto.TransportPrice= 0;
+
                         logisticscostDtos.Add(logisticscostDto);
                     }
                     logisticscostResponse.LogisticscostList = logisticscostDtos;
@@ -247,7 +254,7 @@ namespace Finance.BaseLibrary
             var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
 
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-            int quantity = result.Count - query.Count();
+            int quantity = result.Count - (query.Count()/ result.Count);
             if (quantity > 0)
             {
                 return "还有" + quantity + "个方案没有提交，请先提交";

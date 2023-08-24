@@ -140,7 +140,7 @@ namespace Finance.Processes
                 List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
                 List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
 
-                if (null == logisticscostResponseList) {
+                if (null == logisticscostResponseList || logisticscostResponseList.Count <1) {
                     BomEnterDto logisticscostResponse = new BomEnterDto();
                     foreach (var item in ListGradient)
                     {
@@ -167,6 +167,7 @@ namespace Finance.Processes
                             BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();
                             bomEnterTotal.Year = dtosItemTotal.Year.ToString();
                             bomEnterTotal.TotalCost = 0;
+                           
                             ListbomEnterDto.Add(bomEnterTotal);
                         }
                         logisticscostResponse.ListBomEnter = bomEnterDto;
