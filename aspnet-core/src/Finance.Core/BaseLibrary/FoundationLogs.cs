@@ -91,6 +91,11 @@ namespace Finance.BaseLibrary
         /// 毛利率
         /// </summary>
         [Description("毛利率")]
-        GrossProfitMargin=10
+        GrossProfitMargin=10,
+        /// <summary>
+        /// 汇率
+        /// </summary>
+        [Description("汇率")]
+        ExchangeRate=11,
     }
 }

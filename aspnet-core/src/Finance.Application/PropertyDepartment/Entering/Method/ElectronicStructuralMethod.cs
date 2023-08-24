@@ -1066,7 +1066,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                       join b in await _customerTargetPrice.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)) on a.Productld equals b.ProductId
                       select b).ToList();
             CustomerTargetPrice customer = customerTargetPrices.FirstOrDefault(p=>p.Kv.Equals(Kv));
-            if(customer.ExchangeRate is not 0M)
+            if(customer is not null&&customer.ExchangeRate is not 0M)
             {
                 return customer.ExchangeRate;
             }
