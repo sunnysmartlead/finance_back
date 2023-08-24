@@ -223,10 +223,15 @@ namespace Finance.BaseLibrary
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<LogisticscostDto> CreateSubmitAsync(LogisticscostDto input)
+        public virtual async Task CreateSubmitAsync(LogisticscostDto input)
         {
-            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false);
+
+            // 设置查询条件
+            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId);
+
         }
+
+    
 
         /// <summary>
         /// 编辑
