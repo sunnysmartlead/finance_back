@@ -104,17 +104,9 @@ namespace Finance.Processes
                         bomEnterDto1.DirectDepreciation = dtosItem.DirectDepreciation;
                         bomEnterDto.Add(bomEnterDto1);
                     }
-
-                 
-
-
                     var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == item).ToList();
 
-
-                    List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
-
-
-                
+                    List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();  
                     foreach (var dtosItemTotal in queryItemTotal)
                     {
                         BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();
@@ -217,7 +209,9 @@ namespace Finance.Processes
                     bomEnterTotal.LastModificationTime = DateTime.Now;
                     await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
                 }
-            }
+            
+        
+        }
 
 
         /// <summary>

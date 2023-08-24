@@ -27,7 +27,7 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Decimal> StoragePrice { get; set; }
         public System.Nullable<System.Decimal> TransportPrice { get; set; }
         public string Year { get; set; }
-
+        public decimal YearMountCount { get; set; }
         public List<LogisticscostResponseDto> LogisticscostList { get; set; }
     }
 }

@@ -28,6 +28,8 @@ namespace Finance.BaseLibrary
         private readonly IRepository<Gradient, long> _gradientRepository;
         private readonly IRepository<GradientModel, long> _gradientModelRepository;
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
+        private readonly IRepository<ModelCount, long> _modelCountRepository;
+        private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -35,6 +37,8 @@ namespace Finance.BaseLibrary
         public LogisticscostAppService(
             IRepository<Logisticscost, long> logisticscostRepository,
             IRepository<Gradient, long> gradientRepository ,
+            IRepository<ModelCount, long> modelCountRepository,
+            IRepository<ModelCountYear, long> modelCountYearRepository,
              IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository
             )
         {
@@ -42,7 +46,8 @@ namespace Finance.BaseLibrary
             _gradientRepository = gradientRepository;
             _gradientModelRepository = gradientModelRepository;
             _gradientModelYearRepository = gradientModelYearRepository;
-
+            _modelCountRepository = modelCountRepository;
+            _modelCountYearRepository = modelCountYearRepository;
         }
 
         /// <summary>
@@ -111,11 +116,15 @@ namespace Finance.BaseLibrary
                     LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
                     logisticscostResponse.Classification = item.GradientValue.ToString();
 
+               
+
                     var data1 = from m in _gradientModelRepository.GetAll()
                                join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
                                join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
-                               where y.ProductId == input.SolutionId
-                                select new GradientModelYearListDto
+                               join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
+                               where y.ProductId == input.SolutionId// && m.ProductId == productId && my.ProductId == productId
+                               && y.Year == my.Year && y.UpDown == my.UpDown
+                               select new GradientModelYearListDto
                                {
                                    Id = y.Id,
                                    AuditFlowId = y.AuditFlowId,
@@ -125,13 +134,15 @@ namespace Finance.BaseLibrary
                                    GradientValue = g.GradientValue,
                                    Year = y.Year,
                                    UpDown = y.UpDown,
-                                   Count = y.Count
+                                   Count = y.Count,
+                                   YearMountCount = my.Quantity
                                };
                     List <LogisticscostDto> logisticscostDtos= new List<LogisticscostDto>();
                     foreach (var item1 in data1)
                     {
                         LogisticscostDto logisticscostDto = new LogisticscostDto();
                         logisticscostDto.Year = item1.Year.ToString();
+                        logisticscostDto.YearMountCount = item1.YearMountCount;
                         logisticscostDtos.Add(logisticscostDto);
                     }
                     logisticscostResponse.LogisticscostList = logisticscostDtos;
@@ -182,6 +193,7 @@ namespace Finance.BaseLibrary
                     Logisticscost logisticscost =  new Logisticscost();
                     logisticscost.SolutionId =  input.SolutionId;
                     logisticscost.AuditFlowId = input.AuditFlowId;
+                    logisticscost.Status = input.Status;
                     logisticscost.Classification = item.Classification;
                     logisticscost.CreationTime = DateTime.Now;
                     logisticscost.FreightPrice = entity.FreightPrice;
