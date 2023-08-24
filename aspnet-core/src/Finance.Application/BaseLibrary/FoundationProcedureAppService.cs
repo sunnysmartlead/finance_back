@@ -28,7 +28,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 1;
+        private readonly LogType logType = LogType.WorkClothes;
         private readonly IRepository<FoundationProcedure, long> _foundationProcedureRepository;
 
 
