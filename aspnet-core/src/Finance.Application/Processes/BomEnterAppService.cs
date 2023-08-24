@@ -91,7 +91,7 @@ namespace Finance.Processes
 
                 //有数据的返回
                 var query = (from a in _bomEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.SolutionId == entity.Productld && p.AuditFlowId == input.AuditFlowId
+         p.IsDeleted == false && p.SolutionId == entity.Id && p.AuditFlowId == input.AuditFlowId
          ).Select(c => c.Classification).Distinct()
                              select a).ToList();
                 var dtos = ObjectMapper.Map<List<String>, List<String>>(query, new List<String>());
@@ -100,7 +100,7 @@ namespace Finance.Processes
                 {
                     BomEnterDto logisticscostResponse = new BomEnterDto();
 
-                    var queryItem = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
+                    var queryItem = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Id && t.Classification == item).ToList();
                     List<BomEnterDto> bomEnterDto =   new List<BomEnterDto>();
                     foreach (var dtosItem in queryItem)
                     {
@@ -119,7 +119,7 @@ namespace Finance.Processes
                         bomEnterDto1.DirectDepreciation = dtosItem.DirectDepreciation;
                         bomEnterDto.Add(bomEnterDto1);
                     }
-                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
+                    var queryItemTotal = this._bomEnterTotalRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Id && t.Classification == item).ToList();
 
                     List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();  
                     foreach (var dtosItemTotal in queryItemTotal)
@@ -211,17 +211,17 @@ namespace Finance.Processes
         public virtual async Task CreateAsync(BomEnterDto input)
         {
             Solution entitySolution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
-            await _bomEnterRepository.DeleteAsync(s => s.SolutionId == entitySolution.Productld && s.AuditFlowId == input.AuditFlowId);
+            await _bomEnterRepository.DeleteAsync(s => s.SolutionId == entitySolution.Id && s.AuditFlowId == input.AuditFlowId);
 
 
-            await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == entitySolution.Productld && s.AuditFlowId == input.AuditFlowId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.SolutionId == entitySolution.Id && s.AuditFlowId == input.AuditFlowId);
 
             List<BomEnterDto> LogisticscostList = input.ListBomEnter;
         
                 foreach (var item1 in input.ListBomEnter)
                 {
                     BomEnter bomEnter = new BomEnter();
-                    bomEnter.SolutionId = entitySolution.Productld;
+                    bomEnter.SolutionId = entitySolution.Id;
                     bomEnter.AuditFlowId = input.AuditFlowId;
                     bomEnter.Classification = input.Classification;
                     bomEnter.CreationTime = DateTime.Now;
@@ -251,9 +251,7 @@ namespace Finance.Processes
                     BomEnterTotal bomEnterTotal = new BomEnterTotal();
 
 
-                    bomEnterTotal.SolutionId = entitySolution.Productld;
-
-
+                    bomEnterTotal.SolutionId = entitySolution.Id;
                     bomEnterTotal.AuditFlowId = input.AuditFlowId;
                     bomEnterTotal.Classification = input.Classification;
                     bomEnterTotal.CreationTime = DateTime.Now;
@@ -280,12 +278,15 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<String> CreateSubmitAsync(long auditFlowId)
+        public virtual async Task<String> CreateSubmitAsync(GetBomEntersInput input)
         {
-            var query = this._bomEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
-
-            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-            int quantity = result.Count - query.Count();
+   
+                        var count = (from a in _bomEnterRepository.GetAllList(p =>
+         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
+         ).Select(p => p.SolutionId).Distinct()
+                         select a).ToList();
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+            int quantity = result.Count - count.Count;
             if (quantity > 0)
             {
                 return "还有" + quantity + "个方案没有提交，请先提交";

@@ -9,6 +9,7 @@ using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.Users.Dto;
 using Microsoft.AspNetCore.Mvc;
+using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System;
@@ -98,7 +99,7 @@ namespace Finance.BaseLibrary
 
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
             var query = (from a in _logisticscostRepository.GetAllList(p =>
-            p.IsDeleted == false && p.SolutionId == entity.Productld && p.AuditFlowId == input.AuditFlowId
+            p.IsDeleted == false && p.SolutionId == entity.Id && p.AuditFlowId == input.AuditFlowId
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
             query.Count();
@@ -128,7 +129,7 @@ namespace Finance.BaseLibrary
             {
                 LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
 
-                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Productld && t.Classification == item).ToList();
+                var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Id && t.Classification == item).ToList();
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 foreach (var dtosItem1 in dtosItem)
                 {
@@ -166,7 +167,7 @@ namespace Finance.BaseLibrary
                         logisticscostDto.PackagingPrice= 0;
                         logisticscostDto.StoragePrice= 0;
                         logisticscostDto.SinglyDemandPrice= 0;
-                        logisticscostDto.TransportPrice= 0;
+                        logisticscostDto.TransportPrice = 0;
 
                         logisticscostDtos.Add(logisticscostDto);
                     }
@@ -202,9 +203,8 @@ namespace Finance.BaseLibrary
         public virtual async Task CreateAsync(LogisticscostDto input)
         {
 
-            Solution entitySolution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
             //先根据零件和流程删除之前的数据
-            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entitySolution.Productld);
+            var query = _logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId);
             var list = query.ToList();
             foreach (var item in list)
             {
@@ -217,7 +217,7 @@ namespace Finance.BaseLibrary
                 {
                     var entity = ObjectMapper.Map<LogisticscostDto, Logisticscost>(item1, new Logisticscost());
                     Logisticscost logisticscost =  new Logisticscost();
-                    logisticscost.SolutionId = entitySolution.Productld;
+                    logisticscost.SolutionId = input.SolutionId;
                     logisticscost.AuditFlowId = input.AuditFlowId;
                     logisticscost.Status = input.Status;
                     logisticscost.Classification = item.Classification;
@@ -249,12 +249,18 @@ namespace Finance.BaseLibrary
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<String> CreateSubmitAsync(long auditFlowId)
+        public virtual async Task<String> CreateSubmitAsync(GetLogisticscostsInput input)
         {
-            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId);
-
-            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-            int quantity = result.Count - (query.Count()/ result.Count);
+            //已经录入数量
+            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId);
+            //查询方案id
+           
+            var count = (from a in _logisticscostRepository.GetAllList(p =>
+         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
+         ).Select(p => p.SolutionId).Distinct()
+                         select a).ToList();
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+            int quantity = result.Count - count.Count;
             if (quantity > 0)
             {
                 return "还有" + quantity + "个方案没有提交，请先提交";
