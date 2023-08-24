@@ -31,7 +31,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 6;
+        private readonly LogType logType = LogType.Fixture;
         /// <summary>
         /// .ctor
         /// </summary>

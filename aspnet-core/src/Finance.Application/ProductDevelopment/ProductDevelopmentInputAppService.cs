@@ -135,7 +135,7 @@ namespace Finance.ProductDevelopment
         }
 
         /// <summary>
-        /// 根据流程号获取零件号
+        /// 根据流程号获取方案号
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
