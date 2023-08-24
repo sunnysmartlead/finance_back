@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance.BaseLibrary
 {
@@ -28,6 +29,11 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Decimal> TransportPrice { get; set; }
         public string Year { get; set; }
         public decimal YearMountCount { get; set; }
+
+        /// <summary>
+        ///  0 保存  1 提交
+        /// </summary>
+        public long Status { get; set; }
         public List<LogisticscostResponseDto> LogisticscostList { get; set; }
     }
 }
