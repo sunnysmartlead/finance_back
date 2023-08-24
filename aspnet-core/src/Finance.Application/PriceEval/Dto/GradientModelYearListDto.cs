@@ -50,5 +50,10 @@ namespace Finance.PriceEval.Dto
         /// 梯度走量
         /// </summary>
         public virtual decimal Count { get; set; }
+
+        /// <summary>
+        /// 年度模组数量
+        /// </summary>
+        public virtual decimal YearMountCount { get; set; }
     }
 }

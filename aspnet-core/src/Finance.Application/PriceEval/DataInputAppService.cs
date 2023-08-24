@@ -21,14 +21,21 @@ namespace Finance.PriceEval
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         private readonly IRepository<Requirement, long> _requirementRepository;
         private readonly IRepository<CustomerTargetPrice, long> _customerTargetPriceRepository;
-        
-        public DataInputAppService(IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<Requirement, long> requirementRepository)
+        private readonly IRepository<ModelCount, long> _modelCountRepository;
+        private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
+
+        public DataInputAppService(IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository)
         {
             _gradientRepository = gradientRepository;
             _gradientModelRepository = gradientModelRepository;
             _gradientModelYearRepository = gradientModelYearRepository;
             _requirementRepository = requirementRepository;
+            _customerTargetPriceRepository = customerTargetPriceRepository;
+            _modelCountRepository = modelCountRepository;
+            _modelCountYearRepository = modelCountYearRepository;
         }
+
+
 
 
 
@@ -42,7 +49,9 @@ namespace Finance.PriceEval
             var data = from m in _gradientModelRepository.GetAll()
                        join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
                        join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
-                       where y.ProductId == productId
+                       join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
+                       where y.ProductId == productId// && m.ProductId == productId && my.ProductId == productId
+                       && y.Year == my.Year && y.UpDown == my.UpDown
                        select new GradientModelYearListDto
                        {
                            Id = y.Id,
@@ -53,7 +62,8 @@ namespace Finance.PriceEval
                            GradientValue = g.GradientValue,
                            Year = y.Year,
                            UpDown = y.UpDown,
-                           Count = y.Count
+                           Count = y.Count,
+                           YearMountCount = my.Quantity
                        };
             return await data.ToListAsync();
         }
