@@ -111,7 +111,7 @@ namespace Finance.TradeCompliance
                     InputCount = 0,
                     Year = await GetFristSopYear(input),
                 };
-                var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);
+                var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
                 tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;
 
                 var countries = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.DisplayName.Equals(tradeComplianceCheckDto.TradeComplianceCheck.Country));
