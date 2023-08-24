@@ -252,9 +252,6 @@ namespace Finance.BaseLibrary
         public virtual async Task<String> CreateSubmitAsync(GetLogisticscostsInput input)
         {
             //已经录入数量
-            var query = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId);
-            //查询方案id
-           
             var count = (from a in _logisticscostRepository.GetAllList(p =>
          p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
          ).Select(p => p.SolutionId).Distinct()
