@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,10 +38,21 @@ namespace Finance.PriceEval.Dto
         public virtual int InputCount { get; set; }
 
         /// <summary>
+        /// 方案表ID
+        /// </summary>
+        [Column("SOLUTIONID")]
+        public long SolutionId { get; set; }
+
+        /// <summary>
         /// 年份
         /// </summary>
         [Required]
         public virtual int Year { get; set; }
 
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        [Required]
+        public virtual YearType UpDown { get; set; }
     }
 }

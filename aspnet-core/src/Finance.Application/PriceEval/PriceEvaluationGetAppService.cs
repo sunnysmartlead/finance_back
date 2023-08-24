@@ -553,12 +553,12 @@ namespace Finance.PriceEval
             {
                 //获取总年数
                 var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
-                    .OrderBy(p => p.Year).Select(p => new { p.Year, p.Quantity }).ToListAsync();
+                    .OrderBy(p => p.Year).Select(p => new { p.Year, p.UpDown, p.Quantity }).ToListAsync();
                 //var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
                 //    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
 
                 //获取数据
-                var material = await yearCount.SelectAsync(async p => await GetData(p.Year));
+                var material = await yearCount.SelectAsync(async p => await GetData(p.Year, p.UpDown));
 
                 //加总求平均以获取Dto
                 var dto = material.SelectMany(p => p).Join(yearCount, p => p.Year, p => p.Year, (a, b) => { a.Quantity = b.Quantity; return a; })
@@ -610,25 +610,23 @@ namespace Finance.PriceEval
             }
             else
             {
-                return await GetData(input.Year);
+                return await GetData(input.Year, input.UpDown);
             }
 
-            async Task<List<Material>> GetData(int year)
+            async Task<List<Material>> GetData(int year, YearType upDown)
             {
                 //获取【电子料】表
                 var electronic = from eb in _electronicBomInfoRepository.GetAll()
                                  join ec in _enteringElectronicRepository.GetAll() on eb.Id equals ec.ElectronicId
 
-                                 join lri in _lossRateInfoRepository.GetAll()
-                                 on new { eb.AuditFlowId, eb.ProductId, eb.CategoryName } equals new { lri.AuditFlowId, lri.ProductId, lri.CategoryName }
-
+                                 join lri in _lossRateInfoRepository.GetAll() on eb.CategoryName equals lri.CategoryName
                                  join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
                                  join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
 
-                                 where eb.ProductId == input.ProductId &&
-                                 ec.SolutionId == input.ProductId
+                                 where eb.ProductId == input.ProductId
                                  && eb.AuditFlowId == input.AuditFlowId && lriy.Year == year
+                                 && eb.SolutionId == input.SolutionId && ec.SolutionId == input.SolutionId
 
                                  select new Material
                                  {
@@ -656,16 +654,15 @@ namespace Finance.PriceEval
                 var structure = from sb in _structureBomInfoRepository.GetAll()
                                 join se in _structureElectronicRepository.GetAll() on sb.Id equals se.StructureId
 
-                                join lri in _lossRateInfoRepository.GetAll()
-                                on new { sb.AuditFlowId, sb.ProductId, sb.CategoryName } equals new { lri.AuditFlowId, lri.ProductId, lri.CategoryName }
+                                join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.CategoryName
 
                                 join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
                                 join er in _exchangeRateRepository.GetAll() on se.Currency equals er.ExchangeRateKind
 
                                 where sb.ProductId == input.ProductId
-                                && se.SolutionId == input.ProductId
                                 && sb.AuditFlowId == input.AuditFlowId && lriy.Year == year
+                                 && sb.SolutionId == input.SolutionId && se.SolutionId == input.SolutionId
 
                                 select new Material
                                 {
@@ -689,19 +686,28 @@ namespace Finance.PriceEval
 
                 var electronicAndStructureList = electronicList.Union(structureList).ToList();
 
+
+                //是否客供
+                var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+                var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
+
                 electronicAndStructureList.ForEach(item =>
                 {
                     item.Year = year;
-                    item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, gradient.GradientValue);
-                    item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year, gradient.GradientValue);
-                    item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, gradient.GradientValue);
+                    item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
+                    item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);
+                    item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);
                     item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）
                     item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
                     item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
                     item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
                     item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq))) : item.Moq);
                     item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
+
+                    item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
+                    item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
                 });
+
                 return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
                     .SelectMany(p => p).ToList();
             }
@@ -1257,9 +1263,9 @@ namespace Finance.PriceEval
         /// <param name="isAll"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetMaterialPrice(string json, int year, decimal gradientValue)
+        private static decimal GetMaterialPrice(string json, int year, YearType upDown, decimal gradientValue)
         {
-            return GetYearValue(json, year, gradientValue);
+            return GetYearValue(json, year, upDown, gradientValue);
         }
 
         /// <summary>
@@ -1269,9 +1275,18 @@ namespace Finance.PriceEval
         /// <param name="isAll"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetExchangeRate(string json, int year, decimal gradientValue)
+        private static decimal GetExchangeRate(string json, int year)
         {
-            return GetYearValue(json, year, gradientValue);
+            var list = JsonConvert.DeserializeObject<List<YearOrValueMode>>(json);
+            var query = list.Where(p => p.Year == year);
+            if (query.Any())
+            {
+                return query.FirstOrDefault().Value;
+            }
+            else
+            {
+                return list.OrderByDescending(p => p.Year).FirstOrDefault().Value;
+            }
         }
 
         /// <summary>
@@ -1280,11 +1295,11 @@ namespace Finance.PriceEval
         /// <param name="json"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        private static decimal GetYearValue(string json, int year, decimal gradientValue)
+        private static decimal GetYearValue(string json, int year, YearType upDown, decimal gradientValue)
         {
             //var list = EnteringMapper.JsonToList(json);
             var list = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(json).FirstOrDefault(p => p.Kv == gradientValue).YearOrValueModes;
-            var query = list.Where(p => p.Year == year);
+            var query = list.Where(p => p.Year == year && p.UpDown == upDown);
             if (query.Any())
             {
                 return query.FirstOrDefault().Value;
