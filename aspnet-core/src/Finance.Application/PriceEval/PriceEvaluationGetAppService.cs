@@ -551,7 +551,7 @@ namespace Finance.PriceEval
             var data = await GetAllData(input);
 
             //取得修改项
-            
+
 
             return data;
             async Task<List<Material>> GetAllData(GetBomCostInput input)
@@ -1351,7 +1351,7 @@ namespace Finance.PriceEval
         {
             var data = await _pcsYearRepository.GetAll()
                 .Where(p => p.AuditFlowId == input.AuditFlowId)
-                .Select(p => new YearListDto { Id = p.Year, Name = $"{p.Year}年" })
+                .Select(p => new YearListDto { Id = p.Year, Name = $"{p.Year}年", UpDown = p.UpDown })
                 .Distinct()
                 .OrderBy(p => p.Id)
                 .ToListAsync();
