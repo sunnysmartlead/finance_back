@@ -36,6 +36,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Finance.PriceEval.Dto.ProjectSelf;
+using Finance.TradeCompliance.Dto;
 
 namespace Finance
 {
@@ -285,6 +286,10 @@ namespace Finance
             configuration.CreateMap<UpdateProjectSelfInput, ProjectSelf>();
             configuration.CreateMap<ProjectSelf, ProjectSelfListDto>();
 
+
+            //贸易合规国家库
+            configuration.CreateMap<CountryLibrary, CountryLibraryDto>();
+            configuration.CreateMap<CountryLibraryDto, CountryLibrary>();
         }
     }
 }
