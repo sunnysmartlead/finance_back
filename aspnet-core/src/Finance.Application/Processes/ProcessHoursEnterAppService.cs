@@ -3,14 +3,20 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.BaseLibrary;
+using Finance.DemandApplyAudit;
+using Finance.Ext;
+using Finance.PriceEval;
+using Finance.PriceEval.Dto;
 using Microsoft.AspNetCore.Http;
 using MiniExcelLibs;
+using NPOI.POIFS.FileSystem;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.Processes
 {
@@ -26,12 +32,18 @@ namespace Finance.Processes
         private readonly IRepository<ProcessHoursEnteritem, long> _processHoursEnterItemRepository;
         private readonly IRepository<ProcessHoursEnterLine, long> _processHoursEnterLineRepository;
         private readonly IRepository<ProcessHoursEnterUph, long> _processHoursEnterUphRepository;
+        private readonly DataInputAppService _dataInputAppService;
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
+
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterRepository"></param>
         public ProcessHoursEnterAppService(
-            IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository)
+               IRepository<Solution, long> resourceSchemeTable, IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository, DataInputAppService dataInputAppService)
         {
             _processHoursEnterRepository = processHoursEnterRepository;
             _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
@@ -40,6 +52,8 @@ namespace Finance.Processes
             _processHoursEnterItemRepository = processHoursEnterItemRepository;
             _processHoursEnterLineRepository = processHoursEnterLineRepository;
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
+            _dataInputAppService = dataInputAppService;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
         /// <summary>
@@ -187,12 +201,68 @@ namespace Finance.Processes
                     }
 
                 processHoursEnter.SopInfo = processHoursEnteritems;
+                //Uph查询
+
+
+                //线体数量、共线分摊率
+
+
                 processHoursEnterDtoList.Add(processHoursEnter);
 
 
             }
             // 数据返回
             return processHoursEnterDtoList;
+        }
+
+
+
+        /// <summary>
+        /// 查看uph和线体数量、共线分摊率接口
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<ProcessHoursEnterDto> GetListUphOrLineAsync(GetProcessHoursEntersInput input)
+        {
+            ProcessHoursEnterDto processHoursEnterDto= new ProcessHoursEnterDto();
+
+            
+
+            
+            Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+      
+
+            List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
+            List<ProcessHoursEnterUphListDto> processHoursEnterUphListDtos = new List<ProcessHoursEnterUphListDto>();
+            
+
+            foreach (GradientModelYearListDto row in data) {
+
+                ProcessHoursEnterUphListDto processHoursEnterUphListDto = new ProcessHoursEnterUphListDto();
+                processHoursEnterUphListDto.Smtuph = 0;
+                processHoursEnterUphListDto.Zcuph = 0;
+                processHoursEnterUphListDto.Cobuph = 0;
+                processHoursEnterUphListDto.Year = row.Year.ToString();
+                processHoursEnterUphListDtos.Add(processHoursEnterUphListDto);
+
+            }
+            List<ProcessHoursEnterLineDtoList> processHoursEnterLineDtos = new List<ProcessHoursEnterLineDtoList>();
+            foreach (GradientModelYearListDto row in data)
+            {
+
+                ProcessHoursEnterLineDtoList processHoursEnterLine = new ProcessHoursEnterLineDtoList();
+                processHoursEnterLine.Xtsl = 0;
+                processHoursEnterLine.Gxftl = 0;
+                processHoursEnterLine.Year = row.Year.ToString();
+                processHoursEnterLineDtos.Add(processHoursEnterLine);
+
+            }
+            processHoursEnterDto.processHoursEnterLineList= processHoursEnterLineDtos;
+            processHoursEnterDto.processHoursEnterUphList= processHoursEnterUphListDtos;
+
+            // 数据返回
+            return processHoursEnterDto;
         }
         /// <summary>
         /// 获取修改
@@ -293,7 +363,7 @@ namespace Finance.Processes
                     {
                         ProcessHoursEnteritem processHoursEnteritem =   new ProcessHoursEnteritem();
                         processHoursEnteritem.Year = year.Year;
-                        processHoursEnteritem.Id = foundationDevice;
+                        processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
                         processHoursEnteritem.LaborHour= yearItem.LaborHour;
                         processHoursEnteritem.PersonnelNumber= yearItem.PersonnelNumber;
                         processHoursEnteritem.MachineHour= yearItem.MachineHour;
@@ -302,6 +372,47 @@ namespace Finance.Processes
                 }
             }
 
+            //uph
+            if (null != input.processHoursEnterUphList) {
+                foreach (var item in input.processHoursEnterUphList)
+                {
+                    ProcessHoursEnterUph processHoursEnterUph= new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year= item.Year;
+                    processHoursEnterUph.Uph = UPH.cobuph.GetDescription();
+                    processHoursEnterUph.Value = item.Cobuph;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+                    ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year = item.Year;
+                    processHoursEnterUph.Uph = UPH.zcuph.GetDescription();
+                    processHoursEnterUph.Value = item.Zcuph;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+                    ProcessHoursEnterUph processHoursEnterUph2 = new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year = item.Year;
+                    processHoursEnterUph.Uph = UPH.smtuph.GetDescription();
+                    processHoursEnterUph.Value = item.Smtuph;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+
+                }
+            }
+
+            //线体数量、共线分摊率
+            if (null != input.processHoursEnterLineList)
+            {
+                foreach (var item in input.processHoursEnterLineList)
+                {
+                    ProcessHoursEnterUph processHoursEnterUph = new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year = item.Year;
+                    processHoursEnterUph.Uph = OperateTypeCode.gxftl.GetDescription();
+                    processHoursEnterUph.Value = item.Gxftl;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+                    ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year = item.Year;
+                    processHoursEnterUph.Uph = OperateTypeCode.xtsl.GetDescription();
+                    processHoursEnterUph.Value = item.Xtsl;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+
+                }
+            }
 
         }
 
@@ -398,7 +509,7 @@ namespace Finance.Processes
                     {
                         ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
                         processHoursEnteritem.Year = year.Year;
-                        processHoursEnteritem.Id = entity.Id;
+                        processHoursEnteritem.ProcessHoursEnterId = entity.Id;
                         processHoursEnteritem.LaborHour = yearItem.LaborHour;
                         processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritem.MachineHour = yearItem.MachineHour;

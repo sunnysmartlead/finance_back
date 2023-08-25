@@ -29,7 +29,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 3;
+        private readonly LogType logType = LogType.Environment;
         /// <summary>
         /// .ctor
         /// </summary>

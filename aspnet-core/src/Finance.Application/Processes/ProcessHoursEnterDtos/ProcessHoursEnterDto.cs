@@ -43,5 +43,10 @@ namespace Finance.Processes
 
         public List<ProcessHoursEnterSopInfoDto> SopInfo { get; set; } = new List<ProcessHoursEnterSopInfoDto>();
         public List<ProcessHoursEnteritemDto> SopInfoAll { get; set; } = new List<ProcessHoursEnteritemDto>();
+
+        public List<ProcessHoursEnterUphListDto> processHoursEnterUphList { get; set; } =  new List<ProcessHoursEnterUphListDto>();
+        public List<ProcessHoursEnterLineDtoList> processHoursEnterLineList { get; set; } =  new List<ProcessHoursEnterLineDtoList>();
+
+
     }
 }
