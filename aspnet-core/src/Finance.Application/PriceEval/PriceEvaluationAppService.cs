@@ -3,6 +3,7 @@ using Abp.Authorization;
 using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
+using Abp.Json;
 using Abp.Linq.Extensions;
 using Finance.Audit;
 using Finance.Audit.Dto;
@@ -71,7 +72,8 @@ namespace Finance.PriceEval
         private readonly IRepository<CarModelCount, long> _carModelCountRepository;
         private readonly IRepository<CarModelCountYear, long> _carModelCountYearRepository;
 
-        private readonly IRepository<EditItem, long> _editItemRepository;
+        //private readonly IRepository<EditItem, long> _editItemRepository;
+        private readonly IRepository<UpdateItem, long> _updateItemRepository;
 
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
@@ -92,10 +94,10 @@ namespace Finance.PriceEval
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
-           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, IRepository<EditItem, long> editItemRepository,
-           WorkflowInstanceAppService workflowInstanceAppService)
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, 
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, editItemRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -116,6 +118,7 @@ namespace Finance.PriceEval
             _carModelCountYearRepository = carModelCountYearRepository;
 
             _workflowInstanceAppService = workflowInstanceAppService;
+            _updateItemRepository = updateItemRepository;
         }
 
 
@@ -466,6 +469,33 @@ namespace Finance.PriceEval
             priceEvaluationDto.QuoteVersion = quoteVersion;
             priceEvaluationDto.Files = fileNames;
             return priceEvaluationDto;
+        }
+
+
+        /// <summary>
+        /// 创建修改项
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task CreateUpdateItem(CreateUpdateItemInput input)
+        {
+            await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+        }
+
+        /// <summary>
+        /// 获取修改项
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<List<Material>> GetUpdateItem(GetUpdateItemInput input)
+        {
+            var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.ProductId == input.ProductId
+            && p.GradientId == input.GradientId
+            && p.SolutionId == input.SolutionId
+            && p.Year == input.Year
+            && p.UpDown == p.UpDown);
+            return entity.Select(p => JsonConvert.DeserializeObject<Material>(p.MaterialJson)).ToList();
         }
 
         #endregion

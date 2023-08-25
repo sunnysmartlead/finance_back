@@ -94,14 +94,15 @@ namespace Finance.PriceEval
         protected readonly IRepository<GradientModel, long> _gradientModelRepository;
         protected readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
 
-        protected readonly IRepository<EditItem, long> _editItemRepository;
+        //protected readonly IRepository<EditItem, long> _editItemRepository;
+        private readonly IRepository<UpdateItem, long> _updateItemRepository;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
           IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
-     IRepository<EditItem, long> editItemRepository)
+     IRepository<UpdateItem, long> updateItemRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -132,7 +133,7 @@ namespace Finance.PriceEval
             _gradientModelRepository = gradientModelRepository;
             _gradientModelYearRepository = gradientModelYearRepository;
 
-            _editItemRepository = editItemRepository;
+            _updateItemRepository = updateItemRepository;
         }
 
 
@@ -547,170 +548,181 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<Material>> GetBomCost(GetBomCostInput input)
         {
-            var gradient = await _gradientRepository.GetAsync(input.GradientId);
-            //全生命周期处理
-            if (input.Year == PriceEvalConsts.AllYear)
+            var data = await GetAllData(input);
+
+            //取得修改项
+            
+
+            return data;
+            async Task<List<Material>> GetAllData(GetBomCostInput input)
             {
-                //获取总年数
-                var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
-                    .OrderBy(p => p.Year).Select(p => new { p.Year, p.UpDown, p.Quantity }).ToListAsync();
-                //var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
-                //    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
-
-                //获取数据
-                var material = await yearCount.SelectAsync(async p => await GetData(p.Year, p.UpDown));
-
-                //加总求平均以获取Dto
-                var dto = material.SelectMany(p => p).Join(yearCount, p => p.Year, p => p.Year, (a, b) => { a.Quantity = b.Quantity; return a; })
-                    .GroupBy(p => new
-                    {
-                        p.Id,
-                        p.SuperType,
-                        p.CategoryName,
-                        p.TypeName,
-                        p.Sap,
-                        p.MaterialName,
-                        p.AssemblyCount,
-                        p.CurrencyText,
-                        p.MoqShareCount,
-                        p.Moq,
-                        p.AvailableInventory,
-                        p.Remarks,
-                    }).Select(p => new Material
-                    {
-                        Id = p.Key.Id,
-                        SuperType = p.Key.SuperType,
-                        CategoryName = p.Key.CategoryName,
-                        TypeName = p.Key.TypeName,
-                        Sap = p.Key.Sap,
-                        MaterialName = p.Key.MaterialName,
-                        AssemblyCount = p.Key.AssemblyCount,
-                        CurrencyText = p.Key.CurrencyText,
-                        ExchangeRate = p.MinBy(o => o.Year).ExchangeRate,
-                        SopExchangeRate = p.MinBy(o => o.Year).ExchangeRate,
-                        Loss = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.Loss * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity) * p.Key.AssemblyCount.To<decimal>(),
-                        InputCount = p.Sum(o => o.InputCount),
-                        PurchaseCount = p.Sum(o => o.PurchaseCount),
-                        MoqShareCount = p.Key.MoqShareCount,
-                        Moq = p.Key.Moq,
-                        AvailableInventory = p.Key.AvailableInventory,
-                        Remarks = p.Key.Remarks,
-                        MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity), //* p.Key.AssemblyCount.To<decimal>(),
-
-                    }).ToList();
-                foreach (var item in dto)
+                var gradient = await _gradientRepository.GetAsync(input.GradientId);
+                //全生命周期处理
+                if (input.Year == PriceEvalConsts.AllYear)
                 {
-                    item.TotalMoneyCyn = item.MaterialPriceCyn * item.AssemblyCount.To<decimal>();
-                    item.MaterialPrice = item.MaterialPriceCyn / item.SopExchangeRate;
-                    item.LossRate = item.TotalMoneyCyn == 0 ? 0 : item.Loss / item.TotalMoneyCyn;
-                    item.MaterialCost = item.TotalMoneyCyn + item.Loss;
+                    //获取总年数
+                    var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId)
+                        .OrderBy(p => p.Year).Select(p => new { p.Year, p.UpDown, p.Quantity }).ToListAsync();
+                    //var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == input.ProductId)
+                    //    .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count }).ToListAsync();
+
+                    //获取数据
+                    var material = await yearCount.SelectAsync(async p => await GetData(p.Year, p.UpDown));
+
+                    //加总求平均以获取Dto
+                    var dto = material.SelectMany(p => p).Join(yearCount, p => p.Year, p => p.Year, (a, b) => { a.Quantity = b.Quantity; return a; })
+                        .GroupBy(p => new
+                        {
+                            p.Id,
+                            p.SuperType,
+                            p.CategoryName,
+                            p.TypeName,
+                            p.Sap,
+                            p.MaterialName,
+                            p.AssemblyCount,
+                            p.CurrencyText,
+                            p.MoqShareCount,
+                            p.Moq,
+                            p.AvailableInventory,
+                            p.Remarks,
+                        }).Select(p => new Material
+                        {
+                            Id = p.Key.Id,
+                            SuperType = p.Key.SuperType,
+                            CategoryName = p.Key.CategoryName,
+                            TypeName = p.Key.TypeName,
+                            Sap = p.Key.Sap,
+                            MaterialName = p.Key.MaterialName,
+                            AssemblyCount = p.Key.AssemblyCount,
+                            CurrencyText = p.Key.CurrencyText,
+                            ExchangeRate = p.MinBy(o => o.Year).ExchangeRate,
+                            SopExchangeRate = p.MinBy(o => o.Year).ExchangeRate,
+                            Loss = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.Loss * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity) * p.Key.AssemblyCount.To<decimal>(),
+                            InputCount = p.Sum(o => o.InputCount),
+                            PurchaseCount = p.Sum(o => o.PurchaseCount),
+                            MoqShareCount = p.Key.MoqShareCount,
+                            Moq = p.Key.Moq,
+                            AvailableInventory = p.Key.AvailableInventory,
+                            Remarks = p.Key.Remarks,
+                            MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity), //* p.Key.AssemblyCount.To<decimal>(),
+
+                        }).ToList();
+                    foreach (var item in dto)
+                    {
+                        item.TotalMoneyCyn = item.MaterialPriceCyn * item.AssemblyCount.To<decimal>();
+                        item.MaterialPrice = item.MaterialPriceCyn / item.SopExchangeRate;
+                        item.LossRate = item.TotalMoneyCyn == 0 ? 0 : item.Loss / item.TotalMoneyCyn;
+                        item.MaterialCost = item.TotalMoneyCyn + item.Loss;
+                    }
+                    return dto.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
+                        .SelectMany(p => p).ToList();
                 }
-                return dto.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
-                    .SelectMany(p => p).ToList();
-            }
-            else
-            {
-                return await GetData(input.Year, input.UpDown);
-            }
-
-            async Task<List<Material>> GetData(int year, YearType upDown)
-            {
-                //获取【电子料】表
-                var electronic = from eb in _electronicBomInfoRepository.GetAll()
-                                 join ec in _enteringElectronicRepository.GetAll() on eb.Id equals ec.ElectronicId
-
-                                 join lri in _lossRateInfoRepository.GetAll() on eb.CategoryName equals lri.CategoryName
-                                 join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
-
-                                 join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
-
-                                 where eb.ProductId == input.ProductId
-                                 && eb.AuditFlowId == input.AuditFlowId && lriy.Year == year
-                                 && eb.SolutionId == input.SolutionId && ec.SolutionId == input.SolutionId
-
-                                 select new Material
-                                 {
-                                     Id = $"{PriceEvaluationGetAppService.ElectronicBomName}{eb.Id}",
-                                     SuperType = lri.SuperType,
-                                     CategoryName = eb.CategoryName,
-                                     TypeName = eb.TypeName,
-                                     Sap = eb.SapItemNum,
-                                     MaterialName = eb.SapItemName,
-                                     AssemblyCount = eb.AssemblyQuantity,//装配数量
-                                     SystemiginalCurrency = ec.SystemiginalCurrency,//ec.SystemiginalCurrency,
-                                     CurrencyText = ec.Currency,
-                                     ExchangeRateValue = er.ExchangeRateValue,
-                                     LossRate = lriy.Rate,//损耗率
-                                     Moq = ec.MOQ,
-                                     //AvailableInventory = ec.AvailableStock,
-                                     StandardMoney = ec.StandardMoney,
-                                     Remarks = ec.Remark
-                                 };
-                var electronicList = await electronic.ToListAsync();
-
-
-                //获取【结构料】表（其他大类都在这）
-
-                var structure = from sb in _structureBomInfoRepository.GetAll()
-                                join se in _structureElectronicRepository.GetAll() on sb.Id equals se.StructureId
-
-                                join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.CategoryName
-
-                                join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
-
-                                join er in _exchangeRateRepository.GetAll() on se.Currency equals er.ExchangeRateKind
-
-                                where sb.ProductId == input.ProductId
-                                && sb.AuditFlowId == input.AuditFlowId && lriy.Year == year
-                                 && sb.SolutionId == input.SolutionId && se.SolutionId == input.SolutionId
-
-                                select new Material
-                                {
-                                    Id = $"{PriceEvaluationGetAppService.StructureBomName}{sb.Id}",
-                                    SuperType = lri.SuperType,
-                                    CategoryName = sb.CategoryName,
-                                    TypeName = sb.TypeName,
-                                    Sap = sb.SapItemNum,
-                                    MaterialName = sb.MaterialName,
-                                    AssemblyCount = sb.AssemblyQuantity,//装配数量
-                                    SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
-                                    CurrencyText = se.Currency,
-                                    ExchangeRateValue = er.ExchangeRateValue,
-                                    LossRate = lriy.Rate,//损耗率
-                                    Moq = se.MOQ,
-                                    //AvailableInventory = se.AvailableStock,
-                                    StandardMoney = se.StandardMoney,
-                                    Remarks = se.Remark
-                                };
-                var structureList = await structure.ToListAsync();
-
-                var electronicAndStructureList = electronicList.Union(structureList).ToList();
-
-
-                //是否客供
-                var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-                var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
-
-                electronicAndStructureList.ForEach(item =>
+                else
                 {
-                    item.Year = year;
-                    item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
-                    item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);
-                    item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);
-                    item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）
-                    item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
-                    item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
-                    item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
-                    item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq))) : item.Moq);
-                    item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
+                    return await GetData(input.Year, input.UpDown);
+                }
 
-                    item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
-                    item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
-                });
+                async Task<List<Material>> GetData(int year, YearType upDown)
+                {
+                    //获取【电子料】表
+                    var electronic = from eb in _electronicBomInfoRepository.GetAll()
+                                     join ec in _enteringElectronicRepository.GetAll() on eb.Id equals ec.ElectronicId
 
-                return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
-                    .SelectMany(p => p).ToList();
+                                     join lri in _lossRateInfoRepository.GetAll() on eb.CategoryName equals lri.CategoryName
+                                     join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
+
+                                     join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
+
+                                     where eb.ProductId == input.ProductId
+                                     && eb.AuditFlowId == input.AuditFlowId && lriy.Year == year
+                                     && eb.SolutionId == input.SolutionId && ec.SolutionId == input.SolutionId
+
+                                     select new Material
+                                     {
+                                         Id = $"{PriceEvaluationGetAppService.ElectronicBomName}{eb.Id}",
+                                         SuperType = lri.SuperType,
+                                         CategoryName = eb.CategoryName,
+                                         TypeName = eb.TypeName,
+                                         Sap = eb.SapItemNum,
+                                         MaterialName = eb.SapItemName,
+                                         AssemblyCount = eb.AssemblyQuantity,//装配数量
+                                         SystemiginalCurrency = ec.SystemiginalCurrency,//ec.SystemiginalCurrency,
+                                         CurrencyText = ec.Currency,
+                                         ExchangeRateValue = er.ExchangeRateValue,
+                                         LossRate = lriy.Rate,//损耗率
+                                         Moq = ec.MOQ,
+                                         //AvailableInventory = ec.AvailableStock,
+                                         StandardMoney = ec.StandardMoney,
+                                         Remarks = ec.Remark
+                                     };
+                    var electronicList = await electronic.ToListAsync();
+
+
+                    //获取【结构料】表（其他大类都在这）
+
+                    var structure = from sb in _structureBomInfoRepository.GetAll()
+                                    join se in _structureElectronicRepository.GetAll() on sb.Id equals se.StructureId
+
+                                    join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.CategoryName
+
+                                    join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
+
+                                    join er in _exchangeRateRepository.GetAll() on se.Currency equals er.ExchangeRateKind
+
+                                    where sb.ProductId == input.ProductId
+                                    && sb.AuditFlowId == input.AuditFlowId && lriy.Year == year
+                                     && sb.SolutionId == input.SolutionId && se.SolutionId == input.SolutionId
+
+                                    select new Material
+                                    {
+                                        Id = $"{PriceEvaluationGetAppService.StructureBomName}{sb.Id}",
+                                        SuperType = lri.SuperType,
+                                        CategoryName = sb.CategoryName,
+                                        TypeName = sb.TypeName,
+                                        Sap = sb.SapItemNum,
+                                        MaterialName = sb.MaterialName,
+                                        AssemblyCount = sb.AssemblyQuantity,//装配数量
+                                        SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
+                                        CurrencyText = se.Currency,
+                                        ExchangeRateValue = er.ExchangeRateValue,
+                                        LossRate = lriy.Rate,//损耗率
+                                        Moq = se.MOQ,
+                                        //AvailableInventory = se.AvailableStock,
+                                        StandardMoney = se.StandardMoney,
+                                        Remarks = se.Remark
+                                    };
+                    var structureList = await structure.ToListAsync();
+
+                    var electronicAndStructureList = electronicList.Union(structureList).ToList();
+
+
+                    //是否客供
+                    var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+                    var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
+
+                    electronicAndStructureList.ForEach(item =>
+                    {
+                        item.Year = year;
+                        item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
+                        item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);
+                        item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);
+                        item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）
+                        item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
+                        item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
+                        item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
+                        item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq))) : item.Moq);
+                        item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
+
+                        item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
+                        item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
+                    });
+
+
+                    return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
+                        .SelectMany(p => p).ToList();
+                }
             }
+
         }
 
         /// <summary>
@@ -1566,28 +1578,28 @@ namespace Finance.PriceEval
             return new PagedResultDto<GradientListDto>(entity.Count, ObjectMapper.Map<List<GradientListDto>>(entity));
         }
 
-        /// <summary>
-        /// 设置核价看板修改项
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public virtual async Task SetEditItem(SetEditItemInput input)
-        {
-            var entity = await _editItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-            if (entity is null)
-            {
-                await _editItemRepository.InsertAsync(new EditItem
-                {
-                    AuditFlowId = input.AuditFlowId,
-                    EditItemJson = input.EditItem.ToJsonString(),
-                });
-            }
-            else
-            {
-                entity.EditItemJson = input.EditItem.ToJsonString();
-            }
+        ///// <summary>
+        ///// 设置核价看板修改项
+        ///// </summary>
+        ///// <param name="input"></param>
+        ///// <returns></returns>
+        //public virtual async Task SetEditItem(SetEditItemInput input)
+        //{
+        //    var entity = await _editItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+        //    if (entity is null)
+        //    {
+        //        await _editItemRepository.InsertAsync(new EditItem
+        //        {
+        //            AuditFlowId = input.AuditFlowId,
+        //            EditItemJson = input.EditItem.ToJsonString(),
+        //        });
+        //    }
+        //    else
+        //    {
+        //        entity.EditItemJson = input.EditItem.ToJsonString();
+        //    }
 
-        }
+        //}
         #endregion
 
 
