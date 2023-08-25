@@ -79,7 +79,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GradientModel> GradientModel { set; get; }
         public virtual DbSet<GradientModelYear> GradientModelYear { set; get; }
         public virtual DbSet<ShareCount> ShareCount { set; get; }
-        public virtual DbSet<EditItem> EditItem { set; get; }
+        //public virtual DbSet<EditItem> EditItem { set; get; }
 
 
         public virtual DbSet<UserInputInfo> UserInputInfo { get; set; }
@@ -380,6 +380,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
         public virtual DbSet<FProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
+        public virtual DbSet<UpdateItem> UpdateItem { get; set; }
 
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)

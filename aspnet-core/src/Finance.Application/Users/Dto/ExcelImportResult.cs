@@ -14,7 +14,7 @@ namespace Finance.Users.Dto
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ExcelImportResult() 
+        public ExcelImportResult()
         {
             InsertTotal = 0;
             UpdateTotal = 0;

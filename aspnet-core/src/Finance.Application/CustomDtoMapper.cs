@@ -177,7 +177,7 @@ namespace Finance
 
             configuration.CreateMap<Gradient, GradientListDto>();
 
-            
+
 
             //ProductDevelopmentInput
             configuration.CreateMap<StructureBomDto, StructureBomInfo>();
@@ -282,14 +282,20 @@ namespace Finance
             configuration.CreateMap<LogisticscostDto, Logisticscost>();
 
             //项目自建表
-            configuration.CreateMap<CreateProjectSelfInput, ProjectSelf>();
+            configuration.CreateMap<CreateProjectSelfInput, ProjectSelf>().ReverseMap();
             configuration.CreateMap<UpdateProjectSelfInput, ProjectSelf>();
             configuration.CreateMap<ProjectSelf, ProjectSelfListDto>();
+
+
+            //创建修改项
+            configuration.CreateMap<CreateUpdateItemInput, UpdateItem>().ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.Material)));
+            //configuration.CreateMap<UpdateItem, UpdateItemListDto>();
 
 
             //贸易合规国家库
             configuration.CreateMap<CountryLibrary, CountryLibraryDto>();
             configuration.CreateMap<CountryLibraryDto, CountryLibrary>();
+
         }
     }
 }
