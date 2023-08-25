@@ -15,6 +15,10 @@ namespace Finance.NrePricing.Dto
     public class NREToExamineToExamineDto : ToExamineDto
     {
         /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
         /// 审核界面类型
         /// </summary>
         public NRECHECKTYPE NreCheckType { get; set; }
