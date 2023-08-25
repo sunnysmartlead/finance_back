@@ -1,7 +1,10 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.Linq.Extensions;
+using Finance.Dto;
 using Finance.TradeCompliance.Dto;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,11 +44,25 @@ namespace Finance.TradeCompliance
         /// <returns></returns>
         public virtual async Task EditCountryLibrary(EditCountryLibraryDto input)
         {
-            var entity = await _countryLibraryRepository.GetAsync(input.Id);
-
-            ObjectMapper.Map(input, entity);
-
-            await _countryLibraryRepository.UpdateAsync(entity);
+            try {
+                var entity = await _countryLibraryRepository.GetAsync(input.Id);
+                if (entity == null)
+                {
+                    var prop = ObjectMapper.Map<CountryLibrary>(input);
+                    await _countryLibraryRepository.InsertAsync(prop);
+                }
+                else
+                {
+                    entity.NationalType = input.NationalType;
+                    entity.Country = input.Country;
+                    entity.Rate = input.Rate;
+                    await _countryLibraryRepository.UpdateAsync(entity);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
         }
 
         /// <summary>
@@ -59,29 +76,35 @@ namespace Finance.TradeCompliance
         }
 
         /// <summary>
-        /// 获取国家列表
+        /// 获取国家库列表
         /// </summary>
-        /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<PagedResultDto<GetCountryLibraryDtoListInput>> GetFinanceDictionaryList(GetCountryLibraryDtoListInput input)
+        public async Task<PagedResultDto<CountryLibraryDto>> PostDCountryLibraryList(PagedInputDto input)
         {
-            ////定义列表查询
-            //var filter = _countryLibraryRepository.GetAll()
-            //    .WhereIf(!input.NationalType.IsNullOrEmpty(), p => p.NationalType.Contains(input.NationalType))
-            //    .WhereIf(!input.Country.IsNullOrEmpty(), p => p.Country.Contains(input.Country));
 
-            ////定义列表查询的排序和分页
-            //var pagedSorted = filter.OrderByDescending(p => p.Id).PageBy(input);
+            try {
+                List<CountryLibrary> list = await _countryLibraryRepository.GetAll().OrderByDescending(p => p.NationalType).PageBy(input).ToListAsync();
 
-            ////获取总数
-            //var count = await filter.CountAsync();
+                var count = await _countryLibraryRepository.CountAsync();
 
-            ////获取查询结果
-            //var result = await pagedSorted.ToListAsync();
+                List<CountryLibraryDto> result = new List<CountryLibraryDto>();
+                foreach (var info in list)
+                {
+                    CountryLibraryDto dto = new CountryLibraryDto();
+                    dto.NationalType = info.NationalType;
+                    dto.Country = info.Country;
+                    dto.Rate = info.Rate;
+                    result.Add(dto);
+                }
+                return new PagedResultDto<CountryLibraryDto>(count, result);
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
 
-            //return new PagedResultDto<FinanceDictionaryListDto>(count, ObjectMapper.Map<List<FinanceDictionaryListDto>>(result));
-            return null;
         }
+
 
     }
 }

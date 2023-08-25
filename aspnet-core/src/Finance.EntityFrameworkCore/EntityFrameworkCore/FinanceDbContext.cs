@@ -190,6 +190,10 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<BoardInfo> BoardInfo { get; set; }
 
+        /// <summary>
+        /// 贸易合规国家库
+        /// </summary>
+        public virtual DbSet<CountryLibrary> CountryLibrary { get; set; }
 
         #region NRE新增表
         /// <summary>
