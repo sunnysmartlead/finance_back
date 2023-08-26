@@ -2059,6 +2059,11 @@ namespace Finance.NerPricing
                 throw new UserFriendlyException(e.Message);
             }
         }
+        /// <summary>
+        /// 根据ID从字典表里取值
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         internal async Task<string> GetDisplayName(string Id)
         {
            FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id.Equals(Id));
