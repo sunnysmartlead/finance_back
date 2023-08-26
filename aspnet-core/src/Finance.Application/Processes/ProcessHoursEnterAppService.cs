@@ -10,6 +10,7 @@ using Finance.PriceEval.Dto;
 using Microsoft.AspNetCore.Http;
 using MiniExcelLibs;
 using NPOI.POIFS.FileSystem;
+using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -231,18 +232,43 @@ namespace Finance.Processes
             
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
 
-      
+
+
+
 
             List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
             List<ProcessHoursEnterUphListDto> processHoursEnterUphListDtos = new List<ProcessHoursEnterUphListDto>();
             
-
             foreach (GradientModelYearListDto row in data) {
 
                 ProcessHoursEnterUphListDto processHoursEnterUphListDto = new ProcessHoursEnterUphListDto();
-                processHoursEnterUphListDto.Smtuph = 0;
-                processHoursEnterUphListDto.Zcuph = 0;
-                processHoursEnterUphListDto.Cobuph = 0;
+                var list = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.Year == row.Year.ToString()).ToList();
+                if (null != list && list.Count > 0)
+                {
+                    processHoursEnterUphListDto.Smtuph = list[0].Value;
+                }
+                else {
+                    processHoursEnterUphListDto.Smtuph = 0;
+                }
+                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.Year == row.Year.ToString()).ToList();
+                if (null != ZcuphList && ZcuphList.Count > 0)
+                {
+                    processHoursEnterUphListDto.Zcuph = ZcuphList[0].Value;
+                }
+                else
+                {
+                    processHoursEnterUphListDto.Zcuph = 0;
+                }
+
+                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.Year == row.Year.ToString()).ToList();
+                if (null != CobuphList && CobuphList.Count > 0)
+                {
+                    processHoursEnterUphListDto.Cobuph = ZcuphList[0].Value;
+                }
+                else
+                {
+                    processHoursEnterUphListDto.Cobuph = 0;
+                }
                 processHoursEnterUphListDto.Year = row.Year.ToString();
                 processHoursEnterUphListDtos.Add(processHoursEnterUphListDto);
 
@@ -252,14 +278,32 @@ namespace Finance.Processes
             {
 
                 ProcessHoursEnterLineDtoList processHoursEnterLine = new ProcessHoursEnterLineDtoList();
-                processHoursEnterLine.Xtsl = 0;
-                processHoursEnterLine.Gxftl = 0;
+
+                var XtslList = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "xtsl" && t.Year == row.Year.ToString()).ToList();
+                if (null != XtslList && XtslList.Count > 0)
+                {
+                    processHoursEnterLine.Xtsl = XtslList[0].Value;
+                }
+                else
+                {
+                    processHoursEnterLine.Xtsl = 0;
+                }
+                var GxftlList = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "gxftl" && t.Year == row.Year.ToString() ).ToList();
+                if (null != GxftlList && GxftlList.Count > 0)
+                {
+                    processHoursEnterLine.Gxftl = GxftlList[0].Value;
+                }
+                else
+                {
+                    processHoursEnterLine.Gxftl = 0;
+                }
                 processHoursEnterLine.Year = row.Year.ToString();
                 processHoursEnterLineDtos.Add(processHoursEnterLine);
 
             }
             processHoursEnterDto.processHoursEnterLineList= processHoursEnterLineDtos;
             processHoursEnterDto.processHoursEnterUphList= processHoursEnterUphListDtos;
+            processHoursEnterDto.IsCOB = entity.IsCOB;
 
             // 数据返回
             return processHoursEnterDto;
@@ -378,17 +422,17 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterUph processHoursEnterUph= new ProcessHoursEnterUph();
                     processHoursEnterUph.Year= item.Year;
-                    processHoursEnterUph.Uph = UPH.cobuph.GetDescription();
+                    processHoursEnterUph.Uph = "cobuph";
                     processHoursEnterUph.Value = item.Cobuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
                     ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
                     processHoursEnterUph.Year = item.Year;
-                    processHoursEnterUph.Uph = UPH.zcuph.GetDescription();
+                    processHoursEnterUph.Uph = "zcuph";
                     processHoursEnterUph.Value = item.Zcuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
                     ProcessHoursEnterUph processHoursEnterUph2 = new ProcessHoursEnterUph();
                     processHoursEnterUph.Year = item.Year;
-                    processHoursEnterUph.Uph = UPH.smtuph.GetDescription();
+                    processHoursEnterUph.Uph = "smtuph";
                     processHoursEnterUph.Value = item.Smtuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
 
@@ -402,12 +446,12 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterUph processHoursEnterUph = new ProcessHoursEnterUph();
                     processHoursEnterUph.Year = item.Year;
-                    processHoursEnterUph.Uph = OperateTypeCode.gxftl.GetDescription();
+                    processHoursEnterUph.Uph = "gxftl";
                     processHoursEnterUph.Value = item.Gxftl;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
                     ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
                     processHoursEnterUph.Year = item.Year;
-                    processHoursEnterUph.Uph = OperateTypeCode.xtsl.GetDescription();
+                    processHoursEnterUph.Uph = "xtsl";
                     processHoursEnterUph.Value = item.Xtsl;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
 
@@ -753,7 +797,7 @@ namespace Finance.Processes
 
                     }
 
-                    if (null != ProcessHoursEnterDList)
+           /*         if (null != ProcessHoursEnterDList)
                     {
                         foreach (var item in ProcessHoursEnterDList)
                         {
@@ -847,7 +891,7 @@ namespace Finance.Processes
                             }
 
                         }
-                    }
+                    }*/
                     
                     return ProcessHoursEnterDList;
                 }
@@ -858,6 +902,164 @@ namespace Finance.Processes
             }
         }
 
+
+        /// <summary>
+        /// 创建整个界面保存
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task CreateListAsync(ProcessHoursEnterListDto input)
+        {
+
+            foreach (var listItem in input.ListItemDtos)
+            {
+                ProcessHoursEnter entity = new ProcessHoursEnter();
+                entity.ProcessName = listItem.ProcessName;
+                entity.ProcessNumber = listItem.ProcessNumber;
+                entity.AuditFlowId = input.AuditFlowId;
+                entity.SolutionId = input.SolutionId; 
+                entity.DeviceTotalPrice = listItem.DeviceInfo.DeviceTotalCost;
+                entity.HardwareTotalPrice = listItem.DevelopCostInfo.HardwareTotalPrice;
+                entity.SoftwarePrice = listItem.DevelopCostInfo.SoftwarePrice;
+                entity.OpenDrawingSoftware = listItem.DevelopCostInfo.OpenDrawingSoftware;
+                entity.HardwareTotalPrice = listItem.DevelopCostInfo.HardwareDeviceTotalPrice;
+                entity.FixtureName = listItem.ToolInfo.FixtureName;
+                entity.FrockPrice = listItem.ToolInfo.FrockPrice;
+                entity.FixtureNumber = listItem.ToolInfo.FixtureNumber;
+                entity.FrockPrice = listItem.ToolInfo.FrockPrice;
+                entity.FrockName = listItem.ToolInfo.FrockName;
+                entity.FrockNumber = listItem.ToolInfo.FrockNumber;
+                entity.TestLineName = listItem.ToolInfo.TestLineName;
+                entity.TestLineNumber = listItem.ToolInfo.TestLineNumber;
+                entity.TestLinePrice = listItem.ToolInfo.TestLinePrice;
+                entity.DevelopTotalPrice = listItem.ToolInfo.DevelopTotalPrice;
+                entity.CreationTime = DateTime.Now;
+                if (AbpSession.UserId != null)
+                {
+                    entity.CreatorUserId = AbpSession.UserId.Value;
+                    entity.LastModificationTime = DateTime.Now;
+                    entity.LastModifierUserId = AbpSession.UserId.Value;
+                }
+                entity.LastModificationTime = DateTime.Now;
+                entity = await _processHoursEnterRepository.InsertAsync(entity);
+                var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
+                //设备信息
+                if (null != listItem.DeviceInfo.DeviceArr)
+                {
+                    foreach (var DeviceInfoItem in listItem.DeviceInfo.DeviceArr)
+                    {
+                        ProcessHoursEnterDevice processHoursEnterDevice = new ProcessHoursEnterDevice();
+                        processHoursEnterDevice.ProcessHoursEnterId = foundationDevice;
+                        processHoursEnterDevice.DeviceNumber = DeviceInfoItem.DeviceNumber;
+                        processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
+                        processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
+                        processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
+                        _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                    }
+                }
+                //追溯部分(硬件及软件开发费用)
+                if (null != listItem.DevelopCostInfo.HardwareInfo)
+                {
+                    foreach (var hardwareInfoItem in listItem.DevelopCostInfo.HardwareInfo)
+                    {
+                        ProcessHoursEnterFrock processHoursEnterFrock = new ProcessHoursEnterFrock();
+                        processHoursEnterFrock.ProcessHoursEnterId = foundationDevice;
+                        processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
+                        processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
+                        processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
+                        _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
+                    }
+                }
+
+                //工装治具部分
+                if (null != listItem.ToolInfo.ZhiJuArr)
+                {
+                    foreach (var zoolInfo in listItem.ToolInfo.ZhiJuArr)
+                    {
+                        ProcessHoursEnterFixture processHoursEnterFixture = new ProcessHoursEnterFixture();
+                        processHoursEnterFixture.ProcessHoursEnterId = foundationDevice;
+                        processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
+                        processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
+                        processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
+                        _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
+                    }
+                }
+
+                //年
+                if (null != listItem.SopInfo)
+                {
+                    foreach (var year in listItem.SopInfo)
+                    {
+                        foreach (var yearItem in year.Issues)
+                        {
+                            ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
+                            processHoursEnteritem.Year = year.Year;
+                            processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
+                            processHoursEnteritem.LaborHour = yearItem.LaborHour;
+                            processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
+                            processHoursEnteritem.MachineHour = yearItem.MachineHour;
+                            _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                        }
+                    }
+                }
+
+               }
+            //uph
+            if (null != input.ProcessHoursEnterUphList)
+            {
+                foreach (var item in input.ProcessHoursEnterUphList)
+                {
+                    ProcessHoursEnterUph processHoursEnterUph = new ProcessHoursEnterUph();
+                    processHoursEnterUph.Year = item.Year;
+                    processHoursEnterUph.Uph = "cobuph";
+                    processHoursEnterUph.Value = item.Cobuph;
+                    processHoursEnterUph.SolutionId = input.SolutionId;
+                    processHoursEnterUph.AuditFlowId = input.AuditFlowId;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+                    ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
+                    processHoursEnterUph1.Year = item.Year;
+                    processHoursEnterUph1.Uph = "zcuph";
+                    processHoursEnterUph1.Value = item.Zcuph;
+                    processHoursEnterUph1.SolutionId = input.SolutionId;
+                    processHoursEnterUph1.AuditFlowId = input.AuditFlowId;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph1);
+                    ProcessHoursEnterUph processHoursEnterUph2 = new ProcessHoursEnterUph();
+                    processHoursEnterUph2.Year = item.Year;
+                    processHoursEnterUph2.Uph = "smtuph";
+                    processHoursEnterUph2.SolutionId = input.SolutionId;
+                    processHoursEnterUph2.AuditFlowId = input.AuditFlowId;
+                    processHoursEnterUph2.Value = item.Smtuph;
+                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph2);
+
+                }
+            }
+
+            //线体数量、共线分摊率
+            if (null != input.ProcessHoursEnterLineList)
+            {
+                foreach (var item in input.ProcessHoursEnterLineList)
+                {
+                    ProcessHoursEnterLine processHoursEnterLine = new ProcessHoursEnterLine();
+                    processHoursEnterLine.Year = item.Year;
+                    processHoursEnterLine.Uph = "gxftl";
+                    processHoursEnterLine.Value = item.Gxftl;
+                    processHoursEnterLine.SolutionId = input.SolutionId;
+                    processHoursEnterLine.AuditFlowId = input.AuditFlowId;
+                    await _processHoursEnterLineRepository.InsertAsync(processHoursEnterLine);
+                    ProcessHoursEnterLine processHoursEnterUph1 = new ProcessHoursEnterLine();
+                    processHoursEnterUph1.Year = item.Year;
+                    processHoursEnterUph1.Uph = "xtsl";
+                    processHoursEnterUph1.Value = item.Xtsl;
+                    processHoursEnterUph1.SolutionId = input.SolutionId;
+                    processHoursEnterUph1.AuditFlowId = input.AuditFlowId;
+                    await _processHoursEnterLineRepository.InsertAsync(processHoursEnterUph1);
+
+                }
+            }
+
+
+
+        }
 
 
         /// <summary>
