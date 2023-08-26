@@ -7,6 +7,7 @@ using Abp.Json;
 using Abp.Linq.Extensions;
 using Finance.Audit;
 using Finance.Audit.Dto;
+using Finance.DemandApplyAudit;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
 using Finance.EntityFrameworkCore.Seed.Host;
@@ -19,6 +20,7 @@ using Finance.NerPricing;
 using Finance.Nre;
 using Finance.PriceEval.Dto;
 using Finance.PriceEval.Dto.AllManufacturingCost;
+using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductionControl;
 using Finance.ProjectManagement;
@@ -95,9 +97,9 @@ namespace Finance.PriceEval
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, 
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository)
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -508,7 +510,7 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<ListResultDto<ProportionOfProductCostListDto>> GetPricingPanelProfit(GetPricingPanelProfitInput input)
         {
-            var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, ProductId = input.ProductId, Year = input.Year });
+            var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = 0, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
             var bomCost = data.Material.Sum(p => p.TotalMoneyCyn);

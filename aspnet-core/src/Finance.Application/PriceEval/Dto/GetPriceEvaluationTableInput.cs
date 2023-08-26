@@ -24,10 +24,9 @@ namespace Finance.PriceEval.Dto
         public virtual long GradientId { get; set; }
 
         /// <summary>
-        /// 模组数量Id（即零件Id）
+        /// 方案表ID
         /// </summary>
-        [Required]
-        public virtual long ProductId { get; set; }
+        public long SolutionId { get; set; }
 
         /// <summary>
         /// 投入量
