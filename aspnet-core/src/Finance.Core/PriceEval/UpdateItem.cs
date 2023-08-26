@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Abp.Domain.Entities.Auditing;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,12 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.PriceEval.Dto
+namespace Finance.PriceEval
 {
     /// <summary>
-    /// 获取 bom成本（含损耗）汇总表 输入参数
+    /// 修改项
     /// </summary>
-    public class GetBomCostInput
+    [Table("Pe_UpdateItem")]
+    public class UpdateItem : FullAuditedEntity<long>
     {
         /// <summary>
         /// 审批流程主表Id
@@ -32,15 +34,8 @@ namespace Finance.PriceEval.Dto
         public virtual long GradientId { get; set; }
 
         /// <summary>
-        /// 投入量 （二开项目中：恒定输入0）
-        /// </summary>
-        [Required]
-        public virtual int InputCount { get; set; }
-
-        /// <summary>
         /// 方案表ID
         /// </summary>
-        [Column("SOLUTIONID")]
         public long SolutionId { get; set; }
 
         /// <summary>
@@ -54,5 +49,16 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [Required]
         public virtual YearType UpDown { get; set; }
+
+        /// <summary>
+        /// 修改项Json
+        /// </summary>
+        public virtual string MaterialJson { get; set; }
+
+        /// <summary>
+        /// 上传佐证材料
+        /// </summary>
+        [Required]
+        public virtual long File { get; set; }
     }
 }

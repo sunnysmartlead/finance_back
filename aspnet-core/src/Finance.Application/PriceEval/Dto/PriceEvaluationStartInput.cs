@@ -203,14 +203,12 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 梯度
         /// </summary>
-        [Required]
         public virtual List<GradientInput> Gradient { set; get; }
 
 
         /// <summary>
         /// 梯度模组
         /// </summary>
-        [Required]
         public virtual List<GradientModelInput> GradientModel { set; get; }
 
 
