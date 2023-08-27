@@ -48,6 +48,10 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         private readonly LogType ExchangeRateType = LogType.ExchangeRate;
         /// <summary>
+        /// 日志类型-损耗率
+        /// </summary>
+        private readonly LogType LossRateType = LogType.LossRate;
+        /// <summary>
         /// 基础单价库实体类
         /// </summary>
         private readonly IRepository<UInitPriceForm, long> _configUInitPriceForm;
@@ -857,7 +861,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                         }
                     }
                     await _lossRateYearInfo.BulkInsertAsync(year);
-                }
+                    await CreateLog($"导入了损害率表单 {prop.Count} 条", LossRateType);
+                }                 
             }
             catch (Exception e)
             {
