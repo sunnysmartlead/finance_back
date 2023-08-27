@@ -5,6 +5,7 @@ using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Json;
 using Abp.Linq.Extensions;
+using AutoMapper;
 using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.DemandApplyAudit;
@@ -96,7 +97,7 @@ namespace Finance.PriceEval
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
-           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, 
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
            WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository)
@@ -481,7 +482,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task CreateUpdateItem(CreateUpdateItemInput input)
         {
-            await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input,entity);
+            }
         }
 
         /// <summary>

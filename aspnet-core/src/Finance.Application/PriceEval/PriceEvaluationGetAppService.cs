@@ -613,6 +613,19 @@ namespace Finance.PriceEval
             var data = await GetAllData(input);
 
             //取得修改项
+            var updateItem = await _updateItemRepository
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.ProductId == productId && p.GradientId == input.GradientId
+                && p.SolutionId == input.SolutionId
+                && p.Year == input.Year && p.UpDown == input.UpDown);
+            var material = ObjectMapper.Map<CreateUpdateItemInput>(updateItem);
+            var dataIds = material.Material.Select(p => p.Id);
+
+            foreach (var item in data.Where(p => dataIds.Contains(p.Id)))
+            {
+                //item = material.Material.FirstOrDefault(p => p.Id == item.Id);
+                ObjectMapper.Map(material.Material.FirstOrDefault(p => p.Id == item.Id),item);
+            }
 
 
             return data;
