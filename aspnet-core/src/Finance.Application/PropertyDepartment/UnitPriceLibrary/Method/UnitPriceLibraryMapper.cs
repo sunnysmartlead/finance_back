@@ -2,6 +2,7 @@
 using Abp.Extensions;
 using Abp.Modules;
 using AutoMapper;
+using Finance.EngineeringDepartment;
 using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.PropertyDepartment.Entering.Dto;
@@ -60,6 +61,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             configuration.CreateMap<SharedMaterialWarehouse, SharedMaterialWarehouseMode>()
                  .ForMember(u => u.ModuleThroughputs, p => p.MapFrom(o => JsonExchangeRateYearOrValueModeCanNull(o.ModuleThroughputs)));
 
+
+            configuration.CreateMap<LossRateModel, LossRateInfo>();
         }
         /// <summary>
         /// 返回枚举参数 的文字描述 的委托

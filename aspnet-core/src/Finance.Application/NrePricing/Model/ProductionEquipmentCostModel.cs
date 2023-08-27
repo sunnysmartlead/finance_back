@@ -38,6 +38,10 @@ namespace Finance.NrePricing.Model
         /// </summary>        
         public string DeviceStatus { get; set; }
         /// <summary>
+        /// 设备状态名称
+        /// </summary>        
+        public string DeviceStatusName { get; set; }
+        /// <summary>
         /// 备注
         /// </summary>
         public string Remark { get; set; }

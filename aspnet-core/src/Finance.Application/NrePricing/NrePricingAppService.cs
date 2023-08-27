@@ -1692,6 +1692,8 @@ namespace Finance.NerPricing
                         item.UnitPrice = modify.UnitPrice;
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
+                        item.DeviceStatus = modify.DeviceStatus;
+                        item.DeviceStatusName =await GetDisplayName(modify.DeviceStatus);
                     }
                 }
                 //实验费用
@@ -1735,6 +1737,7 @@ namespace Finance.NerPricing
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
+                        item.ReasonsName =await GetDisplayName(modify.ReasonsId);
                         item.PeopleCount = modify.PeopleCount;
                         item.CostSky = modify.CostSky;
                         item.SkyCount = modify.SkyCount;
@@ -1935,9 +1938,23 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),                     
                     }).ToList();
-                modify.ProductionEquipmentCost = productionEquipmentCostModels;
+                List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
+                                                                 join p in _financeDictionaryDetailRepository.GetAll()
+                                                                 on t.DeviceStatus equals p.Id into temp
+                                                                 from p in temp.DefaultIfEmpty()
+                                                                 select new ProductionEquipmentCostModel
+                                                                 {
+                                                                     Id = t.Id,
+                                                                     EquipmentName = t.EquipmentName,
+                                                                     DeviceStatus = t.DeviceStatus,
+                                                                     UnitPrice = t.UnitPrice,
+                                                                     Number = t.Number,
+                                                                     Cost = t.Cost,
+                                                                     DeviceStatusName = p != null ? p.DisplayName : ""
+                                                                 }).ToList();
+                modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
                 //实验费用
                 {
@@ -1974,7 +1991,7 @@ namespace Finance.NerPricing
                     {
                         Id = t.Id,
                         ReasonsId = t.ReasonsId,
-                        //ReasonsName = p.DisplayName,
+                        ReasonsName = p.DisplayName,
                         PeopleCount = t.PeopleCount,
                         CostSky = t.CostSky,
                         SkyCount = t.SkyCount,
@@ -2041,6 +2058,16 @@ namespace Finance.NerPricing
             {
                 throw new UserFriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 根据ID从字典表里取值
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        internal async Task<string> GetDisplayName(string Id)
+        {
+           FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id.Equals(Id));
+           return prop?.DisplayName;
         }
         /// <summary>
         /// 手板件费用修改项添加
