@@ -191,7 +191,8 @@ namespace Finance.Audit
                 {
                     Id = o.Id,
                     ProcessName = o.NodeName,
-                    Right = RIGHTTYPE.Edit
+                    Right = RIGHTTYPE.Edit,
+                     ProcessIdentifier= AuditFlowConsts.AF_RequirementInput
                 }).ToList()
             }).ToList();
 
@@ -202,7 +203,7 @@ namespace Finance.Audit
             //foreach (var flowRight in flowRightInfos)
             //{
             //    AuditFlowRightInfoDto auditFlowRightInfoDto = this.GetIndexOfRightInfoList(flowRight.AuditFlowId, auditFlowRightInfoDtoList);
-            //    if(auditFlowRightInfoDto == null)
+            //    if (auditFlowRightInfoDto == null)
             //    {
             //        auditFlowRightInfoDto = new();
             //        auditFlowRightInfoDto.AuditFlowId = flowRight.AuditFlowId;
@@ -218,12 +219,12 @@ namespace Finance.Audit
             //        auditFlowRightInfoDto.AuditFlowRightDetailList = new();
             //        auditFlowRightInfoDtoList.Add(auditFlowRightInfoDto);
             //    }
-            //    if(flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
+            //    if (flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
             //    {
             //        var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowRight.AuditFlowId);
             //        if (flowList.Count > 0)
             //        {
-            //            if(!(flowList.FirstOrDefault()).IsValid)
+            //            if (!(flowList.FirstOrDefault()).IsValid)
             //            {
             //                continue;
             //            }
