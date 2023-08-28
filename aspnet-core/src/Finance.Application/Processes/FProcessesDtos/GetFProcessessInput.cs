@@ -8,5 +8,6 @@ namespace Finance.Processes
     public class GetFProcessessInput: PagedInputDto
     {
         public string ProcessName { get; set; }
+        public string ProcessNumber { get; set; }
     }
 }
