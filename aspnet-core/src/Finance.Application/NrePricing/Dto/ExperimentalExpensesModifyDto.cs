@@ -1,4 +1,5 @@
 ﻿using Castle.MicroKernel.SubSystems.Conversion;
+using Finance.Ext;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.NrePricing.Dto
 {
@@ -21,10 +23,12 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 流程号Id
         /// </summary> 
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// 方案的id
         /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 修改项的id

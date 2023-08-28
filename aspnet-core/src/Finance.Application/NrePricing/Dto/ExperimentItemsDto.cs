@@ -19,6 +19,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 流程Id
         /// </summary>
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// 带零件id 的 品保录入模型
@@ -57,6 +58,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 方案的id
         /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
         public long SolutionId { get; set; }
         /// <summary>
         ///品保录入  试验项目表 模型
