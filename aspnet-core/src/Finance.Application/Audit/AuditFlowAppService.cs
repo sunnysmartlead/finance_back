@@ -13,6 +13,7 @@ using Finance.PriceEval;
 using Finance.ProjectManagement;
 using Finance.TradeCompliance;
 using Finance.TradeCompliance.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -29,7 +30,7 @@ namespace Finance.Audit
     /// 审批流程应用方法服务.
     /// </summary>
     public class AuditFlowAppService : ApplicationService
-    {        
+    {
         private readonly IRepository<AuditFlow, long> _auditFlowRepository;
         private readonly IRepository<AuditFinishedProcess, long> _auditFinishedProcessRepository;
         private readonly IRepository<AuditCurrentProcess, long> _auditCurrentProcessRepository;
@@ -47,7 +48,12 @@ namespace Finance.Audit
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
         private readonly TradeComplianceAppService _tradeComplianceAppService;
-        private long  _projectManager = 0;
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
+
+        private long _projectManager = 0;
         private List<string> _backProcessIdentifiers = null;
 
         /// <summary>
@@ -69,7 +75,7 @@ namespace Finance.Audit
         /// <param name="tradeComplianceAppService"></param>
         /// <param name="financeDictionaryDetailRepository"></param>
         /// <param name="noticeEmailInfoRepository"></param>
-        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<FlowJumpInfo, long> flowJumpInfoRepository, IRepository<FlowClearInfo, long> flowClearInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, TradeComplianceAppService tradeComplianceAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<AuditFlowDelete, long> auditFlowDeleteRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository)
+        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<FlowJumpInfo, long> flowJumpInfoRepository, IRepository<FlowClearInfo, long> flowClearInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, TradeComplianceAppService tradeComplianceAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<AuditFlowDelete, long> auditFlowDeleteRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFinishedProcessRepository = auditFinishedProcessRepository;
@@ -88,6 +94,7 @@ namespace Finance.Audit
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _auditFlowDeleteRepository = auditFlowDeleteRepository;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -98,13 +105,13 @@ namespace Finance.Audit
         {
             AuditFlowIdRetDto auditFlowIdRetDto = new();
             var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == userId);
-            if(flowRightInfos.Count > 0)
+            if (flowRightInfos.Count > 0)
             {
                 auditFlowIdRetDto.AuditFlowIdList = new();
 
                 foreach (var flowRight in flowRightInfos)
                 {
-                    if(!auditFlowIdRetDto.AuditFlowIdList.Contains(flowRight.AuditFlowId))
+                    if (!auditFlowIdRetDto.AuditFlowIdList.Contains(flowRight.AuditFlowId))
                     {
                         auditFlowIdRetDto.AuditFlowIdList.Add(flowRight.AuditFlowId);
                     }
@@ -131,7 +138,7 @@ namespace Finance.Audit
                 auditFlowRightDto.AuditFlowRightList = new();
                 foreach (var flowRight in flowRightInfos)
                 {
-                    if(flowRight.AuditFlowId == processRightInputDto.AuditFlowId)
+                    if (flowRight.AuditFlowId == processRightInputDto.AuditFlowId)
                     {
                         auditFlowRightDto.AuditFlowRightList.Add(flowRight);
                     }
@@ -170,63 +177,79 @@ namespace Finance.Audit
         {
             List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
             //登录的实例
-            if(AbpSession.UserId is null)
-            { 
+            if (AbpSession.UserId is null)
+            {
                 throw new FriendlyException(401, "请先登录");
             }
-            var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == AbpSession.UserId.Value);
-            foreach (var flowRight in flowRightInfos)
-            {
-                AuditFlowRightInfoDto auditFlowRightInfoDto = this.GetIndexOfRightInfoList(flowRight.AuditFlowId, auditFlowRightInfoDtoList);
-                if(auditFlowRightInfoDto == null)
-                {
-                    auditFlowRightInfoDto = new();
-                    auditFlowRightInfoDto.AuditFlowId = flowRight.AuditFlowId;
-                    var priceEvaluations = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == flowRight.AuditFlowId);
-                    if (priceEvaluations.Count > 0)
-                    {
-                        auditFlowRightInfoDto.AuditFlowTitle = priceEvaluations.FirstOrDefault().Title;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                    auditFlowRightInfoDto.AuditFlowRightDetailList = new();
-                    auditFlowRightInfoDtoList.Add(auditFlowRightInfoDto);
-                }
-                if(flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
-                {
-                    var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowRight.AuditFlowId);
-                    if (flowList.Count > 0)
-                    {
-                        if(!(flowList.FirstOrDefault()).IsValid)
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                AuditFlowRightDetailDto auditFlowRightDetailDto = new()
-                {
-                    ProcessIdentifier = flowRight.ProcessIdentifier,
-                    ProcessName = this.AuditFlowName(flowRight.ProcessIdentifier),
-                    Right = flowRight.RightType,
-                    IsRetype = flowRight.IsRetype,
-                    JumpDescription = flowRight.Remark
-                };
-                auditFlowRightInfoDto.AuditFlowRightDetailList.Add(auditFlowRightDetailDto);
-            }
 
-            return auditFlowRightInfoDtoList;
+            var data = await _workflowInstanceAppService.GetTaskByUserId(0);
+            var dto = data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            {
+                AuditFlowId = p.Key.WorkFlowInstanceId,
+                AuditFlowTitle = p.Key.Title,
+                AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                {
+                    Id = o.Id,
+                    ProcessName = o.NodeName,
+                }).ToList()
+            }).ToList();
+
+            return dto;
+
+
+            //var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == AbpSession.UserId.Value);
+            //foreach (var flowRight in flowRightInfos)
+            //{
+            //    AuditFlowRightInfoDto auditFlowRightInfoDto = this.GetIndexOfRightInfoList(flowRight.AuditFlowId, auditFlowRightInfoDtoList);
+            //    if(auditFlowRightInfoDto == null)
+            //    {
+            //        auditFlowRightInfoDto = new();
+            //        auditFlowRightInfoDto.AuditFlowId = flowRight.AuditFlowId;
+            //        var priceEvaluations = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == flowRight.AuditFlowId);
+            //        if (priceEvaluations.Count > 0)
+            //        {
+            //            auditFlowRightInfoDto.AuditFlowTitle = priceEvaluations.FirstOrDefault().Title;
+            //        }
+            //        else
+            //        {
+            //            continue;
+            //        }
+            //        auditFlowRightInfoDto.AuditFlowRightDetailList = new();
+            //        auditFlowRightInfoDtoList.Add(auditFlowRightInfoDto);
+            //    }
+            //    if(flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
+            //    {
+            //        var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowRight.AuditFlowId);
+            //        if (flowList.Count > 0)
+            //        {
+            //            if(!(flowList.FirstOrDefault()).IsValid)
+            //            {
+            //                continue;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            continue;
+            //        }
+            //    }
+            //    AuditFlowRightDetailDto auditFlowRightDetailDto = new()
+            //    {
+            //        ProcessIdentifier = flowRight.ProcessIdentifier,
+            //        ProcessName = this.AuditFlowName(flowRight.ProcessIdentifier),
+            //        Right = flowRight.RightType,
+            //        IsRetype = flowRight.IsRetype,
+            //        JumpDescription = flowRight.Remark
+            //    };
+            //    auditFlowRightInfoDto.AuditFlowRightDetailList.Add(auditFlowRightDetailDto);
+            //}
+
+            //return auditFlowRightInfoDtoList;
         }
 
         private string AuditFlowName(string ProcessIdentifier)
         {
             var flowProcessList = _flowProcessRepository.GetAllList(p => p.ProcessIdentifier == ProcessIdentifier);
-            if(flowProcessList.Count > 0)
+            if (flowProcessList.Count > 0)
             {
                 return flowProcessList[0].ProcessName;
             }
@@ -237,7 +260,7 @@ namespace Finance.Audit
         {
             foreach (var flowRightInfoDto in list)
             {
-                if(flowRightInfoDto.AuditFlowId == id)
+                if (flowRightInfoDto.AuditFlowId == id)
                 {
                     return flowRightInfoDto;
                 }
@@ -313,7 +336,7 @@ namespace Finance.Audit
             }
             input.UserId = AbpSession.UserId.Value;
 
-            if(input.ProcessIdentifier != AuditFlowConsts.AF_RequirementInput)
+            if (input.ProcessIdentifier != AuditFlowConsts.AF_RequirementInput)
             {
                 var auditFlowRight = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProcessIdentifier == input.ProcessIdentifier && p.UserId == input.UserId && p.RightType == RIGHTTYPE.Edit);
                 if (auditFlowRight.Count == 0)
@@ -345,14 +368,14 @@ namespace Finance.Audit
                         finishedFormMaxId = allFinishedProcesses.Max(p => p.Id);
                     }
 
-interfaceInput:
+                interfaceInput:
                     var flowDetailInfo = ObjectMapper.Map<AuditFlowDetail>(input);
                     var flowDetailRight = ObjectMapper.Map<AuditFlowRight>(input);
                     //获取当前核价流程表的已完成流程,并判断当前流程是否已在完成流程中
                     var finishedProcesses = await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == flowInfo.Id);
                     foreach (var finishedProcess in finishedProcesses)
                     {
-                        if(finishedProcess.FlowProcessIdentifier == input.ProcessIdentifier)
+                        if (finishedProcess.FlowProcessIdentifier == input.ProcessIdentifier)
                         {
                             isExist = true;
                             break;
@@ -360,7 +383,7 @@ interfaceInput:
                     }
 
                     if (!isExist && input.Opinion != OPINIONTYPE.Reject)
-                    { 
+                    {
                         //新的已完成流程
                         AuditFinishedProcess auditFinishedProcess = new()
                         {
@@ -376,7 +399,7 @@ interfaceInput:
                         {
                             //资源单价录入根据角色判断全部变成查看权限
                             string roleName;
-                            if(AuditFlowConsts.AF_ElectronicPriceInput == input.ProcessIdentifier)
+                            if (AuditFlowConsts.AF_ElectronicPriceInput == input.ProcessIdentifier)
                             {
                                 roleName = Host.ElectronicsPriceInputter;
                             }
@@ -443,8 +466,8 @@ interfaceInput:
 
                     foreach (var processNext in nextJumpInfos)
                     {
-returnloop:
-                        if(processNext.Condition == input.Opinion)
+                    returnloop:
+                        if (processNext.Condition == input.Opinion)
                         {
                             if (input.Opinion == OPINIONTYPE.Reject)
                             {
@@ -476,11 +499,11 @@ returnloop:
                             {
                                 //获取当前流程是跳转表中下一个流程的List
                                 var processPrevList = await _flowJumpInfoRepository.GetAllListAsync(p => p.NextProcessIdentifier == processNext.NextProcessIdentifier);//获取下一个流程在跳转表中所有上一个流程的List
-                                                                                                                                                                        //检查所有上一个流程都已经在完成流程里了
+                                                                                                                                                                       //检查所有上一个流程都已经在完成流程里了
                                 bool isAllFinished = true;
                                 foreach (var processPrev in processPrevList)
                                 {
-                                    if(processPrev.Condition == OPINIONTYPE.Reject)
+                                    if (processPrev.Condition == OPINIONTYPE.Reject)
                                     {
                                         continue;
                                     }
@@ -512,7 +535,7 @@ returnloop:
                                     };
                                     if (isAllFinished)
                                     {
-                                        if(auditCurrentProcess.FlowProcessIdentifier == AuditFlowConsts.AF_TradeApproval)
+                                        if (auditCurrentProcess.FlowProcessIdentifier == AuditFlowConsts.AF_TradeApproval)
                                         {
                                             bool isTradeCompliance = true;
                                             //是否贸易合规判断
@@ -595,7 +618,7 @@ returnloop:
                     //添加新的当前流程
                     AuditCurrentProcess auditCurrentProcess;
                     currentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == flowDetail.AuditFlowId && p.FlowProcessIdentifier == flowDetail.ReceiveProcessIdentifier);
-                    
+
                     if (currentList.Count > 0)
                     {
                         auditCurrentProcess = currentList.FirstOrDefault();
@@ -625,8 +648,8 @@ returnloop:
                 {
                     //移除已完成流程
                     List<AuditFinishedProcess> auditFinishedProcesslist = (from a in await _flowClearInfoRepository.GetAllListAsync(p => p.CurrentProcessIdentifier == flowDetail.ReceiveProcessIdentifier)
-                                                       join b in await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == flowDetail.AuditFlowId) on a.ClearProcessIdentifier equals b.FlowProcessIdentifier
-                                                       select b).ToList();
+                                                                           join b in await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == flowDetail.AuditFlowId) on a.ClearProcessIdentifier equals b.FlowProcessIdentifier
+                                                                           select b).ToList();
                     foreach (AuditFinishedProcess auditFinishedProcess in auditFinishedProcesslist)
                     {
                         await _auditFinishedProcessRepository.HardDeleteAsync(auditFinishedProcess);
@@ -658,11 +681,11 @@ returnloop:
                     }
                     //移除在权限表中的已有流程
                     List<AuditFlowRight> auditFlowRightlist = (from a in await _flowClearInfoRepository.GetAllListAsync(p => p.CurrentProcessIdentifier == flowDetail.ReceiveProcessIdentifier)
-                                                       join b in await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == flowDetail.AuditFlowId) on a.ClearProcessIdentifier equals b.ProcessIdentifier
-                                                       select b).ToList();
+                                                               join b in await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == flowDetail.AuditFlowId) on a.ClearProcessIdentifier equals b.ProcessIdentifier
+                                                               select b).ToList();
                     foreach (AuditFlowRight auditFlowRight in auditFlowRightlist)
                     {
-                        if(auditFlowRight.ProcessIdentifier == flowDetail.ReceiveProcessIdentifier)
+                        if (auditFlowRight.ProcessIdentifier == flowDetail.ReceiveProcessIdentifier)
                         {
 
                             List<Role> roles = (from a in await _userRoleRepository.GetAllListAsync(p => p.UserId == auditFlowRight.UserId)
@@ -690,9 +713,9 @@ returnloop:
                                 || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_ManHourImport || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_LogisticsCostInput
                                 || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_NreInputEmc || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_NreInputMould
                                 || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_NreInputTest || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_NreInputGage
-                                ||auditFlowRight.ProcessIdentifier== AuditFlowConsts.AF_StructBomPriceAudit || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_ElecBomPriceAudit)
+                                || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_StructBomPriceAudit || auditFlowRight.ProcessIdentifier == AuditFlowConsts.AF_ElecBomPriceAudit)
                             {
-                                if (roles.Count > 0  && roleNames.Contains(StaticRoleNames.Host.ProjectManager))
+                                if (roles.Count > 0 && roleNames.Contains(StaticRoleNames.Host.ProjectManager))
                                 {
                                     await _auditFlowRightRepository.HardDeleteAsync(auditFlowRight);
                                 }
@@ -805,7 +828,7 @@ returnloop:
                 {
                     AuditFlowRight readAuditFlowRight;
                     long userId = _projectManager == 0 ? (await _priceEvaluationRepository.SingleAsync(p => p.AuditFlowId == flowRight.AuditFlowId)).ProjectManager : _projectManager;
-                    if(managerReadList == null)
+                    if (managerReadList == null)
                     {
                         managerReadList = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == flowRight.AuditFlowId && p.ProcessIdentifier == flowRight.ProcessIdentifier && p.UserId == userId);
                         if (managerReadList.Count > 0)
@@ -881,7 +904,7 @@ returnloop:
                     auditFlowRightBom.IsRetype = false;
                     await _auditFlowRightRepository.InsertAsync(auditFlowRightBom);
                 }
-                
+
             }
         }
         /// <summary>
@@ -890,7 +913,7 @@ returnloop:
         /// <param name="flowRight"></param>
         /// <returns></returns>
         public async Task InsertAssignJurisdiction(AuditFlowRight flowRight, string host)
-        {         
+        {
             var financeAdminList = await this.GetTheUserByRole(Host.ElectronicsPriceAuditor);
 
             //d查阅者权限
@@ -955,7 +978,7 @@ returnloop:
             ReturnDto returnDto = new();
             try
             {
-                if(isAllFinished)
+                if (isAllFinished)
                 {
                     //接收流程要设置可编辑或者查看
                     AuditFlowRight recvAuditFlowRight;
@@ -1176,7 +1199,7 @@ returnloop:
                     else if (processInfo.FlowProcessIdentifier == AuditFlowConsts.AF_ProjectPriceAudit)
                     {
                         var projectAuditor = (await _userInputInfoRepository.SingleAsync(p => p.AuditFlowId == processInfo.AuditFlowId)).ProjectAuditorId;
-                        if(projectAuditor == 0)
+                        if (projectAuditor == 0)
                         {//如果项目审核员没有指定，则选择角色指定人员，兼容旧版本流程
                             flowDetail.ReceiverId = (await this.GetTheUserByRole(Host.ProjectPriceAuditor)).FirstOrDefault().Id;
                         }
@@ -1184,7 +1207,7 @@ returnloop:
                         {
                             flowDetail.ReceiverId = projectAuditor;
                         }
-                        
+
                         returnDto = await this.InsertDetailInfo(flowDetail);
                         returnDto = await this.InsertRightInfoAfterCurrent(flowDetail, isAllFinished);
                     }
@@ -1309,15 +1332,15 @@ returnloop:
         /// <returns></returns>
         public async virtual Task<List<AuditFlowDelete>> GetAuditFlowDeleteList(long? auditFlowId)
         {
-            if(auditFlowId == null)
+            if (auditFlowId == null)
             {
                 var auditFlowDelete = await _auditFlowDeleteRepository.GetAllListAsync();
                 return auditFlowDelete;
             }
             else
             {
-                var auditFlowDelete = await _auditFlowDeleteRepository.GetAllListAsync(p=>p.AuditFlowId == auditFlowId);
-                if(auditFlowDelete.Count > 0)
+                var auditFlowDelete = await _auditFlowDeleteRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                if (auditFlowDelete.Count > 0)
                 {
                     return auditFlowDelete;
                 }
@@ -1343,19 +1366,19 @@ returnloop:
             if (priceEvaluation != null)
             {
                 auditFlowDelete.AuditFlowName = priceEvaluation.Title;
-                User user = await _userRepository.FirstOrDefaultAsync(p=>p.Name.Equals(priceEvaluation.Drafter));
-                if(user != null)
+                User user = await _userRepository.FirstOrDefaultAsync(p => p.Name.Equals(priceEvaluation.Drafter));
+                if (user != null)
                 {
                     auditFlowDelete.AuditFlowUserId = user.Id;
                 }
-                if(AbpSession.UserId != null)
+                if (AbpSession.UserId != null)
                 {
                     auditFlowDelete.AuditFlowDeleterId = (long)AbpSession.UserId;
                 }
             }
 
-            var auditFlowList = await _auditFlowRepository.GetAllListAsync(p=>p.Id == auditFlowDeleteDto.AuditFlowId);
-            if(auditFlowList.Count > 0)
+            var auditFlowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == auditFlowDeleteDto.AuditFlowId);
+            if (auditFlowList.Count > 0)
             {
                 auditFlowDelete.AuditFlowVersion = auditFlowList.FirstOrDefault().QuoteVersion;
                 await _auditFlowRepository.HardDeleteAsync(auditFlowList.FirstOrDefault());
@@ -1364,9 +1387,9 @@ returnloop:
             {
                 throw new FriendlyException("流程已删除！");
             }
-            
+
             var auditFlowCurrentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            foreach(var auditFlowCurrent in auditFlowCurrentList)
+            foreach (var auditFlowCurrent in auditFlowCurrentList)
             {
                 await _auditCurrentProcessRepository.HardDeleteAsync(auditFlowCurrent);
             }
@@ -1416,7 +1439,7 @@ returnloop:
         /// 发送邮件接口
         /// </summary>
         /// <returns></returns>
-        public async virtual Task SendEmailToUserTest(long flowId, string processIdentifier, long userId )
+        public async virtual Task SendEmailToUserTest(long flowId, string processIdentifier, long userId)
         {
             string flowTitle = null;
 
@@ -1450,16 +1473,17 @@ returnloop:
                 return;
             }
             string quoteType = priceEvaluations.FirstOrDefault().QuotationType;
-            string quoteTypeName = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == quoteType).DisplayName; 
-            
+            string quoteTypeName = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == quoteType).DisplayName;
+
             var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
             SendEmail email = new SendEmail();
             string loginIp = email.GetLoginAddr();
             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8080/login";
             string emailBody = "核价报价提醒：您有新的工作流（" + flowNodeName + "，项目经理：" + usrInfo.Name + "，报价形式：" + quoteTypeName + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
 #pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-            Task.Run(async () => {
-                await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), flowTitle, emailBody, emailAddr, emailInfoList.Count == 0? null: emailInfoList.FirstOrDefault());
+            Task.Run(async () =>
+            {
+                await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), flowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
             });
 #pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
         }
@@ -1470,10 +1494,10 @@ returnloop:
         /// <returns></returns>
         public async virtual Task<EmailDto> GetEmailInfo()
         {
-            var emailInfoList = await _noticeEmailInfoRepository.FirstOrDefaultAsync(p=>!p.IsDeleted);
-            
-            return ObjectMapper.Map<EmailDto>(emailInfoList); 
-        
+            var emailInfoList = await _noticeEmailInfoRepository.FirstOrDefaultAsync(p => !p.IsDeleted);
+
+            return ObjectMapper.Map<EmailDto>(emailInfoList);
+
         }
 
         /// <summary>
@@ -1483,9 +1507,9 @@ returnloop:
         /// <returns></returns>
         public async virtual Task ChangeEmailInfo(EmailDto emailDto)
         {
-            var emailInfoList = await _noticeEmailInfoRepository.FirstOrDefaultAsync(p=>p.Id.Equals(emailDto.Id));
+            var emailInfoList = await _noticeEmailInfoRepository.FirstOrDefaultAsync(p => p.Id.Equals(emailDto.Id));
             if (emailInfoList is not null)
-            {              
+            {
                 emailInfoList.EmailPassword = emailDto.EmailPassword;
                 emailInfoList.MaintainerEmail = emailDto.MaintainerEmail;
                 await _noticeEmailInfoRepository.UpdateAsync(emailInfoList);
