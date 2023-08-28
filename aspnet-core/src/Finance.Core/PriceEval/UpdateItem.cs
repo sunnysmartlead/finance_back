@@ -1,16 +1,19 @@
-﻿using System;
+﻿using Abp.Domain.Entities.Auditing;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.PriceEval.Dto
+namespace Finance.PriceEval
 {
     /// <summary>
-    /// 获取项目核价表的接口参数输入
+    /// 修改项
     /// </summary>
-    public class GetPriceEvaluationTableInput
+    [Table("Pe_UpdateItem")]
+    public class UpdateItem : FullAuditedEntity<long>
     {
         /// <summary>
         /// 审批流程主表Id
@@ -19,20 +22,21 @@ namespace Finance.PriceEval.Dto
         public virtual long AuditFlowId { get; set; }
 
         /// <summary>
+        /// 模组数量Id（即零件Id）
+        /// </summary>
+        [Required]
+        public virtual long ProductId { get; set; }
+
+        /// <summary>
         /// 梯度Id
         /// </summary>
+        [Required]
         public virtual long GradientId { get; set; }
 
         /// <summary>
         /// 方案表ID
         /// </summary>
         public long SolutionId { get; set; }
-
-        /// <summary>
-        /// 投入量
-        /// </summary>
-        [Required]
-        public virtual int InputCount { get; set; }
 
         /// <summary>
         /// 年份
@@ -43,6 +47,18 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 年份类型
         /// </summary>
+        [Required]
         public virtual YearType UpDown { get; set; }
+
+        /// <summary>
+        /// 修改项Json
+        /// </summary>
+        public virtual string MaterialJson { get; set; }
+
+        /// <summary>
+        /// 上传佐证材料
+        /// </summary>
+        [Required]
+        public virtual long File { get; set; }
     }
 }

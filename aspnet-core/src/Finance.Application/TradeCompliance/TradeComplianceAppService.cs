@@ -107,11 +107,11 @@ namespace Finance.TradeCompliance
                 GetPriceEvaluationTableInput priceTableByPart = new()
                 {
                     AuditFlowId = input.AuditFlowId,
-                    ProductId = input.ProductId,
+                    //ProductId = input.ProductId,
                     InputCount = 0,
                     Year = await GetFristSopYear(input),
                 };
-                var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);
+                var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
                 tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;
 
                 var countries = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.DisplayName.Equals(tradeComplianceCheckDto.TradeComplianceCheck.Country));
