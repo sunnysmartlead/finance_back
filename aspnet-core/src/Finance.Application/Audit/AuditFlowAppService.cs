@@ -191,6 +191,7 @@ namespace Finance.Audit
                 {
                     Id = o.Id,
                     ProcessName = o.NodeName,
+                    Right = RIGHTTYPE.Edit
                 }).ToList()
             }).ToList();
 
