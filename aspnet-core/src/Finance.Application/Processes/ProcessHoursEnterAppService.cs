@@ -943,9 +943,9 @@ namespace Finance.Processes
 
             foreach (var listItem in input.ListItemDtos)
             {
-                await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == listItem.AuditFlowId && s.SolutionId == listItem.SolutionId);
-                await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == listItem.AuditFlowId && s.SolutionId == listItem.SolutionId);
-                await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == listItem.AuditFlowId && s.SolutionId == listItem.SolutionId);
+                await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
+                await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
+                await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
                 ProcessHoursEnter entity = new ProcessHoursEnter();
                 entity.ProcessName = listItem.ProcessName;
                 entity.ProcessNumber = listItem.ProcessNumber;
