@@ -99,7 +99,7 @@ namespace Finance.Entering
             InitialElectronicDto initialElectronicDto = new();
             //从字典明细表取 零件名称和id
             initialElectronicDto.PartDtoList = solutionList;
-            initialElectronicDto.ElectronicBomList = await _resourceElectronicStructuralMethod.ElectronicBomList(solutionList, AuditFlowId);// 电子BOM单价表单           
+            initialElectronicDto.ElectronicBomList = await _resourceElectronicStructuralMethod.ElectronicBomListCount(solutionList, AuditFlowId);// 电子BOM单价表单           
             #region 电子BOM退回差异处理
             foreach (var item in solutionList)//循环所有方案
             {
@@ -342,7 +342,7 @@ namespace Finance.Entering
             #endregion
             InitialStructuralDto initialStructuralDto = new();
             initialStructuralDto.PartDtoList = partList;
-            initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomList(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
+            initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomListCount(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
             return initialStructuralDto.ConstructionBomList.Count;
         }
         /// <summary>
