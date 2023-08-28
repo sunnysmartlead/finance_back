@@ -1,4 +1,5 @@
 ﻿using Finance.Dto;
+using Finance.Ext;
 using Finance.ProductDevelopment.Dto;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.NrePricing.Dto
 {
@@ -17,9 +19,10 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 流程号Id
         /// </summary> 
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
-        /// 审核界面类型
+        /// 审核界面类型（1：“模具费审核”，2：“环境试验费审核”，3：“EMC试验费审核”）
         /// </summary>
         public NRECHECKTYPE NreCheckType { get; set; }
         /// <summary>
