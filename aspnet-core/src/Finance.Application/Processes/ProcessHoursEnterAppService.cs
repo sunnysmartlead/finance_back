@@ -263,7 +263,7 @@ namespace Finance.Processes
                 var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.Year == row.Year.ToString()).ToList();
                 if (null != CobuphList && CobuphList.Count > 0)
                 {
-                    processHoursEnterUphListDto.Cobuph = ZcuphList[0].Value;
+                    processHoursEnterUphListDto.Cobuph = CobuphList[0].Value;
                 }
                 else
                 {
@@ -307,6 +307,36 @@ namespace Finance.Processes
 
             // 数据返回
             return processHoursEnterDto;
+        }
+
+        /// <summary>
+        /// 提交
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task<String> CreateSubmitAsync(GetLogisticscostsInput input)
+        {
+            //已经录入数量
+            var count = (from a in _processHoursEnterRepository.GetAllList(p =>
+         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
+         ).Select(p => p.SolutionId).Distinct()
+                         select a).ToList();
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+            int quantity = result.Count - count.Count;
+            if (quantity > 0)
+            {
+                return "还有" + quantity + "个方案没有提交，请先提交";
+            }
+            else
+            {
+
+                //提交完成  可以在这里做审核处理
+                return "提交完成";
+
+            }
+
+
         }
         /// <summary>
         /// 获取修改
