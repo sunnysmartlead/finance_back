@@ -38,8 +38,8 @@ namespace Finance.BaseLibrary
 
     }
     /// <summary>
-    /// 日志类型
-    /// </summary>
+    /// 日志类型 1 工装  2 EMC  3环境 4 工序 5 设备 6 治具 7 硬件及软件  8 工时库  9 标准工艺库 10 毛利率 11 汇率 12 损耗率 13 质量成本比例
+    /// </summary>    
     public enum LogType
     {
         /// <summary>
@@ -95,7 +95,17 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 汇率
         /// </summary>
-        [Description("汇率")]
-        ExchangeRate=11,
+        [Description("汇率")] 
+        ExchangeRate =11,
+        /// <summary>
+        /// 损耗率
+        /// </summary>
+        [Description("损耗率")]
+        LossRate =12,
+        /// <summary>
+        /// 质量成本比例
+        /// </summary>
+        [Description("质量成本比例")]
+        QualityCostRatio = 13,
     }
 }

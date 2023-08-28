@@ -233,6 +233,11 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         public virtual int Year { get; set; }
 
+         /// <summary>
+        /// 年份类型
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
         /// <summary>
         /// 核价表标题
         /// </summary>

@@ -107,7 +107,7 @@ namespace Finance.TradeCompliance
                 GetPriceEvaluationTableInput priceTableByPart = new()
                 {
                     AuditFlowId = input.AuditFlowId,
-                    ProductId = input.ProductId,
+                    //ProductId = input.ProductId,
                     InputCount = 0,
                     Year = await GetFristSopYear(input),
                 };

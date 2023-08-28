@@ -624,7 +624,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         [AbpAuthorize]
-        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle(long auditFlowId, long solutionId)
+        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
@@ -1359,7 +1359,7 @@ namespace Finance.NerPricing
         /// </summary>      
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm(long auditFlowId, long solutionId)
+        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1401,7 +1401,7 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="auditFlowId">流程表Id</param>
         /// <returns></returns>
-        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment(long auditFlowId)
+        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
         {
 
             List<ReturnSalesDepartmentDto> initialSalesDepartmentDtos = new();
@@ -1573,11 +1573,11 @@ namespace Finance.NerPricing
         /// <summary>
         /// 获取 第一个页面最初的年份
         /// </summary>
-        /// <param name="processId"></param>
+        /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        private async Task<int> GetYear(long processId)
+        private async Task<int> GetYear(long auditFlowId)
         {
-            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(processId));
+            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<int> yearList = modelCountYears.Select(p => p.Year).Distinct().ToList();
             int year = yearList.Min();
             return year;
@@ -1595,7 +1595,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<PricingFormDto> GetPricingFormDownload(long auditFlowId, long solutionId)
+        public async Task<PricingFormDto> GetPricingFormDownload([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1692,6 +1692,8 @@ namespace Finance.NerPricing
                         item.UnitPrice = modify.UnitPrice;
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
+                        item.DeviceStatus = modify.DeviceStatus;
+                        item.DeviceStatusName =await GetDisplayName(modify.DeviceStatus);
                     }
                 }
                 //实验费用
@@ -1735,6 +1737,7 @@ namespace Finance.NerPricing
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
+                        item.ReasonsName =await GetDisplayName(modify.ReasonsId);
                         item.PeopleCount = modify.PeopleCount;
                         item.CostSky = modify.CostSky;
                         item.SkyCount = modify.SkyCount;
@@ -1777,7 +1780,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<ModifyItemPricingFormDto> GetPricingForm(long auditFlowId, long solutionId)
+        public async Task<ModifyItemPricingFormDto> GetPricingForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1935,9 +1938,23 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),                     
                     }).ToList();
-                modify.ProductionEquipmentCost = productionEquipmentCostModels;
+                List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
+                                                                 join p in _financeDictionaryDetailRepository.GetAll()
+                                                                 on t.DeviceStatus equals p.Id into temp
+                                                                 from p in temp.DefaultIfEmpty()
+                                                                 select new ProductionEquipmentCostModel
+                                                                 {
+                                                                     Id = t.Id,
+                                                                     EquipmentName = t.EquipmentName,
+                                                                     DeviceStatus = t.DeviceStatus,
+                                                                     UnitPrice = t.UnitPrice,
+                                                                     Number = t.Number,
+                                                                     Cost = t.Cost,
+                                                                     DeviceStatusName = p != null ? p.DisplayName : ""
+                                                                 }).ToList();
+                modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
                 //实验费用
                 {
@@ -1974,7 +1991,7 @@ namespace Finance.NerPricing
                     {
                         Id = t.Id,
                         ReasonsId = t.ReasonsId,
-                        //ReasonsName = p.DisplayName,
+                        ReasonsName = p.DisplayName,
                         PeopleCount = t.PeopleCount,
                         CostSky = t.CostSky,
                         SkyCount = t.SkyCount,
@@ -2041,6 +2058,16 @@ namespace Finance.NerPricing
             {
                 throw new UserFriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 根据ID从字典表里取值
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        internal async Task<string> GetDisplayName(string Id)
+        {
+           FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id.Equals(Id));
+           return prop?.DisplayName;
         }
         /// <summary>
         /// 手板件费用修改项添加

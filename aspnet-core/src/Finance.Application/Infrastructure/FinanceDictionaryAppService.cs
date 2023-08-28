@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Abp.Linq.Extensions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
+using Abp.Collections.Extensions;
 
 namespace Finance.Infrastructure
 {
@@ -125,8 +127,9 @@ namespace Finance.Infrastructure
                     .Where(p => p.FinanceDictionaryId == entity.Id);
 
                 //定义列表查询的排序（先根据Order倒序，再根据CreationTime倒序）
-                var pagedSorted = filter.OrderByDescending(p => p.Order).OrderByDescending(p => p.CreationTime);
-
+                //var pagedSorted = filter.OrderByDescending(p => p.Order).OrderByDescending(p => p.CreationTime);
+                var isOrder = filter.Any(p => p.Order != 0);
+                var pagedSorted = isOrder ? filter.OrderByDescending(p => p.Order) : filter.OrderByDescending(p => p.CreationTime);
 
                 //获取查询结果
                 var result = await pagedSorted.ToListAsync();

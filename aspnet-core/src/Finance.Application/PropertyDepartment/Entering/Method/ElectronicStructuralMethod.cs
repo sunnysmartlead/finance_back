@@ -23,7 +23,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.Xml;
 using System.Threading.Tasks;
 using static Finance.Authorization.Roles.StaticRoleNames;
 
@@ -34,6 +33,10 @@ namespace Finance.PropertyDepartment.Entering.Method
     /// </summary>
     public class ElectronicStructuralMethod : AsyncCrudAppService<User, UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>, ISingletonDependency
     {
+        /// <summary>
+        /// 是否涉及选项
+        /// </summary>
+        private static string IsInvolveItem="是";
         /// <summary>
         /// 财务字典表明细
         /// </summary>
@@ -275,7 +278,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             Quantity = a.Quantity,
                             UpDown = a.UpDown
                         }).ToList();
-                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals("是"));
+                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
@@ -352,6 +355,48 @@ namespace Finance.PropertyDepartment.Entering.Method
             }
         }
         /// <summary>
+        /// 电子BOM单价录入数量
+        /// </summary>
+        /// <param name="solution">总共的方案</param>
+        /// <param name="auditFlowId">流程表id</param>
+        /// <returns></returns>
+        internal async Task<List<ElectronicDto>> ElectronicBomListCount(List<SolutionModel> solution, long auditFlowId)
+        {
+            try
+            {
+                //查询PCS中的梯度
+                List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
+                List<ElectronicDto> electronicBomList = new List<ElectronicDto>();
+                //总共的零件/方案
+                foreach (SolutionModel item in solution)
+                {                   
+                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+                    //循环查询到的 电子料BOM表单
+                    foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
+                    {
+                        ElectronicDto electronicDto = new();
+                        //将电子料BOM映射到ElectronicDto
+                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
+                        //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
+                        EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(BomInfo.Id));
+                        if (enteringElectronic != null)
+                        {
+                            //将电子料BOM映射到ElectronicDto
+                            electronicDto = ObjectMapper.Map<ElectronicDto>(enteringElectronic);                           
+                            electronicBomList.Add(electronicDto);
+                            continue;//直接进行下一个循环
+                        }                                  
+                        electronicBomList.Add(electronicDto);
+                    }
+                }
+                return electronicBomList;
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
         /// 单个 物料编号的计算
         /// </summary>
         /// <param name="SolutionId"></param>
@@ -362,7 +407,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         {
             //查询PCS中的梯度
             List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
-            ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals("是"));
+            ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
             //通过零件号获取 模组数量中的 年度模组数量以及年份               
             List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(SolutionId)))
                 .Select(a => new ModelCountYear
@@ -432,7 +477,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             foreach (SolutionModel item in price)
             {
                 //获取电子料bom表单  根据流程主键id 和 每一个零件的id  
-                List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals("是"));
+                List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                 //循环查询到的 电子料BOM表单
                 foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                 {
@@ -489,7 +534,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         Quantity = a.Quantity,
                         UpDown = a.UpDown
                     }).ToList();
-                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains("是"));
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
                 {
@@ -599,6 +644,38 @@ namespace Finance.PropertyDepartment.Entering.Method
             return constructionDtos;
         }
         /// <summary>
+        /// 结构件单价录入数量
+        /// </summary>
+        /// <param name="price"></param>
+        /// <param name="auditFlowId"></param>
+        /// <param name="structureBOMIdDeleted"></param>
+        /// <param name="structureBOMIdModify"></param>
+        /// <returns></returns>
+        internal async Task<List<ConstructionDto>> ConstructionBomListCount(List<SolutionModel> price, long auditFlowId, List<long> structureBOMIdDeleted, List<long> structureBOMIdModify)
+        {
+            List<ConstructionDto> constructionDtos = new List<ConstructionDto>();
+            //查询PCS中的梯度
+            List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
+            foreach (SolutionModel item in price)//循环方案
+            {
+                
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+                List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
+                foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
+                {
+                    List<StructureBomInfo> StructureMaterialnfp = structureBomInfos.Where(p => p.SuperTypeName.Equals(SuperTypeName)).ToList(); //查找属于这一超级大类的
+                    List<ConstructionModel> constructionModels = ObjectMapper.Map<List<ConstructionModel>>(StructureMaterialnfp);// 结构BOM表单 模型                     
+                    ConstructionDto constructionDto = new ConstructionDto()
+                    {
+                        SuperTypeName = SuperTypeName,
+                        StructureMaterial = constructionModels,
+                    };
+                    constructionDtos.Add(constructionDto);
+                }
+            }
+            return constructionDtos;
+        }
+        /// <summary>
         /// 结构料BOM单价审核
         /// </summary>
         /// <param name="price">总共的零件</param>
@@ -611,7 +688,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             //循环模组
             foreach (SolutionModel item in price)
             {
-                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains("是"));
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 //超级大种类  结构料 胶水等辅材 SMT外协 包材
                 foreach (string SuperTypeName in structureBomInfosGr)
@@ -1504,6 +1581,6 @@ namespace Finance.PropertyDepartment.Entering.Method
                 }
             }
             return true;
-        }
+        }       
     }
 }

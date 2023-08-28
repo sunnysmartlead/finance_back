@@ -86,6 +86,10 @@ namespace Finance.Processes
             {
                 query = query.Where(t => t.ProcessName.Contains(input.ProcessName));
             }
+            if (!string.IsNullOrEmpty(input.ProcessNumber))
+            {
+                query = query.Where(t => t.ProcessNumber.Contains(input.ProcessNumber));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换

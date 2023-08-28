@@ -6,8 +6,11 @@ using Abp.EntityFrameworkCore;
 using Abp.EntityFrameworkCore.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
+using Abp.UI;
 using AutoMapper;
 using Finance.BaseLibrary;
+using Finance.Dto;
+using Finance.EngineeringDepartment;
 using Finance.EntityFrameworkCore;
 using Finance.Ext;
 using Finance.FinanceMaintain;
@@ -18,10 +21,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
-using Spire.Pdf.General.Paper.Uof;
 using Spire.Xls;
 using System;
 using System.Collections.Generic;
@@ -46,6 +49,14 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         private readonly LogType ExchangeRateType = LogType.ExchangeRate;
         /// <summary>
+        /// 日志类型-损耗率
+        /// </summary>
+        private readonly LogType LossRateType = LogType.LossRate;
+        /// <summary>
+        /// 日志类型-质量成本比例
+        /// </summary>
+        private readonly LogType QualityCostRatioType = LogType.QualityCostRatio;
+        /// <summary>
         /// 基础单价库实体类
         /// </summary>
         private readonly IRepository<UInitPriceForm, long> _configUInitPriceForm;
@@ -69,7 +80,22 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 基础库--日志表
         /// </summary>
         private readonly IRepository<FoundationLogs, long> _foundationLogs;
-    
+        /// <summary>
+        /// 损耗率表
+        /// </summary>
+        private readonly IRepository<LossRateInfo, long> _lossRateInfo;
+        /// <summary>
+        /// 损耗率年份
+        /// </summary>
+        private readonly IRepository<LossRateYearInfo, long> _lossRateYearInfo;
+        /// <summary>
+        /// 质量成本比例
+        /// </summary>
+        private readonly IRepository<QualityCostRatio, long> _qualityCostRatio;
+        /// <summary>
+        /// 质量成本比例年份
+        /// </summary>
+        private readonly IRepository<QualityCostRatioYear, long> _qualityCostRatioYear;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -79,14 +105,31 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="provider"></param>
         /// <param name="sharedMaterialWarehouse"></param>
         /// <param name="foundationLogs"></param>
-        public UnitPriceLibraryAppService(IRepository<UInitPriceForm, long> configUInitPriceForm, IRepository<GrossMarginForm, long> configGrossMarginForm, IRepository<ExchangeRate, long> configExchangeRate, IDbContextProvider<FinanceDbContext> provider, IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse, IRepository<FoundationLogs, long> foundationLogs)
+        /// <param name="lossRateInfo"></param>
+        /// <param name="lossRateYearInfo"></param>
+        /// <param name="qualityCostRatio"></param>
+        /// <param name="qualityCostRatioYear"></param>
+        public UnitPriceLibraryAppService(IRepository<UInitPriceForm, long> configUInitPriceForm,
+            IRepository<GrossMarginForm, long> configGrossMarginForm,
+            IRepository<ExchangeRate, long> configExchangeRate,
+            IDbContextProvider<FinanceDbContext> provider,
+            IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse,
+            IRepository<FoundationLogs, long> foundationLogs,
+            IRepository<LossRateInfo, long> lossRateInfo,
+            IRepository<LossRateYearInfo, long> lossRateYearInfo,
+            IRepository<QualityCostRatio, long> qualityCostRatio,
+            IRepository<QualityCostRatioYear, long> qualityCostRatioYear)
         {
             _configUInitPriceForm = configUInitPriceForm;
             _configGrossMarginForm = configGrossMarginForm;
             _configExchangeRate = configExchangeRate;
             _provider = provider;
             _sharedMaterialWarehouse = sharedMaterialWarehouse;
-            _foundationLogs= foundationLogs;
+            _foundationLogs = foundationLogs;
+            _lossRateInfo = lossRateInfo;
+            _lossRateYearInfo = lossRateYearInfo;
+            _qualityCostRatio = qualityCostRatio;
+            _qualityCostRatioYear = qualityCostRatioYear;
         }
 
 
@@ -413,14 +456,14 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                             }
                             catch (Exception)
                             {
-                                throw new FriendlyException($"{i+3}行,请检查模组走量年份/值,不允许有中文或者空格");
+                                throw new FriendlyException($"{i + 3}行,请检查模组走量年份/值,不允许有中文或者空格");
                             }
 
                             yearOrValueModeCanNulls.Add(yearOrValueModeCanNull);
                         }
                         rows[i].ModuleThroughputs = yearOrValueModeCanNulls;
                     }
-                    List<SharedMaterialWarehouse> sharedMaterialWarehouses=new List<SharedMaterialWarehouse>();
+                    List<SharedMaterialWarehouse> sharedMaterialWarehouses = new List<SharedMaterialWarehouse>();
                     try
                     {
                         sharedMaterialWarehouses = ObjectMapper.Map<List<SharedMaterialWarehouse>>(rows);
@@ -481,14 +524,14 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 DataTable dataTable = MiniExcel.QueryAsDataTable(memoryStream, useHeaderRow: true);
                 //上下合并的列
-                var MergeColumnsUpAndDown = 5;               
+                var MergeColumnsUpAndDown = 5;
                 // 创建工作簿
                 IWorkbook workbook = new XSSFWorkbook();
                 // 创建一个字体
                 IFont font = workbook.CreateFont();
                 font.FontName = "Arial";
                 font.FontHeightInPoints = 10;
-                font.Color = IndexedColors.Black.Index;               
+                font.Color = IndexedColors.Black.Index;
                 // 创建一个样式
                 ICellStyle style = workbook.CreateCellStyle();
                 style.BorderBottom = BorderStyle.Thin;
@@ -516,8 +559,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                     headerCell1.CellStyle = headerstyle; // 应用样式
                     if (i >= MergeColumnsUpAndDown)
                     {
-                        headerCell.SetCellValue("模组走量");                    
-                        headerCell1.SetCellValue(dataTable.Columns[i].ColumnName);                     
+                        headerCell.SetCellValue("模组走量");
+                        headerCell1.SetCellValue(dataTable.Columns[i].ColumnName);
                     }
                     else
                     {
@@ -788,6 +831,192 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             }
         }
         /// <summary>
+        ///  损耗率模板导出
+        /// </summary>
+        /// <param name="FileName"></param>
+        /// <returns></returns>
+        /// <exception cref="UserFriendlyException"></exception>
+        public IActionResult ExportOfLossRateTemplate(string FileName = "损耗率模版")
+        {
+            try
+            {
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\损耗率模板.xlsx";
+                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"{FileName}.xlsx"
+                };
+            }
+            catch (Exception e)
+            {
+                throw new UserFriendlyException(e.Message);
+            }
+        }
+        /// <summary>
+        ///  损耗率导入
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        /// <exception cref="UserFriendlyException"></exception>
+        public async Task LossRateImport(IFormFile filename)
+        {
+            try
+            {
+                await _lossRateInfo.HardDeleteAsync(p => true);
+                await _lossRateYearInfo.HardDeleteAsync(p => true);
+                if (Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
+                using (var memoryStream = new MemoryStream())
+                {
+                    await filename.CopyToAsync(memoryStream);
+                    List<LossRateModel> rowExcls = memoryStream.Query<LossRateModel>().ToList();
+                    List<LossRateSopModel> rowExcl = memoryStream.Query<LossRateSopModel>().ToList();
+                    if (rowExcls.Count != rowExcl.Count) throw new FriendlyException("读取文件的过程中产生了错误,产品大类/物料大类和SOP行数不一");
+                    List<LossRateInfo> prop = await _lossRateInfo.BulkInsertAsync(ObjectMapper.Map<List<LossRateInfo>>(rowExcls));
+                    List<LossRateYearInfo> year = new List<LossRateYearInfo>();
+                    for (int i = 0; i < prop.Count; i++)
+                    {
+                        //年降率表头
+                        List<decimal> annualGeneralRateHeader = rowExcl[i].ToListDecimal();
+                        for (int j = 0; j < annualGeneralRateHeader.Count; j++)
+                        {
+                            year.Add(new LossRateYearInfo()
+                            {
+                                LossRateInfoId = prop[i].Id,
+                                Year = j,
+                                Rate = annualGeneralRateHeader[j]
+                            });
+                        }
+                    }
+                    await _lossRateYearInfo.BulkInsertAsync(year);
+                    await CreateLog($"导入了损害率表单 {prop.Count} 条", LossRateType);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
+        }
+        /// <summary>
+        /// 损耗率查询
+        /// </summary>
+        /// <param name="filterPagedInputDto"></param>
+        /// <returns></returns>
+        public async Task<PagedResultDto<LossRatesDto>> LossRateQuery(FilterPagedInputDto filterPagedInputDto)
+        {
+            try
+            {
+                //定义列表查询
+                List<LossRateInfo> lossRateInfo = _lossRateInfo.GetAll().WhereIf(!filterPagedInputDto.Filter.IsNullOrEmpty(), p => p.SuperType.Contains(filterPagedInputDto.Filter) || p.CategoryName.Contains(filterPagedInputDto.Filter)).ToList();
+                List<LossRateYearInfo> lossRateYearInfo = await _lossRateYearInfo.GetAllListAsync();
+                IQueryable<LossRatesDto> filter = (from s in lossRateInfo
+                                                   join b in lossRateYearInfo on s.Id equals b.LossRateInfoId into bGroup
+                                                   select new LossRatesDto
+                                                   {
+
+                                                       SuperType = s.SuperType,
+                                                       CategoryName = s.CategoryName,
+                                                       LossRateYearList = bGroup.Select(t => new LossRatesYearDto
+                                                       {
+                                                           Year = t.Year,
+                                                           YearAlias = t.Year != 0 ? "SOP+" + t.Year : "SOP",
+                                                           Rate = t.Rate
+                                                       }).ToList()
+                                                   }).AsQueryable();
+
+                IQueryable<LossRatesDto> pagedSorted = filter.PageBy(filterPagedInputDto);
+                //获取总数
+                var count = filter.Count();
+                //获取查询结果
+                List<LossRatesDto> result = pagedSorted.ToList();
+                return new PagedResultDto<LossRatesDto>(count, result);
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
+        }
+        /// <summary>
+        /// 损耗率导出
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IActionResult> LossRateExport()
+        {
+            PagedResultDto<LossRatesDto> lossRatesDtos = await LossRateQuery(new FilterPagedInputDto() { Filter = "", MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
+            //用MiniExcel读取数据
+            var values = new List<Dictionary<string, object>>();
+            foreach (LossRatesDto item in lossRatesDtos.Items)
+            {
+                Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
+                    {
+                    { "产品大类", item.SuperType },
+                    { "物料种类", item.CategoryName },
+                    };
+                foreach (LossRatesYearDto pro in item.LossRateYearList)
+                {
+                    keyValuePairs.Add(pro.YearAlias, pro.Rate);
+                }
+                values.Add(keyValuePairs);
+            }
+            MemoryStream memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, values);
+            return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = $"损耗率导出-{DateTime.Now}.xlsx"
+            };
+        }
+        /// <summary>
+        /// 添加质量成本比例
+        /// </summary>
+        /// <param name="qualityCostRatioDtos"></param>
+        /// <returns></returns>
+        public async Task QualityCostRatioSubmission(List<QualityCostRatioDto> qualityCostRatioDtos)
+        {
+            //判断前端传入所有数据的年份是否相同
+            bool allHaveSameCount = qualityCostRatioDtos.All(x => x.qualityCostRatioYears.Count == qualityCostRatioDtos.First().qualityCostRatioYears.Count);
+            if (!allHaveSameCount) throw new FriendlyException("数据中年份必须统一/该数据年份未统一");
+            foreach (QualityCostRatioDto qualityModel in qualityCostRatioDtos)
+            {
+                QualityCostRatio qualityCostRatio = ObjectMapper.Map<QualityCostRatio>(qualityModel);
+                long qualityCostRatioId = await _qualityCostRatio.InsertOrUpdateAndGetIdAsync(qualityCostRatio);
+                qualityModel.qualityCostRatioYears.Select((p,i) => { p.QualityCostRatioId = qualityCostRatioId; p.Year = i; return p; }).ToList() ;
+                List<QualityCostRatioYear> qualityCostRatioYears = await _qualityCostRatioYear.GetAllListAsync(p => p.QualityCostRatioId.Equals(qualityCostRatioId));
+                await _qualityCostRatioYear.HardDeleteAsync(p => qualityCostRatioYears.Select(l => l.Id).Contains(p.Id));
+                List<QualityCostRatioYear> qualityCostRatios = ObjectMapper.Map<List<QualityCostRatioYear>>(qualityModel.qualityCostRatioYears);
+                await _qualityCostRatioYear.BulkInsertAsync(qualityCostRatios);
+            }
+            await CreateLog($"添加或者更改了质量成本比例表单 {qualityCostRatioDtos.Count} 条", QualityCostRatioType);
+        }
+        /// <summary>
+        /// 查询质量成本比例
+        /// </summary>
+        /// <returns></returns>
+        public async Task<PagedResultDto<QualityCostRatioDto>> QueryQualityCostRatio(FilterPagedInputDto filterPagedInputDto)
+        {
+            List<QualityCostRatio> qualityCostRatios = await _qualityCostRatio.GetAllListAsync();
+            List<QualityCostRatioYear> qualityCostRatioYears = await _qualityCostRatioYear.GetAllListAsync();
+            IQueryable<QualityCostRatioDto> prop = (from a in qualityCostRatios
+                                                    join b in qualityCostRatioYears on a.Id equals b.QualityCostRatioId into ab
+                                                    where ab != null
+                                                    select new QualityCostRatioDto
+                                                    {
+                                                        Id = a.Id,
+                                                        IsItTheFirstProduct = a.IsItTheFirstProduct,
+                                                        Category = a.Category,
+                                                        qualityCostRatioYears = ab.Select(p => new QualityCostRatioYearDto
+                                                        {
+                                                            YearAlias = p.Year != 0 ? "SOP+" + p.Year : "SOP",
+                                                            Value = p.Value,
+                                                            Year = p.Year,
+                                                            QualityCostRatioId = a.Id
+                                                        }).ToList()
+                                                    }).AsQueryable();
+            IQueryable<QualityCostRatioDto> pagedSorted = prop.PageBy(filterPagedInputDto);
+            //获取总数
+            var count = prop.Count();
+            //获取查询结果
+            List<QualityCostRatioDto> result = pagedSorted.ToList();
+            return new PagedResultDto<QualityCostRatioDto>(count, result);
+        }
+        /// <summary>
         /// 添加日志
         /// </summary>
         private async Task<bool> CreateLog(string Remark, LogType logType)
@@ -802,11 +1031,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             if (AbpSession.UserId != null)
             {
                 entity.LastModifierUserId = AbpSession.UserId.Value;
-
                 entity.CreatorUserId = AbpSession.UserId.Value;
-
-
-
             }
             entity.Remark = Remark;
             entity.Type = logType;
