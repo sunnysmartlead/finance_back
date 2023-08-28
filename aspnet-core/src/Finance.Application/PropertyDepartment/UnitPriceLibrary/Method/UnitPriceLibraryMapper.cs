@@ -63,6 +63,10 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
 
 
             configuration.CreateMap<LossRateModel, LossRateInfo>();
+
+            configuration.CreateMap<QualityCostRatioDto, QualityCostRatio>();
+
+            configuration.CreateMap<QualityCostRatioYearDto, QualityCostRatioYear>();
         }
         /// <summary>
         /// 返回枚举参数 的文字描述 的委托
