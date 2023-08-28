@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.PropertyDepartment.DemandApplyAudit
 {
@@ -177,7 +178,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="AuditFlowId"></param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<AuditEntering> AuditExport(long AuditFlowId)
+        public async Task<AuditEntering> AuditExport([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long AuditFlowId)
         {
             try
             {
@@ -334,7 +335,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<FileResult> DownloadExplosives(long auditFlowId, long solutionId)
+        public async Task<FileResult> DownloadExplosives([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             // 营销部审核中项目设计方案
             DesignSolution designScheme = await _resourceDesignScheme.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
