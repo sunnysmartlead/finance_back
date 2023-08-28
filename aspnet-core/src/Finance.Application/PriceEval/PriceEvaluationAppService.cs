@@ -5,8 +5,10 @@ using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Json;
 using Abp.Linq.Extensions;
+using AutoMapper;
 using Finance.Audit;
 using Finance.Audit.Dto;
+using Finance.DemandApplyAudit;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
 using Finance.EntityFrameworkCore.Seed.Host;
@@ -19,6 +21,7 @@ using Finance.NerPricing;
 using Finance.Nre;
 using Finance.PriceEval.Dto;
 using Finance.PriceEval.Dto.AllManufacturingCost;
+using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductionControl;
 using Finance.ProjectManagement;
@@ -94,10 +97,10 @@ namespace Finance.PriceEval
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
-           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository, 
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository)
+           IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -479,7 +482,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task CreateUpdateItem(CreateUpdateItemInput input)
         {
-            await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input,entity);
+            }
         }
 
         /// <summary>
@@ -508,7 +520,7 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<ListResultDto<ProportionOfProductCostListDto>> GetPricingPanelProfit(GetPricingPanelProfitInput input)
         {
-            var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, ProductId = input.ProductId, Year = input.Year });
+            var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = 0, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
             var bomCost = data.Material.Sum(p => p.TotalMoneyCyn);

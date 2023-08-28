@@ -19,11 +19,11 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual long AuditFlowId { get; set; }
 
-        /// <summary>
-        /// 模组数量Id（即零件Id）
-        /// </summary>
-        [Required]
-        public virtual long ProductId { get; set; }
+        ///// <summary>
+        ///// 模组数量Id（即零件Id）
+        ///// </summary>
+        //[Required]
+        //public virtual long ProductId { get; set; }
 
         /// <summary>
         /// 梯度Id
@@ -40,7 +40,6 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 方案表ID
         /// </summary>
-        [Column("SOLUTIONID")]
         public long SolutionId { get; set; }
 
         /// <summary>

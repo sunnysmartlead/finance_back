@@ -52,7 +52,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 修改项
         /// </summary>
-        public virtual Material Material { get; set; }
+        public virtual List<Material> Material { get; set; }
 
         /// <summary>
         /// 上传佐证材料
