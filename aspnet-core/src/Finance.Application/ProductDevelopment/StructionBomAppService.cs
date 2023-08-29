@@ -261,7 +261,7 @@ namespace Finance.ProductDevelopment
                 //查询核价需求导入时的零件信息
                 var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
 
-                //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
+                var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
 
 
                 List<StructureBomDto> structureBomDtos = dto.StructureBomDtos;
