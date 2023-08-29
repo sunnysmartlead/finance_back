@@ -192,6 +192,26 @@ namespace Finance.Audit
                     Id = o.Id,
                     ProcessName = o.NodeName,
                     Right = RIGHTTYPE.Edit,
+                    ProcessIdentifier = o.ProcessIdentifier
+                }).ToList()
+            }).ToList();
+
+            var tasked = await _workflowInstanceAppService.GetInstanceHistory();
+            dto.AddRange
+                (
+                tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList()
+                }).ToList()
+                );
                      ProcessIdentifier= AuditFlowConsts.AF_RequirementInput
                 }).ToList()
             }).ToList();

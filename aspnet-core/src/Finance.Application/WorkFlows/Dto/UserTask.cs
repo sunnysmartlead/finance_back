@@ -46,5 +46,10 @@ namespace Finance.WorkFlows.Dto
         /// 工作流状态
         /// </summary>
         public virtual WorkflowState WorkflowState { get; set; }
+
+        /// <summary>
+        /// 流程流程标识符
+        /// </summary>
+        public virtual string ProcessIdentifier { get; set; }
     }
 }
