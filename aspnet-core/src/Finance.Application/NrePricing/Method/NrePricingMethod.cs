@@ -49,12 +49,12 @@ namespace Finance.NrePricing.Method
         /// 根据 流程id和方案id 返回 模具清单
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="partId"></param>
+        /// <param name="solutionId"></param>
         /// <returns></returns>
-        internal async Task<List<MouldInventoryModel>> MouldInventoryModels(long id, long partId)
+        internal async Task<List<MouldInventoryModel>> MouldInventoryModels(long id, long solutionId)
         {
             //筛选 结构BOM 还要进行 是否新开模的筛选
-            List<StructureBomInfo> structureBomInfos = await _resourceStructureBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(id)&&p.ProductId.Equals(partId)&&p.IsNewMouldProduct.Equals(YesNO.Yes.GetDescription()));
+            List<StructureBomInfo> structureBomInfos = await _resourceStructureBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(id)&&p.SolutionId.Equals(solutionId)&&p.IsNewMouldProduct.Equals(YesNO.Yes.GetDescription()));
             List<MouldInventoryModel> inventoryModels = ObjectMapper.Map<List<MouldInventoryModel>>(structureBomInfos);
             if (inventoryModels.Count is not 0) inventoryModels.Add(new MouldInventoryModel() { ModelName ="吸塑/包材" });
             return inventoryModels;

@@ -24,7 +24,7 @@ namespace Finance.Entering
         /// </summary>
         public long SolutionId { get; set; }
         /// <summary>
-        /// 电子bom单价表单id
+        /// 电子bom表单id
         /// </summary>
         public long ElectronicId { get; set; }
         /// <summary>

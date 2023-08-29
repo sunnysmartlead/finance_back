@@ -624,7 +624,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         [AbpAuthorize]
-        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle(long auditFlowId, long solutionId)
+        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
@@ -1359,7 +1359,7 @@ namespace Finance.NerPricing
         /// </summary>      
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm(long auditFlowId, long solutionId)
+        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1401,7 +1401,7 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="auditFlowId">流程表Id</param>
         /// <returns></returns>
-        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment(long auditFlowId)
+        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
         {
 
             List<ReturnSalesDepartmentDto> initialSalesDepartmentDtos = new();
@@ -1573,11 +1573,11 @@ namespace Finance.NerPricing
         /// <summary>
         /// 获取 第一个页面最初的年份
         /// </summary>
-        /// <param name="processId"></param>
+        /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        private async Task<int> GetYear(long processId)
+        private async Task<int> GetYear(long auditFlowId)
         {
-            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(processId));
+            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<int> yearList = modelCountYears.Select(p => p.Year).Distinct().ToList();
             int year = yearList.Min();
             return year;
@@ -1595,7 +1595,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<PricingFormDto> GetPricingFormDownload(long auditFlowId, long solutionId)
+        public async Task<PricingFormDto> GetPricingFormDownload([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1780,7 +1780,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<ModifyItemPricingFormDto> GetPricingForm(long auditFlowId, long solutionId)
+        public async Task<ModifyItemPricingFormDto> GetPricingForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {

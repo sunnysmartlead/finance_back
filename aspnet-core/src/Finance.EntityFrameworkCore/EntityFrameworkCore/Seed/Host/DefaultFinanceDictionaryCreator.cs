@@ -189,10 +189,10 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.PriceEvalType, Id=FinanceConsts.PriceEvalType_Sample, DisplayName="样品核价",},
 
                 //样品阶段
-                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_A, DisplayName="A样",},
-                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_B, DisplayName="B样",},
-                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_C, DisplayName="C样",},
-                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_Other, DisplayName="其他",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_A, DisplayName="A样", Order=400,},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_B, DisplayName="B样", Order=300, },
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_C, DisplayName="C样", Order=200,},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.SampleName, Id=FinanceConsts.SampleName_Other, DisplayName="其他", Order=100},
 
                 //是否同意
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.YesOrNo, Id=FinanceConsts.YesOrNo_Yes, DisplayName="同意",},
