@@ -18,6 +18,11 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary.Model
         [ExcelColumnName("产品大类")]
         public string SuperType { get; set; }
         /// <summary>
+        /// 物料大类
+        /// </summary>
+        [ExcelColumnName("物料大类")]
+        public string MaterialCategory { get; set; }
+        /// <summary>
         /// 物料种类
         /// </summary>
         [ExcelColumnName("物料种类")]
@@ -31,57 +36,57 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary.Model
         /// <summary>
         /// Sop
         /// </summary>
-        [ExcelColumnIndex("C")]
+        [ExcelColumnName("SOP")]
         public decimal Sop { get; set; }
         /// <summary>
         /// Sop1
         /// </summary>
-        [ExcelColumnIndex("D")]
+        [ExcelColumnName("SOP+1")]
         public decimal Sop1 { get; set; }
         /// <summary>
         /// Sop2
         /// </summary>
-        [ExcelColumnIndex("E")]
+        [ExcelColumnName("SOP+2")]
         public decimal Sop2 { get; set; }
         /// <summary>
         /// Sop3
         /// </summary>
-        [ExcelColumnIndex("F")]
+        [ExcelColumnName("SOP+3")]
         public decimal Sop3 { get; set; }
         /// <summary>
         /// Sop4
         /// </summary>
-        [ExcelColumnIndex("G")]
+        [ExcelColumnName("SOP+4")]
         public decimal Sop4 { get; set; }
         /// <summary>
         /// Sop5
         /// </summary>
-        [ExcelColumnIndex("H")]
+        [ExcelColumnName("SOP+5")]
         public decimal Sop5 { get; set; }
         /// <summary>
         /// Sop6
         /// </summary>
-        [ExcelColumnIndex("I")]
+        [ExcelColumnName("SOP+6")]
         public decimal Sop6 { get; set; }
         /// <summary>
         /// Sop7
         /// </summary>
-        [ExcelColumnIndex("J")]
+        [ExcelColumnName("SOP+7")]
         public decimal Sop7 { get; set; }
         /// <summary>
         /// Sop8
         /// </summary>
-        [ExcelColumnIndex("K")]
+        [ExcelColumnName("SOP+8")]
         public decimal Sop8 { get; set; }
         /// <summary>
         /// Sop9
         /// </summary>
-        [ExcelColumnIndex("L")]
+        [ExcelColumnName("SOP+9")]
         public decimal Sop9 { get; set; }
         /// <summary>
         /// Sop10
         /// </summary>
-        [ExcelColumnIndex("M")]
+        [ExcelColumnName("SOP+10")]
         public decimal Sop10 { get; set; }
     }
 }
