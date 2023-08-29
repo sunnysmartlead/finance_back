@@ -378,14 +378,6 @@ namespace Finance.EntityFrameworkCore
         /// 工序工时导入UPH率
         /// </summary>
         public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
-        /// <summary>
-        /// 质量成本比例
-        /// </summary>
-        public virtual DbSet<QualityCostRatio> QualityCostRatio { get; set; }
-        /// <summary>
-        /// 质量成本比例年份
-        /// </summary>
-        public virtual DbSet<QualityCostRatioYear> QualityCostRatioYear { get; set; }
         public virtual DbSet<FProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<UpdateItem> UpdateItem { get; set; }
@@ -523,7 +515,7 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<StructureBomInfoBak>().ToTable("StructureBomInfoBak");
             modelBuilder.Entity<BoardInfo>().ToTable("BoardInfo");
 
-            // 基础库
+     // 基础库
             modelBuilder.Entity<FoundationDevice>().ToTable("FDevice");
             modelBuilder.Entity<FoundationDeviceItem>().ToTable("FDeviceItem");
             modelBuilder.Entity<FoundationEmc>().ToTable("FEmc");
