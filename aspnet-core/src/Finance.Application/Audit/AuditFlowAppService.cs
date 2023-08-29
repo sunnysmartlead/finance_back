@@ -210,12 +210,7 @@ namespace Finance.Audit
                         Right = RIGHTTYPE.ReadOnly,
                         ProcessIdentifier = o.ProcessIdentifier
                     }).ToList()
-                }).ToList()
-                );
-                     ProcessIdentifier= AuditFlowConsts.AF_RequirementInput
-                }).ToList()
-            }).ToList();
-
+                }).ToList());
             return dto;
 
 
