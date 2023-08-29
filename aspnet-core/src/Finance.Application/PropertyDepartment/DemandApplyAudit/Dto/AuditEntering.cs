@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
 {
@@ -20,7 +21,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// <summary>
         /// 流程Id
         /// </summary>
-        [FriendlyRequired("流程ID")]
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public virtual long AuditFlowId { get; set; }
         /// <summary>
         /// 核价团队  其中包含(核价人员以及对应完成时间)

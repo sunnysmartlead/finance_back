@@ -61,6 +61,7 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual NodeType NodeType { get; set; }
 
+
         /// <summary>
         /// 流程流程标识符
         /// </summary>
