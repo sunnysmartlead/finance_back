@@ -1,6 +1,7 @@
 ﻿using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Finance.Audit;
+using Finance.DemandApplyAudit;
 using Finance.Entering.Model;
 using Finance.Ext;
 using Finance.Infrastructure;
@@ -516,6 +517,88 @@ namespace Finance.Entering
         public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
+        }
+        /// <summary>
+        /// 获取电子单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronic>> ElectronicUnitPriceMaterialRebateAmount(long auditFlowId)
+        {
+            List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
+                                                            where a != null
+                                                            select new RebateAmountKvModeElectronic
+                                                            {
+                                                                AuditFlowId = a.AuditFlowId,
+                                                                SolutionId = a.SolutionId,
+                                                                ElectronicId = a.ElectronicId,
+                                                                ElectronicUnitPriceId=a.Id,
+                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                            }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取电子单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronic>> ElectronicUnitPriceMaterialRebateAmount(long auditFlowId, Func<EnteringElectronic, bool> filter)
+        {
+            List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
+                                                            where filter(a) && a != null
+                                                            select new RebateAmountKvModeElectronic
+                                                            {
+                                                                AuditFlowId = a.AuditFlowId,
+                                                                SolutionId = a.SolutionId,
+                                                                ElectronicId = a.ElectronicId,
+                                                                ElectronicUnitPriceId = a.Id,
+                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                            }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取结构单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronicStructure>> StructureUnitPriceMaterialRebateAmount(long auditFlowId)
+        {
+            List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
+                                                                      where a != null
+                                                                      select new RebateAmountKvModeElectronicStructure
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          StructureId = a.StructureId,
+                                                                          StructuralUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取结构单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronicStructure>> StructureUnitPriceMaterialRebateAmount(long auditFlowId, Func<StructureElectronic, bool> filter)
+        {
+            List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
+                                                                      where filter(a) && a != null
+                                                                      select new RebateAmountKvModeElectronicStructure
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          StructureId = a.StructureId,
+                                                                          StructuralUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
+            return rebateAmountKvModes;
         }
         /// <summary>
         /// 结构/电子/BOM/单价审核
