@@ -96,13 +96,15 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.EvalReason,
                     Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_核价需求录入 || {MainFlowId}_开始_{MainFlowId}_核价需求录入",
                     RoleId = salesMan.Id.ToString(),
+                    ProcessIdentifier = "PricingDemandInput",
                 },
                 new Node
                 {
                     Name="核价审批录入",
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_核价需求录入_{MainFlowId}_核价审批录入 || {MainFlowId}_TR审核_{MainFlowId}_核价审批录入",
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}"
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
+                    ProcessIdentifier = "PriceDemandReview",
                 },
                 new Node
                 {
@@ -110,6 +112,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_TR审核",
                     RoleId = r_D_TRAuditor.Id.ToString(),
+                    ProcessIdentifier = "TRToExamine",
                 },
                 new Node
                 {
@@ -117,6 +120,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_TR审核_{MainFlowId}_NRE_可靠性实验费录入 || {MainFlowId}_NRE_可靠性实验费审核_{MainFlowId}_NRE_可靠性实验费录入 || {MainFlowId}_核价看板_{MainFlowId}_NRE_可靠性实验费录入",
                     RoleId = environmentInput.Id.ToString(),
+                    ProcessIdentifier = "NRE_ReliabilityExperimentFeeInput",
                 },
                 new Node
                 {
@@ -124,6 +128,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_NRE_可靠性实验费录入_{MainFlowId}_NRE_可靠性实验费审核",
                     RoleId = environmentEval.Id.ToString(),
+                    ProcessIdentifier = "NRE_ReliabilityExperimentFeeInputoExamine",
                 },
                 new Node
                 {
@@ -131,6 +136,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_NRE_EMC实验费录入_{MainFlowId}_NRE_EMC实验费审核",
                     RoleId = emcEval.Id.ToString(),
+                    ProcessIdentifier = "NRE_EMCExperimentalFeeInputToExamine",
                 },
                 new Node
                 {
@@ -138,6 +144,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation =  $"{MainFlowId}_TR审核_{MainFlowId}_NRE_EMC实验费录入 || {MainFlowId}_NRE_EMC实验费审核_{MainFlowId}_NRE_EMC实验费录入 || {MainFlowId}_核价看板_{MainFlowId}_NRE_EMC实验费录入",
                     RoleId = emcInput.Id.ToString(),
+                    ProcessIdentifier = "NRE_EMCExperimentalFeeInput",
                 },
                 new Node
                 {
@@ -145,6 +152,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation =  $"{MainFlowId}_TR审核_{MainFlowId}_上传结构BOM || {MainFlowId}_结构BOM审核_{MainFlowId}_上传结构BOM || {MainFlowId}_核价看板_{MainFlowId}_上传结构BOM || {MainFlowId}_不合规是否退回_{MainFlowId}_上传结构BOM",
                     RoleId = structuralEngineer.Id.ToString(),
+                    ProcessIdentifier = "StructureBOM",
                 },
                 new Node
                 {
@@ -152,6 +160,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_TR审核_{MainFlowId}_上传电子BOM || {MainFlowId}_电子BOM审核_{MainFlowId}_上传电子BOM || {MainFlowId}_核价看板_{MainFlowId}_上传电子BOM || {MainFlowId}_不合规是否退回_{MainFlowId}_上传电子BOM",
                     RoleId = electronicsEngineer.Id.ToString(),
+                    ProcessIdentifier = "ElectronicsBOM",
                 },
                 new Node
                 {
@@ -159,6 +168,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_上传电子BOM_{MainFlowId}_电子BOM审核",
                     RoleId = electronicsBomAuditor.Id.ToString(),
+                    ProcessIdentifier = "ElectronicsBOMToExamine",
                 },
                 new Node
                 {
@@ -166,6 +176,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_NRE手板件 || {MainFlowId}_核价看板_{MainFlowId}_NRE手板件",
                     RoleId= $"{projectManager.Id},{marketProjectManager.Id}",
+                    ProcessIdentifier = "NRE_ManualComponentInput",
                 },
                 new Node
                 {
@@ -173,6 +184,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_上传结构BOM_{MainFlowId}_结构BOM审核",
                     RoleId = structuralBomAuditor.Id.ToString(),
+                    ProcessIdentifier = "StructureBOMToExamine",
                 },
                  new Node
                 {
@@ -180,6 +192,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_结构BOM审核_{MainFlowId}_NRE模具费录入 || {MainFlowId}_模具费审核_{MainFlowId}_NRE模具费录入 || {MainFlowId}_核价看板_{MainFlowId}_NRE模具费录入",
                     RoleId = modelInput.Id.ToString(),
+                    ProcessIdentifier = "NRE_MoldFeeEntry",
                  },
                 new Node
                 {
@@ -187,6 +200,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_结构BOM审核_{MainFlowId}_物流成本录入 || {MainFlowId}_不合规是否退回_{MainFlowId}_物流成本录入 || {MainFlowId}_核价看板_{MainFlowId}_物流成本录入",
                     RoleId = logisticsCostInputter.Id.ToString(),
+                    ProcessIdentifier = "LogisticsCostEntry",
                 },
                 new Node
                 {
@@ -194,6 +208,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"({MainFlowId}_结构BOM审核_{MainFlowId}_工序工时添加 && {MainFlowId}_电子BOM审核_{MainFlowId}_工序工时添加) || {MainFlowId}_不合规是否退回_{MainFlowId}_工序工时添加 || {MainFlowId}_核价看板_{MainFlowId}_工序工时添加",
                     RoleId = manHourInputter.Id.ToString(),
+                    ProcessIdentifier = "FormulaOperationAddition",
                 },
                 new Node
                 {
@@ -201,6 +216,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_结构BOM审核_{MainFlowId}_定制结构件 || {MainFlowId}_结构BOM单价审核_{MainFlowId}_定制结构件 || {MainFlowId}_BOM成本审核_{MainFlowId}_定制结构件 || {MainFlowId}_不合规是否退回_{MainFlowId}_定制结构件 || {MainFlowId}_核价看板_{MainFlowId}_定制结构件",
                     RoleId = structuralInput.Id.ToString(),
+                    ProcessIdentifier = "CustomizedStructuralComponents",
                 },
                 new Node
                 {
@@ -208,6 +224,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_结构BOM审核_{MainFlowId}_结构BOM匹配修改 || {MainFlowId}_结构BOM单价审核_{MainFlowId}_结构BOM匹配修改 || {MainFlowId}_BOM成本审核_{MainFlowId}_结构BOM匹配修改 || {MainFlowId}_不合规是否退回_{MainFlowId}_结构BOM匹配修改 || {MainFlowId}_核价看板_{MainFlowId}_结构BOM匹配修改",
                     RoleId = structuralPriceInputter.Id.ToString(),
+                    ProcessIdentifier = "StructureUnitPriceEntry",
                 },
                 new Node
                 {
@@ -215,6 +232,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_电子BOM审核_{MainFlowId}_电子BOM匹配修改 || {MainFlowId}_BOM成本审核_{MainFlowId}_电子BOM匹配修改 || {MainFlowId}_不合规是否退回_{MainFlowId}_电子BOM匹配修改 || {MainFlowId}_核价看板_{MainFlowId}_电子BOM匹配修改",
                     RoleId = electronicsPriceInputter.Id.ToString(),
+                    ProcessIdentifier = "ElectronicUnitPriceEntry",
                 },
                 new Node
                 {
@@ -222,6 +240,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_NRE模具费录入_{MainFlowId}_模具费审核",
                     RoleId = modelEval.Id.ToString(),
+                    ProcessIdentifier = "NRE_MoldFeeEntryToExamine",
                 },
                 new Node
                 {
@@ -229,6 +248,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_物流成本录入_{MainFlowId}_贸易合规 && {MainFlowId}_COB制造成本录入_{MainFlowId}_贸易合规",
                     RoleId = tradeComplianceAuditor.Id.ToString(),
+                    ProcessIdentifier = "TradeCompliance",
                 },
                 new Node
                 {
@@ -236,6 +256,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"({MainFlowId}_工序工时添加_{MainFlowId}_COB制造成本录入 && {MainFlowId}_BOM成本审核_{MainFlowId}_COB制造成本录入) || {MainFlowId}_不合规是否退回_{MainFlowId}_COB制造成本录入 || {MainFlowId}_核价看板_{MainFlowId}_COB制造成本录入",
                     RoleId = financeProductCostInputter.Id.ToString(),
+                    ProcessIdentifier = "COBManufacturingCostEntry",
                 },
                 new Node
                 {
@@ -243,6 +264,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.BomEvalSelect,
                     Activation = $"{MainFlowId}_结构BOM单价审核_{MainFlowId}_BOM成本审核 && {MainFlowId}_电子BOM单价审核_{MainFlowId}_BOM成本审核",
                     RoleId = bomInput.Id.ToString(),
+                    ProcessIdentifier = "UnitPriceInputReviewToExamine",
                 },
                 new Node
                 {
@@ -250,6 +272,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.StructBomEvalSelect,
                     Activation = $"{MainFlowId}_定制结构件_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_结构BOM匹配修改_{MainFlowId}_结构BOM单价审核",
                     RoleId = structuralPriceAuditor.Id.ToString(),
+                    ProcessIdentifier = "StructureUnitPriceEntryToExamine",
                 },
                   new Node
                 {
@@ -257,6 +280,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect,
                     Activation = $"{MainFlowId}_电子BOM匹配修改_{MainFlowId}_电子BOM单价审核",
                     RoleId = electronicsPriceAuditor.Id.ToString(),
+                    ProcessIdentifier = "ElectronicUnitPriceEntryToExamine",
                 },
                 new Node
                 {
@@ -270,14 +294,16 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Name="查看每个方案初版BOM成本",
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_BOM成本审核_{MainFlowId}_查看每个方案初版BOM成本",
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}"
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
+                    ProcessIdentifier = "UnitPriceInputReviewToExamine",
                 },
                 new Node
                 {
                     Name="核价看板",
                     FinanceDictionaryId = FinanceConsts.HjkbSelect,
                     Activation = $"({MainFlowId}_模具费审核_{MainFlowId}_核价看板 && {MainFlowId}_贸易合规_{MainFlowId}_核价看板 && {MainFlowId}_NRE_EMC实验费审核_{MainFlowId}_核价看板 && {MainFlowId}_NRE_可靠性实验费审核_{MainFlowId}_核价看板 && {MainFlowId}_NRE手板件_{MainFlowId}_核价看板) || ({MainFlowId}_核价需求录入_{MainFlowId}_核价看板 || {MainFlowId}_财务审核_{MainFlowId}_核价看板 || {MainFlowId}_项目部课长审核_{MainFlowId}_核价看板 || {MainFlowId}_审批报价策略与核价表_{MainFlowId}_核价看板)",
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}"
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
+                    ProcessIdentifier = "PriceEvaluationBoard",
                 },
                 new Node
                 {
