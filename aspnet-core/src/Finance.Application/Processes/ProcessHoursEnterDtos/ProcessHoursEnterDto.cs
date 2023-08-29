@@ -11,6 +11,7 @@ namespace Finance.Processes
     {
 
         public bool IsDeleted { get; set; }
+        public bool IsCOB { get; set; }
         public System.Nullable<System.Int64> DeleterUserId { get; set; }
         public System.Nullable<System.DateTime> DeletionTime { get; set; }
         public System.Nullable<System.DateTime> LastModificationTime { get; set; }
@@ -43,5 +44,10 @@ namespace Finance.Processes
 
         public List<ProcessHoursEnterSopInfoDto> SopInfo { get; set; } = new List<ProcessHoursEnterSopInfoDto>();
         public List<ProcessHoursEnteritemDto> SopInfoAll { get; set; } = new List<ProcessHoursEnteritemDto>();
+
+        public List<ProcessHoursEnterUphListDto> processHoursEnterUphList { get; set; } =  new List<ProcessHoursEnterUphListDto>();
+        public List<ProcessHoursEnterLineDtoList> processHoursEnterLineList { get; set; } =  new List<ProcessHoursEnterLineDtoList>();
+
+
     }
 }

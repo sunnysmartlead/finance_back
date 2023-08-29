@@ -18,6 +18,11 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary>
         public long Id { get; set; }
         /// <summary>
+        /// 流程的id
+        /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.AuditFlowIdVerification)]
+        public long AuditFlowId { get; set; }
+        /// <summary>
         /// 方案的id
         /// </summary>
         [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]

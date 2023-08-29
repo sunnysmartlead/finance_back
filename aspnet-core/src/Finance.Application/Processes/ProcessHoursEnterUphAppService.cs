@@ -1,11 +1,17 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
+using Finance.DemandApplyAudit;
+using Finance.PriceEval;
+using Finance.PriceEval.Dto;
+using NPOI.POIFS.Crypt.Dsig;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.Processes
 {
@@ -15,14 +21,23 @@ namespace Finance.Processes
     public class ProcessHoursEnterUphAppService : ApplicationService
     {
         private readonly IRepository<ProcessHoursEnterUph, long> _processHoursEnterUphRepository;
+        private readonly DataInputAppService _dataInputAppService;
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterUphRepository"></param>
         public ProcessHoursEnterUphAppService(
+            DataInputAppService dataInputAppService,
+            IRepository<Solution, long> resourceSchemeTable,
             IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository)
         {
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
+            _dataInputAppService= dataInputAppService;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
         /// <summary>
@@ -56,6 +71,42 @@ namespace Finance.Processes
             return new PagedResultDto<ProcessHoursEnterUphDto>(totalCount, dtos);
         }
 
+
+
+        /// <summary>
+        /// 根据流程和方案获取COB-UPH的值
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<ProcessHoursEnterUphBomDto> GetListByAuditFlowIdOrSolutionIdAsync(GetProcessHoursEnterUphsInput input)
+        {
+            ProcessHoursEnterUphBomDto processHoursEnterUphBomDto = new ProcessHoursEnterUphBomDto(); 
+            Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+            // 设置查询条件
+            List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
+            List<ProcessHoursEnterUphBomItemDto> processHoursEnterUphBomItemDtoList = new List<ProcessHoursEnterUphBomItemDto>();
+            foreach (var dtosItem in data)
+            {
+                var query = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Year == dtosItem.Year.ToString() && t.Uph == "cobuph").ToList();
+                if (null != query && query.Count>0) {
+                    ProcessHoursEnterUphBomItemDto processHoursEnterUphBomItemDto = new ProcessHoursEnterUphBomItemDto();
+                    processHoursEnterUphBomItemDto.ComPuh = query[0].Value;
+                    processHoursEnterUphBomItemDto.Year = dtosItem.Year.ToString();
+                    processHoursEnterUphBomItemDtoList.Add(processHoursEnterUphBomItemDto);
+                }
+                else {
+                    ProcessHoursEnterUphBomItemDto processHoursEnterUphBomItemDto = new ProcessHoursEnterUphBomItemDto();
+                    processHoursEnterUphBomItemDto.ComPuh = 0;
+                }
+       
+
+            }
+            processHoursEnterUphBomDto.IsCOB = entity.IsCOB;
+            processHoursEnterUphBomDto.ProcessHoursEnterUphBomItemsList = processHoursEnterUphBomItemDtoList;
+            return processHoursEnterUphBomDto;
+
+
+        }
         /// <summary>
         /// 获取修改
         /// </summary>

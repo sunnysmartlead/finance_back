@@ -34,6 +34,10 @@ namespace Finance.PropertyDepartment.Entering.Method
     public class ElectronicStructuralMethod : AsyncCrudAppService<User, UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>, ISingletonDependency
     {
         /// <summary>
+        /// 是否涉及选项
+        /// </summary>
+        private static string IsInvolveItem="是";
+        /// <summary>
         /// 财务字典表明细
         /// </summary>
         private static IRepository<FinanceDictionaryDetail, string> _resourceFinanceDictionaryDetail;
@@ -89,7 +93,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
         /// <summary>
         /// 共用物料库
         /// </summary>
@@ -106,6 +110,10 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 梯度模组年份
         /// </summary>
         private readonly IRepository<GradientModelYear, long> _gradientModelYear;
+        /// <summary>
+        /// 客户目标价
+        /// </summary>
+        private readonly IRepository<CustomerTargetPrice, long> _customerTargetPrice;
 
         /// <summary>
         /// 构造函数
@@ -130,6 +138,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <param name="gradientRepository"></param>
         /// <param name="gradientModelRepository"></param>
         /// <param name="gradientModelYearRepository"></param>
+        /// <param name="customerTargetPrice"></param>
         public ElectronicStructuralMethod(
             IRepository<FinanceDictionaryDetail,
             string> resourceFinanceDictionaryDetail,
@@ -147,11 +156,12 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
             IUserAppService userAppService,
-            IRepository<SolutionTable, long> resourceSchemeTable,
+            IRepository<Solution, long> resourceSchemeTable,
             IRepository<SharedMaterialWarehouse, long> sharedMaterialWarehouse,
             IRepository<Gradient, long> gradientRepository,
             IRepository<GradientModel, long> gradientModelRepository,
-            IRepository<GradientModelYear, long> gradientModelYearRepository) : base(repository)
+            IRepository<GradientModelYear, long> gradientModelYearRepository,
+            IRepository<CustomerTargetPrice, long> customerTargetPrice) : base(repository)
         {
             _resourceFinanceDictionaryDetail = resourceFinanceDictionaryDetail;
             _resourceElectronicBomInfo = electronicBomInfo;
@@ -172,6 +182,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             _gradient = gradientRepository;
             _gradientModel= gradientModelRepository;
             _gradientModelYear = gradientModelYearRepository;
+            _customerTargetPrice= customerTargetPrice;
         }
 
         /// <summary>
@@ -179,7 +190,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// </summary>
         internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId)
         {
-            List<SolutionTable> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
             result = result.OrderBy(p => p.ModuleName).ToList();
             List<SolutionModel> partModel = (from a in result
                                              select new SolutionModel
@@ -193,9 +204,9 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <summary>
         /// 根据筛选条件获取方案列表
         /// </summary>
-        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<SolutionTable, bool> filter)
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<Solution, bool> filter)
         {
-            List<SolutionTable> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
             result = result.OrderBy(p => p.ModuleName).ToList();
             List<SolutionModel> partModel = (from a in result
                                              where filter(a)
@@ -267,7 +278,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             Quantity = a.Quantity,
                             UpDown = a.UpDown
                         }).ToList();
-                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals("是"));
+                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
@@ -322,7 +333,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
                         List<UInitPriceForm> uInitPriceForm = uInitPriceFormsPriority.Count > 0 ? uInitPriceFormsPriority : uInitPriceForms;
                         //返回值分别是 系统单价（原币） 项目物料的年将率  物料返利金额   MOQ 货币编码  物料管制状态
-                        var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, electronicDto.MaterialsUseCount, sharedMaterialWarehouses);
+                        var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, electronicDto.MaterialsUseCount, sharedMaterialWarehouses, item.SolutionId, auditFlowId);
                         electronicDto.Currency = CurrencyCode;//获取货币编码
                         electronicDto.SystemiginalCurrency = systemiginalCurrency;//系统单价（原币）
                         electronicDto.InTheRate = inTheRate;//项目物料的年将率
@@ -344,6 +355,48 @@ namespace Finance.PropertyDepartment.Entering.Method
             }
         }
         /// <summary>
+        /// 电子BOM单价录入数量
+        /// </summary>
+        /// <param name="solution">总共的方案</param>
+        /// <param name="auditFlowId">流程表id</param>
+        /// <returns></returns>
+        internal async Task<List<ElectronicDto>> ElectronicBomListCount(List<SolutionModel> solution, long auditFlowId)
+        {
+            try
+            {
+                //查询PCS中的梯度
+                List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
+                List<ElectronicDto> electronicBomList = new List<ElectronicDto>();
+                //总共的零件/方案
+                foreach (SolutionModel item in solution)
+                {                   
+                    List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+                    //循环查询到的 电子料BOM表单
+                    foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
+                    {
+                        ElectronicDto electronicDto = new();
+                        //将电子料BOM映射到ElectronicDto
+                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
+                        //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
+                        EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(BomInfo.Id));
+                        if (enteringElectronic != null)
+                        {
+                            //将电子料BOM映射到ElectronicDto
+                            electronicDto = ObjectMapper.Map<ElectronicDto>(enteringElectronic);                           
+                            electronicBomList.Add(electronicDto);
+                            continue;//直接进行下一个循环
+                        }                                  
+                        electronicBomList.Add(electronicDto);
+                    }
+                }
+                return electronicBomList;
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
         /// 单个 物料编号的计算
         /// </summary>
         /// <param name="SolutionId"></param>
@@ -354,7 +407,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         {
             //查询PCS中的梯度
             List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
-            ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals("是"));
+            ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
             //通过零件号获取 模组数量中的 年度模组数量以及年份               
             List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(SolutionId)))
                 .Select(a => new ModelCountYear
@@ -396,7 +449,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
             List<UInitPriceForm> uInitPriceForm = uInitPriceFormsPriority.Count > 0 ? uInitPriceFormsPriority : uInitPriceForms;
             //返回值分别是 系统单价（原币） 项目物料的年将率  物料返利金额   MOQ 货币编码  物料管制状态
-            var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, electronicDto.MaterialsUseCount, sharedMaterialWarehouses);
+            var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, electronicDto.MaterialsUseCount, sharedMaterialWarehouses, SolutionId, auditFlowId);
             electronicDto.Currency = CurrencyCode;//获取货币编码
             electronicDto.SystemiginalCurrency = systemiginalCurrency;//系统单价（原币）
             electronicDto.InTheRate = inTheRate;//项目物料的年将率
@@ -424,7 +477,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             foreach (SolutionModel item in price)
             {
                 //获取电子料bom表单  根据流程主键id 和 每一个零件的id  
-                List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals("是"));
+                List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                 //循环查询到的 电子料BOM表单
                 foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                 {
@@ -481,7 +534,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         Quantity = a.Quantity,
                         UpDown = a.UpDown
                     }).ToList();
-                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains("是"));
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
                 {
@@ -529,7 +582,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
                         List<UInitPriceForm> uInitPriceForm = uInitPriceFormsPriority.Count > 0 ? uInitPriceFormsPriority : uInitPriceForms;
                         //返回值分别是 系统单价（原币） 项目物料的年将率  物料返利金额   MOQ 货币编码  物料管制状态
-                        var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, construction.MaterialsUseCount, sharedMaterialWarehouses);
+                        var (systemiginalCurrency, inTheRate, rebateMoney, Moq, CurrencyCode, MaterialControlStatus) = await CalculateUnitPrice(gradient, modelCountYearList, uInitPriceForm, construction.MaterialsUseCount, sharedMaterialWarehouses, item.SolutionId, auditFlowId);
 
                         #endregion
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
@@ -591,6 +644,38 @@ namespace Finance.PropertyDepartment.Entering.Method
             return constructionDtos;
         }
         /// <summary>
+        /// 结构件单价录入数量
+        /// </summary>
+        /// <param name="price"></param>
+        /// <param name="auditFlowId"></param>
+        /// <param name="structureBOMIdDeleted"></param>
+        /// <param name="structureBOMIdModify"></param>
+        /// <returns></returns>
+        internal async Task<List<ConstructionDto>> ConstructionBomListCount(List<SolutionModel> price, long auditFlowId, List<long> structureBOMIdDeleted, List<long> structureBOMIdModify)
+        {
+            List<ConstructionDto> constructionDtos = new List<ConstructionDto>();
+            //查询PCS中的梯度
+            List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
+            foreach (SolutionModel item in price)//循环方案
+            {
+                
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+                List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
+                foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
+                {
+                    List<StructureBomInfo> StructureMaterialnfp = structureBomInfos.Where(p => p.SuperTypeName.Equals(SuperTypeName)).ToList(); //查找属于这一超级大类的
+                    List<ConstructionModel> constructionModels = ObjectMapper.Map<List<ConstructionModel>>(StructureMaterialnfp);// 结构BOM表单 模型                     
+                    ConstructionDto constructionDto = new ConstructionDto()
+                    {
+                        SuperTypeName = SuperTypeName,
+                        StructureMaterial = constructionModels,
+                    };
+                    constructionDtos.Add(constructionDto);
+                }
+            }
+            return constructionDtos;
+        }
+        /// <summary>
         /// 结构料BOM单价审核
         /// </summary>
         /// <param name="price">总共的零件</param>
@@ -603,7 +688,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             //循环模组
             foreach (SolutionModel item in price)
             {
-                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains("是"));
+                List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 //超级大种类  结构料 胶水等辅材 SMT外协 包材
                 foreach (string SuperTypeName in structureBomInfosGr)
@@ -657,13 +742,14 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 计算单价  返回值分别是 系统单价（原币） 项目物料的年将率  物料返利金额   MOQ 货币编码  物料管制状态
         /// </summary>
         /// <param name="gradient">PCS中的梯度</param>
-        /// <param name="modelCountYears">模组数量中的 年度模组数量以及年份       </param>
+        /// <param name="modelCountYears">模组数量中的 年度模组数量以及年份</param>
         /// <param name="uInitPrice">基础单价库数据</param>
         /// <param name="materialsUseCount">项目物料的使用量</param>
         /// <param name="sharedMaterialWarehouses">共用物料库</param>
+        /// <param name="solutionId">方案ID</param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        internal async Task<(List<YearOrValueKvMode>, List<YearOrValueKvMode>, List<KvMode>, decimal, string, string)> CalculateUnitPrice(List<GradientValueModel> gradient, List<ModelCountYear> modelCountYears, List<UInitPriceForm> uInitPrice, List<YearOrValueKvMode> materialsUseCount, List<SharedMaterialWarehouse> sharedMaterialWarehouses)
+        internal async Task<(List<YearOrValueKvMode>, List<YearOrValueKvMode>, List<KvMode>, decimal, string, string)> CalculateUnitPrice(List<GradientValueModel> gradient, List<ModelCountYear> modelCountYears, List<UInitPriceForm> uInitPrice, List<YearOrValueKvMode> materialsUseCount, List<SharedMaterialWarehouse> sharedMaterialWarehouses,long solutionId,long auditFlowId)
         {
             try
             {
@@ -732,17 +818,14 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                          .SelectMany(p => p.YearOrValueModes)
                                                          .Where(p => p.Year.Equals(item.Year) && p.UpDown.Equals(item.UpDown))
                                                          .Select(p => p.Value)
-                                                         .Sum();
-                                //获取汇率
-                                ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(priceForm.CurrencyCode));
-                                //获取汇率值
-                                List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
-                                //获取汇率值
-                                YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
+                                                         .Sum();                                 
+
+                                //获取汇率值                    
+                                decimal exchangeRateModelValue = await ObtainExchangeRate(auditFlowId,priceForm.CurrencyCode, item.Year, solutionId, gradientItem.Kv);
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
-                                kvMode.Value += sharedMaterialWarehousesModeCount * yearOrValueModeOriginal.Value * (exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M) * rebateRateYearOrValueMode.Value;
+                                kvMode.Value += sharedMaterialWarehousesModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
                             yearOrValueModesOriginal.Add(yearOrValueKvModeOriginal);
@@ -820,16 +903,12 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                          .Where(p => p.Year.Equals(item.Year) && p.UpDown.Equals(item.UpDown))
                                                          .Select(p => p.Value)
                                                          .Sum();
-                                //获取汇率
-                                ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(uInitPriceForm.CurrencyCode));
-                                //获取汇率值
-                                List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate.ExchangeRateValue);
-                                //获取汇率值
-                                YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
+                                //获取汇率值                    
+                                decimal exchangeRateModelValue = await ObtainExchangeRate(auditFlowId,priceForm.CurrencyCode, item.Year, solutionId, gradientItem.Kv);
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
-                                kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * (exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M) * rebateRateYearOrValueMode.Value;
+                                kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
                             yearOrValueModesOriginal.Add(yearOrValueKvModeOriginal);
@@ -900,16 +979,12 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                          .Where(p => p.Year.Equals(item.Year) && p.UpDown.Equals(item.UpDown))
                                                          .Select(p => p.Value)
                                                          .Sum();
-                                //获取汇率
-                                ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(uInitPriceForm.CurrencyCode));
-                                //获取汇率值
-                                List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate.ExchangeRateValue);
-                                //获取汇率值
-                                YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
+                                //获取汇率值                    
+                                decimal exchangeRateModelValue = await ObtainExchangeRate(auditFlowId,priceForm.CurrencyCode, item.Year, solutionId, gradientItem.Kv);
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
-                                kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * (exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M) * rebateRateYearOrValueMode.Value;
+                                kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
                             yearOrValueModesOriginal.Add(yearOrValueKvModeOriginal);
@@ -969,9 +1044,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         [Obsolete("优化前")]
         internal async Task<List<YearOrValueKvMode>> CalculateStandardMoneyObsolete(ElectronicDto electronicDto)
         {
-            List<YearOrValueKvMode> yearOrValueKvModes = new List<YearOrValueKvMode>();
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(electronicDto.Currency));
+            List<YearOrValueKvMode> yearOrValueKvModes = new List<YearOrValueKvMode>();          
             //梯度
             foreach (YearOrValueKvMode KV in electronicDto.SystemiginalCurrency)
             {
@@ -981,13 +1054,11 @@ namespace Finance.PropertyDepartment.Entering.Method
                 //年份
                 foreach (YearOrValueMode item in KV.YearOrValueModes)
                 {
-                    var yearOrValueModes11 = JsonExchangeRateValue(exchangeRate.ExchangeRateValue);
-                    //每个年份的汇率
-                    YearOrValueMode exchangeRateModel = new();
-                    if (yearOrValueModes11.Count is not 0) exchangeRateModel = yearOrValueModes11.FirstOrDefault(p => p.Year.Equals(item.Year));
+                    //获取汇率值                    
+                    decimal exchangeRateModelValue = await ObtainExchangeRate(electronicDto.AuditFlowId,electronicDto.Currency, item.Year, electronicDto.SolutionId, KV.Kv);
                     YearOrValueMode yearOrValueMode = new YearOrValueMode();
                     yearOrValueMode.Year = item.Year;
-                    yearOrValueMode.Value = (decimal)item.Value * (decimal)exchangeRateModel.Value * (decimal)electronicDto.AssemblyQuantity;
+                    yearOrValueMode.Value = (decimal)item.Value * exchangeRateModelValue * (decimal)electronicDto.AssemblyQuantity;
 
                     yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
                 }
@@ -1056,61 +1127,74 @@ namespace Finance.PropertyDepartment.Entering.Method
             }
             return null;
         }
-        //获取汇率
-        internal async Task<decimal> ObtainExchangeRate(string Currency, int Year)
+        /// <summary>
+        /// 获取汇率
+        /// </summary>
+        /// <param name="auditFlowId">x</param>
+        /// <param name="Currency">币种</param>
+        /// <param name="Year">年份</param>
+        /// <param name="solutionId">零件</param>
+        /// <param name="Kv">梯度</param>
+        /// <returns></returns>
+        internal async Task<decimal> ObtainExchangeRate(long auditFlowId,string Currency, int Year,long solutionId, decimal Kv)
         {
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(Currency));
-            //获取汇率值
-            List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
-            //获取汇率值
-            YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(Year));
-            return exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
+
+            List<CustomerTargetPrice> customerTargetPrices = (from a in await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.Id.Equals(solutionId))
+                      join b in await _customerTargetPrice.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)) on a.Productld equals b.ProductId
+                      select b).ToList();
+            CustomerTargetPrice customer = customerTargetPrices.FirstOrDefault(p=>p.Kv.Equals(Kv));
+            if(customer is not null&&customer.ExchangeRate is not 0M)
+            {
+                return customer.ExchangeRate;
+            }
+            else
+            {
+                //获取汇率
+                ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(Currency));
+                //获取汇率值
+                List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
+                //获取汇率值
+                YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(Year));
+                return exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
+            }           
         }
         //计算电子本位币
         internal async Task<List<YearOrValueKvMode>> CalculateStandardMoney(ElectronicDto electronicDto)
         {
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(electronicDto.Currency));
-            //获取汇率值
-            List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
             //计算本位币
-            List<YearOrValueKvMode> yearOrValueKvModes = electronicDto.SystemiginalCurrency.Select(KV =>
+            List<YearOrValueKvMode> yearOrValueKvModes = new List<YearOrValueKvMode>();
+            foreach (var KV in electronicDto.SystemiginalCurrency)
             {
                 YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
                 yearOrValueKvMode.Kv = KV.Kv;
-                yearOrValueKvMode.YearOrValueModes = KV.YearOrValueModes.Select(item =>
+                yearOrValueKvMode.YearOrValueModes = new List<YearOrValueMode>();
+                foreach (var item in KV.YearOrValueModes)
                 {
-                    //获取汇率值
-                    YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
-                    decimal exchangeRateModelValue = exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
+                    //获取汇率值                    
+                    decimal exchangeRateModelValue =await ObtainExchangeRate(electronicDto.AuditFlowId,electronicDto.Currency, item.Year, electronicDto.SolutionId, KV.Kv);
                     //计算本位币
                     YearOrValueMode yearOrValueMode = new YearOrValueMode();
                     yearOrValueMode.Year = item.Year;
                     yearOrValueMode.Value = (decimal)item.Value * exchangeRateModelValue * (decimal)electronicDto.AssemblyQuantity;
                     yearOrValueMode.UpDown = item.UpDown;
-                    return yearOrValueMode;
-                }).ToList();
-                return yearOrValueKvMode;
-            }).ToList();
+                    yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
+                }
+                yearOrValueKvModes.Add(yearOrValueKvMode);
+            }
             return yearOrValueKvModes;
         }
         //计算电子物料返利金额
         internal async Task<List<KvMode>> CalculateMaterialRebateAmount(ElectronicDto electronicDto, List<UInitPriceForm> uInitPrice)
-        {
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(electronicDto.Currency));
-            //获取汇率值
-            List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
+        {          
             //计算物料返利金额
             List<KvMode> yearOrValueKvModes = electronicDto.MaterialsUseCount.Select(KV =>
             {
                 KvMode yearOrValueKvMode = new KvMode();
                 yearOrValueKvMode.Kv = KV.Kv;
                 yearOrValueKvMode.Value = KV.YearOrValueModes.Sum(item =>
-                {
-                    //获取汇率值
-                    YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
+                {                   
+                    //获取汇率值                    
+                    decimal exchangeRateModelValue = ObtainExchangeRate(electronicDto.AuditFlowId,electronicDto.Currency, item.Year, electronicDto.SolutionId, KV.Kv).Result;
                     //单价
                     decimal unitPrice = electronicDto.SystemiginalCurrency.FirstOrDefault(p =>
                     p.Kv.Equals(KV.Kv)).YearOrValueModes.FirstOrDefault(p => p.Year.Equals(item.Year))?.Value ?? 0.0m;
@@ -1120,7 +1204,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
 
-                    return item.Value * unitPrice * (exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M) * rebateRateYearOrValueMode.Value;
+                    return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
             }).ToList();
@@ -1129,38 +1213,32 @@ namespace Finance.PropertyDepartment.Entering.Method
         //计算结构本位币
         internal async Task<List<YearOrValueKvMode>> CalculateStandardMoney(ConstructionModel construction)
         {
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(construction.Currency));
-            //获取汇率值
-            List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
             //计算本位币
-            List<YearOrValueKvMode> yearOrValueKvModes = construction.SystemiginalCurrency.Select(KV =>
+            List<YearOrValueKvMode> yearOrValueKvModes = new List<YearOrValueKvMode>();
+            foreach (var KV in construction.SystemiginalCurrency)
             {
                 YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
                 yearOrValueKvMode.Kv = KV.Kv;
-                yearOrValueKvMode.YearOrValueModes = KV.YearOrValueModes.Select(item =>
+                List<YearOrValueMode> yearOrValueModes = new List<YearOrValueMode>();
+                foreach (var item in KV.YearOrValueModes)
                 {
                     //获取汇率值
-                    YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
-                    decimal exchangeRateModelValue = exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
+                    decimal exchangeRateModelValue = await ObtainExchangeRate(construction.AuditFlowId,construction.Currency, item.Year, construction.SolutionId, KV.Kv);
                     //计算本位币
                     YearOrValueMode yearOrValueMode = new YearOrValueMode();
                     yearOrValueMode.Year = item.Year;
                     yearOrValueMode.Value = (decimal)item.Value * exchangeRateModelValue * (decimal)construction.AssemblyQuantity;
                     yearOrValueMode.UpDown = item.UpDown;
-                    return yearOrValueMode;
-                }).ToList();
-                return yearOrValueKvMode;
-            }).ToList();
+                    yearOrValueModes.Add(yearOrValueMode);
+                }
+                yearOrValueKvMode.YearOrValueModes = yearOrValueModes;
+                yearOrValueKvModes.Add(yearOrValueKvMode);
+            }
             return yearOrValueKvModes;
         }
         //计算结构物料返利金额
         internal async Task<List<KvMode>> CalculateMaterialRebateAmount(ConstructionModel construction, List<UInitPriceForm> uInitPrice)
         {
-            //获取汇率
-            ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals(construction.Currency));
-            //获取汇率值
-            List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
             //计算物料返利金额
             List<KvMode> yearOrValueKvModes = construction.MaterialsUseCount.Select(KV =>
             {
@@ -1169,7 +1247,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                 yearOrValueKvMode.Value = KV.YearOrValueModes.Sum(item =>
                 {
                     //获取汇率值
-                    YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(item.Year));
+                    decimal exchangeRateModelValue = ObtainExchangeRate(construction.AuditFlowId,construction.Currency, item.Year, construction.SolutionId, KV.Kv).Result;
                     //单价
                     decimal unitPrice = construction.SystemiginalCurrency.FirstOrDefault(p =>
                     p.Kv.Equals(KV.Kv)).YearOrValueModes.FirstOrDefault(p => p.Year.Equals(item.Year))?.Value ?? 0.0m;
@@ -1178,7 +1256,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<UInitPriceFormYearOrValueMode> uInitPriceFormYearOrValueModes = JsonConvert.DeserializeObject<List<UInitPriceFormYearOrValueMode>>(uInitPriceForm.UInitPriceFormYearOrValueModes);
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
-                    return item.Value * unitPrice * (exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M) * rebateRateYearOrValueMode.Value;
+                    return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
             }).ToList();
@@ -1503,6 +1581,6 @@ namespace Finance.PropertyDepartment.Entering.Method
                 }
             }
             return true;
-        }
+        }       
     }
 }

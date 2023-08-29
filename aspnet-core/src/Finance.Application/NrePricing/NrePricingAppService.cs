@@ -4,8 +4,8 @@ using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
 using Finance.Authorization.Users;
+using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
-using Finance.Dto;
 using Finance.EngineeringDepartment;
 //using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
@@ -27,9 +27,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
-using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -147,6 +149,10 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<ProcessHoursEnterFrock, long> _processHoursEnterFrock;
         /// <summary>
+        /// 二开新增 基础库--实验库环境
+        /// </summary>
+        private readonly IRepository<Foundationreliable, long> _foundationreliable;
+        /// <summary>
         /// Nre 项目管理部 手板件 修改项实体类
         /// </summary>
         private readonly IRepository<HandPieceCostModify, long> _handPieceCostModify;
@@ -188,9 +194,10 @@ namespace Finance.NerPricing
         private readonly IRepository<RestsCostModify, long> _restsCostModify;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
-
-
+        /// <summary>
+        /// 环境实验费录入 服务
+        /// </summary>
+        private readonly FoundationreliableAppService _foundationreliableAppService;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -232,6 +239,8 @@ namespace Finance.NerPricing
         /// <param name="exchangeRate"></param>
         /// <param name="processHoursEnterLine"></param>
         /// <param name="workflowInstanceAppService"></param>
+        /// <param name="foundationreliable"></param>
+        /// <param name="foundationreliableAppService"></param>
         public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount,
             ElectronicStructuralMethod resourceElectronicStructuralMethod,
             IRepository<HandPieceCost, long> resourceHandPieceCost,
@@ -268,7 +277,9 @@ namespace Finance.NerPricing
             IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
             IRepository<ExchangeRate, long> exchangeRate,
             IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
-            WorkflowInstanceAppService workflowInstanceAppService)
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<Foundationreliable, long> foundationreliable,
+            FoundationreliableAppService foundationreliableAppService)
 
         {
             _resourceModelCount = resourceModelCount;
@@ -309,7 +320,8 @@ namespace Finance.NerPricing
             _configExchangeRate = exchangeRate;
             _processHoursEnterLine = processHoursEnterLine;
             _workflowInstanceAppService = workflowInstanceAppService;
-
+            _foundationreliable = foundationreliable;
+            _foundationreliableAppService = foundationreliableAppService;
         }
 
         /// <summary>
@@ -326,7 +338,7 @@ namespace Finance.NerPricing
         /// <summary>
         /// 根据筛选条件获取方案列表
         /// </summary>
-        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<SolutionTable, bool> filter)
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId, Func<Solution, bool> filter)
         {
             //总共的方案
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, filter);
@@ -589,13 +601,30 @@ namespace Finance.NerPricing
             }
         }
         /// <summary>
+        /// 资源部模具费初始值数量
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>     
+        public async Task<long> GetInitialResourcesManagementCount(long auditFlowId)
+        {
+            List<SolutionModel> partModels = await TotalSolution(auditFlowId);// 获总方案         
+            List<MouldInventoryPartModel> mouldInventoryPartModels = new();
+            //循环每一个方案
+            foreach (SolutionModel part in partModels)
+            {
+                MouldInventoryPartModel mould = await GetInitialResourcesManagementSingle(auditFlowId, part.SolutionId);
+                mouldInventoryPartModels.Add(mould);
+            }
+            return mouldInventoryPartModels.Count;
+        }
+        /// <summary>
         /// 资源部模具费初始值(单个方案)
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
         [AbpAuthorize]
-        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle(long auditFlowId, long solutionId)
+        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
@@ -682,42 +711,33 @@ namespace Finance.NerPricing
             MouldInventorys.PeopleId = AbpSession.GetUserId();//提交人ID
             await _resourceMouldInventory.InsertOrUpdateAsync(MouldInventorys);//录入模具清单            
             #region 方案页面录入完成之后
-            MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(price.AuditFlowId, resourcesManagementModel.SolutionId);
-            long count = await _resourceMouldInventory.CountAsync(p => p.IsSubmit) + (MouldInventorys.IsSubmit ? 1 : 0);
-            if (mouldInventoryPartModel.MouldInventoryModels.Count == count)
+            //long ResourcesManagementCount = await GetInitialResourcesManagementCount(price.AuditFlowId);
+            //long count = await _resourceMouldInventory.CountAsync(p => p.IsSubmit&&p.AuditFlowId.Equals(price.AuditFlowId)) + (MouldInventorys.IsSubmit ? 1 : 0);
+            if (await GetResourcesManagement(price.AuditFlowId, MouldInventorys.IsSubmit ? 1 : 0))
             {
-                await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = resourcesManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ResourcesManagement.ToString() });
-                if (await this.GetResourcesManagement(price.AuditFlowId))
+                // _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = resourcesManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ResourcesManagement.ToString() });
+                //if (await this.GetResourcesManagement(price.AuditFlowId))
+                //{                  
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
                 {
-                    if (AbpSession.UserId is null)
-                    {
-                        throw new FriendlyException("请先登录");
-                    }
-
-                }
+                    NodeInstanceId = price.NodeInstanceId,
+                    FinanceDictionaryDetailId = price.Opinion,
+                    Comment = price.Comment,
+                });
+                //}
             }
-            #endregion
-
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-            {
-                NodeInstanceId = price.NodeInstanceId,
-                FinanceDictionaryDetailId = price.Opinion,
-                Comment = price.Comment,
-            });
+            #endregion          
         }
         /// <summary>
         /// 资源部模具费录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> GetResourcesManagement(long auditFlowId)
+        private async Task<bool> GetResourcesManagement(long auditFlowId, long cun)
         {
-            //获取 总共的方案
-            List<SolutionModel> partModels = await TotalSolution(auditFlowId);
-            int AllCount = partModels.Count();
-            //获取 已经提交的方案
-            int Count = await _resourceNreIsSubmit.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString())) + 1;
-            return AllCount == Count;
+            long ResourcesManagementCount = await GetInitialResourcesManagementCount(auditFlowId);
+            long count = await _resourceMouldInventory.CountAsync(p => p.IsSubmit && p.AuditFlowId.Equals(auditFlowId)) + cun;
+            return ResourcesManagementCount == count;
         }
         /// <summary>
         /// 资源部模具费录入  退回重置状态
@@ -725,8 +745,22 @@ namespace Finance.NerPricing
         /// <returns></returns>
         internal async Task GetResourcesManagementConfigurationState(long auditFlowId)
         {
-            await _resourceNreIsSubmit.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString()));
+            //await _resourceNreIsSubmit.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString()));
             List<MouldInventory> prop = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            foreach (var item in prop)
+            {
+                item.IsSubmit = false;
+                await _resourceMouldInventory.UpdateAsync(item);
+            }
+        }
+        /// <summary>
+        /// 资源部模具费录入  退回重置状态
+        /// </summary>
+        /// <returns></returns>
+        internal async Task GetResourcesManagementConfigurationState(List<long> NreId)
+        {
+            //await _resourceNreIsSubmit.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString()));
+            List<MouldInventory> prop = await _resourceMouldInventory.GetAllListAsync(p => NreId.Contains(p.Id));
             foreach (var item in prop)
             {
                 item.IsSubmit = false;
@@ -1148,23 +1182,15 @@ namespace Finance.NerPricing
                     #endregion
                     if (await this.GetExperimentItems(experimentItems.AuditFlowId))
                     {
-                        if (AbpSession.UserId is null)
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
                         {
-                            throw new FriendlyException("请先登录");
-                        }
-                        #region 流程流转
-                        #endregion
+                            NodeInstanceId = experimentItems.NodeInstanceId,
+                            FinanceDictionaryDetailId = experimentItems.Opinion,
+                            Comment = experimentItems.Comment,
+                        });
                     }
                 }
-
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-                {
-                    NodeInstanceId = experimentItems.NodeInstanceId,
-                    FinanceDictionaryDetailId = experimentItems.Opinion,
-                    Comment = experimentItems.Comment,
-                });
-
             }
             catch (Exception e)
             {
@@ -1209,15 +1235,47 @@ namespace Finance.NerPricing
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public IActionResult PostExperimentItemsSingleDownloadExcel(string FileName = "NRE环境实验费模版下载")
+        public async Task<IActionResult> PostExperimentItemsSingleDownloadExcel(string FileName = "NRE环境实验费模版下载")
         {
             try
             {
+                List<FoundationreliableDto> foundationreliables = await _foundationreliableAppService.GetListAllAsync(new GetFoundationreliablesInput() { MaxResultCount = 9999 });
+
                 string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE环境实验费模版.xlsx";
-                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                //创建Excel工作簿
+                var workbook = new XSSFWorkbook(templatePath);
+                ISheet sheet = workbook.GetSheetAt(0);
+                //列数据约束
+                workbook.SetConstraint(sheet, 0, 2, foundationreliables.Select(p => p.Name).ToArray());
+                ISheet sheet2 = workbook.CreateSheet("环境实验库");
+                // 添加表头
+                IRow headerRow = sheet2.CreateRow(0);
+                headerRow.CreateCell(0).SetCellValue("实验分类");
+                headerRow.CreateCell(1).SetCellValue("实验名称");
+                headerRow.CreateCell(2).SetCellValue("单价");
+                headerRow.CreateCell(3).SetCellValue("计价单位");
+                headerRow.CreateCell(4).SetCellValue("工序维护人");
+                headerRow.CreateCell(5).SetCellValue("工序维护时间");
+                int index = 1;
+                foreach (FoundationreliableDto item in foundationreliables)
+                {   // 添加数据
+                    IRow dataRow = sheet2.CreateRow(index++);
+                    dataRow.CreateCell(0).SetCellValue(item.Classification);
+                    dataRow.CreateCell(1).SetCellValue(item.Name);
+                    dataRow.CreateCell(2).SetCellValue(item.Price.ToString());
+                    dataRow.CreateCell(3).SetCellValue(item.Unit);
+                    dataRow.CreateCell(4).SetCellValue(item.LastModifierUserName);
+                    dataRow.CreateCell(5).SetCellValue(item.CreationTime);
+                }
+                // 保存工作簿
+                using (MemoryStream fileStream = new MemoryStream())
                 {
-                    FileDownloadName = $"{FileName}.xlsx"
-                };
+                    workbook.Write(fileStream);
+                    return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    {
+                        FileDownloadName = $"{FileName}.xlsx"
+                    };
+                }
             }
             catch (Exception e)
             {
@@ -1238,7 +1296,15 @@ namespace Finance.NerPricing
                     await filename.CopyToAsync(memoryStream);
                     List<QADepartmentTestExcelModel> rowExcls = memoryStream.Query<QADepartmentTestExcelModel>(startCell: "A2").ToList();
                     if (rowExcls.Count is 0) throw new FriendlyException("模板数据为空/未使用标准模板");
+                    List<FoundationreliableDto> foundationreliables = await _foundationreliableAppService.GetListAllAsync(new GetFoundationreliablesInput() { MaxResultCount = 9999 });
                     List<EnvironmentalExperimentFeeModel> rows = ObjectMapper.Map<List<EnvironmentalExperimentFeeModel>>(rowExcls);
+                    rows.ForEach(row =>
+                    {
+                        FoundationreliableDto foundationreliableDto = foundationreliables.FirstOrDefault(p => p.Name == row.ProjectName);
+                        if (foundationreliableDto is null) throw new FriendlyException("实验项目为请根据下拉选择填写!");
+                        row.UnitPrice = (decimal)foundationreliableDto.Price;
+                        row.Unit = foundationreliableDto.Unit;
+                    });
                     return rows;
                 }
             }
@@ -1293,7 +1359,7 @@ namespace Finance.NerPricing
         /// </summary>      
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm(long auditFlowId, long solutionId)
+        public async Task<IActionResult> GetExportOfEnvironmentalExperimentFeeForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1335,7 +1401,7 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="auditFlowId">流程表Id</param>
         /// <returns></returns>
-        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment(long auditFlowId)
+        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
         {
 
             List<ReturnSalesDepartmentDto> initialSalesDepartmentDtos = new();
@@ -1507,11 +1573,11 @@ namespace Finance.NerPricing
         /// <summary>
         /// 获取 第一个页面最初的年份
         /// </summary>
-        /// <param name="processId"></param>
+        /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        private async Task<int> GetYear(long processId)
+        private async Task<int> GetYear(long auditFlowId)
         {
-            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(processId));
+            List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<int> yearList = modelCountYears.Select(p => p.Year).Distinct().ToList();
             int year = yearList.Min();
             return year;
@@ -1529,7 +1595,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<PricingFormDto> GetPricingFormDownload(long auditFlowId, long solutionId)
+        public async Task<PricingFormDto> GetPricingFormDownload([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1626,6 +1692,8 @@ namespace Finance.NerPricing
                         item.UnitPrice = modify.UnitPrice;
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
+                        item.DeviceStatus = modify.DeviceStatus;
+                        item.DeviceStatusName =await GetDisplayName(modify.DeviceStatus);
                     }
                 }
                 //实验费用
@@ -1669,6 +1737,7 @@ namespace Finance.NerPricing
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
+                        item.ReasonsName =await GetDisplayName(modify.ReasonsId);
                         item.PeopleCount = modify.PeopleCount;
                         item.CostSky = modify.CostSky;
                         item.SkyCount = modify.SkyCount;
@@ -1711,7 +1780,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<ModifyItemPricingFormDto> GetPricingForm(long auditFlowId, long solutionId)
+        public async Task<ModifyItemPricingFormDto> GetPricingForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1727,6 +1796,37 @@ namespace Finance.NerPricing
                 decimal UphAndValuesd = 0M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+
+                if (processHoursEnterLines.Count is not 0)
+                {
+                    //先判断线体数量是否一致 如果一致 则继续判断共线分摊率
+                    var xtsl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription())).ToList();
+                    if (xtsl.Select(x => x.Value).Distinct().Count() == 1)
+                    {
+                        //每一年的值都一样  
+                        List<ProcessHoursEnterLine> gxftl = processHoursEnterLines.Where(a => a.Uph.Equals(OperateTypeCode.gxftl.GetDescription())).ToList();
+                        //继续判断共线分摊率
+                        if (gxftl.Select(x => x.Value).Distinct().Count() == 1)
+                        {
+                            //获取值最大年份的那一年
+                            var maxYear = gxftl.Max(p => p.Year);
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxYear)).ToList();
+                        }
+                        else
+                        {
+                            //获取值最大的那年
+                            ProcessHoursEnterLine maxGxftl = gxftl.OrderByDescending(p => p.Value).FirstOrDefault();
+                            processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxGxftl.Year)).ToList();
+                        }
+                    }
+                    else
+                    {
+                        //获取值最大的那年
+                        ProcessHoursEnterLine maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
+                        processHoursEnterLines = processHoursEnterLines.Where(p => p.Year.Equals(maxXtsl.Year)).ToList();
+                    }
+                }
+
                 decimal NumberOfLines = processHoursEnterLines
                .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.GetDescription()))?.Value ?? 0;
 
@@ -1838,9 +1938,23 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd)
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),                     
                     }).ToList();
-                modify.ProductionEquipmentCost = productionEquipmentCostModels;
+                List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
+                                                                 join p in _financeDictionaryDetailRepository.GetAll()
+                                                                 on t.DeviceStatus equals p.Id into temp
+                                                                 from p in temp.DefaultIfEmpty()
+                                                                 select new ProductionEquipmentCostModel
+                                                                 {
+                                                                     Id = t.Id,
+                                                                     EquipmentName = t.EquipmentName,
+                                                                     DeviceStatus = t.DeviceStatus,
+                                                                     UnitPrice = t.UnitPrice,
+                                                                     Number = t.Number,
+                                                                     Cost = t.Cost,
+                                                                     DeviceStatusName = p != null ? p.DisplayName : ""
+                                                                 }).ToList();
+                modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
                 //实验费用
                 {
@@ -1877,7 +1991,7 @@ namespace Finance.NerPricing
                     {
                         Id = t.Id,
                         ReasonsId = t.ReasonsId,
-                        //ReasonsName = p.DisplayName,
+                        ReasonsName = p.DisplayName,
                         PeopleCount = t.PeopleCount,
                         CostSky = t.CostSky,
                         SkyCount = t.SkyCount,
@@ -1944,6 +2058,16 @@ namespace Finance.NerPricing
             {
                 throw new UserFriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 根据ID从字典表里取值
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        internal async Task<string> GetDisplayName(string Id)
+        {
+           FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id.Equals(Id));
+           return prop?.DisplayName;
         }
         /// <summary>
         /// 手板件费用修改项添加
@@ -2041,6 +2165,24 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task NREToExamine(NREToExamineToExamineDto toExamineDto)
         {
+            //模具费审核 并且拒绝
+            if (toExamineDto.NreCheckType == NRECHECKTYPE.MoldCost && toExamineDto.Opinion == FinanceConsts.YesOrNo_No)
+            {
+                //重置状态
+                await GetResourcesManagementConfigurationState(toExamineDto.NreId);
+            }
+            //环境实验费审核 并且拒绝
+            if (toExamineDto.NreCheckType == NRECHECKTYPE.EnvironmentalTestingFee && toExamineDto.Opinion == FinanceConsts.YesOrNo_No)
+            {
+                //重置状态
+                await GetExperimentItemsConfigurationState(toExamineDto.AuditFlowId);
+            }
+            //EMC试验费审核 并且拒绝
+            if (toExamineDto.NreCheckType == NRECHECKTYPE.EMCTestFee && toExamineDto.Opinion == FinanceConsts.YesOrNo_No)
+            {
+                //重置状态
+                await GetProductDepartmentConfigurationState(toExamineDto.AuditFlowId);
+            }
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
             {

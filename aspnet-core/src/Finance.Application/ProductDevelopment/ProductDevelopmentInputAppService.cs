@@ -35,9 +35,9 @@ namespace Finance.ProductDevelopment
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
-        public readonly IRepository<SolutionTable, long> _resourceSchemeTable;
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
 
-        public ProductDevelopmentInputAppService(ILogger<ProductDevelopmentInput> logger, IRepository<ProductDevelopmentInput, long> productDevelopmentInputRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<FileManagement, long> fileManagementRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IObjectMapper objectMapper, IRepository<SolutionTable, long> resourceSchemeTable)
+        public ProductDevelopmentInputAppService(ILogger<ProductDevelopmentInput> logger, IRepository<ProductDevelopmentInput, long> productDevelopmentInputRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<FileManagement, long> fileManagementRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IObjectMapper objectMapper, IRepository<Solution, long> resourceSchemeTable)
         {
             _logger=logger;
             _productDevelopmentInputRepository=productDevelopmentInputRepository;
@@ -135,16 +135,16 @@ namespace Finance.ProductDevelopment
         }
 
         /// <summary>
-        /// 根据流程号获取零件号
+        /// 根据流程号获取方案号
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        public async Task<List<SolutionTable>> GetProductByAuditFlowId(long auditFlowId)
+        public async Task<List<Solution>> GetProductByAuditFlowId(long auditFlowId)
         {
             try
             {
                 //List<ModelCount> result = await _modelCountRepository.GetAll().Where(p => auditFlowId==p.AuditFlowId).ToListAsync();
-                List<SolutionTable> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
                 result = result.OrderBy(p => p.ModuleName).ToList();
                 return result;
             }

@@ -7,5 +7,7 @@ namespace Finance.Processes
     /// </summary>
     public class GetProcessHoursEnterUphsInput: PagedInputDto
     {
+        public long? AuditFlowId { get; set; }
+        public long? SolutionId { get; set; }
     }
 }

@@ -23,7 +23,7 @@ namespace Finance.Processes
     /// </summary>
     public class FProcessesAppService : ApplicationService
     {
-        private readonly int logType = 4;
+        private readonly LogType logType = LogType.WorkingProcedure;
         private readonly IRepository<FProcesses, long> _fProcessesRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
@@ -85,6 +85,10 @@ namespace Finance.Processes
             if (!string.IsNullOrEmpty(input.ProcessName))
             {
                 query = query.Where(t => t.ProcessName.Contains(input.ProcessName));
+            }
+            if (!string.IsNullOrEmpty(input.ProcessNumber))
+            {
+                query = query.Where(t => t.ProcessNumber.Contains(input.ProcessNumber));
             }
             // 查询数据
             var list = query.ToList();

@@ -1,11 +1,13 @@
 ﻿using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Finance.Audit;
+using Finance.DemandApplyAudit;
 using Finance.Entering.Model;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment;
+using Finance.ProductDevelopment.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
@@ -92,13 +94,13 @@ namespace Finance.Entering
         /// <returns></returns>         
 
         internal async Task<int> InitialValueQuantityOfElectronicMaterials(long AuditFlowId)
-        {            
+        {
             //总共的方案
             List<SolutionModel> solutionList = await _resourceElectronicStructuralMethod.TotalSolution(AuditFlowId);
             InitialElectronicDto initialElectronicDto = new();
             //从字典明细表取 零件名称和id
             initialElectronicDto.PartDtoList = solutionList;
-            initialElectronicDto.ElectronicBomList = await _resourceElectronicStructuralMethod.ElectronicBomList(solutionList, AuditFlowId);// 电子BOM单价表单           
+            initialElectronicDto.ElectronicBomList = await _resourceElectronicStructuralMethod.ElectronicBomListCount(solutionList, AuditFlowId);// 电子BOM单价表单           
             #region 电子BOM退回差异处理
             foreach (var item in solutionList)//循环所有方案
             {
@@ -228,14 +230,18 @@ namespace Finance.Entering
         public async Task PostElectronicMaterialEntering(SubmitElectronicDto electronicDto)
         {
             if (electronicDto.IsSubmit)
-            {             
+            {
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
-
                 //判断是否全部提交
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
                 {
-                  
-                   
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    {
+                        NodeInstanceId = electronicDto.NodeInstanceId,
+                        FinanceDictionaryDetailId = electronicDto.Opinion,
+                        Comment = electronicDto.Comment,
+                    });
                 }
             }
             else
@@ -243,15 +249,8 @@ namespace Finance.Entering
                 //电子料单价录入确认
                 await _resourceElectronicStructuralMethod.ElectronicMaterialEntering(electronicDto);
             }
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-            {
-                NodeInstanceId = electronicDto.NodeInstanceId,
-                FinanceDictionaryDetailId = electronicDto.Opinion,
-                Comment = electronicDto.Comment,
-            });
 
-        }   
+        }
         /// <summary>
         /// 电子料单价录入  判断是否全部提交完毕  true 所有零件已录完   false  没有录完
         /// </summary>
@@ -310,8 +309,8 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        internal async Task<int> InitialValueOfLoadingStructuralMaterials(long auditFlowId)
-        {             
+        internal async Task<int> InitialValueOfLoadingStructuralMaterials([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
+        {
             //总共的零件
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId);
             //删除的结构BOMid
@@ -344,7 +343,7 @@ namespace Finance.Entering
             #endregion
             InitialStructuralDto initialStructuralDto = new();
             initialStructuralDto.PartDtoList = partList;
-            initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomList(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
+            initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomListCount(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
             return initialStructuralDto.ConstructionBomList.Count;
         }
         /// <summary>
@@ -354,13 +353,13 @@ namespace Finance.Entering
         /// <param name="solutionId"></param>
         /// <returns></returns>
         public async Task<List<ConstructionDto>> GetStructuralSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
-        {             
+        {
             //删除的结构BOMid
             List<long> structureBOMIdDeleted = new();
             //修改的结构BOMid
             List<long> structureBOMIdModify = new();
             //指定方案
-            List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId,item=> item.Id.Equals(solutionId));
+            List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));
             #region 结构BOM退回差异处理
             foreach (var item in partList)//循环所有方案
             {
@@ -395,9 +394,9 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<IsALLConstructionDto> GetBOMStructuralSingle(long auditFlowId, long solutionId)
+        public async Task<IsALLConstructionDto> GetBOMStructuralSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
-            IsALLConstructionDto isALLConstructionDto = new();       
+            IsALLConstructionDto isALLConstructionDto = new();
             isALLConstructionDto.isAll = await GetStructuralIsAllEntering(auditFlowId);
             //指定方案
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));
@@ -420,7 +419,7 @@ namespace Finance.Entering
                 Count += await _configStructureElectronic.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsSubmit);//数据库实际提交的条数
             }
             return AllCount == Count;
-        }     
+        }
         /// <summary>
         /// 结构件单价录入确认/提交 有则添加无则修改
         /// </summary>
@@ -429,27 +428,24 @@ namespace Finance.Entering
         public async Task PostStructuralMemberEntering(StructuralMemberEnteringModel structuralMemberEnteringModel)
         {
             if (structuralMemberEnteringModel.IsSubmit)
-            {                
+            {
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
                 //判断有没有全部提交完
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
                 {
-                 
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    {
+                        NodeInstanceId = structuralMemberEnteringModel.NodeInstanceId,
+                        FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
+                        Comment = structuralMemberEnteringModel.Comment,
+                    });
                 }
-
             }
             else
             {
                 await _resourceElectronicStructuralMethod.StructuralMemberEntering(structuralMemberEnteringModel);
             }
-
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-            {
-                NodeInstanceId = structuralMemberEnteringModel.NodeInstanceId,
-                FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
-                Comment = structuralMemberEnteringModel.Comment,
-            });
         }
         /// <summary>
         /// 结构件单价录入  判断是否全部提交完毕  true 所有零件已录完   false  没有录完
@@ -521,16 +517,123 @@ namespace Finance.Entering
         public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
         {
             return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
-        }    
+        }
+        /// <summary>
+        /// 获取电子单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronic>> ElectronicUnitPriceMaterialRebateAmount(long auditFlowId)
+        {
+            List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
+                                                            where a != null
+                                                            select new RebateAmountKvModeElectronic
+                                                            {
+                                                                AuditFlowId = a.AuditFlowId,
+                                                                SolutionId = a.SolutionId,
+                                                                ElectronicId = a.ElectronicId,
+                                                                ElectronicUnitPriceId=a.Id,
+                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                            }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取电子单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronic>> ElectronicUnitPriceMaterialRebateAmount(long auditFlowId, Func<EnteringElectronic, bool> filter)
+        {
+            List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
+                                                            where filter(a) && a != null
+                                                            select new RebateAmountKvModeElectronic
+                                                            {
+                                                                AuditFlowId = a.AuditFlowId,
+                                                                SolutionId = a.SolutionId,
+                                                                ElectronicId = a.ElectronicId,
+                                                                ElectronicUnitPriceId = a.Id,
+                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                            }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取结构单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronicStructure>> StructureUnitPriceMaterialRebateAmount(long auditFlowId)
+        {
+            List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
+                                                                      where a != null
+                                                                      select new RebateAmountKvModeElectronicStructure
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          StructureId = a.StructureId,
+                                                                          StructuralUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
+            return rebateAmountKvModes;
+        }
+        /// <summary>
+        /// 获取结构单价物料返利金额
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        internal async Task<List<RebateAmountKvModeElectronicStructure>> StructureUnitPriceMaterialRebateAmount(long auditFlowId, Func<StructureElectronic, bool> filter)
+        {
+            List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
+                                                                      where filter(a) && a != null
+                                                                      select new RebateAmountKvModeElectronicStructure
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          StructureId = a.StructureId,
+                                                                          StructuralUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
+            return rebateAmountKvModes;
+        }
         /// <summary>
         /// 结构/电子/BOM/单价审核
         /// </summary>
         /// <returns></returns>
         public async Task BOMUnitPriceReview(BomUnitPriceReviewToExamineDto toExamineDto)
         {
-            
+            //电子bom单价审核 并且是拒绝
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.ElecBomPriceCheck && toExamineDto.Opinion != FinanceConsts.ElectronicBomEvalSelect_Yes)
+            {
+                //重置状态
+                await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
+            }
+            //结构bom单价审核 并且是拒绝
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.ElecBomPriceCheck && toExamineDto.Opinion != FinanceConsts.StructBomEvalSelect_Yes)
+            {
+                //重置状态
+                await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
+            }
+            //bom单价审核 并且是拒绝
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.BomPriceCheck && toExamineDto.Opinion != FinanceConsts.BomEvalSelect_Yes)
+            {
+                //重置状态
+                await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
+                //重置状态
+                await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
+            }
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            {
+                NodeInstanceId = toExamineDto.NodeInstanceId,
+                FinanceDictionaryDetailId = toExamineDto.Opinion,
+                Comment = toExamineDto.Comment,
+            });
         }
-
     }
 
 }

@@ -22,7 +22,7 @@ namespace Finance.NrePricing.Model
         /// <summary>
         /// 事由名称
         /// </summary>
-        //public string ReasonsName { get; set; }
+        public string ReasonsName { get; set; }
         /// <summary>
         /// 人数
         /// </summary>

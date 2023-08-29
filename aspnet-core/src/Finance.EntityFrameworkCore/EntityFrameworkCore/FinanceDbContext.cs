@@ -79,7 +79,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GradientModel> GradientModel { set; get; }
         public virtual DbSet<GradientModelYear> GradientModelYear { set; get; }
         public virtual DbSet<ShareCount> ShareCount { set; get; }
-        public virtual DbSet<EditItem> EditItem { set; get; }
+        //public virtual DbSet<EditItem> EditItem { set; get; }
 
 
         public virtual DbSet<UserInputInfo> UserInputInfo { get; set; }
@@ -167,7 +167,7 @@ namespace Finance.EntityFrameworkCore
         /// <summary>
         /// 营销部审核 方案表
         /// </summary>
-        public virtual DbSet<SolutionTable> SolutionTable { get; set; }
+        public virtual DbSet<Solution> Solution { get; set; }
         /// <summary>
         /// 时效性页面
         /// </summary>
@@ -190,6 +190,10 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<BoardInfo> BoardInfo { get; set; }
 
+        /// <summary>
+        /// 贸易合规国家库
+        /// </summary>
+        public virtual DbSet<CountryLibrary> CountryLibrary { get; set; }
 
         #region NRE新增表
         /// <summary>
@@ -374,8 +378,17 @@ namespace Finance.EntityFrameworkCore
         /// 工序工时导入UPH率
         /// </summary>
         public virtual DbSet<ProcessHoursEnterUph> ProcessHoursEnterUph { get; set; }
+        /// <summary>
+        /// 质量成本比例
+        /// </summary>
+        public virtual DbSet<QualityCostRatio> QualityCostRatio { get; set; }
+        /// <summary>
+        /// 质量成本比例年份
+        /// </summary>
+        public virtual DbSet<QualityCostRatioYear> QualityCostRatioYear { get; set; }
         public virtual DbSet<FProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
+        public virtual DbSet<UpdateItem> UpdateItem { get; set; }
 
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
@@ -510,7 +523,7 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<StructureBomInfoBak>().ToTable("StructureBomInfoBak");
             modelBuilder.Entity<BoardInfo>().ToTable("BoardInfo");
 
-     // 基础库
+            // 基础库
             modelBuilder.Entity<FoundationDevice>().ToTable("FDevice");
             modelBuilder.Entity<FoundationDeviceItem>().ToTable("FDeviceItem");
             modelBuilder.Entity<FoundationEmc>().ToTable("FEmc");

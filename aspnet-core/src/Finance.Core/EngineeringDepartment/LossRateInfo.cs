@@ -33,7 +33,7 @@ namespace Finance.EngineeringDepartment
         [Column("PRODUCT")]
         public string Product { get; set; }
         /// <summary>
-        /// 超级大种类
+        /// 产品大类
         /// </summary>
         [Required]
         [Column("SUPERTYPE")]
@@ -44,7 +44,7 @@ namespace Finance.EngineeringDepartment
         [Column("IDNUMBER")]
         public int IdNumber { get; set; }
         /// <summary>
-        /// 物料大类
+        /// 物料种类
         /// </summary>
         [Column("CATEGORYNAME")]
         public string CategoryName { get; set; }

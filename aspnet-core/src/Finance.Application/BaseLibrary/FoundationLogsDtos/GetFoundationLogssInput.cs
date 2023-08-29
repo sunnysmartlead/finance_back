@@ -11,7 +11,7 @@ namespace Finance.BaseLibrary
     public class GetFoundationLogssInput: PagedInputDto
     {
      
-        public int? Type { get; set; }
+        public LogType? Type { get; set; }
         public List<FoundationLogsDto> ListFoundationLogs { get; set; }
     }
 }

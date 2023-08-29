@@ -25,7 +25,7 @@ namespace Finance.BaseLibrary
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly int logType = 2;
+        private readonly LogType logType = LogType.EMC;
         /// <summary>
         /// .ctor
         /// </summary>

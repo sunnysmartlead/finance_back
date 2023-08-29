@@ -46,6 +46,9 @@ namespace Finance
         public const string EccnCode_Uninvolved = "不涉及";
         public const string EccnCode_Pending = "待定";
 
+        public const int ExcelColumnWidth = 20;
+
+
         /// <summary>
         /// 部门PathId的生成规则
         /// </summary>

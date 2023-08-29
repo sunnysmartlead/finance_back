@@ -37,7 +37,7 @@ namespace Finance.ProductDevelopment
         private readonly IRepository<StructureBomInfoBak, long> _structureBomInfoBakRepository;
         private readonly IRepository<ModelCount, long> _modelCountRepository;
         private readonly IRepository<StructBomDifferent, long> _structBomDifferentRepository;
-        private readonly IRepository<SolutionTable, long> _solutionTableRepository;
+        private readonly IRepository<Solution, long> _solutionTableRepository;
         /// <summary>
         ///  零件是否全部录入 依据实体类
         /// </summary>
@@ -52,7 +52,7 @@ namespace Finance.ProductDevelopment
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
-        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<SolutionTable, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
+        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _logger=logger;
             _structureBomInfoRepository=structureBomInfoRepository;

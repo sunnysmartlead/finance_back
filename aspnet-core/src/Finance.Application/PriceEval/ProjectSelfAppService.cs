@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Finance.Ext;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Finance.Users.Dto;
 using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
+using MiniExcelLibs;
+using System.IO;
 
 namespace Finance.PriceEval
 {
@@ -44,14 +46,12 @@ namespace Finance.PriceEval
         /// <returns></returns>
         protected override IQueryable<ProjectSelf> CreateFilteredQuery(GetProjectSelfInput input)
         {
-            return Repository.GetAll()
-                .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
-                p =>
-                p.Custom.Contains(input.Filter)
+            return Repository.GetAll().WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+                p => p.Custom.Contains(input.Filter)
                 || p.CustomName.Contains(input.Filter)
                 || p.Code.Contains(input.Filter)
                 || p.Description.Contains(input.Filter)
-                 || p.SubCode.Contains(input.Filter)
+                || p.SubCode.Contains(input.Filter)
                 || p.SubDescription.Contains(input.Filter));
         }
 
@@ -114,6 +114,16 @@ namespace Finance.PriceEval
             await base.DeleteAsync(input);
         }
 
+        /// <summary>
+        /// 修改基本库日志
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public virtual async Task UpdateBaseStoreLog(UpdateBaseStoreLogInput input)
+        {
+            var entity = await _baseStoreLogRepository.GetAsync(input.Id);
+            entity.Text = input.Text;
+        }
 
         /// <summary>
         /// 获取基础库日志
@@ -147,7 +157,27 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<ExcelImportResult> ExcelImport([Required] IFormFile excle)
         {
-            return null;
+            var stream = excle.OpenReadStream();
+            var rows = MiniExcel.Query<CreateProjectSelfInput>(stream).ToList();
+            var entitys = ObjectMapper.Map<List<ProjectSelf>>(rows);
+            await Repository.BulkInsertAsync(entitys);
+
+            await _baseStoreLogRepository.InsertAsync(new BaseStoreLog
+            {
+                OperationType = OperationType.Import,
+                Count = rows.Count,
+                Text = $"使用Excel导入了{rows.Count}条记录",
+            });
+
+            return new ExcelImportResult
+            {
+                Total = rows.Count,
+                InsertTotal = rows.Count,
+                UpdateTotal = 0,
+                NegativeTotal = 0,
+                IsSuccess = true,
+                Message = "添加成功"
+            };
         }
 
         /// <summary>
@@ -156,7 +186,23 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task<FileResult> GetImportTemplate()
         {
-            return null;
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { new CreateProjectSelfInput { Custom = string.Empty } });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "项目自建表导入模板.xlsx" };
+        }
+
+        /// <summary>
+        /// 导出项目自建表
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetProjectSelfImport()
+        {
+            var data = await Repository.GetAllListAsync();
+            var dto = ObjectMapper.Map<List<CreateProjectSelfInput>>(data);
+
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, dto);
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "项目自建表.xlsx" };
         }
     }
 }
