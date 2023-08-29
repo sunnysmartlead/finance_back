@@ -878,6 +878,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                         List<decimal> annualGeneralRateHeader = rowExcl[i].ToListDecimal();
                         for (int j = 0; j < annualGeneralRateHeader.Count; j++)
                         {
+                            if (annualGeneralRateHeader[j] == 0) throw new FriendlyException($"导入错误!  {i + 1}行,{j + 4}列数值为0");
                             year.Add(new LossRateYearInfo()
                             {
                                 LossRateInfoId = prop[i].Id,
@@ -887,7 +888,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                         }
                     }
                     await _lossRateYearInfo.BulkInsertAsync(year);
-                    await CreateLog($"导入了损害率表单 {prop.Count} 条", LossRateType);
+                    await CreateLog($"导入了损耗率表单 {prop.Count} 条", LossRateType);
                 }
             }
             catch (Exception e)
@@ -905,7 +906,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             try
             {
                 //定义列表查询
-                List<LossRateInfo> lossRateInfo = _lossRateInfo.GetAll().WhereIf(!filterPagedInputDto.Filter.IsNullOrEmpty(), p => p.SuperType.Contains(filterPagedInputDto.Filter) || p.CategoryName.Contains(filterPagedInputDto.Filter)).ToList();
+                List<LossRateInfo> lossRateInfo = _lossRateInfo.GetAll().WhereIf(!filterPagedInputDto.Filter.IsNullOrEmpty(), p => p.SuperType.Contains(filterPagedInputDto.Filter) || p.CategoryName.Contains(filterPagedInputDto.Filter)||p.MaterialCategory.Contains(filterPagedInputDto.Filter)).ToList();
                 List<LossRateYearInfo> lossRateYearInfo = await _lossRateYearInfo.GetAllListAsync();
                 IQueryable<LossRatesDto> filter = (from s in lossRateInfo
                                                    join b in lossRateYearInfo on s.Id equals b.LossRateInfoId into bGroup
@@ -914,6 +915,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
 
                                                        SuperType = s.SuperType,
                                                        CategoryName = s.CategoryName,
+                                                       MaterialCategory = s.MaterialCategory,
                                                        LossRateYearList = bGroup.Select(t => new LossRatesYearDto
                                                        {
                                                            Year = t.Year,
@@ -947,8 +949,9 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             {
                 Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
                     {
-                    { "产品大类", item.SuperType },
-                    { "物料种类", item.CategoryName },
+                     { "产品大类", item.SuperType },
+                     { "物料大类", item.MaterialCategory },
+                     { "物料种类", item.CategoryName },
                     };
                 foreach (LossRatesYearDto pro in item.LossRateYearList)
                 {
@@ -977,7 +980,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             {
                 QualityCostRatio qualityCostRatio = ObjectMapper.Map<QualityCostRatio>(qualityModel);
                 long qualityCostRatioId = await _qualityCostRatio.InsertOrUpdateAndGetIdAsync(qualityCostRatio);
-                qualityModel.qualityCostRatioYears.Select((p,i) => { p.QualityCostRatioId = qualityCostRatioId; p.Year = i; return p; }).ToList() ;
+                qualityModel.qualityCostRatioYears.Select((p, i) => { p.QualityCostRatioId = qualityCostRatioId; p.Year = i; return p; }).ToList();
                 List<QualityCostRatioYear> qualityCostRatioYears = await _qualityCostRatioYear.GetAllListAsync(p => p.QualityCostRatioId.Equals(qualityCostRatioId));
                 await _qualityCostRatioYear.HardDeleteAsync(p => qualityCostRatioYears.Select(l => l.Id).Contains(p.Id));
                 List<QualityCostRatioYear> qualityCostRatios = ObjectMapper.Map<List<QualityCostRatioYear>>(qualityModel.qualityCostRatioYears);
