@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Abp.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -43,7 +44,7 @@ namespace Finance.Audit.Dto
     /// <summary>
     /// 流程信息
     /// </summary>
-    public class AuditFlowRightDetailDto
+    public class AuditFlowRightDetailDto : Entity<long>
     {
         /// <summary>
         /// 流程标识符

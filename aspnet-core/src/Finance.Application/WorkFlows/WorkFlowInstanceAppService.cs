@@ -6,6 +6,7 @@ using Abp.Extensions;
 using Abp.Linq.Extensions;
 using Castle.MicroKernel.Registration;
 using DynamicExpresso;
+using Finance.Audit.Dto;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
 using Finance.Ext;
@@ -20,6 +21,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
