@@ -190,8 +190,8 @@ namespace Finance.Processes
                 foreach (var device in queryYear)
                 {
                     ProcessHoursEnterSopInfoDto processHoursEnteritem =    new ProcessHoursEnterSopInfoDto();
-                    var query = this._modelCountYearRepository.GetAsync(device);
-                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId ==query.Id ).ToList();
+                    ModelCountYear query = await _modelCountYearRepository.GetAsync(device);
+                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == query.Id ).ToList();
                    List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
                     foreach (var yearItem in deviceYear)
                     {
@@ -199,7 +199,21 @@ namespace Finance.Processes
                         processHoursEnteritemDto.LaborHour = yearItem.LaborHour;
                         processHoursEnteritemDto.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritemDto.MachineHour = yearItem.MachineHour;
-                        processHoursEnteritem.Issues.Add(processHoursEnteritemDto);
+                        processHoursEnteritems1.Add(processHoursEnteritemDto);
+                    }
+                    processHoursEnteritem.Issues = processHoursEnteritems1;
+                    if (query.UpDown == YearType.FirstHalf)
+                    {
+
+                        processHoursEnteritem.Year = query.Year + "上半年";
+                    }
+                    else if (query.UpDown == YearType.SecondHalf)
+                    {
+                        processHoursEnteritem.Year = query.Year + "下半年";
+                    }
+                    else
+                    {
+                        processHoursEnteritem.Year = query.Year.ToString();
                     }
                     processHoursEnteritems.Add(processHoursEnteritem);
                     }
@@ -1162,6 +1176,7 @@ namespace Finance.Processes
                             processHoursEnteritem.LaborHour = yearItem.LaborHour;
                             processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                             processHoursEnteritem.MachineHour = yearItem.MachineHour;
+                            processHoursEnteritem.ModelCountYearId = yearItem.ModelCountYearId;
                             _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
                         }
                     }
