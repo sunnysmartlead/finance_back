@@ -54,5 +54,57 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// 值
         /// </summary>
         public decimal Value { get; set; }
+    }  
+    /// <summary>
+    /// 电子返利金额内部开放接口模型
+    /// </summary>
+    public class RebateAmountKvModeElectronic
+    {
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 电子bom表单id
+        /// </summary>
+        public long ElectronicId { get; set; }
+        /// <summary>
+        /// 电子单价Id
+        /// </summary>
+        public long ElectronicUnitPriceId { get; set; }
+        /// <summary>
+        /// 物料返利金额模型
+        /// </summary>
+        public List<KvMode> KvModes { get; set; }
+    }
+    /// <summary>
+    /// 结构返利金额内部开放接口模型
+    /// </summary>
+    public class RebateAmountKvModeElectronicStructure
+    {
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 结构料BOM Id
+        /// </summary>
+        public long StructureId { get; set; }
+        /// <summary>
+        /// 结构单价Id
+        /// </summary>
+        public long StructuralUnitPriceId { get; set; }
+        /// <summary>
+        /// 物料返利金额模型
+        /// </summary>
+        public List<KvMode> KvModes { get; set; }
     }
 }

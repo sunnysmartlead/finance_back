@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.Authorization;
 using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.EntityFrameworkCore;
@@ -37,7 +38,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
 {
     /// <summary>
     /// 
-    /// </summary>
+    /// </summary>   
+    [AbpAuthorize]
     public class UnitPriceLibraryAppService : ApplicationService, IUnitPriceLibraryAppService
     {
         /// <summary>
@@ -861,9 +863,9 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         {
             try
             {
-                await _lossRateInfo.HardDeleteAsync(p => true);
-                await _lossRateYearInfo.HardDeleteAsync(p => true);
                 if (Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
+                await _lossRateInfo.HardDeleteAsync(p => true);
+                await _lossRateYearInfo.DeleteAllEntities();                
                 using (var memoryStream = new MemoryStream())
                 {
                     await filename.CopyToAsync(memoryStream);
@@ -878,6 +880,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                         List<decimal> annualGeneralRateHeader = rowExcl[i].ToListDecimal();
                         for (int j = 0; j < annualGeneralRateHeader.Count; j++)
                         {
+                            if (annualGeneralRateHeader[j] == 0) throw new FriendlyException($"导入错误!  {i + 2}行,{j + 4}列数值为0");
                             year.Add(new LossRateYearInfo()
                             {
                                 LossRateInfoId = prop[i].Id,
@@ -886,8 +889,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                             });
                         }
                     }
-                    await _lossRateYearInfo.BulkInsertAsync(year);
-                    await CreateLog($"导入了损害率表单 {prop.Count} 条", LossRateType);
+                    await CreateLog($"导入了损耗率表单 {prop.Count} 条", LossRateType);
+                    await _lossRateYearInfo.BulkInsertAsync(year);                    
                 }
             }
             catch (Exception e)
@@ -899,13 +902,13 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 损耗率查询
         /// </summary>
         /// <param name="filterPagedInputDto"></param>
-        /// <returns></returns>
+        /// <returns></returns>       
         public async Task<PagedResultDto<LossRatesDto>> LossRateQuery(FilterPagedInputDto filterPagedInputDto)
         {
             try
             {
                 //定义列表查询
-                List<LossRateInfo> lossRateInfo = _lossRateInfo.GetAll().WhereIf(!filterPagedInputDto.Filter.IsNullOrEmpty(), p => p.SuperType.Contains(filterPagedInputDto.Filter) || p.CategoryName.Contains(filterPagedInputDto.Filter)).ToList();
+                List<LossRateInfo> lossRateInfo = _lossRateInfo.GetAll().WhereIf(!filterPagedInputDto.Filter.IsNullOrEmpty(), p => p.SuperType.Contains(filterPagedInputDto.Filter) || p.CategoryName.Contains(filterPagedInputDto.Filter)||p.MaterialCategory.Contains(filterPagedInputDto.Filter)).ToList();
                 List<LossRateYearInfo> lossRateYearInfo = await _lossRateYearInfo.GetAllListAsync();
                 IQueryable<LossRatesDto> filter = (from s in lossRateInfo
                                                    join b in lossRateYearInfo on s.Id equals b.LossRateInfoId into bGroup
@@ -914,6 +917,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
 
                                                        SuperType = s.SuperType,
                                                        CategoryName = s.CategoryName,
+                                                       MaterialCategory = s.MaterialCategory,
                                                        LossRateYearList = bGroup.Select(t => new LossRatesYearDto
                                                        {
                                                            Year = t.Year,
@@ -947,8 +951,9 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             {
                 Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
                     {
-                    { "产品大类", item.SuperType },
-                    { "物料种类", item.CategoryName },
+                     { "产品大类", item.SuperType },
+                     { "物料大类", item.MaterialCategory },
+                     { "物料种类", item.CategoryName },
                     };
                 foreach (LossRatesYearDto pro in item.LossRateYearList)
                 {
@@ -977,7 +982,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             {
                 QualityCostRatio qualityCostRatio = ObjectMapper.Map<QualityCostRatio>(qualityModel);
                 long qualityCostRatioId = await _qualityCostRatio.InsertOrUpdateAndGetIdAsync(qualityCostRatio);
-                qualityModel.qualityCostRatioYears.Select((p,i) => { p.QualityCostRatioId = qualityCostRatioId; p.Year = i; return p; }).ToList() ;
+                qualityModel.qualityCostRatioYears.Select((p, i) => { p.QualityCostRatioId = qualityCostRatioId; p.Year = i; return p; }).ToList();
                 List<QualityCostRatioYear> qualityCostRatioYears = await _qualityCostRatioYear.GetAllListAsync(p => p.QualityCostRatioId.Equals(qualityCostRatioId));
                 await _qualityCostRatioYear.HardDeleteAsync(p => qualityCostRatioYears.Select(l => l.Id).Contains(p.Id));
                 List<QualityCostRatioYear> qualityCostRatios = ObjectMapper.Map<List<QualityCostRatioYear>>(qualityModel.qualityCostRatioYears);
@@ -1018,7 +1023,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         }
         /// <summary>
         /// 添加日志
-        /// </summary>
+        /// </summary>       
         private async Task<bool> CreateLog(string Remark, LogType logType)
         {
             FoundationLogs entity = new FoundationLogs()

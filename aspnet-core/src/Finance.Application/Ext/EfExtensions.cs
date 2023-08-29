@@ -158,6 +158,27 @@ namespace Finance.Ext
                 throw new FriendlyException(ex.Message);
             }
         }
+        /// <summary>
+        /// 批量删除指定实体类型的所有实体
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <typeparam name="TPrimaryKey">实体主键类型</typeparam>
+        /// <param name="repository">仓储</param>
+        /// <returns>删除的实体数量</returns>       
+        public static async Task<int> DeleteAllEntities<TEntity, TPrimaryKey>(this IRepository<TEntity, TPrimaryKey> repository)
+       where TEntity : class, IEntity<TPrimaryKey>
+       where TPrimaryKey : struct, IEquatable<TPrimaryKey>
+        {
+            var dbContext = repository.GetDbContext();
+
+            // 构建SQL语句
+            var sql = $"DELETE FROM \"{typeof(TEntity).Name}\"";
+
+            // 执行SQL语句
+            var result = await dbContext.Database.ExecuteSqlRawAsync(sql);
+
+            return result;
+        }
     }
 
 
