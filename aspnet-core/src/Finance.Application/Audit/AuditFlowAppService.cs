@@ -197,20 +197,19 @@ namespace Finance.Audit
             }).ToList();
 
             var tasked = await _workflowInstanceAppService.GetInstanceHistory();
-            dto.AddRange
-                (
-                tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            {
+                AuditFlowId = p.Key.WorkFlowInstanceId,
+                AuditFlowTitle = p.Key.Title,
+                AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
                 {
-                    AuditFlowId = p.Key.WorkFlowInstanceId,
-                    AuditFlowTitle = p.Key.Title,
-                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
-                    {
-                        Id = o.Id,
-                        ProcessName = o.NodeName,
-                        Right = RIGHTTYPE.ReadOnly,
-                        ProcessIdentifier = o.ProcessIdentifier
-                    }).ToList()
-                }).ToList());
+                    Id = o.Id,
+                    ProcessName = o.NodeName,
+                    Right = RIGHTTYPE.ReadOnly,
+                    ProcessIdentifier = o.ProcessIdentifier
+                }).ToList()
+            }).ToList();
+            dto.AddRange(taskedDto);
             return dto;
 
 
