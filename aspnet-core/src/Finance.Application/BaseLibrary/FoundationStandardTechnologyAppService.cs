@@ -241,6 +241,8 @@ namespace Finance.BaseLibrary
 
                     }
                     foundationReliableProcess.sopInfo = foundationWorkingHourItemDtos;
+                    foundationReliableProcess.ProcessName= foundationReliableProcessHours.ProcessName;
+                    foundationReliableProcess.ProcessNumber = foundationReliableProcessHours.ProcessNumber;
 
 
                     foundationReliableProcessHoursResponseDtos.Add(foundationReliableProcess);
