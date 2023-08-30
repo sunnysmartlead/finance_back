@@ -543,12 +543,14 @@ namespace Finance.WorkFlows
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
                            WorkFlowName = w.Name,
                            Title = w.Title,
                            NodeName = n.Name,
                            CreationTime = w.CreationTime,
                            TaskUser = u.Name,
-                           WorkflowState = w.WorkflowState
+                           WorkflowState = w.WorkflowState,
+                           ProcessIdentifier = n.ProcessIdentifier,
                        };
             var count = await data.CountAsync();
             var result = await data.ToListAsync();
