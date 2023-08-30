@@ -344,7 +344,10 @@ namespace Finance.Entering
             InitialStructuralDto initialStructuralDto = new();
             initialStructuralDto.PartDtoList = partList;
             initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomListCount(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
-            return initialStructuralDto.ConstructionBomList.Count;
+
+            int AllCount = 0;//应该录入数据库这么多条数据
+            initialStructuralDto.ConstructionBomList.ForEach(p => { AllCount += p.StructureMaterial.Count(); });
+            return AllCount;
         }
         /// <summary>
         ///  资源部输入时,加载结构料初始值(单个零件)
