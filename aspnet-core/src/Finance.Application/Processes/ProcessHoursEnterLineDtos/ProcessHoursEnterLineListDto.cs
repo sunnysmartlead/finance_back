@@ -11,5 +11,6 @@ namespace Finance.Processes
         public System.Nullable<System.Decimal> Xtsl { get; set; }
         public System.Nullable<System.Decimal> Gxftl { get; set; }
         public string Year { get; set; }
+        public long ModelCountYearId { get; set; }
     }
 }

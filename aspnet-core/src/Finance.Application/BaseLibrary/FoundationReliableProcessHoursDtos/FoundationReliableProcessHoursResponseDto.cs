@@ -13,11 +13,11 @@ namespace Finance.BaseLibrary
         public string ProcessName { get; set; }
         public string ProcessNumber { get; set; }
 
-        public FoundationReliableProcessHoursDeviceResponseDto DeviceInfo { get; set; }
-        public FoundationReliableProcessHoursdevelopCostInfoResponseDto DevelopCostInfo { get; set; }
-        public FoundationReliableProcessHoursFixtureResponseDto toolInfo { get; set; }
+        public FoundationReliableProcessHoursDeviceResponseDto DeviceInfo { get; set; } = new FoundationReliableProcessHoursDeviceResponseDto();
+        public FoundationReliableProcessHoursdevelopCostInfoResponseDto DevelopCostInfo { get; set; } = new FoundationReliableProcessHoursdevelopCostInfoResponseDto();
+        public FoundationReliableProcessHoursFixtureResponseDto toolInfo { get; set; } = new FoundationReliableProcessHoursFixtureResponseDto(); 
 
-        public List<FoundationWorkingHourItemDto> sopInfo { get; set; }
+        public List<FoundationWorkingHourItemDto> sopInfo { get; set; } =new List<FoundationWorkingHourItemDto>(); 
 
         public static implicit operator FoundationReliableProcessHoursResponseDto(List<FoundationReliableProcessHoursResponseDto> v)
         {
