@@ -138,7 +138,10 @@ namespace Finance.BaseLibrary
             // 设置查询条件
             var query = this._foundationStandardTechnologyRepository.GetAll().Where(t => t.IsDeleted == false);
 
-
+            if (!string.IsNullOrEmpty(input.Name))
+            {
+                query = query.Where(t => t.Name.Contains(input.Name));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换
