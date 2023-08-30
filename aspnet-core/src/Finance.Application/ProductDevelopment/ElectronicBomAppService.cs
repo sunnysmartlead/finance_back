@@ -203,16 +203,16 @@ namespace Finance.ProductDevelopment
             else
             {
                 //查询核价需求导入时的零件信息
-                var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
+                var solutionIds = await _solutionTableRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
 
                 List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
                 long AuditFlowId = dto.AuditFlowId;
                 long SolutionId = dto.SolutionId;
-                long ProductId = dto.ProductId;
+      
                 electronicBomDtos.ForEach(bomInfo => {
                     bomInfo.AuditFlowId = AuditFlowId;
                     bomInfo.SolutionId=SolutionId;
-                    bomInfo.ProductId = ProductId;
+                    
                 });
 
                 //要保存的bom表list
@@ -227,8 +227,8 @@ namespace Finance.ProductDevelopment
                     throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
                 }
 
-                var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if(bomInfoByProductIds.Count == 0)
+                var bomInfoBySolutionIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                if(bomInfoBySolutionIds.Count == 0)
                 {
                     foreach(var item in electronicBomDtos)
                     {
@@ -236,7 +236,7 @@ namespace Finance.ProductDevelopment
                         {
                             AuditFlowId = item.AuditFlowId,
                             SolutionId= item.SolutionId,
-                            ProductId = item.ProductId,
+                           
                             CategoryName = item.CategoryName,
                             TypeName = item.TypeName,
                             IsInvolveItem = item.IsInvolveItem,
@@ -255,11 +255,7 @@ namespace Finance.ProductDevelopment
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                if (productIds.Count == allProductIsSubmits.Count + 1)
-                {
-                    //执行跳转
-                    await this.InterfaceJump(dto.AuditFlowId);
-                }
+               
             }
 
             //嵌入工作流
