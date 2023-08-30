@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities.Auditing;
+using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -43,6 +44,11 @@ namespace Finance.EngineeringDepartment
         /// </summary>
         [Column("IDNUMBER")]
         public int IdNumber { get; set; }
+        /// <summary>
+        /// 物料大类
+        /// </summary>
+        [Column("MATERIALCATEGORY")]
+        public string MaterialCategory { get; set; }
         /// <summary>
         /// 物料种类
         /// </summary>
