@@ -8,6 +8,8 @@ using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.Users.Dto;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
@@ -32,7 +34,8 @@ namespace Finance.BaseLibrary
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         private readonly IRepository<ModelCount, long> _modelCountRepository;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
-                /// <summary>
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+        /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
@@ -46,7 +49,8 @@ namespace Finance.BaseLibrary
             IRepository<ModelCount, long> modelCountRepository,
             IRepository<ModelCountYear, long> modelCountYearRepository,
             IRepository<Solution, long> resourceSchemeTable,
-             IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository
+             IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
+             WorkflowInstanceAppService workflowInstanceAppService
             )
         {
             _logisticscostRepository = logisticscostRepository;
@@ -56,6 +60,7 @@ namespace Finance.BaseLibrary
             _modelCountRepository = modelCountRepository;
             _modelCountYearRepository = modelCountYearRepository;
             _resourceSchemeTable = resourceSchemeTable;
+            _workflowInstanceAppService= workflowInstanceAppService;
         }
 
         /// <summary>
@@ -263,7 +268,13 @@ namespace Finance.BaseLibrary
                 return "还有" + quantity + "个方案没有提交，请先提交";
             }
             else {
-
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                {
+                    NodeInstanceId = input.NodeInstanceId,
+                    FinanceDictionaryDetailId = input.Opinion,
+                    Comment = input.Comment,
+                });
                 //提交完成  可以在这里做审核处理
                 return "提交完成";
 

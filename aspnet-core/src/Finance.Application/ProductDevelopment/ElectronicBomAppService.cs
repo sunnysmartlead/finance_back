@@ -10,6 +10,7 @@ using Finance.Nre;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.ProductDevelopment.Dto;
+using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -54,22 +55,26 @@ namespace Finance.ProductDevelopment
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
-
-        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
+        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> resourceSchemeTable)
         {
-            _logger=logger;
-            _electronicBomInfoRepository=electronicBomInfoRepository;
-            _electronicBomInfoBakRepository=electronicBomInfoBakRepository;
-            _modelCountRepository=modelCountRepository;
-            _elecBomDifferentRepository=elecBomDifferentRepository;
-            _priceEvaluationRepository=priceEvaluationRepository;
-            _productInformationRepository=productInformationRepository;
-            _boardInfoRepository=boardInfoRepository;
-            _solutionTableRepository=solutionTableRepository;
-            _productIsSubmit=productIsSubmit;
-            _flowAppService=flowAppService;
-            _objectMapper=objectMapper;
+            _logger = logger;
+            _electronicBomInfoRepository = electronicBomInfoRepository;
+            _electronicBomInfoBakRepository = electronicBomInfoBakRepository;
+            _modelCountRepository = modelCountRepository;
+            _elecBomDifferentRepository = elecBomDifferentRepository;
+            _priceEvaluationRepository = priceEvaluationRepository;
+            _productInformationRepository = productInformationRepository;
+            _boardInfoRepository = boardInfoRepository;
+            _solutionTableRepository = solutionTableRepository;
+            _productIsSubmit = productIsSubmit;
+            _flowAppService = flowAppService;
+            _objectMapper = objectMapper;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
 
@@ -186,7 +191,22 @@ namespace Finance.ProductDevelopment
 
             return bomInfo;
         }
-
+        /// <summary>
+        /// 总的方案
+        /// </summary>
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId)
+        {
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            result = result.OrderBy(p => p.ModuleName).ToList();
+            List<SolutionModel> partModel = (from a in result
+                                             select new SolutionModel
+                                             {
+                                                 SolutionId = a.Id,
+                                                 SolutionName = a.SolutionName,
+                                                 ProductId = a.Productld,
+                                             }).ToList();
+            return partModel;
+        }
         /// <summary>
         /// 接收前端数据存入本地接口
         /// </summary>
@@ -202,8 +222,8 @@ namespace Finance.ProductDevelopment
             }
             else
             {
-                //查询核价需求导入时的零件信息
-                var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
+                //查询总方案
+                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
 
                 List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
                 long AuditFlowId = dto.AuditFlowId;
@@ -255,20 +275,17 @@ namespace Finance.ProductDevelopment
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                if (productIds.Count == allProductIsSubmits.Count + 1)
+                if (solutionId.Count == allProductIsSubmits.Count + 1)
                 {
-                    //执行跳转
-                    await this.InterfaceJump(dto.AuditFlowId);
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    {
+                        NodeInstanceId = dto.NodeInstanceId,
+                        FinanceDictionaryDetailId = dto.Opinion,
+                        Comment = dto.Comment,
+                    });
                 }
-            }
-
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-            {
-                NodeInstanceId = dto.NodeInstanceId,
-                FinanceDictionaryDetailId = dto.Opinion,
-                Comment = dto.Comment,
-            });
+            }           
         }
 
 
