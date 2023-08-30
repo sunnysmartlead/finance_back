@@ -586,7 +586,7 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                         #endregion
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
-                        StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.ProductId) && p.StructureId.Equals(construction.StructureId));
+                        StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId));
                         if (structureElectronic != null)
                         {
                             construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态

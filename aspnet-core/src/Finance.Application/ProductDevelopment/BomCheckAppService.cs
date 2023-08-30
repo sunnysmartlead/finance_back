@@ -136,7 +136,7 @@ namespace Finance.ProductDevelopment
                 Comment = bomCheck.Comment,
             });
 
-            returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
+            //returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
 
             return returnDto;
         }

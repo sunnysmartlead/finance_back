@@ -7,6 +7,7 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using MiniExcelLibs;
 using NPOI.POIFS.FileSystem;
@@ -41,11 +42,15 @@ namespace Finance.Processes
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
 
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterRepository"></param>
         public ProcessHoursEnterAppService(
+               IRepository<Solution, long> resourceSchemeTable, IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository, DataInputAppService dataInputAppService, WorkflowInstanceAppService workflowInstanceAppService)
                IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository, DataInputAppService dataInputAppService)
         {
             _processHoursEnterRepository = processHoursEnterRepository;
@@ -57,6 +62,7 @@ namespace Finance.Processes
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
             _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
+            _workflowInstanceAppService = workflowInstanceAppService;
             _modelCountYearRepository = modelCountYearRepository;
         }
 
@@ -69,7 +75,7 @@ namespace Finance.Processes
         {
             ProcessHoursEnter entity = await _processHoursEnterRepository.GetAsync(id);
 
-            return ObjectMapper.Map<ProcessHoursEnter, ProcessHoursEnterDto>(entity,new ProcessHoursEnterDto());
+            return ObjectMapper.Map<ProcessHoursEnter, ProcessHoursEnterDto>(entity, new ProcessHoursEnterDto());
         }
 
         /// <summary>
@@ -101,7 +107,7 @@ namespace Finance.Processes
         {
             // 设置查询条件
             var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
-       
+
             // 查询数据
             //数据转换
 
@@ -109,7 +115,7 @@ namespace Finance.Processes
             foreach (var item in list)
             {
                 ProcessHoursEnterDto processHoursEnter =   new ProcessHoursEnterDto();
-               
+
                 processHoursEnter.Id = item.Id;
                 processHoursEnter.ProcessNumber = item.ProcessNumber;
                 processHoursEnter.ProcessName   = item.ProcessName;
@@ -233,7 +239,7 @@ namespace Finance.Processes
             if (null == processHoursEnterDtoList || processHoursEnterDtoList.Count<1)
             {
 
-           
+
             //无数据的情况下
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
 
@@ -268,7 +274,7 @@ namespace Finance.Processes
                         processHoursEnteritem.Year = device.Year.ToString();
                     }
                     processHoursEnteritems.Add(processHoursEnteritem);
-            
+
                 }
 
                 processHoursEnterDto.SopInfo = processHoursEnteritems;
@@ -331,7 +337,7 @@ namespace Finance.Processes
 
                 processHoursEnterDtoList.Add(processHoursEnterDto);
             }
-        
+
             return processHoursEnterDtoList;
         }
 
@@ -346,9 +352,9 @@ namespace Finance.Processes
         {
             ProcessHoursEnterDto processHoursEnterDto= new ProcessHoursEnterDto();
 
-            
 
-            
+
+
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
 
             var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId  == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
@@ -370,7 +376,7 @@ namespace Finance.Processes
                 else {
                     processHoursEnterUphListDto.Year = row.Year.ToString();
                 }
-              
+
 
                 var list = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "smtuph" && t.ModelCountYearId == row.Id).ToList();
                 if (null != list && list.Count > 0)
@@ -380,7 +386,7 @@ namespace Finance.Processes
                 else {
                     processHoursEnterUphListDto.Smtuph = 0;
                 }
-                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.ModelCountYearId == row.Id).ToList();
+                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.Year == row.Year.ToString()).ToList();
                 if (null != ZcuphList && ZcuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Zcuph = ZcuphList[0].Value;
@@ -390,7 +396,7 @@ namespace Finance.Processes
                     processHoursEnterUphListDto.Zcuph = 0;
                 }
 
-                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.ModelCountYearId == row.Id).ToList();
+                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.Year == row.Year.ToString()).ToList();
                 if (null != CobuphList && CobuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Cobuph = CobuphList[0].Value;
@@ -453,7 +459,7 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<String> CreateSubmitAsync(GetLogisticscostsInput input)
+        public virtual async Task<String> CreateSubmitAsync(ProcessHoursEnterCreateSubmitInput input)
         {
             //已经录入数量
             var count = (from a in _processHoursEnterRepository.GetAllList(p =>
@@ -468,6 +474,9 @@ namespace Finance.Processes
             }
             else
             {
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNode(input);
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";
@@ -487,7 +496,7 @@ namespace Finance.Processes
 
             return ObjectMapper.Map<ProcessHoursEnter, ProcessHoursEnterDto>(entity,new ProcessHoursEnterDto());
         }
-    
+
         /// <summary>
         /// 创建
         /// </summary>
@@ -589,17 +598,17 @@ namespace Finance.Processes
                 foreach (var item in input.processHoursEnterUphList)
                 {
                     ProcessHoursEnterUph processHoursEnterUph= new ProcessHoursEnterUph();
-                    processHoursEnterUph.ModelCountYearId= item.ModelCountYearId;
+                    processHoursEnterUph.Year= item.Year;
                     processHoursEnterUph.Uph = "cobuph";
                     processHoursEnterUph.Value = item.Cobuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
                     ProcessHoursEnterUph processHoursEnterUph1 = new ProcessHoursEnterUph();
-                    processHoursEnterUph.ModelCountYearId = item.ModelCountYearId;
+                    processHoursEnterUph.Year = item.Year;
                     processHoursEnterUph.Uph = "zcuph";
                     processHoursEnterUph.Value = item.Zcuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
                     ProcessHoursEnterUph processHoursEnterUph2 = new ProcessHoursEnterUph();
-                    processHoursEnterUph.ModelCountYearId= item.ModelCountYearId;
+                    processHoursEnterUph.Year = item.Year;
                     processHoursEnterUph.Uph = "smtuph";
                     processHoursEnterUph.Value = item.Smtuph;
                     await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
@@ -1044,7 +1053,7 @@ namespace Finance.Processes
                             //年
                             if (null != item.SopInfoAll)
                             {
-                               
+
                                     foreach (var yearItem in item.SopInfoAll)
                                     {
                                         ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
@@ -1055,12 +1064,12 @@ namespace Finance.Processes
                                         processHoursEnteritem.MachineHour = yearItem.MachineHour;
                                         _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
                                     }
-                                
+
                             }
 
                         }
                     }*/
-                    
+
                     return ProcessHoursEnterDList;
                 }
             }
@@ -1090,12 +1099,12 @@ namespace Finance.Processes
             await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
             foreach (var listItem in input.ListItemDtos)
             {
-   
+
                 ProcessHoursEnter entity = new ProcessHoursEnter();
                 entity.ProcessName = listItem.ProcessName;
                 entity.ProcessNumber = listItem.ProcessNumber;
                 entity.AuditFlowId = input.AuditFlowId;
-                entity.SolutionId = input.SolutionId; 
+                entity.SolutionId = input.SolutionId;
                 entity.DeviceTotalPrice = listItem.DeviceInfo.DeviceTotalCost;
                 entity.HardwareTotalPrice = listItem.DevelopCostInfo.HardwareTotalPrice;
                 entity.SoftwarePrice = listItem.DevelopCostInfo.SoftwarePrice;

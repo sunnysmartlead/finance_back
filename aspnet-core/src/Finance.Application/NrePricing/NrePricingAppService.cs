@@ -448,30 +448,18 @@ namespace Finance.NerPricing
                     await _resourceTravelExpense.InsertOrUpdateAsync(travel);//录入差旅费
                 }
                 #region 录入完成之后
-                //await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = projectManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ProjectManagement.ToString() });
+                await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = projectManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ProjectManagement.ToString() });
                 #endregion
-                //if (await this.GetProjectManagement(price.AuditFlowId))
-                //{
-                //    if (AbpSession.UserId is null)
-                //    {
-                //        throw new FriendlyException("请先登录");
-                //    }
-                //    ReturnDto retDto = await _flowAppService.UpdateAuditFlowInfo(new Audit.Dto.AuditFlowDetailDto()
-                //    {
-                //        AuditFlowId = price.AuditFlowId,
-                //        ProcessIdentifier = AuditFlowConsts.AF_NreInputOther,
-                //        UserId = AbpSession.UserId.Value,
-                //        Opinion = OPINIONTYPE.Submit_Agreee
-                //    });
-                //}
-
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                if (await this.GetProjectManagement(price.AuditFlowId))
                 {
-                    NodeInstanceId = price.NodeInstanceId,
-                    FinanceDictionaryDetailId = price.Opinion,
-                    Comment = price.Comment,
-                });
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    {
+                        NodeInstanceId = price.NodeInstanceId,
+                        FinanceDictionaryDetailId = price.Opinion,
+                        Comment = price.Comment,
+                    });
+                }         
             }
             catch (Exception e)
             {
@@ -607,15 +595,16 @@ namespace Finance.NerPricing
         /// <returns></returns>     
         public async Task<long> GetInitialResourcesManagementCount(long auditFlowId)
         {
-            List<SolutionModel> partModels = await TotalSolution(auditFlowId);// 获总方案         
-            List<MouldInventoryPartModel> mouldInventoryPartModels = new();
+            long count = 0;
+            List<SolutionModel> partModels = await TotalSolution(auditFlowId);// 获总方案       
+            
             //循环每一个方案
             foreach (SolutionModel part in partModels)
             {
                 MouldInventoryPartModel mould = await GetInitialResourcesManagementSingle(auditFlowId, part.SolutionId);
-                mouldInventoryPartModels.Add(mould);
-            }
-            return mouldInventoryPartModels.Count;
+                count += mould.MouldInventoryModels.Count;
+            }          
+            return count;
         }
         /// <summary>
         /// 资源部模具费初始值(单个方案)
