@@ -40,7 +40,7 @@ namespace Finance.Processes
 		[StringLength(255, ErrorMessage = "年份长度不能超出255字符")]
 		public string Year { get; set; }
         /// <summary>
-        /// 流程id
+        /// 年度id
         /// </summary>
         [Column("model_count_year_Id")]
 

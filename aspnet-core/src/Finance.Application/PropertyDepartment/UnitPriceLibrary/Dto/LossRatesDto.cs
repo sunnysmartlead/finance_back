@@ -1,4 +1,5 @@
 ﻿using Finance.EngineeringDepartment.Dto;
+using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +14,16 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary.Dto
     public class LossRatesDto
     {
         /// <summary>
-        /// 超级大种类
+        /// 产品大类
         /// </summary>
         public string SuperType { get; set; }
         /// <summary>
         /// 物料大类
-        /// </summary>
+        /// </summary>   
+        public string MaterialCategory { get; set; }
+        /// <summary>
+        /// 物料种类
+        /// </summary>    
         public string CategoryName { get; set; }
         /// <summary>
         /// 年份

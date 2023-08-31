@@ -619,12 +619,15 @@ namespace Finance.PriceEval
                 && p.SolutionId == input.SolutionId
                 && p.Year == input.Year && p.UpDown == input.UpDown);
             var material = ObjectMapper.Map<CreateUpdateItemInput>(updateItem);
-            var dataIds = material.Material.Select(p => p.Id);
-
-            foreach (var item in data.Where(p => dataIds.Contains(p.Id)))
+            if (material is not null)
             {
-                //item = material.Material.FirstOrDefault(p => p.Id == item.Id);
-                ObjectMapper.Map(material.Material.FirstOrDefault(p => p.Id == item.Id),item);
+                var dataIds = material.Material.Select(p => p.Id);
+
+                foreach (var item in data.Where(p => dataIds.Contains(p.Id)))
+                {
+                    //item = material.Material.FirstOrDefault(p => p.Id == item.Id);
+                    ObjectMapper.Map(material.Material.FirstOrDefault(p => p.Id == item.Id), item);
+                }
             }
 
 

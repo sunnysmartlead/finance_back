@@ -236,7 +236,7 @@ namespace Finance.Entering
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = electronicDto.NodeInstanceId,
                         FinanceDictionaryDetailId = electronicDto.Opinion,
@@ -344,7 +344,10 @@ namespace Finance.Entering
             InitialStructuralDto initialStructuralDto = new();
             initialStructuralDto.PartDtoList = partList;
             initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomListCount(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
-            return initialStructuralDto.ConstructionBomList.Count;
+
+            int AllCount = 0;//应该录入数据库这么多条数据
+            initialStructuralDto.ConstructionBomList.ForEach(p => { AllCount += p.StructureMaterial.Count(); });
+            return AllCount;
         }
         /// <summary>
         ///  资源部输入时,加载结构料初始值(单个零件)
@@ -434,7 +437,7 @@ namespace Finance.Entering
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = structuralMemberEnteringModel.NodeInstanceId,
                         FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
@@ -627,7 +630,7 @@ namespace Finance.Entering
                 await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
             }
             //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
                 NodeInstanceId = toExamineDto.NodeInstanceId,
                 FinanceDictionaryDetailId = toExamineDto.Opinion,
