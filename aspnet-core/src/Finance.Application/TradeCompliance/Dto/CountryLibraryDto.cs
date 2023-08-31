@@ -25,7 +25,7 @@ namespace Finance.TradeCompliance.Dto
         /// <summary>
         /// 比例
         /// </summary>
-        public string Rate { get; set; }
+        public decimal Rate { get; set; }
 
     }
 
@@ -43,7 +43,7 @@ namespace Finance.TradeCompliance.Dto
         /// <summary>
         /// 比例
         /// </summary>
-        public string Rate { get; set; }
+        public decimal Rate { get; set; }
 
     }
 

@@ -21,5 +21,7 @@ namespace Finance.Processes
         public string Remark { get; set; }
         public System.Nullable<System.Decimal> TotalCost { get; set; }
         public string Year { get; set; }
+
+        public long ModelCountYearId { get; set; }
     }
 }
