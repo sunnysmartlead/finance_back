@@ -29,6 +29,8 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Decimal> TransportPrice { get; set; }
         public string Year { get; set; }
         public decimal YearMountCount { get; set; }
+        public long ModelCountYearId { get; set; }
+
 
         /// <summary>
         ///  0 保存  1 提交

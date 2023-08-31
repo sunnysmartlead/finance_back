@@ -484,11 +484,15 @@ namespace Finance.BaseLibrary
 
             if (input.List != null)
             {
-                await _foundationTechnologyDeviceRepository.DeleteAsync(s => s.FoundationReliableHoursId == input.Id);
-                await _foundationFoundationReliableProcessHoursRepository.DeleteAsync(s => s.StandardTechnologyId == input.Id);
-                await _foundationTechnologyHardwareRepository.DeleteAsync(s => s.FoundationReliableHoursId == input.Id);
-                await _foundationTechnologyFixtureRepository.DeleteAsync(s => s.FoundationReliableHoursId == input.Id);
-                await _fTWorkingHourRepository.DeleteAsync(s => s.FoundationReliableHoursId == input.Id);
+                var query = this._foundationFoundationReliableProcessHoursRepository.GetAll().Where(t => t.IsDeleted == false && t.StandardTechnologyId == input.Id).ToList();
+                foreach (var item in query) {
+                    await _foundationTechnologyDeviceRepository.DeleteAsync(s => s.FoundationReliableHoursId == item.Id);
+                    await _foundationFoundationReliableProcessHoursRepository.DeleteAsync(s => s.Id == item.Id);
+                    await _foundationTechnologyHardwareRepository.DeleteAsync(s => s.FoundationReliableHoursId == item.Id);
+                    await _foundationTechnologyFixtureRepository.DeleteAsync(s => s.FoundationReliableHoursId == item.Id);
+                    await _fTWorkingHourRepository.DeleteAsync(s => s.FoundationReliableHoursId == item.Id);
+                }
+          
                 foreach (var deviceItem in input.List)
                 {
                     FoundationReliableProcessHours foundationReliableProcessHours = new FoundationReliableProcessHours();
@@ -519,11 +523,6 @@ namespace Finance.BaseLibrary
 
 
                     //工时
-
-
-
-
-
                     foundationReliableProcessHours.CreationTime = DateTime.Now;
                     if (AbpSession.UserId != null)
                     {
@@ -532,6 +531,7 @@ namespace Finance.BaseLibrary
                         foundationReliableProcessHours.LastModifierUserId = AbpSession.UserId.Value;
                     }
                     foundationReliableProcessHours.LastModificationTime = DateTime.Now;
+                    foundationReliableProcessHours.StandardTechnologyId = input.Id;
                     _foundationFoundationReliableProcessHoursRepository.InsertAsync(foundationReliableProcessHours);
 
                     var ID = _foundationFoundationReliableProcessHoursRepository.InsertAndGetId(foundationReliableProcessHours);
@@ -577,26 +577,6 @@ namespace Finance.BaseLibrary
                         }
                     }
 
-                    if (null != deviceItem.toolInfo.zhiJuArr)
-                    {
-                        foreach (var device in deviceItem.toolInfo.zhiJuArr)
-                        {
-                            FoundationTechnologyFixture technologyFixture = new FoundationTechnologyFixture();
-                            technologyFixture.FixturePrice = device.FixturePrice;
-                            technologyFixture.FixtureName = device.FixtureName;
-                            technologyFixture.FixtureNumber = device.FixtureNumber;
-                            technologyFixture.CreationTime = DateTime.Now;
-                            technologyFixture.FoundationReliableHoursId = ID;
-                            if (AbpSession.UserId != null)
-                            {
-                                technologyFixture.CreatorUserId = AbpSession.UserId.Value;
-                                technologyFixture.LastModificationTime = DateTime.Now;
-                                technologyFixture.LastModifierUserId = AbpSession.UserId.Value;
-                            }
-                            _foundationTechnologyFixtureRepository.InsertAsync(technologyFixture);
-
-                        }
-                    }
                     if (null != deviceItem.toolInfo.zhiJuArr)
                     {
                         foreach (var device in deviceItem.toolInfo.zhiJuArr)
