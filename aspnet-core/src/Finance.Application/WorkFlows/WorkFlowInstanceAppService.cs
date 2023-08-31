@@ -238,7 +238,7 @@ namespace Finance.WorkFlows
         /// 流程节点提交（结束当前节点，开启下个节点）
         /// </summary>
         /// <returns></returns>
-        public async virtual Task SubmitNode(SubmitNodeInput input)
+        public async virtual Task SubmitNode(ISubmitNodeInput input)
         {
             //try
             //{
@@ -350,6 +350,20 @@ namespace Finance.WorkFlows
                             }
                         }
                     }
+
+                    #region 定制结构件特殊处理逻辑
+                    //如果是定制结构件节点，就再调用本函数一次，自动提交本函数
+                    //该节点开发完毕后删除本region代码
+                    if (item.NodeId == "主流程_定制结构件")
+                    {
+                        await SubmitNode(new SubmitNodeInput
+                        {
+                            NodeInstanceId = item.Id,
+                            FinanceDictionaryDetailId = FinanceConsts.Done,
+                            Comment = "该节点暂未开发，系统自动提交。"
+                        });
+                    }
+                    #endregion
                 }
                 else
                 {

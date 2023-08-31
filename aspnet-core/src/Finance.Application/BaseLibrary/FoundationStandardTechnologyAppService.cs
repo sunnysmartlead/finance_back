@@ -138,7 +138,10 @@ namespace Finance.BaseLibrary
             // 设置查询条件
             var query = this._foundationStandardTechnologyRepository.GetAll().Where(t => t.IsDeleted == false);
 
-
+            if (!string.IsNullOrEmpty(input.Name))
+            {
+                query = query.Where(t => t.Name.Contains(input.Name));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换
@@ -146,10 +149,110 @@ namespace Finance.BaseLibrary
             foreach (var item in dtos)
             {
                 var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
-               
-                if (user != null)
+                List<FoundationReliableProcessHoursResponseDto> foundationReliableProcessHoursResponseDtos = new List<FoundationReliableProcessHoursResponseDto>();
+
+             List<FoundationReliableProcessHours> FoundationReliableProcessHourList =  this._foundationFoundationReliableProcessHoursRepository.GetAll().Where(u => u.StandardTechnologyId == item.Id).ToList();
+
+                foreach (var foundationReliableProcessHours in FoundationReliableProcessHourList)
                 {
+                    FoundationReliableProcessHoursResponseDto foundationReliableProcess = new FoundationReliableProcessHoursResponseDto();
+                    //设备信息
+                    List<FoundationTechnologyDevice> devices = this._foundationTechnologyDeviceRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    List<FoundationTechnologyDeviceDto> foundationTechnologyDeviceDtos = new List<FoundationTechnologyDeviceDto>();
+                    foreach (var device in devices)
+                    {
+                        FoundationTechnologyDeviceDto foundationTechnologyDevice = new FoundationTechnologyDeviceDto();
+                        foundationTechnologyDevice.DevicePrice = device.DevicePrice;
+                        foundationTechnologyDevice.DeviceNumber = device.DeviceNumber;
+                        foundationTechnologyDevice.DeviceName = device.DeviceName;
+                        foundationTechnologyDevice.DeviceStatus = device.DeviceStatus;
+                        foundationTechnologyDeviceDtos.Add(foundationTechnologyDevice);
+
+                    }
+                    foundationReliableProcess.DeviceInfo.DeviceArr = foundationTechnologyDeviceDtos;
+                    foundationReliableProcess.DeviceInfo.DeviceTotalPrice = foundationReliableProcessHours.DeviceTotalPrice;
+                    //追溯部分(硬件及软件开发费用)
+                    List<FoundationTechnologyFrockDto> foundationTechnologyFrockDtos = new List<FoundationTechnologyFrockDto>();
+                    List<FoundationTechnologyHardware> foundationTechnologyHardwares = this._foundationTechnologyHardwareRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    {
+                        foreach (var device in foundationTechnologyHardwares)
+                        {
+                            FoundationTechnologyFrockDto technologyHardware = new FoundationTechnologyFrockDto();
+                            technologyHardware.HardwareDeviceName = device.HardwareName;
+                            technologyHardware.HardwareDeviceNumber = device.HardwareNumber;
+                            technologyHardware.HardwareDevicePrice = device.HardwarePrice;
+                            foundationTechnologyFrockDtos.Add(technologyHardware);
+
+
+
+                        }
+
+                    }
+                    foundationReliableProcess.DevelopCostInfo.TotalHardwarePrice = foundationReliableProcessHours.SoftwareHardPrice;
+                    foundationReliableProcess.DevelopCostInfo.PictureDevelopment = foundationReliableProcessHours.PictureDevelopment;
+                    foundationReliableProcess.DevelopCostInfo.DrawingSoftware = foundationReliableProcessHours.DrawingSoftware;
+                    foundationReliableProcess.DevelopCostInfo.Development = foundationReliableProcessHours.Development;
+                    foundationReliableProcess.DevelopCostInfo.TraceabilitySoftware = foundationReliableProcessHours.TraceabilitySoftware;
+                    foundationReliableProcess.DevelopCostInfo.HardwareInfo = foundationTechnologyFrockDtos;
+
+                    //工装治具部分
+                    List<FoundationTechnologyFixtureDto> foundationTechnologyFixtureDtos = new List<FoundationTechnologyFixtureDto>();
+                    List<FoundationTechnologyFixture> foundationTechnologyFixtureList = this._foundationTechnologyFixtureRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    {
+                        foreach (var device in foundationTechnologyFixtureList)
+                        {
+                            FoundationTechnologyFixtureDto technologyHardware = new FoundationTechnologyFixtureDto();
+                            technologyHardware.FixturePrice = device.FixturePrice;
+                            technologyHardware.FixtureNumber = device.FixtureNumber;
+                            technologyHardware.FixtureName = device.FixtureName;
+                            foundationTechnologyFixtureDtos.Add(technologyHardware);
+
+
+
+                        }
+
+                    }
+                    foundationReliableProcess.toolInfo.zhiJuArr = foundationTechnologyFixtureDtos;
+                    foundationReliableProcess.toolInfo.TestLineName = foundationReliableProcessHours.TestLineName;
+                    foundationReliableProcess.toolInfo.TestLineNumber = foundationReliableProcessHours.TestLineNumber;
+                    foundationReliableProcess.toolInfo.TestLinePrice = foundationReliableProcessHours.TestLinePrice;
+                    foundationReliableProcess.toolInfo.FrockName = foundationReliableProcessHours.FrockName;
+                    foundationReliableProcess.toolInfo.FrockNumber = foundationReliableProcessHours.FrockNumber;
+                    foundationReliableProcess.toolInfo.FrockPrice = 0;
+                    foundationReliableProcess.toolInfo.HardwareDeviceTotalPrice = foundationReliableProcessHours.HardwareDeviceTotalPrice;
+                    foundationReliableProcess.toolInfo.SoftwarePrice = foundationReliableProcessHours.SoftwarePrice;
+                    foundationReliableProcess.toolInfo.FixtureName = "";
+                    foundationReliableProcess.toolInfo.FixtureNumber = 0;
+                    foundationReliableProcess.toolInfo.FixtureName = "";
+
+
+                    List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
+                    List<FTWorkingHour> foundationWorkingHourItemDtosList = this._fTWorkingHourRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    {
+                        foreach (var device in foundationWorkingHourItemDtosList)
+                        {
+                            FoundationWorkingHourItemDto technologyHardware = new FoundationWorkingHourItemDto();
+                            technologyHardware.Year = device.Year;
+                            technologyHardware.LaborHour = device.LaborHour;
+                            technologyHardware.MachineHour = device.MachineHour;
+                            technologyHardware.NumberPersonnel = device.NumberPersonnel;
+                            foundationWorkingHourItemDtos.Add(technologyHardware);
+
+
+
+                        }
+
+                    }
+                    foundationReliableProcess.sopInfo = foundationWorkingHourItemDtos;
+                    foundationReliableProcess.ProcessName= foundationReliableProcessHours.ProcessName;
+                    foundationReliableProcess.ProcessNumber = foundationReliableProcessHours.ProcessNumber;
+
+
+                    foundationReliableProcessHoursResponseDtos.Add(foundationReliableProcess);
+
                 }
+                item.List = foundationReliableProcessHoursResponseDtos;
+
             }
             // 数据返回
             return dtos;

@@ -119,7 +119,7 @@ namespace Finance.BaseLibrary
 		/// 测试线单价
 		/// </summary>
 		[Column("test_line_price")]
-		public decimal? TestLinePrice { get; set; }
+		public decimal TestLinePrice { get; set; }
 
 		/// <summary>
 		/// 硬件总价

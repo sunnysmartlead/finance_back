@@ -13,5 +13,6 @@ namespace Finance.Processes
         public System.Nullable<System.Decimal> Smtuph { get; set; }
         public System.Nullable<System.Decimal> Zcuph { get; set; }
         public string Year { get; set; }
+        public long ModelCountYearId { get; set; }
     }
 }
