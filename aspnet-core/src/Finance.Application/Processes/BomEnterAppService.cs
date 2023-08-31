@@ -6,6 +6,8 @@ using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +29,10 @@ namespace Finance.Processes
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
         /// <summary>
         /// .ctor
         /// </summary>
@@ -36,13 +42,15 @@ namespace Finance.Processes
             DataInputAppService dataInputAppService,
             IRepository<User, long> userRepository,
               IRepository<Solution, long> resourceSchemeTable,
-            IRepository<BomEnter, long> bomEnterRepository)
+            IRepository<BomEnter, long> bomEnterRepository,
+            WorkflowInstanceAppService workflowInstanceAppService)
         {
             _bomEnterRepository = bomEnterRepository;
             _bomEnterTotalRepository = foundationFoundationWorkingHourItemRepository;
             _userRepository = userRepository;
             _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
         /// <summary>
@@ -281,7 +289,7 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<String> CreateSubmitAsync(GetBomEntersInput input)
+        public virtual async Task<String> CreateSubmitAsync(CreateSubmitInput input)
         {
    
                         var count = (from a in _bomEnterRepository.GetAllList(p =>
@@ -296,6 +304,14 @@ namespace Finance.Processes
             }
             else
             {
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    Comment = input.Comment,
+                    FinanceDictionaryDetailId = input.Opinion,
+                    NodeInstanceId = input.NodeInstanceId,
+                });
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";
