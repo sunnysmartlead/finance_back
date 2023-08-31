@@ -25,6 +25,7 @@ namespace Finance.Processes
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<BomEnterTotal, long> _bomEnterTotalRepository;
         private readonly DataInputAppService _dataInputAppService;
+        private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
@@ -42,15 +43,22 @@ namespace Finance.Processes
             DataInputAppService dataInputAppService,
             IRepository<User, long> userRepository,
               IRepository<Solution, long> resourceSchemeTable,
-            IRepository<BomEnter, long> bomEnterRepository,
-            WorkflowInstanceAppService workflowInstanceAppService)
+
+            WorkflowInstanceAppService workflowInstanceAppService,
+
+              IRepository<ModelCountYear, long> modelCountYearRepository,
+            IRepository<BomEnter, long> bomEnterRepository)
+
         {
             _bomEnterRepository = bomEnterRepository;
             _bomEnterTotalRepository = foundationFoundationWorkingHourItemRepository;
             _userRepository = userRepository;
             _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
+
             _workflowInstanceAppService = workflowInstanceAppService;
+
+            _modelCountYearRepository = modelCountYearRepository;
         }
 
         /// <summary>
@@ -112,8 +120,22 @@ namespace Finance.Processes
                     List<BomEnterDto> bomEnterDto =   new List<BomEnterDto>();
                     foreach (var dtosItem in queryItem)
                     {
+                        ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)dtosItem.ModelCountYearId);
                         BomEnterDto bomEnterDto1 = new BomEnterDto();
-                        bomEnterDto1.Year = dtosItem.Year;
+                        if (entitySolution.UpDown == YearType.FirstHalf)
+                        {
+
+                            bomEnterDto1.Year = entitySolution.Year + "上半年";
+                        }
+                        else if (entitySolution.UpDown == YearType.SecondHalf)
+                        {
+                            bomEnterDto1.Year = entitySolution.Year + "下半年";
+                        }
+                        else
+                        {
+                            bomEnterDto1.Year = entitySolution.Year.ToString();
+                        }
+
                         bomEnterDto1.TotalCost = dtosItem.TotalCost;
                         bomEnterDto1.Remark = dtosItem.Remark;
                         bomEnterDto1.IndirectSummary = dtosItem.IndirectSummary;
@@ -124,6 +146,7 @@ namespace Finance.Processes
                         bomEnterDto1.DirectManufacturingCosts = dtosItem.DirectManufacturingCosts;
                         bomEnterDto1.DirectLineChangeCost = dtosItem.DirectLineChangeCost;
                         bomEnterDto1.DirectLaborPrice = dtosItem.DirectLaborPrice;
+                        bomEnterDto1.ModelCountYearId = entitySolution.Id;
                         bomEnterDto1.DirectDepreciation = dtosItem.DirectDepreciation;
                         bomEnterDto.Add(bomEnterDto1);
                     }
@@ -133,7 +156,21 @@ namespace Finance.Processes
                     foreach (var dtosItemTotal in queryItemTotal)
                     {
                         BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();
-                        bomEnterTotal.Year = dtosItemTotal.Year;
+                        ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)dtosItemTotal.ModelCountYearId);
+                        bomEnterTotal.ModelCountYearId = entitySolution.Id;
+                        if (entitySolution.UpDown == YearType.FirstHalf)
+                        {
+
+                            bomEnterTotal.Year = entitySolution.Year + "上半年";
+                        }
+                        else if (entitySolution.UpDown == YearType.SecondHalf)
+                        {
+                            bomEnterTotal.Year = entitySolution.Year + "下半年";
+                        }
+                        else
+                        {
+                            bomEnterTotal.Year = entitySolution.Year.ToString();
+                        }
                         bomEnterTotal.Remark= dtosItemTotal.Remark;
                         bomEnterTotal.TotalCost = dtosItemTotal.TotalCost;
                         ListbomEnterDto.Add(bomEnterTotal);
@@ -145,9 +182,10 @@ namespace Finance.Processes
                 }
 
                 //没有数据的情况下
-                List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
+              
+                Solution solution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
                 List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
-
+                var year = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
                 if (null == logisticscostResponseList || logisticscostResponseList.Count <1) {
               
                     foreach (var item in ListGradient)
@@ -155,10 +193,23 @@ namespace Finance.Processes
                   
                         List<BomEnterDto> bomEnterDto = new List<BomEnterDto>();
                         BomEnterDto logisticscostResponse = new BomEnterDto();
-                        foreach (var dtosItem in data)
+                        foreach (var dtosItem in year)
                         {
                             BomEnterDto bomEnterDto1 = new BomEnterDto();
-                            bomEnterDto1.Year = dtosItem.Year.ToString();
+                            if (dtosItem.UpDown == YearType.FirstHalf)
+                            {
+
+                                bomEnterDto1.Year = dtosItem.Year + "上半年";
+                            }
+                            else if (dtosItem.UpDown == YearType.SecondHalf)
+                            {
+                                bomEnterDto1.Year = dtosItem.Year + "下半年";
+                            }
+                            else
+                            {
+                                bomEnterDto1.Year = dtosItem.Year.ToString();
+                            }
+
                             bomEnterDto1.IndirectSummary = 0;
                             bomEnterDto1.IndirectManufacturingCosts = 0;
                             bomEnterDto1.IndirectLaborPrice = 0;
@@ -166,17 +217,18 @@ namespace Finance.Processes
                             bomEnterDto1.DirectSummary = 0;
                             bomEnterDto1.DirectManufacturingCosts = 0;
                             bomEnterDto1.DirectLineChangeCost =0;
+                            bomEnterDto1.ModelCountYearId = dtosItem.Id;
                             bomEnterDto1.DirectLaborPrice = 0;
                             bomEnterDto1.DirectDepreciation = 0;
                             bomEnterDto.Add(bomEnterDto1);
                         }
                         List<BomEnterTotalDto> ListbomEnterDto = new List<BomEnterTotalDto>();
-                        foreach (var dtosItemTotal in data)
+                        foreach (var dtosItemTotal in year)
                         {
                             BomEnterTotalDto bomEnterTotal = new BomEnterTotalDto();
                             bomEnterTotal.Year = dtosItemTotal.Year.ToString();
                             bomEnterTotal.TotalCost = 0;
-                           
+                            bomEnterTotal.ModelCountYearId = dtosItemTotal.Id;
                             ListbomEnterDto.Add(bomEnterTotal);
                         }
                         logisticscostResponse.ListBomEnter = bomEnterDto;
@@ -245,7 +297,7 @@ namespace Finance.Processes
                     bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
                     bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
                     bomEnter.TotalCost = ListBomEnterItem.TotalCost;
-                    bomEnter.Year = ListBomEnterItem.Year;
+                    bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
                     bomEnter.Remark = ListBomEnterItem.Remark;
                     if (AbpSession.UserId != null)
                     {
@@ -268,7 +320,7 @@ namespace Finance.Processes
                     bomEnterTotal.CreationTime = DateTime.Now;
                     bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
                     bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
-                    bomEnterTotal.Year = ListBomEnterTotalItem.Year;
+                    bomEnterTotal.ModelCountYearId = ListBomEnterTotalItem.ModelCountYearId;
                     bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
                     if (AbpSession.UserId != null)
                     {

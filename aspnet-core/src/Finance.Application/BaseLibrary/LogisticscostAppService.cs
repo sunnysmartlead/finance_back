@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using Finance.Processes;
 
 namespace Finance.BaseLibrary
 {
@@ -107,27 +108,7 @@ namespace Finance.BaseLibrary
             p.IsDeleted == false && p.SolutionId == entity.Id && p.AuditFlowId == input.AuditFlowId
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
-            query.Count();
-
-            var data1 = from m in _gradientModelRepository.GetAll()
-                        join y in _gradientModelYearRepository.GetAll() on m.Id equals y.GradientModelId
-                        join g in _gradientRepository.GetAll() on m.GradientId equals g.Id
-                        join my in _modelCountYearRepository.GetAll() on y.ProductId equals my.ProductId
-                        where y.ProductId == entity.Productld// && m.ProductId == productId && my.ProductId == productId
-                        && y.Year == my.Year && y.UpDown == my.UpDown
-                        select new GradientModelYearListDto
-                        {
-                            Id = y.Id,
-                            AuditFlowId = y.AuditFlowId,
-                            PriceEvaluationId = y.PriceEvaluationId,
-                            GradientModelId = y.GradientModelId,
-                            ProductId = y.ProductId,
-                            GradientValue = g.GradientValue,
-                            Year = y.Year,
-                            UpDown = y.UpDown,
-                            Count = y.Count,
-                            YearMountCount = my.Quantity
-                        };
+            var year = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
             var dtos = ObjectMapper.Map<List<String>, List<String>>(query, new List<String>());
             List<LogisticscostResponseDto> logisticscostResponseList = new List<LogisticscostResponseDto>();
             foreach (var item in dtos)
@@ -138,17 +119,26 @@ namespace Finance.BaseLibrary
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 foreach (var dtosItem1 in dtosItem)
                 {
-                    if (null != data1)
+                    ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)dtosItem1.ModelCountYearId);
+                    dtosItem1.ModelCountYearId = entitySolution.Id;
+                    dtosItem1.YearMountCount = entitySolution.Quantity;
+                    if (entitySolution.UpDown == YearType.FirstHalf)
                     {
-                        dtosItem1.YearMountCount = data1.ToList()[0].YearMountCount;
+
+                        dtosItem1.Year = entitySolution.Year + "上半年";
                     }
-                    else {
-                        dtosItem1.YearMountCount = 0;
+                    else if (entitySolution.UpDown == YearType.SecondHalf)
+                    {
+                        dtosItem1.Year = entitySolution.Year + "下半年";
                     }
-                   
+                    else
+                    {
+                        dtosItem1.Year = entitySolution.Year.ToString();
+                    }
+
                 }
 
-                    logisticscostResponse.LogisticscostList = dtosItem;
+                logisticscostResponse.LogisticscostList = dtosItem;
                 logisticscostResponse.Classification = item;
                 logisticscostResponseList.Add(logisticscostResponse);
             }
@@ -162,11 +152,24 @@ namespace Finance.BaseLibrary
                     LogisticscostResponseDto logisticscostResponse = new LogisticscostResponseDto();
                     logisticscostResponse.Classification = item.GradientValue.ToString();
                     List <LogisticscostDto> logisticscostDtos= new List<LogisticscostDto>();
-                    foreach (var item1 in data1)
+                    foreach (var item1 in year)
                     {
                         LogisticscostDto logisticscostDto = new LogisticscostDto();
-                        logisticscostDto.Year = item1.Year.ToString();
-                        logisticscostDto.YearMountCount = item1.YearMountCount;
+                        if (item1.UpDown == YearType.FirstHalf)
+                        {
+
+                            logisticscostDto.Year = item1.Year + "上半年";
+                        }
+                        else if (item1.UpDown == YearType.SecondHalf)
+                        {
+                            logisticscostDto.Year = item1.Year + "下半年";
+                        }
+                        else
+                        {
+                            logisticscostDto.Year = item1.Year.ToString();
+                        }
+                        logisticscostDto.YearMountCount = item1.Quantity;
+                        logisticscostDto.ModelCountYearId = item1.Id;
                         logisticscostDto.FreightPrice = 0;
                         logisticscostDto.MonthlyDemandPrice= 0;
                         logisticscostDto.PackagingPrice= 0;
@@ -234,7 +237,7 @@ namespace Finance.BaseLibrary
                     logisticscost.StoragePrice = entity.StoragePrice;
                     logisticscost.TransportPrice = entity.TransportPrice;
                     logisticscost.Remark = entity.Remark;
-                    logisticscost.Year = entity.Year;
+                    logisticscost.ModelCountYearId = entity.ModelCountYearId;
                     if (AbpSession.UserId != null)
                     {
                         logisticscost.CreatorUserId = AbpSession.UserId.Value;
