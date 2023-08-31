@@ -7,5 +7,6 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class GetFoundationStandardTechnologysInput: PagedInputDto
     {
+        public string Name { get; set; }
     }
 }

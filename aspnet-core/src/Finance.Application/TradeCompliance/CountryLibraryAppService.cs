@@ -2,6 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Abp.Linq.Extensions;
+using Finance.BaseLibrary;
 using Finance.Dto;
 using Finance.TradeCompliance.Dto;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,15 @@ namespace Finance.TradeCompliance
     public class CountryLibraryAppService : ApplicationService
     {
         private readonly IRepository<CountryLibrary, long> _countryLibraryRepository;
+        private readonly IRepository<FoundationLogs, long> _foundationLogs;
 
-        public CountryLibraryAppService(IRepository<CountryLibrary, long> countryLibraryRepository)
+        public CountryLibraryAppService(IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<FoundationLogs, long> foundationLogs)
         {
-            _countryLibraryRepository=countryLibraryRepository;
+            _countryLibraryRepository = countryLibraryRepository;
+            _foundationLogs = foundationLogs;
         }
+
+
 
         /// <summary>
         /// 添加国家
@@ -35,6 +40,7 @@ namespace Finance.TradeCompliance
             var entity = ObjectMapper.Map<CountryLibrary>(input);
     
             await _countryLibraryRepository.InsertAsync(entity);
+            await CreateLog("添加了贸易合规国家库1条",LogType.CountryLib);
         }
 
         /// <summary>
@@ -57,6 +63,7 @@ namespace Finance.TradeCompliance
                     entity.Country = input.Country;
                     entity.Rate = input.Rate;
                     await _countryLibraryRepository.UpdateAsync(entity);
+                    await CreateLog("修改了贸易合规国家库1条", LogType.CountryLib);
                 }
             }
             catch (Exception e)
@@ -73,6 +80,7 @@ namespace Finance.TradeCompliance
         public virtual async Task DeleteCountryLibrary(long id)
         {
             await _countryLibraryRepository.DeleteAsync(id);
+            await CreateLog("删除了贸易合规国家库1条", LogType.CountryLib);
         }
 
         /// <summary>
@@ -104,7 +112,28 @@ namespace Finance.TradeCompliance
             }
 
         }
+        /// <summary>
+        /// 添加日志
+        /// </summary>
+        private async Task<bool> CreateLog(string Remark, LogType logType)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
 
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+                entity.CreatorUserId = AbpSession.UserId.Value;
+            }
+            entity.Remark = Remark;
+            entity.Type = logType;
+            entity = await _foundationLogs.InsertAsync(entity);
+            return true;
+        }
 
     }
 }

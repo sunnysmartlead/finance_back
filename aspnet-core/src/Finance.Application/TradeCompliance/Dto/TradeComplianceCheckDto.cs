@@ -19,10 +19,9 @@ namespace Finance.TradeCompliance.Dto
         [Required]
         public long AuditFlowId { get; set; }
         /// <summary>
-        /// MoudelCount表id
+        /// 方案表ID
         /// </summary>
-        [Required]
-        public long ProductId { get; set; }
+        public long SolutionId { get; set; }
     }
     /// <summary>
     /// 贸易合规判定界面Dto

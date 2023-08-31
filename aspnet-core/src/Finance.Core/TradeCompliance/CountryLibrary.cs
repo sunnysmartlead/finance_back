@@ -32,6 +32,6 @@ namespace Finance.TradeCompliance
         /// 比例
         /// </summary>
         [Column("RATE")]
-        public string Rate { get; set; }
+        public decimal Rate { get; set; }
     }
 }

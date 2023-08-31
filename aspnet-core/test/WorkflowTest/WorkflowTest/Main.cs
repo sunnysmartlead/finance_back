@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace WorkflowTest
@@ -60,6 +61,7 @@ namespace WorkflowTest
                 {
                     NodeInstanceId = nodeInstanceId,
                     FinanceDictionaryDetailId = financeDictionaryDetailId,
+                    Comment = "测试程序提交"
                 }).ReceiveJson<ReulstData<FinanceDictionaryListDto>>();
             if (result != null)
             {

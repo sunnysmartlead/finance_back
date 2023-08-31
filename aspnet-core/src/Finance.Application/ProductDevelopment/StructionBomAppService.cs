@@ -9,6 +9,7 @@ using Finance.Ext;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.ProductDevelopment.Dto;
+using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -51,20 +52,24 @@ namespace Finance.ProductDevelopment
         private readonly IObjectMapper _objectMapper;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
-        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService)
+        /// <summary>
+        /// 营销部审核中方案表
+        /// </summary>
+        public readonly IRepository<Solution, long> _resourceSchemeTable;
+        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> resourceSchemeTable)
         {
-            _logger=logger;
-            _structureBomInfoRepository=structureBomInfoRepository;
-            _structureBomInfoBakRepository=structureBomInfoBakRepository;
-            _modelCountRepository=modelCountRepository;
-            _structBomDifferentRepository=structBomDifferentRepository;
-            _solutionTableRepository=solutionTableRepository;
-            _productIsSubmit=productIsSubmit;
-            _flowAppService=flowAppService;
-            _productDevelopmentInputAppService=productDevelopmentInputAppService;
-            _objectMapper=objectMapper;
+            _logger = logger;
+            _structureBomInfoRepository = structureBomInfoRepository;
+            _structureBomInfoBakRepository = structureBomInfoBakRepository;
+            _modelCountRepository = modelCountRepository;
+            _structBomDifferentRepository = structBomDifferentRepository;
+            _solutionTableRepository = solutionTableRepository;
+            _productIsSubmit = productIsSubmit;
+            _flowAppService = flowAppService;
+            _productDevelopmentInputAppService = productDevelopmentInputAppService;
+            _objectMapper = objectMapper;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _resourceSchemeTable = resourceSchemeTable;
         }
 
 
@@ -241,11 +246,27 @@ namespace Finance.ProductDevelopment
             return dto;
         }
         /// <summary>
+        /// 总的方案
+        /// </summary>
+        internal async Task<List<SolutionModel>> TotalSolution(long auditFlowId)
+        {
+            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+            result = result.OrderBy(p => p.ModuleName).ToList();
+            List<SolutionModel> partModel = (from a in result
+                                             select new SolutionModel
+                                             {
+                                                 SolutionId = a.Id,
+                                                 SolutionName = a.SolutionName,
+                                                 ProductId = a.Productld,
+                                             }).ToList();
+            return partModel;
+        }
+        /// <summary>
         /// 接收前端数据存入本地接口
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-       
+
         public async Task SaveStructionBom(ProductDevelopmentInputDto dto)
         {
             List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
@@ -257,10 +278,9 @@ namespace Finance.ProductDevelopment
             }
             else
             {
-                await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
-                //查询核价需求导入时的零件信息
-                var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
-
+                await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);       
+                //查询总方案
+                List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
                 //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
 
 
@@ -324,20 +344,17 @@ namespace Finance.ProductDevelopment
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
                 //当前已保存的确认表中零件数目等于 核价需求导入时的零件数目
-                if (productIds.Count == allProductIsSubmits.Count + 1)
+                if (solutionId.Count == allProductIsSubmits.Count + 1)
                 {
-                    //执行跳转
-                    await this.InterfaceJump(dto.AuditFlowId);
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        NodeInstanceId = dto.NodeInstanceId,
+                        FinanceDictionaryDetailId = dto.Opinion,
+                        Comment = dto.Comment,
+                    });
                 }
-            }
-
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
-            {
-                NodeInstanceId = dto.NodeInstanceId,
-                FinanceDictionaryDetailId = dto.Opinion,
-                Comment = dto.Comment,
-            });
+            }          
         }
 
         /// <summary>

@@ -28,9 +28,9 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 结构单价表id
         /// </summary>
-        public List<long> StructureUnitPriceId { get; set; } 
+        public List<long> StructureUnitPriceId { get; set; }
         /// <summary>
-        /// 审核界面类型
+        /// 审核界面类型 （1：“电子Bom审核”，2：“结构Bom审核”，3：“电子Bom单价审核”，4：“结构Bom单价审核”,5:"Bom单价审核"）
         /// </summary>
         public BOMCHECKTYPE BomCheckType { get; set; }
     }

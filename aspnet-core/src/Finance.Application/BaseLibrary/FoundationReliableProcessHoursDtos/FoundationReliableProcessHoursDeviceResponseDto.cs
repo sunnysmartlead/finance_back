@@ -11,7 +11,7 @@ namespace Finance.BaseLibrary
     {
         public System.Nullable<System.Decimal> DeviceTotalPrice { get; set; }
 
-        public List<FoundationTechnologyDeviceDto> DeviceArr { get; set; }    
+        public List<FoundationTechnologyDeviceDto> DeviceArr { get; set; } = new List<FoundationTechnologyDeviceDto>(); 
 
 
 

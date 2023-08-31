@@ -523,7 +523,7 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<StructureBomInfoBak>().ToTable("StructureBomInfoBak");
             modelBuilder.Entity<BoardInfo>().ToTable("BoardInfo");
 
-            // 基础库
+     // 基础库
             modelBuilder.Entity<FoundationDevice>().ToTable("FDevice");
             modelBuilder.Entity<FoundationDeviceItem>().ToTable("FDeviceItem");
             modelBuilder.Entity<FoundationEmc>().ToTable("FEmc");

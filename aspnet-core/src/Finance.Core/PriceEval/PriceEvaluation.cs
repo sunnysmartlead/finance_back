@@ -286,6 +286,10 @@ namespace Finance.PriceEval
         [Required(AllowEmptyStrings = false)]
         public virtual string PlaceOfDelivery { get; set; }
 
+        /// <summary>
+        /// 贸易合规国家库ID
+        /// </summary>
+        public virtual long CountryLibraryId { get; set; }
 
         /// <summary>
         /// 国家（字典明细表主键）
