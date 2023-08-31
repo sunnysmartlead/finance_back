@@ -475,7 +475,7 @@ namespace Finance.Processes
             {
 
                 //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(input);
+                await _workflowInstanceAppService.SubmitNodeInterfece(input);
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";

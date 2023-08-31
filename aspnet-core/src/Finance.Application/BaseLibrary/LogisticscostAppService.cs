@@ -269,7 +269,7 @@ namespace Finance.BaseLibrary
             }
             else {
                 //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                 {
                     NodeInstanceId = input.NodeInstanceId,
                     FinanceDictionaryDetailId = input.Opinion,

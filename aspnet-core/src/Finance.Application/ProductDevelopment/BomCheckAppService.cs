@@ -129,7 +129,7 @@ namespace Finance.ProductDevelopment
 
 
             //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
                 NodeInstanceId = bomCheck.NodeInstanceId,
                 FinanceDictionaryDetailId = bomCheck.Opinion,

@@ -8,6 +8,7 @@ using Finance.Audit.Dto;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
 using Finance.Dto;
+using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProjectManagement;
@@ -175,6 +176,7 @@ namespace Finance.Audit
         /// </summary>
         public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfos()
         {
+            //如果是项目经理，可以看整个流程的全部已办。否则，只能看自己的已办
             List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
             //登录的实例
             if (AbpSession.UserId is null)
@@ -182,6 +184,7 @@ namespace Finance.Audit
                 throw new FriendlyException(401, "请先登录");
             }
 
+            //待办
             var data = await _workflowInstanceAppService.GetTaskByUserId(0);
             var dto = data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
             {
@@ -195,7 +198,9 @@ namespace Finance.Audit
                     ProcessIdentifier = o.ProcessIdentifier
                 }).ToList()
             }).ToList();
+            auditFlowRightInfoDtoList.AddRange(dto);
 
+            //已办
             var tasked = await _workflowInstanceAppService.GetInstanceHistory();
             var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
             {
@@ -209,8 +214,38 @@ namespace Finance.Audit
                     ProcessIdentifier = o.ProcessIdentifier
                 }).ToList()
             }).ToList();
-            dto.AddRange(taskedDto);
-            return dto;
+
+            //项目经理的全部已办
+            var userRole = from ur in _userRoleRepository.GetAll()
+                           join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
+                           where ur.UserId == AbpSession.UserId
+                           && r.Name.Contains("项目经理")
+                           select r.Name;
+            var isPm = await userRole.AnyAsync();
+            if (isPm)
+            {
+                var auditFlowIds = dto.Select(p => p.AuditFlowId).Union(taskedDto.Select(p => p.AuditFlowId)).Distinct();
+                var taskedPm = await auditFlowIds.SelectAsync(async p => await _workflowInstanceAppService.GetInstanceHistoryByWorkflowInstanceId(p));
+                var taskedDtoPm = taskedPm.SelectMany(p=>p.Items).GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList()
+                }).ToList();
+                auditFlowRightInfoDtoList.AddRange(taskedDtoPm);
+            }
+            else
+            {
+                auditFlowRightInfoDtoList.AddRange(taskedDto);
+            }
+
+            return auditFlowRightInfoDtoList;
 
 
             //var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == AbpSession.UserId.Value);
