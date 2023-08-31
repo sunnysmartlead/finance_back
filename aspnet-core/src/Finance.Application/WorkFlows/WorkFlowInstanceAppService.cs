@@ -18,6 +18,7 @@ using LinqKit;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,6 +93,16 @@ namespace Finance.WorkFlows
 
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+
+        /// <summary>
+        /// 手动触发贸易合规
+        /// </summary>
+        /// <returns></returns>
+        public async Task GG()
+        {
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_贸易合规");
+            hg.LastModificationTime = DateTime.UtcNow;
         }
 
         /// <summary>
