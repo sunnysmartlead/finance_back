@@ -21,11 +21,23 @@ namespace Finance.TradeCompliance
         [Column("AUDITFLOWID")]
         public long AuditFlowId { get; set; }
         /// <summary>
+        /// Solution表id(方案号)
+        /// </summary>
+        [Required]
+        [Column("SOLUTIONID")]
+        public long SolutionId { get; set; }
+        /// <summary>
         /// MoudelCount表id(零件号)
         /// </summary>
         [Required]
         [Column("PRODUCTID")]
         public long ProductId { get; set; }
+        /// <summary>
+        /// CountryLibrary表id
+        /// </summary>
+        [Required]
+        [Column("COUNTRYLIBRARYID")]
+        public long CountryLibraryId { get; set; }
         /// <summary>
         /// 产品名称（零件1，零件2...）
         /// </summary>
@@ -33,7 +45,7 @@ namespace Finance.TradeCompliance
         [Column("PRODUCTNAME")]
         public string ProductName { get; set; }
         /// <summary>
-        /// 产品小类
+        /// 产品大类
         /// </summary>         
         [Required]
         [Column("PRODUCTTYPE")]
