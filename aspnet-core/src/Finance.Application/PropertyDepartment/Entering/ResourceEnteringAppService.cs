@@ -236,7 +236,7 @@ namespace Finance.Entering
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = electronicDto.NodeInstanceId,
                         FinanceDictionaryDetailId = electronicDto.Opinion,
@@ -437,7 +437,7 @@ namespace Finance.Entering
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = structuralMemberEnteringModel.NodeInstanceId,
                         FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
@@ -630,7 +630,7 @@ namespace Finance.Entering
                 await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
             }
             //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
                 NodeInstanceId = toExamineDto.NodeInstanceId,
                 FinanceDictionaryDetailId = toExamineDto.Opinion,
