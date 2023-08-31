@@ -278,7 +278,7 @@ namespace Finance.ProductDevelopment
                 if (solutionId.Count == allProductIsSubmits.Count + 1)
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = dto.NodeInstanceId,
                         FinanceDictionaryDetailId = dto.Opinion,

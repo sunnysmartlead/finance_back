@@ -233,12 +233,20 @@ namespace Finance.WorkFlows
             return workFlowInstanceId;
         }
 
+        /// <summary>
+        /// 流程节点提交（结束当前节点，开启下个节点）
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task SubmitNode(SubmitNodeInput input)
+        {
+            await SubmitNodeInterfece(input);
+        }
 
         /// <summary>
         /// 流程节点提交（结束当前节点，开启下个节点）
         /// </summary>
         /// <returns></returns>
-        public async virtual Task SubmitNode(ISubmitNodeInput input)
+        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
         {
             //try
             //{
@@ -356,12 +364,18 @@ namespace Finance.WorkFlows
                     //该节点开发完毕后删除本region代码
                     if (item.NodeId == "主流程_定制结构件")
                     {
-                        await SubmitNode(new SubmitNodeInput
-                        {
-                            NodeInstanceId = item.Id,
-                            FinanceDictionaryDetailId = FinanceConsts.Done,
-                            Comment = "该节点暂未开发，系统自动提交。"
-                        });
+                        item.NodeInstanceStatus = NodeInstanceStatus.Passed;
+                        item.FinanceDictionaryDetailId = FinanceConsts.Done;
+
+                        var linrjg = lineInstance.FirstOrDefault(p => p.LineId == "主流程_定制结构件_主流程_结构BOM单价审核");
+                        linrjg.NodeInstanceStatus = NodeInstanceStatus.Passed;
+                        linrjg.IsCurrent = true;
+                        //await SubmitNode(new SubmitNodeInput
+                        //{
+                        //    NodeInstanceId = item.Id,
+                        //    FinanceDictionaryDetailId = FinanceConsts.Done,
+                        //    Comment = "该节点暂未开发，系统自动提交。"
+                        //});
                     }
                     #endregion
                 }
@@ -536,7 +550,9 @@ namespace Finance.WorkFlows
                            NodeName = n.Name,
                            CreationTime = w.CreationTime,
                            TaskUser = u.Name,
-                           WorkflowState = w.WorkflowState
+                           WorkflowState = w.WorkflowState,
+                           ProcessIdentifier = n.ProcessIdentifier,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId
                        };
             var count = await data.CountAsync();
             var result = await data.ToListAsync();
