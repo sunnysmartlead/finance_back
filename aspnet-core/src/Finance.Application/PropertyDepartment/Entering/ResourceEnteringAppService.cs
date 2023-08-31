@@ -616,7 +616,7 @@ namespace Finance.Entering
                 await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
             }
             //结构bom单价审核 并且是拒绝
-            if (toExamineDto.BomCheckType == BOMCHECKTYPE.ElecBomPriceCheck && toExamineDto.Opinion != FinanceConsts.StructBomEvalSelect_Yes)
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.StructBomPriceCheck && toExamineDto.Opinion != FinanceConsts.StructBomEvalSelect_Yes)
             {
                 //重置状态
                 await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
