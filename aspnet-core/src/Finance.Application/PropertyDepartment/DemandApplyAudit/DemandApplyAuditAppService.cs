@@ -143,7 +143,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 #endregion
                 #region 工作流
                 //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                 {
                     NodeInstanceId = auditEntering.NodeInstanceId,
                     FinanceDictionaryDetailId = auditEntering.Opinion,
@@ -165,7 +165,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         public async Task ProductDevelopmentDepartmentReview(ToExamineDto toExamineDto)
         {
             //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
                 NodeInstanceId = toExamineDto.NodeInstanceId,
                 FinanceDictionaryDetailId = toExamineDto.Opinion,

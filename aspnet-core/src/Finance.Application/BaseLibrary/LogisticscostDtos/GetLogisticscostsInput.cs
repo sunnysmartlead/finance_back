@@ -29,12 +29,26 @@ namespace Finance.BaseLibrary
     /// <summary>
     /// ProcessHoursEnterAppService/CreateSubmitAsync方法的提交参数Dto
     /// </summary>
-    public class ProcessHoursEnterCreateSubmitInput : SubmitNodeInput
+    public class ProcessHoursEnterCreateSubmitInput// : SubmitNodeInput
     {
         /// <summary>
         /// 流程Id
         /// </summary>
         [Required]
         public virtual long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 节点实例Id
+        /// </summary>
+        public virtual long NodeInstanceId { get; set; }
+
+        /// <summary>
+        /// 审批意见
+        /// </summary>
+        public string Opinion { get; set; }
+        /// <summary>
+        /// 审批评论
+        /// </summary>
+        public string Comment { get; set; }
     }
 }

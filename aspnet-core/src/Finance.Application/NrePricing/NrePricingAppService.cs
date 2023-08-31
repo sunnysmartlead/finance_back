@@ -453,7 +453,7 @@ namespace Finance.NerPricing
                 if (await this.GetProjectManagement(price.AuditFlowId))
                 {
                     //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = price.NodeInstanceId,
                         FinanceDictionaryDetailId = price.Opinion,
@@ -708,7 +708,7 @@ namespace Finance.NerPricing
                 //if (await this.GetResourcesManagement(price.AuditFlowId))
                 //{                  
                 //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                 {
                     NodeInstanceId = price.NodeInstanceId,
                     FinanceDictionaryDetailId = price.Opinion,
@@ -866,7 +866,7 @@ namespace Finance.NerPricing
                 #region 流程流转
 
                 //嵌入工作流
-                await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                 {
                     NodeInstanceId = price.NodeInstanceId,
                     FinanceDictionaryDetailId = price.Opinion,
@@ -1172,7 +1172,7 @@ namespace Finance.NerPricing
                     if (await this.GetExperimentItems(experimentItems.AuditFlowId))
                     {
                         //嵌入工作流
-                        await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                         {
                             NodeInstanceId = experimentItems.NodeInstanceId,
                             FinanceDictionaryDetailId = experimentItems.Opinion,
@@ -2173,7 +2173,7 @@ namespace Finance.NerPricing
                 await GetProductDepartmentConfigurationState(toExamineDto.AuditFlowId);
             }
             //嵌入工作流
-            await _workflowInstanceAppService.SubmitNode(new SubmitNodeInput
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
                 NodeInstanceId = toExamineDto.NodeInstanceId,
                 FinanceDictionaryDetailId = toExamineDto.Opinion,
