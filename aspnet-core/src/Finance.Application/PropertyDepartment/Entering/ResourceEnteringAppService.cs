@@ -272,7 +272,7 @@ namespace Finance.Entering
                 EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsEntering && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(item.ElectronicId));
                 if (enteringElectronic is not null) enteringElectronics.Add(enteringElectronic);
             }
-            electronicDtos = electronicDtos.Where(a => enteringElectronics.Where(t => a.SolutionId == t.SolutionId && a.ElectronicId.Equals(t.ElectronicId)).Any()).ToList();
+            electronicDtos = electronicDtos.Where(a => enteringElectronics.Where(t => a.SolutionId == t.SolutionId && a.ElectronicId.Equals(t.ElectronicId)).Any()||a.IsEntering).ToList();
             Count += electronicDtos.Count();
             return AllCount == Count;
         }
@@ -471,7 +471,7 @@ namespace Finance.Entering
                 StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsEntering && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(item.StructureId));
                 if (structureElectronic is not null) structureElectronics.Add(structureElectronic);
             }
-            structuralMaterialModels = structuralMaterialModels.Where(a => structureElectronics.Where(t => a.SolutionId == t.SolutionId && a.StructureId.Equals(t.StructureId)).Any()).ToList();
+            structuralMaterialModels = structuralMaterialModels.Where(a => structureElectronics.Where(t => a.SolutionId == t.SolutionId && a.StructureId.Equals(t.StructureId)).Any()||a.IsEntering).ToList();
             Count += structuralMaterialModels.Count();
             return AllCount == Count;
         }
