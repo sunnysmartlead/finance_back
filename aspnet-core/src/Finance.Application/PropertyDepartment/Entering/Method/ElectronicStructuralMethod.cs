@@ -1147,10 +1147,11 @@ namespace Finance.PropertyDepartment.Entering.Method
         {
 
             List<CustomerTargetPrice> customerTargetPrices = (from a in await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.Id.Equals(solutionId))
-                      join b in await _customerTargetPrice.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)) on a.Productld equals b.ProductId
-                      select b).ToList();
-            CustomerTargetPrice customer = customerTargetPrices.FirstOrDefault(p=>p.Kv.Equals(Kv));
-            if(customer is not null&&customer.ExchangeRate is not 0M)
+                                                              join b in await _customerTargetPrice.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)) on a.Productld equals b.ProductId
+                                                              select b).ToList();
+            CustomerTargetPrice customer = customerTargetPrices.FirstOrDefault(p => p.Kv.Equals(Kv));
+            ExchangeRate ExchangeRateKind = await _configExchangeRate.FirstOrDefaultAsync(p => p.Id.Equals(customer.Currency));
+            if (customer is not null && customer.ExchangeRate is not 0M && ExchangeRateKind is not null && ExchangeRateKind.ExchangeRateKind == Currency)
             {
                 return customer.ExchangeRate;
             }
