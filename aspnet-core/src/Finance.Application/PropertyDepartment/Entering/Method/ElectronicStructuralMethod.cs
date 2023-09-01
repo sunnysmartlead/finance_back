@@ -315,7 +315,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
                             yearOrValueKvMode.YearOrValueModes = new();
                             yearOrValueKvMode.Kv = gradientItem.Kv;
-                            foreach (ModelCountYear modelCountYear in modelCountYearList)
+                            foreach (GradientModelYear modelCountYear in gradientModelYears)
                             {
                                 //公共物料库中装配数量乘以每年的走量
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
@@ -324,9 +324,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)BomInfo.AssemblyQuantity;
-                                List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
-                                if (gradientModels.Count is not 1) throw new FriendlyException("获取项目物料使用量时候,梯度走量不唯一");
-                                decimal modelCountYearQuantity = gradientModels.FirstOrDefault().Count * 1000;
+                                decimal modelCountYearQuantity = modelCountYear.Count*1000;
                                 decimal value = bomAssemblyQuantity * modelCountYearQuantity + sharedMaterialWarehousesModeCount;
                                 YearOrValueMode yearOrValueMode = new YearOrValueMode { Year = modelCountYear.Year, UpDown = modelCountYear.UpDown, Value = value };
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
