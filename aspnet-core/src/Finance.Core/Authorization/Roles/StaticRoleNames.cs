@@ -35,8 +35,8 @@ namespace Finance.Authorization.Roles
             public const string LogisticsCostInputter = "生产管理部-物流成本录入员";//
             public const string EnvironmentInput = "品质保证部-环境实验费录入员";//
             public const string EnvironmentEval = "品质保证部-环境实验费审核员";//
-            public const string EmcInput = "品质保证部-EMC+电性能实验费录入员";//
-            public const string EmcEval = "品质保证部-EMC+电性能实验费审核员";//
+            public const string EmcInput = "产品开发部-EMC+电性能实验费录入员";//
+            public const string EmcEval = "产品开发部-EMC+电性能实验费审核员";//
 
             public const string TestCostInputter = "品质保证部-实验费用录入员";
             public const string GageCostInputter = "品质保证部-检具费用录入员";

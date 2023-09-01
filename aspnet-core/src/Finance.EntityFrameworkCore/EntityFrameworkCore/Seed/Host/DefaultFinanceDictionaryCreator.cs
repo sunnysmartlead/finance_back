@@ -72,6 +72,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
                  new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="设备状态",},
 
+                 new FinanceDictionary { Id=FinanceConsts.QualityCostType,DisplayName="质量成本比例",},
+
+                 
             };
 
             var noDb = financeDictionaryList.Where(p => !_context.FinanceDictionary.Contains(p));
@@ -273,6 +276,14 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Xy, DisplayName="现有",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Xg, DisplayName="新购",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Sbzt, Id = FinanceConsts.Sbzt_Gz, DisplayName="改造",},
+
+                //质量成本比例
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Qt, DisplayName="其他",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Ryjyw, DisplayName="软硬件业务",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Xxgz, DisplayName="显像感知",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Cnjc, DisplayName="舱内监测",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Hjgz, DisplayName="环境感知",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Wsxx, DisplayName="外摄显像",},
             };
 
             var noDbDetail = financeDictionaryDetailList.Where(p => !_context.FinanceDictionaryDetail.Contains(p));
