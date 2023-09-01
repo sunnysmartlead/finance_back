@@ -28,6 +28,10 @@ namespace Finance.Processes
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
+
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
         /// <summary>
         /// .ctor
         /// </summary>
@@ -38,13 +42,18 @@ namespace Finance.Processes
             IRepository<User, long> userRepository,
               IRepository<Solution, long> resourceSchemeTable,
               IRepository<ModelCountYear, long> modelCountYearRepository,
+            WorkflowInstanceAppService workflowInstanceAppService,
             IRepository<BomEnter, long> bomEnterRepository)
+
         {
             _bomEnterRepository = bomEnterRepository;
             _bomEnterTotalRepository = foundationFoundationWorkingHourItemRepository;
             _userRepository = userRepository;
             _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
+
+            _workflowInstanceAppService = workflowInstanceAppService;
+
             _modelCountYearRepository = modelCountYearRepository;
         }
 
@@ -169,7 +178,7 @@ namespace Finance.Processes
                 }
 
                 //没有数据的情况下
-              
+
                 Solution solution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
                 List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
                 var year = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
@@ -284,6 +293,7 @@ namespace Finance.Processes
                     bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
                     bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
                     bomEnter.TotalCost = ListBomEnterItem.TotalCost;
+                    bomEnter.Year = ListBomEnterItem.Year;
                     bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
                     bomEnter.Remark = ListBomEnterItem.Remark;
                     if (AbpSession.UserId != null)
@@ -328,7 +338,7 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<String> CreateSubmitAsync(GetBomEntersInput input)
+        public virtual async Task<String> CreateSubmitAsync(CreateSubmitInput input)
         {
    
                         var count = (from a in _bomEnterRepository.GetAllList(p =>
@@ -343,6 +353,14 @@ namespace Finance.Processes
             }
             else
             {
+
+                //嵌入工作流
+                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    Comment = input.Comment,
+                    FinanceDictionaryDetailId = input.Opinion,
+                    NodeInstanceId = input.NodeInstanceId,
+                });
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";

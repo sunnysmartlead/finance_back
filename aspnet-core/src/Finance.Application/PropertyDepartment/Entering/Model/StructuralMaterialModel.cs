@@ -65,6 +65,14 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary>
         public long PeopleId { get; set; }
         /// <summary>
+        /// 是否提交 true/1 提交  false/0 未提交
+        /// </summary>
+        public bool IsSubmit { get; set; }
+        /// <summary>
+        /// 是否录入 true/1 录入  false/0 未录入
+        /// </summary>
+        public bool IsEntering { get; set; }
+        /// <summary>
         /// 物料管制状态
         /// </summary> 
         [FriendlyRequired("物料管制状态")]
