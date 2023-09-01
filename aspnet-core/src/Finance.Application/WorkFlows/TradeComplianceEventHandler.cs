@@ -24,6 +24,12 @@ namespace Finance.WorkFlows
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="tradeComplianceAppService"></param>
+        /// <param name="workflowInstanceAppService"></param>
+        /// <param name="unitOfWorkManager"></param>
         public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
@@ -31,6 +37,10 @@ namespace Finance.WorkFlows
             _unitOfWorkManager = unitOfWorkManager;
         }
 
+        /// <summary>
+        /// 贸易合规节点被激活时触发
+        /// </summary>
+        /// <param name="eventData"></param>
         public async void HandleEvent(EntityUpdatedEventData<NodeInstance> eventData)
         {
             if (eventData.Entity.NodeId == "主流程_贸易合规")
