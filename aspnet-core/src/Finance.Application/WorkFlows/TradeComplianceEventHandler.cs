@@ -22,14 +22,12 @@ namespace Finance.WorkFlows
 
         private readonly TradeComplianceAppService _tradeComplianceAppService;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-        private readonly IRepository<TradeComplianceCheck, long> _tradeComplianceCheckRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
-        public TradeComplianceEventHandler(WorkflowInstanceAppService workflowInstanceAppService, TradeComplianceAppService tradeComplianceAppService, IRepository<TradeComplianceCheck, long> tradeComplianceCheckRepository, IUnitOfWorkManager unitOfWorkManager)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager)
         {
-            _workflowInstanceAppService = workflowInstanceAppService;
             _tradeComplianceAppService = tradeComplianceAppService;
-            _tradeComplianceCheckRepository = tradeComplianceCheckRepository;
+            _workflowInstanceAppService = workflowInstanceAppService;
             _unitOfWorkManager = unitOfWorkManager;
         }
 
@@ -62,22 +60,5 @@ namespace Finance.WorkFlows
                 }
             }
         }
-
-        ///// <summary>
-        ///// 是否贸易合规，合规返回true，不合规返回false
-        ///// </summary>
-        ///// <returns></returns>
-        //public virtual bool GetIsTradeCompliance(long auditFlowId)
-        //{
-        //    var tradeComplianceCheckList = _tradeComplianceCheckRepository.GetAllList(p => p.AuditFlowId == auditFlowId);
-        //    foreach (var tradeComplianceCheck in tradeComplianceCheckList)
-        //    {
-        //        if (tradeComplianceCheck.AnalysisConclusion.Equals(GeneralDefinition.TRADE_COMPLIANCE_NOT_OK))
-        //        {
-        //            return false;
-        //        }
-        //    }
-        //    return true;
-        //}
     }
 }
