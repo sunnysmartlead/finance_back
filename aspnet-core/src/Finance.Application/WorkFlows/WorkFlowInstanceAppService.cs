@@ -600,7 +600,9 @@ namespace Finance.WorkFlows
                        };
             var count = await data.CountAsync();
             var result = await data.ToListAsync();
-            return new PagedResultDto<UserTask>(count, result.Where(p => p.RoleIds.IsNullOrWhiteSpace() || p.RoleIds.Split(",").ToList().ToHashSet().Overlaps(roleIds)).ToList());
+            var dto = result.Where(p => p.RoleIds.IsNullOrWhiteSpace() || p.RoleIds.Split(",").ToList().ToHashSet().Overlaps(roleIds))
+               .Distinct().ToList();
+            return new PagedResultDto<UserTask>(count, dto);
         }
 
         /// <summary>
