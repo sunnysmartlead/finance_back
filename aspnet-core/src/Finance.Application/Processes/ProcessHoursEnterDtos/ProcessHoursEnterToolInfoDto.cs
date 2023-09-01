@@ -69,7 +69,7 @@ namespace Finance.Processes
 
         public string DevelopTotalPrice { get; set; }
 
-
+        public decimal SoftwarePrice { get; set; }
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Abp.Application.Services.Dto;
+using Finance.Processes;
 using System;
 using System.Collections.Generic;
 
@@ -20,6 +21,8 @@ namespace Finance.BaseLibrary
 
 
         public List<FoundationReliableProcessHoursResponseDto> List { get; set; }
+        //工时工序导入专用
+        public List<ProcessHoursEnterDto> ProcessHoursEnterDtoList { get; set; }
 
         
 
