@@ -6,6 +6,8 @@ using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
