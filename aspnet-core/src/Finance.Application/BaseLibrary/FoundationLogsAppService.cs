@@ -126,7 +126,6 @@ namespace Finance.BaseLibrary
                     entity.Id= item.Id;
                     entity.Remark= item.Remark;
                     entity.LastModificationTime = DateTime.Now;
-                    entity.u = DateTime.Now;
                     if (AbpSession.UserId != null)
                     {
                         entity.LastModifierUserId = AbpSession.UserId.Value;
