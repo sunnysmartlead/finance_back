@@ -866,5 +866,35 @@ namespace Finance
         /// </summary>
         public const string QualityCostType = "QualityCostType";
 
+        /// <summary>
+        /// 质量成本比例-其他
+        /// </summary>
+        public const string QualityCostType_Qt = "QualityCostType_Qt";
+
+        /// <summary>
+        /// 质量成本比例-软硬件业务
+        /// </summary>
+        public const string QualityCostType_Ryjyw = "QualityCostType_Ryjyw";
+
+        /// <summary>
+        /// 质量成本比例-显像感知
+        /// </summary>
+        public const string QualityCostType_Xxgz = "QualityCostType_Xxgz";
+
+        /// <summary>
+        /// 质量成本比例-舱内监测
+        /// </summary>
+        public const string QualityCostType_Cnjc = "QualityCostType_Cnjc";
+
+        /// <summary>
+        /// 质量成本比例-环境感知
+        /// </summary>
+        public const string QualityCostType_Hjgz = "QualityCostType_Hjgz";
+
+        /// <summary>
+        /// 质量成本比例-外摄显像
+        /// </summary>
+        public const string QualityCostType_Wsxx = "QualityCostType_Wsxx";
+
     }
 }
