@@ -143,10 +143,14 @@ namespace Finance.ProductDevelopment
         {
             try
             {
-                //List<ModelCount> result = await _modelCountRepository.GetAll().Where(p => auditFlowId==p.AuditFlowId).ToListAsync();
-                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
-                result = result.OrderBy(p => p.ModuleName).ToList();
-                return result;
+                List<Solution> resultNew=new List<Solution>();           
+                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);                
+                List<string> strings = result.Select(p=>p.ModuleName).Distinct().ToList();
+                strings.ForEach(m => {
+
+                    resultNew.AddRange(result.Where(p =>p.ModuleName==m));
+                });
+                return resultNew;
             }
             catch (Exception ex)
             {
