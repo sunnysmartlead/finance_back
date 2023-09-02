@@ -288,8 +288,8 @@ namespace Finance
 
 
             //创建修改项
-            configuration.CreateMap<CreateUpdateItemInput, UpdateItem>()
-                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.Material)))
+            configuration.CreateMap<SetUpdateItemInput<Material>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
                 .ReverseMap();
             configuration.CreateMap<Material, Material>();
 

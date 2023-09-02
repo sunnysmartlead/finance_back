@@ -36,7 +36,12 @@ namespace Finance.PriceEval
         /// <summary>
         /// 方案表ID
         /// </summary>
-        public long SolutionId { get; set; }
+        public virtual long SolutionId { get; set; }
+
+        /// <summary>
+        /// 修改项类型
+        /// </summary>
+        public virtual UpdateItemType UpdateItemType { get; set; }
 
         /// <summary>
         /// 年份
@@ -61,4 +66,36 @@ namespace Finance.PriceEval
         [Required]
         public virtual long File { get; set; }
     }
+
+    /// <summary>
+    /// 修改项类型
+    /// </summary>
+    public enum UpdateItemType : byte 
+    {
+        /// <summary>
+        /// 物料成本
+        /// </summary>
+        Material,
+
+        /// <summary>
+        /// 损耗成本
+        /// </summary>
+        LossCostItem,
+
+        /// <summary>
+        /// 制造成本
+        /// </summary>
+        ManufacturingCost,
+
+        /// <summary>
+        /// 质量成本
+        /// </summary>
+        QualityCost,
+
+        /// <summary>
+        /// 其他成本
+        /// </summary>
+        OtherCost,
+    }
+
 }

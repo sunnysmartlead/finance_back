@@ -618,7 +618,7 @@ namespace Finance.PriceEval
                 && p.ProductId == productId && p.GradientId == input.GradientId
                 && p.SolutionId == input.SolutionId
                 && p.Year == input.Year && p.UpDown == input.UpDown);
-            var material = ObjectMapper.Map<CreateUpdateItemInput>(updateItem);
+            var material = ObjectMapper.Map<SetUpdateItemInput>(updateItem);
             if (material is not null)
             {
                 var dataIds = material.Material.Select(p => p.Id);
