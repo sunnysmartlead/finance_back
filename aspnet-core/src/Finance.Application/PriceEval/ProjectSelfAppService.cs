@@ -145,7 +145,7 @@ namespace Finance.PriceEval
                             UserName = u.Name
                         }).WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.UserName.Contains(input.Filter) || p.Text.Contains(input.Filter));
             var count = await data.CountAsync();
-            var paged = data.PageBy(input);
+            var paged = data.OrderByDescending(p => p.Id).PageBy(input);
             var result = await paged.ToListAsync();
             return new PagedResultDto<BaseStoreLogListDto>(count, result);
         }

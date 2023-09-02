@@ -474,16 +474,60 @@ namespace Finance.PriceEval
             return priceEvaluationDto;
         }
 
+        #region 修改项
+
+
+
 
         /// <summary>
-        /// 创建修改项
+        /// 创建修改项（物料成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task CreateUpdateItem(CreateUpdateItemInput input)
+        public async virtual Task SetUpdateItemMaterial(SetUpdateItemInput<Material> input)
         {
             var entity = await _updateItemRepository.GetAll()
-                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.Material
+                && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input, entity);
+            }
+        }
+
+        /// <summary>
+        /// 获取修改项（物料成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<List<Material>> GetUpdateItemMaterial(GetUpdateItemInput input)
+        {
+            var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.UpdateItemType == UpdateItemType.Material
+            //&& p.ProductId == input.ProductId
+            && p.GradientId == input.GradientId
+            && p.SolutionId == input.SolutionId
+            && p.Year == input.Year
+            && p.UpDown == p.UpDown);
+            return entity.Select(p => JsonConvert.DeserializeObject<Material>(p.MaterialJson)).ToList();
+        }
+
+        /// <summary>
+        /// 创建修改项（损耗成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<LossCost> input)
+        {
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.LossCost
+                && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
@@ -495,20 +539,136 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 获取修改项
+        /// 获取修改项（损耗成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task<List<Material>> GetUpdateItem(GetUpdateItemInput input)
+        public async virtual Task<List<LossCost>> GetUpdateItemLossCost(GetUpdateItemInput input)
         {
             var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
-            && p.ProductId == input.ProductId
+            &&p.UpdateItemType ==  UpdateItemType.LossCost
+            //&& p.ProductId == input.ProductId
             && p.GradientId == input.GradientId
             && p.SolutionId == input.SolutionId
             && p.Year == input.Year
             && p.UpDown == p.UpDown);
-            return entity.Select(p => JsonConvert.DeserializeObject<Material>(p.MaterialJson)).ToList();
+            return entity.Select(p => JsonConvert.DeserializeObject<LossCost>(p.MaterialJson)).ToList();
         }
+
+        /// <summary>
+        /// 创建修改项（制造成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task SetUpdateItemManufacturingCost(SetUpdateItemInput<ManufacturingCost> input)
+        {
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.ManufacturingCost
+                && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input, entity);
+            }
+        }
+
+        /// <summary>
+        /// 获取修改项（制造成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<List<ManufacturingCost>> GetUpdateItemManufacturingCost(GetUpdateItemInput input)
+        {
+            var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.UpdateItemType == UpdateItemType.ManufacturingCost
+            //&& p.ProductId == input.ProductId
+            && p.GradientId == input.GradientId
+            && p.SolutionId == input.SolutionId
+            && p.Year == input.Year
+            && p.UpDown == p.UpDown);
+            return entity.Select(p => JsonConvert.DeserializeObject<ManufacturingCost>(p.MaterialJson)).ToList();
+        }
+
+        /// <summary>
+        /// 创建修改项（质量成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task SetUpdateItemQualityCost(SetUpdateItemInput<QualityCostListDto> input)
+        {
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.QualityCost
+                && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input, entity);
+            }
+        }
+
+        /// <summary>
+        /// 获取修改项（质量成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<List<QualityCostListDto>> GetUpdateItemQualityCost(GetUpdateItemInput input)
+        {
+            var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.UpdateItemType == UpdateItemType.QualityCost
+            //&& p.ProductId == input.ProductId
+            && p.GradientId == input.GradientId
+            && p.SolutionId == input.SolutionId
+            && p.Year == input.Year
+            && p.UpDown == p.UpDown);
+            return entity.Select(p => JsonConvert.DeserializeObject<QualityCostListDto>(p.MaterialJson)).ToList();
+        }
+
+        /// <summary>
+        /// 创建修改项（其他成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<OtherCostItem> input)
+        {
+            var entity = await _updateItemRepository.GetAll()
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.OtherCost
+                && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (entity is null)
+            {
+                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+            }
+            else
+            {
+                ObjectMapper.Map(input, entity);
+            }
+        }
+
+        /// <summary>
+        /// 获取修改项（其他成本）
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<List<OtherCostItem>> GetUpdateItemOtherCost(GetUpdateItemInput input)
+        {
+            var entity = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.UpdateItemType == UpdateItemType.OtherCost
+            //&& p.ProductId == input.ProductId
+            && p.GradientId == input.GradientId
+            && p.SolutionId == input.SolutionId
+            && p.Year == input.Year
+            && p.UpDown == p.UpDown);
+            return entity.Select(p => JsonConvert.DeserializeObject<OtherCostItem>(p.MaterialJson)).ToList();
+        }
+        #endregion
 
         #endregion
 
