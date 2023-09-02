@@ -576,11 +576,15 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task<PagedResultDto<UserTask>> GetInstanceHistory()
         {
+            //获取用户所有拥有的工作流相关的角色
+            var roleIds = await _userRoleRepository.GetAll().Where(p => p.UserId == AbpSession.UserId)
+                .Join(_roleRepository.GetAll(), p => p.RoleId, p => p.Id, (a, b) => b).Select(p => p.Id.ToString()).ToListAsync();
+
             var data = from h in _instanceHistoryRepository.GetAll()
                        join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
                        join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
                        join u in _userManager.Users on h.CreatorUserId equals u.Id
-                       where h.CreatorUserId == AbpSession.UserId
+                       where h.CreatorUserId == AbpSession.UserId || roleIds.Contains(n.RoleId)
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -592,10 +596,13 @@ namespace Finance.WorkFlows
                            TaskUser = u.Name,
                            WorkflowState = w.WorkflowState,
                            ProcessIdentifier = n.ProcessIdentifier,
+                           RoleIds = n.RoleId
                        };
             var count = await data.CountAsync();
             var result = await data.ToListAsync();
-            return new PagedResultDto<UserTask>(count, result);
+            var dto = result.Where(p => p.RoleIds.IsNullOrWhiteSpace() || p.RoleIds.Split(",").ToList().ToHashSet().Overlaps(roleIds))
+               .Distinct().ToList();
+            return new PagedResultDto<UserTask>(count, dto);
         }
 
         /// <summary>
