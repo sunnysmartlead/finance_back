@@ -6,8 +6,8 @@ using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
-using Finance.WorkFlows.Dto;
 using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,10 +43,8 @@ namespace Finance.Processes
             DataInputAppService dataInputAppService,
             IRepository<User, long> userRepository,
               IRepository<Solution, long> resourceSchemeTable,
-
-            WorkflowInstanceAppService workflowInstanceAppService,
-
               IRepository<ModelCountYear, long> modelCountYearRepository,
+            WorkflowInstanceAppService workflowInstanceAppService,
             IRepository<BomEnter, long> bomEnterRepository)
 
         {
@@ -182,7 +180,7 @@ namespace Finance.Processes
                 }
 
                 //没有数据的情况下
-              
+
                 Solution solution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
                 List<Gradient> ListGradient = await _dataInputAppService.GetGradientByAuditFlowId((long)input.AuditFlowId);
                 var year = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
@@ -297,6 +295,7 @@ namespace Finance.Processes
                     bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
                     bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
                     bomEnter.TotalCost = ListBomEnterItem.TotalCost;
+                    bomEnter.Year = ListBomEnterItem.Year;
                     bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
                     bomEnter.Remark = ListBomEnterItem.Remark;
                     if (AbpSession.UserId != null)

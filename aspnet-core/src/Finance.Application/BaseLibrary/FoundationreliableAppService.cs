@@ -162,6 +162,44 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
+        /// 导出
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> FoundationreliableDownloadStream()
+        {
+            var list = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false).ToList();
+            var memoryStream = new MemoryStream();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<Foundationreliable>, List<FoundationreliableDto>>(list, new List<FoundationreliableDto>());
+            List<FoundationreliableExport> values = new List<FoundationreliableExport>();
+            foreach (var item in dtos)
+            {
+                FoundationreliableExport foundationEmc = new FoundationreliableExport();
+
+                foundationEmc.Classification = item.Classification;
+                foundationEmc.Name = item.Name;
+                if (null != item.Price)
+                {
+                    foundationEmc.Price = (double)item.Price;
+                }
+                else {
+                    foundationEmc.Price = 0;
+                }
+              
+                foundationEmc.Unit = item.Unit;
+                values.Add(foundationEmc);
+            }
+            var memoryStream1 = new MemoryStream();
+            memoryStream1.SaveAs(values, sheetName: "Sheet1");
+            memoryStream1.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream1, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "Foundationreliable" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
+        }
+
+        /// <summary>
         /// 删除
         /// </summary>
         /// <param name="id">主键</param>
