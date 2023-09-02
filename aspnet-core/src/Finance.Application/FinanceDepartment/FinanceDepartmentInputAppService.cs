@@ -1,15 +1,14 @@
 ﻿using Abp.Application.Services;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
-using Abp.EntityFrameworkCore.Repositories;
 using Abp.ObjectMapping;
+using Finance.BaseLibrary;
 using Finance.FinanceDepartment.Dto;
 using Finance.FinanceParameter;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Finance.FinanceDepartment
@@ -17,27 +16,40 @@ namespace Finance.FinanceDepartment
     /// <summary>
     /// 财务部所有接口
     /// </summary>
+    [AbpAuthorize]
     public class FinanceDepartmentInputAppService : ApplicationService
     {
+        /// <summary>
+        /// 日志类型-制造成本计算参数
+        /// </summary>
+        private readonly LogType ManufacturingCostCalculationParametersType = LogType.ManufacturingCostCalculationParameters;
+        /// <summary>
+        /// 日志类型-作业价格
+        /// </summary>
+        private readonly LogType JobPriceType = LogType.JobPrice;
         private readonly IRepository<RateEntryInfo, long> _rateEntryInfoRepository;
         private readonly IRepository<QualityRatioEntryInfo, long> _qualityCostProportionEntryInfoRepository;
         private readonly IRepository<QualityRatioYearInfo, long> _qualityCostProportionYearInfoRepository;
         private readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
         private readonly IObjectMapper _objectMapper;
-
-        public FinanceDepartmentInputAppService(IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IObjectMapper objectMapper)
+        /// <summary>
+        /// 基础库--日志表
+        /// </summary>
+        private readonly IRepository<FoundationLogs, long> _foundationLogs;
+        public FinanceDepartmentInputAppService(IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IObjectMapper objectMapper, IRepository<FoundationLogs, long> foundationLogs)
         {
-            _rateEntryInfoRepository=rateEntryInfoRepository;
-            _qualityCostProportionEntryInfoRepository=qualityCostProportionEntryInfoRepository;
-            _qualityCostProportionYearInfoRepository=qualityCostProportionYearInfoRepository;
-            _manufacturingCostInfoRepository=manufacturingCostInfoRepository;
-            _objectMapper=objectMapper;
+            _rateEntryInfoRepository = rateEntryInfoRepository;
+            _qualityCostProportionEntryInfoRepository = qualityCostProportionEntryInfoRepository;
+            _qualityCostProportionYearInfoRepository = qualityCostProportionYearInfoRepository;
+            _manufacturingCostInfoRepository = manufacturingCostInfoRepository;
+            _objectMapper = objectMapper;
+            _foundationLogs = foundationLogs;
         }
 
 
 
         /// <summary>
-        /// 获取费率录入
+        /// 获取作业价格录入
         /// </summary>
         /// <returns></returns>
         public async Task<RateEntryDto> GetRateEntry()
@@ -51,7 +63,7 @@ namespace Finance.FinanceDepartment
         }
 
         /// <summary>
-        /// 保存费率
+        /// 保存作业价格
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
@@ -64,7 +76,7 @@ namespace Finance.FinanceDepartment
             {
                await _rateEntryInfoRepository.InsertOrUpdateAsync(info);
             });
-
+            await CreateLog($"保存作业价格 {rateEntryInfos.Count} 条", JobPriceType);
         }
 
         /// <summary>
@@ -162,7 +174,30 @@ namespace Finance.FinanceDepartment
             {
                 await _manufacturingCostInfoRepository.InsertOrUpdateAsync(manufacturingCost);
             });
+            await CreateLog($"保存制造成本里计算 {result.Count} 条", ManufacturingCostCalculationParametersType);
+        }
 
+        /// <summary>
+        /// 添加日志
+        /// </summary>       
+        private async Task<bool> CreateLog(string Remark, LogType logType)
+        {
+            FoundationLogs entity = new FoundationLogs()
+            {
+                IsDeleted = false,
+                DeletionTime = DateTime.Now,
+                LastModificationTime = DateTime.Now,
+
+            };
+            if (AbpSession.UserId != null)
+            {
+                entity.LastModifierUserId = AbpSession.UserId.Value;
+                entity.CreatorUserId = AbpSession.UserId.Value;
+            }
+            entity.Remark = Remark;
+            entity.Type = logType;
+            entity = await _foundationLogs.InsertAsync(entity);
+            return true;
         }
     }
 }
