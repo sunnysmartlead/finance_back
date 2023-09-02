@@ -80,7 +80,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 损耗成本
         /// </summary>
-        LossCostItem,
+        LossCost,
 
         /// <summary>
         /// 制造成本
