@@ -12,7 +12,7 @@ namespace Finance.PriceEval.Dto
     /// <summary>
     /// 创建修改项输入
     /// </summary>
-    public class CreateUpdateItemInput
+    public class SetUpdateItemInput<TType>
     {
         /// <summary>
         /// 审批流程主表Id
@@ -20,11 +20,11 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual long AuditFlowId { get; set; }
 
-        /// <summary>
-        /// 模组数量Id（即零件Id）
-        /// </summary>
-        [Required]
-        public virtual long ProductId { get; set; }
+        ///// <summary>
+        ///// 模组数量Id（即零件Id）
+        ///// </summary>
+        //[Required]
+        //public virtual long ProductId { get; set; }
 
         /// <summary>
         /// 梯度Id
@@ -52,7 +52,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 修改项
         /// </summary>
-        public virtual List<Material> Material { get; set; }
+        public virtual List<TType> UpdateItem { get; set; }
 
         /// <summary>
         /// 上传佐证材料
@@ -69,11 +69,17 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual long AuditFlowId { get; set; }
 
-        /// <summary>
-        /// 模组数量Id（即零件Id）
-        /// </summary>
-        [Required]
-        public virtual long ProductId { get; set; }
+
+        ///// <summary>
+        ///// 修改项类型
+        ///// </summary>
+        //public virtual UpdateItemType UpdateItemType { get; set; }
+
+        ///// <summary>
+        ///// 模组数量Id（即零件Id）
+        ///// </summary>
+        //[Required]
+        //public virtual long ProductId { get; set; }
 
         /// <summary>
         /// 梯度Id

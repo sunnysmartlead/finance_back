@@ -36,7 +36,12 @@ namespace Finance.Processes
         /// </summary>
 
         public decimal SoftwarePrice { get; set; }
+        public decimal TotalHardwarePrice { get; set; }
 
+        public decimal PictureDevelopment { get; set; }
+        public decimal Development { get; set; }
+
+        public string TraceabilitySoftware { get; set; }
     }
 
 

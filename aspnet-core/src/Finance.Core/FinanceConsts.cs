@@ -19,7 +19,7 @@ namespace Finance
 
         public const string AliServer_In_IP = "172.26.144.105"; //阿里云内网IP地址
         public const string AliServer_Out_IP = "139.196.216.165"; //阿里云外网IP地址
-        
+
         public const int SmtpPort_Tencent = 587;    //SMTP服务器端口
         public const string SmtpServer_Tencent = "smtp.qq.com"; //SMTP服务器
         public const string MailFrom_Tencent = "274439023@qq.com"; //登陆用户名，邮箱
@@ -162,7 +162,7 @@ namespace Finance
         /// 代理（字典明细表的Name）
         /// </summary>
         public const string CustomerNature_Agent = "CustomerNature_Agent";
-        
+
 
         /// <summary>
         /// 终端性质（字典表的Name）
@@ -607,7 +607,7 @@ namespace Finance
         /// 节点成本预估
         /// </summary>
         public const string EvalReason_Jdcbpg = "EvalReason_Jdcbpg";
-        
+
         /// <summary>
         /// 项目变更
         /// </summary>
@@ -859,6 +859,42 @@ namespace Finance
         public const string Sbzt_Xy = "Sbzt_Xy";
         public const string Sbzt_Xg = "Sbzt_Xg";
         public const string Sbzt_Gz = "Sbzt_Gz";
+
+
+        /// <summary>
+        /// 质量成本比例
+        /// </summary>
+        public const string QualityCostType = "QualityCostType";
+
+        /// <summary>
+        /// 质量成本比例-其他
+        /// </summary>
+        public const string QualityCostType_Qt = "QualityCostType_Qt";
+
+        /// <summary>
+        /// 质量成本比例-软硬件业务
+        /// </summary>
+        public const string QualityCostType_Ryjyw = "QualityCostType_Ryjyw";
+
+        /// <summary>
+        /// 质量成本比例-显像感知
+        /// </summary>
+        public const string QualityCostType_Xxgz = "QualityCostType_Xxgz";
+
+        /// <summary>
+        /// 质量成本比例-舱内监测
+        /// </summary>
+        public const string QualityCostType_Cnjc = "QualityCostType_Cnjc";
+
+        /// <summary>
+        /// 质量成本比例-环境感知
+        /// </summary>
+        public const string QualityCostType_Hjgz = "QualityCostType_Hjgz";
+
+        /// <summary>
+        /// 质量成本比例-外摄显像
+        /// </summary>
+        public const string QualityCostType_Wsxx = "QualityCostType_Wsxx";
 
     }
 }

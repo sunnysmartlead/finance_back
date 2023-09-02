@@ -125,6 +125,7 @@ namespace Finance.BaseLibrary
                     FoundationLogs entity = await _foundationLogsRepository.GetAsync(item.Id);
                     entity.Id= item.Id;
                     entity.Remark= item.Remark;
+                    entity.LastModificationTime = DateTime.Now;
                     if (AbpSession.UserId != null)
                     {
                         entity.LastModifierUserId = AbpSession.UserId.Value;

@@ -448,7 +448,10 @@ namespace Finance.NerPricing
                     await _resourceTravelExpense.InsertOrUpdateAsync(travel);//录入差旅费
                 }
                 #region 录入完成之后
-                await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = projectManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ProjectManagement.ToString() });
+                if (price.Opinion == FinanceConsts.Done)
+                {
+                    await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = projectManagementModel.SolutionId, EnumSole = NreIsSubmitDto.ProjectManagement.ToString() });
+                }
                 #endregion
                 if (await this.GetProjectManagement(price.AuditFlowId))
                 {
@@ -459,7 +462,7 @@ namespace Finance.NerPricing
                         FinanceDictionaryDetailId = price.Opinion,
                         Comment = price.Comment,
                     });
-                }         
+                }
             }
             catch (Exception e)
             {
@@ -597,13 +600,13 @@ namespace Finance.NerPricing
         {
             long count = 0;
             List<SolutionModel> partModels = await TotalSolution(auditFlowId);// 获总方案       
-            
+
             //循环每一个方案
             foreach (SolutionModel part in partModels)
             {
                 MouldInventoryPartModel mould = await GetInitialResourcesManagementSingle(auditFlowId, part.SolutionId);
                 count += mould.MouldInventoryModels.Count;
-            }          
+            }
             return count;
         }
         /// <summary>
@@ -850,7 +853,10 @@ namespace Finance.NerPricing
                 if (price.IsSubmit)
                 {
                     #region 录入完成之后
-                    await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = price.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
+                    if (price.Opinion == FinanceConsts.Done)
+                    {
+                        await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = price.AuditFlowId, SolutionId = price.SolutionId, EnumSole = NreIsSubmitDto.ProductDepartment.ToString() });
+                    }
                     #endregion
                     if (await this.GetProductDepartment(price.AuditFlowId))
                     {
@@ -858,21 +864,20 @@ namespace Finance.NerPricing
                         {
                             throw new FriendlyException("请先登录");
                         }
+                        #region 流程流转
 
-
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                        {
+                            NodeInstanceId = price.NodeInstanceId,
+                            FinanceDictionaryDetailId = price.Opinion,
+                            Comment = price.Comment,
+                        });
+                        #endregion
 
                     }
                 }
-                #region 流程流转
 
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                {
-                    NodeInstanceId = price.NodeInstanceId,
-                    FinanceDictionaryDetailId = price.Opinion,
-                    Comment = price.Comment,
-                });
-                #endregion
 
             }
             catch (Exception e)
@@ -1167,7 +1172,10 @@ namespace Finance.NerPricing
                 if (experimentItems.IsSubmit)
                 {
                     #region 录入完成之后
-                    await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = experimentItems.AuditFlowId, SolutionId = experimentItems.SolutionId, EnumSole = NreIsSubmitDto.EnvironmentalExperimentFee.ToString() });
+                    if (experimentItems.Opinion == FinanceConsts.Done)
+                    {
+                        await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = experimentItems.AuditFlowId, SolutionId = experimentItems.SolutionId, EnumSole = NreIsSubmitDto.EnvironmentalExperimentFee.ToString() });
+                    }
                     #endregion
                     if (await this.GetExperimentItems(experimentItems.AuditFlowId))
                     {
@@ -1927,22 +1935,22 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),                     
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
-                                                                 join p in _financeDictionaryDetailRepository.GetAll()
-                                                                 on t.DeviceStatus equals p.Id into temp
-                                                                 from p in temp.DefaultIfEmpty()
-                                                                 select new ProductionEquipmentCostModel
-                                                                 {
-                                                                     Id = t.Id,
-                                                                     EquipmentName = t.EquipmentName,
-                                                                     DeviceStatus = t.DeviceStatus,
-                                                                     UnitPrice = t.UnitPrice,
-                                                                     Number = t.Number,
-                                                                     Cost = t.Cost,
-                                                                     DeviceStatusName = p != null ? p.DisplayName : ""
-                                                                 }).ToList();
+                                                                                              join p in _financeDictionaryDetailRepository.GetAll()
+                                                                                              on t.DeviceStatus equals p.Id into temp
+                                                                                              from p in temp.DefaultIfEmpty()
+                                                                                              select new ProductionEquipmentCostModel
+                                                                                              {
+                                                                                                  Id = t.Id,
+                                                                                                  EquipmentName = t.EquipmentName,
+                                                                                                  DeviceStatus = t.DeviceStatus,
+                                                                                                  UnitPrice = t.UnitPrice,
+                                                                                                  Number = t.Number,
+                                                                                                  Cost = t.Cost,
+                                                                                                  DeviceStatusName = p != null ? p.DisplayName : ""
+                                                                                              }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
                 //实验费用
@@ -2055,8 +2063,8 @@ namespace Finance.NerPricing
         /// <returns></returns>
         internal async Task<string> GetDisplayName(string Id)
         {
-           FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id.Equals(Id));
-           return prop?.DisplayName;
+            FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id.Equals(Id));
+            return prop?.DisplayName;
         }
         /// <summary>
         /// 手板件费用修改项添加

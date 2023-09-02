@@ -4,7 +4,10 @@ using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.Processes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
 using NPOI.SS.UserModel;
+using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -172,6 +175,36 @@ namespace Finance.BaseLibrary
             this.CreateLog(" 删除EMC项目1条");
         }
 
+        /// <summary>
+        /// 导出FoundationEmc
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> FoundationEmcDownloadStream()
+        {
+            var list = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false).ToList();
+            var memoryStream = new MemoryStream();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationEmc>, List<FoundationEmcDto>>(list, new List<FoundationEmcDto>());
+            List<FoundationEmcExportDto> values = new List<FoundationEmcExportDto>();
+            foreach (var item in dtos)
+            {
+                FoundationEmcExportDto foundationEmc = new FoundationEmcExportDto();
+
+                foundationEmc.Classification = item.Classification;
+                foundationEmc.Name = item.Name;
+                foundationEmc.Price = item.Price;
+                foundationEmc.Unit = item.Unit;
+                values.Add(foundationEmc);
+            }
+            var memoryStream1 = new MemoryStream();
+            memoryStream1.SaveAs(values, sheetName: "Sheet1");
+            memoryStream1.Seek(0, SeekOrigin.Begin);
+            return new FileStreamResult(memoryStream1, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FoundationEMC" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
+        }
 
 
         /// <summary>

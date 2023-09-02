@@ -206,6 +206,7 @@ namespace Finance.Processes
                         processHoursEnteritemDto.LaborHour = yearItem.LaborHour;
                         processHoursEnteritemDto.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritemDto.MachineHour = yearItem.MachineHour;
+                        processHoursEnteritemDto.ModelCountYearId= yearItem.ModelCountYearId;
                         processHoursEnteritems1.Add(processHoursEnteritemDto);
                     }
                     processHoursEnteritem.Issues = processHoursEnteritems1;
