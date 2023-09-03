@@ -1307,7 +1307,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.AuditFlowId = submitElectronicDto.AuditFlowId;//流程的id
                         enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                         enteringElectronic.IsEntering = true;//确认录入           
-                        await _configEnteringElectronic.InsertAsync(enteringElectronic);
+                        await _configEnteringElectronic.InsertOrUpdateAsync(enteringElectronic);
                     }
                     else
                     {
