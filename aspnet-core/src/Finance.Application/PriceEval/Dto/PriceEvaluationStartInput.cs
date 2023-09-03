@@ -386,7 +386,7 @@ namespace Finance.PriceEval.Dto
         /// 国家类型
         /// </summary>
         //[Required]
-        public virtual string CountryType { get; set; }
+        public virtual string CountryType { get; set;}
 
         /// <summary>
         /// 要求核价完成时间

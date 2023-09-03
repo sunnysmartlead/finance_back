@@ -1,43 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using Abp.Domain.Entities.Auditing;
 
-namespace Finance.MakeOffers.AnalyseBoard.DTo;
+namespace Finance.MakeOffers;
 /// <summary>
-/// 样品
+/// 报价分析看板中的 样品报价
 /// </summary>
-public class OnlySampleDto
+public class SampleQuotation : FullAuditedEntity<long>
 {
-    /// <summary>
-    /// 方案名
-    /// </summary>
-    public string SolutionName { get; set; }
     /// <summary>
     /// 流程号Id
     /// </summary> 
     public long AuditFlowId { get; set; }
     /// <summary>
-    /// 方案表ID
+    /// 方案的id
     /// </summary>
     public long SolutionId { get; set; }
+    
     /// <summary>
-    /// 样品阶段
+    /// 样品阶段名称（从字典明细表取值，FinanceDictionaryId是【SampleName】）
     /// </summary>
-    public List<OnlySampleModel> OnlySampleModels{ get; set; }
-}
-/// <summary>
-/// 样品值
-/// </summary>
-public class OnlySampleModel
-{
-    /// <summary>
-    /// 样品阶段名称
-    /// </summary>
-    public string SampleName { get; set; }
+    public virtual string Name { get; set; }
+
 
     /// <summary>
     /// 需求量
     /// </summary>
-    public decimal Pcs { get; set; }
-
+    public virtual decimal Pcs { get; set; }
     /// <summary>
     /// 成本
     /// </summary>

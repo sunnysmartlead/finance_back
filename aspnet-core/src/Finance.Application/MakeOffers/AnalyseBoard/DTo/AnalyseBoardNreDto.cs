@@ -9,6 +9,14 @@ public class AnalyseBoardNreDto
     /// 方案名
     /// </summary>
     public string solutionName { get; set; }
+    /// <summary>
+    /// 方案表ID
+    /// </summary>
+    public long SolutionId { get; set; }
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
     public List<ReturnSalesDepartmentDto> models{ get; set; }
     public List<DeviceModel> devices{ get; set; }
     

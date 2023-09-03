@@ -1,25 +1,22 @@
 ﻿using System.Collections.Generic;
-using Finance.Dto;
 using Finance.MakeOffers.AnalyseBoard.Model;
-using Finance.NrePricing.Dto;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
 
-/// <summary>
-/// 报价分析看板二开返回实体类  交互类
-/// </summary>
-public class AnalyseBoardSecondDto : ResultDto
+public class IsOfferSecondDto
 {
     /// <summary>
-    /// 流程号Id
+    /// 是否报价 true/1 是  false/0 否
     /// </summary>
-    public long AuditFlowId { get; set; }
+    public bool IsOffer { get; set; }
     /// <summary>
-    /// 毛利率
+    /// 不报价原因
     /// </summary>
-    public List<decimal> grossMarginList { get; set; }
-
-
+    public string NoOfferReason { get; set; }
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
     /// <summary>
     /// 单价表
     /// </summary>
@@ -52,6 +49,4 @@ public class AnalyseBoardSecondDto : ResultDto
     /// 项目全生命周期汇总分析表-实际数量
     /// </summary>
     public List<PooledAnalysisModel> FullLifeCycle{ get; set; }
-    
-
 }
