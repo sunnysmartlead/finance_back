@@ -19,6 +19,10 @@ namespace Finance.EngineeringDepartment.Dto
         /// </summary>
         public long ProductId { get; set; }
         /// <summary>
+        /// 方案号
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
         /// 客户特殊性需求
         /// </summary>
         public string CustomerSpecialRequest { get; set; }
