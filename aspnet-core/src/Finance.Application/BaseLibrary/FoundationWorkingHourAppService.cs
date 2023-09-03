@@ -410,6 +410,29 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public async virtual Task<FileStreamResult> FoundationWorkingHourDownloadStream(GetFoundationDevicesInput input)
         {
+            var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false);
+            // 查询数据
+            var list = query.ToList();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationWorkingHour>, List<FoundationWorkingHourDto>>(list, new List<FoundationWorkingHourDto>());
+            foreach (var item in dtos)
+            {
+                var FoundationDeviceItemlist = this._foundationFoundationWorkingHourItemRepository.GetAll().Where(f => f.FoundationWorkingHourId == item.Id).ToList();
+                var dtosItem = ObjectMapper.Map<List<FoundationWorkingHourItem>, List<FoundationWorkingHourItemDto>>(FoundationDeviceItemlist, new List<FoundationWorkingHourItemDto>());
+                item.ListFoundationWorkingHour = dtosItem;
+                var user = this._userRepository.GetAll().Where(u => u.Id == item.CreatorUserId).ToList().FirstOrDefault();
+                if (user != null)
+                {
+                    item.LastModifierUserName = user.Name;
+                }
+            }
+
+
+
+            var yearCountList = (from a in _foundationFoundationWorkingHourItemRepository.GetAllList(p =>
+p.IsDeleted == false
+).Select(c => c.Year).Distinct()
+                         select a).ToList();
             IWorkbook wk = new XSSFWorkbook();
             ISheet sheet = wk.CreateSheet("Sheet1");
             sheet.DefaultRowHeight = 25 * 20;
@@ -422,29 +445,31 @@ namespace Finance.BaseLibrary
             CreateCell(herdRow, 2, "工序名称", wk);
             sheet.SetColumnWidth(2, 10 * 400);
 
-            int yearCount = 3;
             int colIndex = 0;
-            for (int i = 0; i < yearCount * 3; i++)
+            for (int i = 0; i < yearCountList.Count * 3; i++)
             {
                 colIndex = i + 3;
                 CreateCell(herdRow, colIndex, string.Empty, wk);
                 sheet.SetColumnWidth(colIndex, 10 * 400);
             }
-
-            for (int i = 0; i < yearCount; i++)
+            if (null != yearCountList && yearCountList.Count>0)
             {
-                colIndex = i * 3 + 3;
-                herdRow.GetCell(colIndex).SetCellValue("202" + (i + 3) + "年");
-                MergedRegion(sheet, 0, 0, colIndex, colIndex + 2);
+                for (int i = 0; i < yearCountList.Count(); i++)
+                {
+                    colIndex = i * 3 + 3;
+                    herdRow.GetCell(colIndex).SetCellValue(yearCountList[i] + "年");
+                    MergedRegion(sheet, 0, 0, colIndex, colIndex + 2);
 
+                }
             }
+           
 
             // 副表头
             IRow herdRow2 = sheet.CreateRow(1);
             CreateCell(herdRow2, 0, string.Empty, wk);
             CreateCell(herdRow2, 1, string.Empty, wk);
             CreateCell(herdRow2, 2, string.Empty, wk);
-            for (int i = 0; i < yearCount; i++)
+            for (int i = 0; i < yearCountList.Count; i++)
             {
                 colIndex = i * 3 + 3;
                 CreateCell(herdRow2, colIndex, "标准人工工时", wk);
@@ -455,29 +480,28 @@ namespace Finance.BaseLibrary
             MergedRegion(sheet, 0, 1, 1, 1);
             MergedRegion(sheet, 0, 1, 2, 2);
 
-            for (int i = 2; i < 10; i++)
+            for (int i = 2; i < dtos.Count()+2; i++)
             {
                 IRow row = sheet.CreateRow(i);
-                CreateCell(row, 0, $"序号{i}", wk);
-                CreateCell(row, 1, $"工序编号{i}", wk);
-                CreateCell(row, 2, $"工序名称{i}", wk);
-                for (int j = 0; j < yearCount; j++)
+                CreateCell(row, 0, (i-1).ToString(), wk);
+                CreateCell(row, 1, dtos[i-2].ProcessNumber, wk);
+                CreateCell(row, 2, dtos[i-2].ProcessName, wk);
+                for (int j = 0; j < dtos[i-2].ListFoundationWorkingHour.Count; j++)
                 {
                     colIndex = j * 3 + 3;
-                    CreateCell(row, colIndex, "bzgrgs" + j, wk);
-                    CreateCell(row, colIndex + 1, "bzjjgs" + j, wk);
-                    CreateCell(row, colIndex + 2, "rysl" + j, wk);
+                    CreateCell(row, colIndex, dtos[i - 2].ListFoundationWorkingHour[j].LaborHour, wk);
+                    CreateCell(row, colIndex + 1, dtos[i - 2].ListFoundationWorkingHour[j].MachineHour, wk);
+                    CreateCell(row, colIndex + 2, dtos[i - 2].ListFoundationWorkingHour[j].NumberPersonnel, wk);
                 }
             }
 
-            FileStream sw = File.Create("test.xlsx");
-            wk.Write(sw);
-            sw.Close();
-
-
-            return new FileStreamResult(sw, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            using (FileStream sw = File.Create("FoundationWorkingHour.xlsx"))
             {
-                FileDownloadName = "foundationWorkingHour" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+                wk.Write(sw);
+            }
+            return new FileStreamResult(File.Open("FoundationWorkingHour.xlsx", FileMode.Open), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FProcesses" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
             };
         }
 
