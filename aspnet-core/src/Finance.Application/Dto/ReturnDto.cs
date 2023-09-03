@@ -39,6 +39,10 @@ namespace Finance.Dto
         /// 零件号
         /// </summary>
         public long ProductId { get; set; }
+        /// <summary>
+        /// 方案号
+        /// </summary>
+        public long SolutionId { get; set; }
     }
     /// <summary>
     /// 返回结果Dto
