@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Finance.Authorization.Roles.StaticRoleNames;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace Finance.PropertyDepartment.Entering.Method
 {
@@ -541,6 +542,24 @@ namespace Finance.PropertyDepartment.Entering.Method
                     }).ToList();
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
+                // 按照结构料、胶水、包材顺序排序
+                structureBomInfosGr = structureBomInfosGr.OrderBy(m => {
+                
+                        if (m.Contains("结构料"))
+                        {
+                            return 1;
+                        }
+                        else if (m.Contains("胶水"))
+                        {
+                            return 2;
+                        }
+                        else if (m.Contains("包材"))
+                        {
+                            return 3;
+                        }
+               
+                    return 4;
+                }).ToList();
                 foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
                 {
                     List<StructureBomInfo> StructureMaterialnfp = structureBomInfos.Where(p => p.SuperTypeName.Equals(SuperTypeName)).ToList(); //查找属于这一超级大类的
