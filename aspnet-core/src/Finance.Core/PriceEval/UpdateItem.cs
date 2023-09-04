@@ -96,6 +96,11 @@ namespace Finance.PriceEval
         /// 其他成本
         /// </summary>
         OtherCost,
+
+        /// <summary>
+        /// 物流成本
+        /// </summary>
+        LogisticsCost,
     }
 
 }
