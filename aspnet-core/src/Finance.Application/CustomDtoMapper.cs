@@ -291,7 +291,7 @@ namespace Finance
             configuration.CreateMap<SetUpdateItemInput<List<Material>>, UpdateItem>()
                 .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
                 .ReverseMap();
-            configuration.CreateMap<UpdateItem, SetUpdateItemInput<Material>>()
+            configuration.CreateMap<UpdateItem, SetUpdateItemInput<List<Material>>>()
                 .ForMember(p => p.UpdateItem, p => p.MapFrom(o => JsonConvert.DeserializeObject<List<Material>>(o.MaterialJson)))
                 .ReverseMap();
 
