@@ -58,8 +58,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new Role(tenantId, StaticRoleNames.Host.Timeliness, StaticRoleNames.Host.Timeliness) { IsStatic = true, IsDefault = false, Description="时效性查询页面可查看的角色" },
                 //new Role(tenantId, StaticRoleNames.Host.ProjectSupervisor, StaticRoleNames.Host.ProjectSupervisor) { IsStatic = true, IsDefault = false, Description="项目课长"  },
 
-                new Role(tenantId, "测试角色1", "测试角色1") { IsStatic = true, IsDefault = false,Description="测试用的角色1" },
-                new Role(tenantId, "测试角色2", "测试角色2") { IsStatic = true, IsDefault = false,Description="测试用的角色2"  },
+                //new Role(tenantId, "测试角色1", "测试角色1") { IsStatic = true, IsDefault = false,Description="测试用的角色1" },
+                //new Role(tenantId, "测试角色2", "测试角色2") { IsStatic = true, IsDefault = false,Description="测试用的角色2"  },
 
                 //二开新增角色
                 new Role(tenantId, StaticRoleNames.Host.ProjectChief, StaticRoleNames.Host.ProjectChief) { IsStatic = true, IsDefault = false },

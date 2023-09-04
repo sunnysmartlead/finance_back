@@ -55,6 +55,16 @@ namespace Finance.FinanceParameter
         [Column("TRACELINEOFPERSON")]
         public double TraceLineOfPerson { get; set; }
         /// <summary>
+        /// GP12工序成本(元/pcs)
+        /// </summary>
+        [Column("PROCESSCOST", TypeName = "decimal(18,4)")]
+        public decimal ProcessCost { get; set; }
+        /// <summary>
+        /// 产能利用率
+        /// </summary>
+        [Column("CAPACITYUTILIZATIONRATE", TypeName = "decimal(18,4)")]
+        public decimal CapacityUtilizationRate { get; set; }
+        /// <summary>
         /// 年
         /// </summary>
         [Column("YEAR")]
