@@ -492,7 +492,9 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.Material;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
@@ -514,7 +516,7 @@ namespace Finance.PriceEval
             && p.SolutionId == input.SolutionId
             && p.Year == input.Year
             && p.UpDown == p.UpDown);
-            return  JsonConvert.DeserializeObject<List<Material>>(entity.MaterialJson);
+            return JsonConvert.DeserializeObject<List<Material>>(entity.MaterialJson);
         }
 
         /// <summary>
@@ -530,11 +532,13 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.LossCost;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input,entity);
+                ObjectMapper.Map(input, entity);
             }
         }
 
@@ -569,7 +573,9 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.ManufacturingCost;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
@@ -592,7 +598,7 @@ namespace Finance.PriceEval
           && p.Year == input.Year
           && p.UpDown == p.UpDown);
             return JsonConvert.DeserializeObject<List<ManufacturingCost>>(entity.MaterialJson);
-         
+
         }
 
 
@@ -609,7 +615,9 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.LogisticsCost;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
@@ -647,7 +655,9 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.QualityCost;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
@@ -686,7 +696,9 @@ namespace Finance.PriceEval
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
-                await _updateItemRepository.InsertAsync(ObjectMapper.Map<UpdateItem>(input));
+                var data = ObjectMapper.Map<UpdateItem>(input);
+                data.UpdateItemType = UpdateItemType.OtherCost;
+                await _updateItemRepository.InsertAsync(data);
             }
             else
             {
@@ -765,12 +777,15 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<MemoryStream> NreTableDownloadStream(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+
+
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
             //模组名
-            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.ProductId).Select(p => p.Product).FirstOrDefaultAsync();
+            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == solution.Productld).Select(p => p.Product).FirstOrDefaultAsync();
             dto.ProjectName = $"{modelCountName}——{dto.ProjectName}";
 
 
@@ -811,13 +826,15 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
-            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.ProductId);
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+
+            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
 
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
             //模组名
-            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.ProductId).Select(p => p.Product).FirstOrDefaultAsync();
+            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.SolutionId).Select(p => p.Product).FirstOrDefaultAsync();
             dto.ProjectName = $"{modelCountName}——{dto.ProjectName}";
 
             dto.HandPieceCost = dto.HandPieceCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();

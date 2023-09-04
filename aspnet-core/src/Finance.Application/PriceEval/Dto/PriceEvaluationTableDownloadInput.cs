@@ -59,11 +59,17 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual long AuditFlowId { get; set; }
 
+        ///// <summary>
+        ///// 模组数量Id（即零件Id）
+        ///// </summary>
+        ////[Required]
+        //public virtual long ProductId { get; set; }
+
         /// <summary>
-        /// 模组数量Id（即零件Id）
+        /// 方案表ID
         /// </summary>
         [Required]
-        public virtual long ProductId { get; set; }
+        public long SolutionId { get; set; }
 
         ///// <summary>
         ///// 年份
