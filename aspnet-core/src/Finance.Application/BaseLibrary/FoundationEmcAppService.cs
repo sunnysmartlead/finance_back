@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.UI;
 using Finance.Authorization.Users;
 using Finance.Processes;
 using Microsoft.AspNetCore.Http;
@@ -122,11 +123,18 @@ namespace Finance.BaseLibrary
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<FoundationEmcDto> CreateAsync(FoundationEmcDto input)
+        public virtual async Task<TaskFoundationEmcDto> CreateAsync(FoundationEmcDto input)
         {
 
             var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name));
             var list = query.ToList();
+            TaskFoundationEmcDto taskFoundationEmcDto = new TaskFoundationEmcDto();
+            if (list.Count > 0) {
+                taskFoundationEmcDto.Error = "名字有重复！！！";
+                taskFoundationEmcDto.Success = false;
+                return taskFoundationEmcDto;
+
+            }
            
             var entity = ObjectMapper.Map<FoundationEmcDto, FoundationEmc>(input, new FoundationEmc());
             entity.CreationTime = DateTime.Now;
@@ -140,7 +148,8 @@ namespace Finance.BaseLibrary
             entity.IsDeleted = false;
             entity = await _foundationEmcRepository.InsertAsync(entity);
              this.CreateLog(" 创建EMC项目1条");
-            return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity, new FoundationEmcDto());
+            taskFoundationEmcDto.Success = true;
+            return taskFoundationEmcDto;
         }
 
         /// <summary>
@@ -149,8 +158,18 @@ namespace Finance.BaseLibrary
         /// <param name="id">主键</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<FoundationEmcDto> UpdateAsync(FoundationEmcDto input)
+        public virtual async Task<TaskFoundationEmcDto> UpdateAsync(FoundationEmcDto input)
         {
+            var query = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name) && t.Id != input.Id);
+            var list = query.ToList();
+            TaskFoundationEmcDto taskFoundationEmcDto = new TaskFoundationEmcDto();
+            if (list.Count > 0)
+            {
+                taskFoundationEmcDto.Error = "名字有重复！！！";
+                taskFoundationEmcDto.Success = false;
+                return taskFoundationEmcDto;
+
+            }
             FoundationEmc entity = await _foundationEmcRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity.LastModificationTime = DateTime.Now;
@@ -161,7 +180,8 @@ namespace Finance.BaseLibrary
             }
             entity = await _foundationEmcRepository.UpdateAsync(entity);
              this.CreateLog(" 编辑EMC项目1条");
-            return ObjectMapper.Map<FoundationEmc, FoundationEmcDto>(entity,new FoundationEmcDto());
+            taskFoundationEmcDto.Success= true;
+            return taskFoundationEmcDto;
         }
 
         /// <summary>

@@ -125,12 +125,23 @@ namespace Finance.BaseLibrary
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<FoundationreliableDto> CreateAsync(FoundationreliableDto input)
+        public virtual async Task<TaskFoundationreliableDto> CreateAsync(FoundationreliableDto input)
         {
+            var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name));
+            var list = query.ToList();
+            TaskFoundationreliableDto taskFoundationreliable = new TaskFoundationreliableDto();
+            if (list.Count > 0)
+            {
+                taskFoundationreliable.Error = "名字有重复！！！";
+                taskFoundationreliable.Success = false;
+                return taskFoundationreliable;
+
+            }
             var entity = ObjectMapper.Map<FoundationreliableDto, Foundationreliable>(input, new Foundationreliable());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
+                entity.IsDeleted =  false;
                 entity.CreatorUserId = AbpSession.UserId.Value;
                 entity.LastModificationTime = DateTime.Now;
                 entity.LastModifierUserId = AbpSession.UserId.Value;
@@ -138,7 +149,8 @@ namespace Finance.BaseLibrary
             entity.LastModificationTime = DateTime.Now;
             entity = await _foundationreliableRepository.InsertAsync(entity);
             this.CreateLog(" 创建环境项目1条");
-            return ObjectMapper.Map<Foundationreliable, FoundationreliableDto>(entity, new FoundationreliableDto());
+            taskFoundationreliable.Success = true;
+            return taskFoundationreliable;
         }
 
         /// <summary>
@@ -147,8 +159,18 @@ namespace Finance.BaseLibrary
         /// <param name="id">主键</param>
         /// <param name="input"></param>
         /// <returns></returns>
-        public virtual async Task<FoundationreliableDto> UpdateAsync(FoundationreliableDto input)
+        public virtual async Task<TaskFoundationreliableDto> UpdateAsync(FoundationreliableDto input)
         {
+            var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false && t.Name.Equals(input.Name) && t.Id != input.Id);
+            var list = query.ToList();
+            TaskFoundationreliableDto taskFoundationreliable = new TaskFoundationreliableDto();
+            if (list.Count > 0)
+            {
+                taskFoundationreliable.Error = "名字有重复！！！";
+                taskFoundationreliable.Success = false;
+                return taskFoundationreliable;
+
+            }
             Foundationreliable entity = await _foundationreliableRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map<FoundationreliableDto, Foundationreliable>(input, entity);
             entity.LastModificationTime = DateTime.Now;
@@ -158,7 +180,8 @@ namespace Finance.BaseLibrary
             }
             entity = await _foundationreliableRepository.UpdateAsync(entity);
             this.CreateLog(" 编辑环境项目1条");
-            return ObjectMapper.Map<Foundationreliable, FoundationreliableDto>(entity, new FoundationreliableDto());
+            taskFoundationreliable.Success = true;
+            return taskFoundationreliable;
         }
 
         /// <summary>
