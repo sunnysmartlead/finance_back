@@ -639,7 +639,7 @@ namespace Finance.MakeOffers.AnalyseBoard
                 #endregion
                 #region 某个模组 Nre 核价表 文件保存
                 //核价表
-                MemoryStream memoryStreamNre = await _resourcePriceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id });
+                MemoryStream memoryStreamNre = null;// await _resourcePriceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id });
                 //将核价表保存到硬盘中
                 FileName="Nre核价表.xlsx";
                 IFormFile fileNre = new FormFile(memoryStreamNre, 0, memoryStreamNre.Length, FileName, FileName);
