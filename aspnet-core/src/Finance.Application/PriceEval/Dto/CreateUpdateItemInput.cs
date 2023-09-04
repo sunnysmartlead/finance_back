@@ -52,7 +52,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 修改项
         /// </summary>
-        public virtual List<TType> UpdateItem { get; set; }
+        public virtual TType UpdateItem { get; set; }
 
         /// <summary>
         /// 上传佐证材料

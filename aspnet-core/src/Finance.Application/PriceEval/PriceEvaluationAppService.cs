@@ -484,7 +484,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemMaterial(SetUpdateItemInput<Material> input)
+        public async virtual Task SetUpdateItemMaterial(SetUpdateItemInput<List<Material>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
@@ -516,6 +516,10 @@ namespace Finance.PriceEval
             && p.SolutionId == input.SolutionId
             && p.Year == input.Year
             && p.UpDown == p.UpDown);
+            if (entity is null)
+            {
+                return null;
+            }
             return JsonConvert.DeserializeObject<List<Material>>(entity.MaterialJson);
         }
 
@@ -524,7 +528,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<LossCost> input)
+        public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<List<LossCost>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
@@ -556,6 +560,10 @@ namespace Finance.PriceEval
            && p.SolutionId == input.SolutionId
            && p.Year == input.Year
            && p.UpDown == p.UpDown);
+            if (entity is null)
+            {
+                return null;
+            }
             return JsonConvert.DeserializeObject<List<LossCost>>(entity.MaterialJson);
 
         }
@@ -565,7 +573,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemManufacturingCost(SetUpdateItemInput<ManufacturingCost> input)
+        public async virtual Task SetUpdateItemManufacturingCost(SetUpdateItemInput<List<ManufacturingCost>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
@@ -597,6 +605,10 @@ namespace Finance.PriceEval
           && p.SolutionId == input.SolutionId
           && p.Year == input.Year
           && p.UpDown == p.UpDown);
+            if (entity is null)
+            {
+                return null;
+            }
             return JsonConvert.DeserializeObject<List<ManufacturingCost>>(entity.MaterialJson);
 
         }
@@ -607,7 +619,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemLogisticsCost(SetUpdateItemInput<ProductionControlInfoListDto> input)
+        public async virtual Task SetUpdateItemLogisticsCost(SetUpdateItemInput<List<ProductionControlInfoListDto>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
@@ -639,6 +651,10 @@ namespace Finance.PriceEval
         && p.SolutionId == input.SolutionId
         && p.Year == input.Year
         && p.UpDown == p.UpDown);
+            if (entity is null)
+            {
+                return null;
+            }
             return JsonConvert.DeserializeObject<List<ProductionControlInfoListDto>>(entity.MaterialJson);
         }
 
@@ -647,7 +663,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemQualityCost(SetUpdateItemInput<QualityCostListDto> input)
+        public async virtual Task SetUpdateItemQualityCost(SetUpdateItemInput<List<QualityCostListDto>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
@@ -679,6 +695,10 @@ namespace Finance.PriceEval
   && p.SolutionId == input.SolutionId
   && p.Year == input.Year
   && p.UpDown == p.UpDown);
+            if (entity is null)
+            {
+                return null;
+            }
             return JsonConvert.DeserializeObject<List<QualityCostListDto>>(entity.MaterialJson);
 
         }
@@ -711,7 +731,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task<List<OtherCostItem>> GetUpdateItemOtherCost(GetUpdateItemInput input)
+        public async virtual Task<OtherCostItem> GetUpdateItemOtherCost(GetUpdateItemInput input)
         {
             var entity = await _updateItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
 && p.UpdateItemType == UpdateItemType.OtherCost
@@ -720,7 +740,11 @@ namespace Finance.PriceEval
 && p.SolutionId == input.SolutionId
 && p.Year == input.Year
 && p.UpDown == p.UpDown);
-            return JsonConvert.DeserializeObject<List<OtherCostItem>>(entity.MaterialJson);
+            if (entity is null)
+            {
+                return null;
+            }
+            return JsonConvert.DeserializeObject<OtherCostItem>(entity.MaterialJson);
 
         }
         #endregion
