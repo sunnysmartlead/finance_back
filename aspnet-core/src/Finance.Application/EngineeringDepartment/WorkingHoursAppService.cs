@@ -904,7 +904,7 @@ namespace Finance.EngineeringDepartment
             _3DFileDto _3DFileDto = new();
             try
             {
-                var ProductDevelopInputInfo = await _productDevelopmentInputRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowAndProductIdDto.AuditFlowId && p.ProductId == auditFlowAndProductIdDto.ProductId);
+                var ProductDevelopInputInfo = await _productDevelopmentInputRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowAndProductIdDto.AuditFlowId && p.SolutionId == auditFlowAndProductIdDto.SolutionId);
                
                 if(ProductDevelopInputInfo != null)
                 {
@@ -914,7 +914,7 @@ namespace Finance.EngineeringDepartment
                     if (fileName.Count > 0)
                     {
                         _3DFileDto.AuditFlowId = auditFlowAndProductIdDto.AuditFlowId;
-                        _3DFileDto.ProductId = auditFlowAndProductIdDto.ProductId;
+                        _3DFileDto.SolutionId = auditFlowAndProductIdDto.SolutionId;
                         _3DFileDto.ThreeDFileName = fileName.FirstOrDefault().Name;
                         _3DFileDto.ThreeDFileId = Picture3DFileId;
                         _3DFileDto.IsSuccess = true;

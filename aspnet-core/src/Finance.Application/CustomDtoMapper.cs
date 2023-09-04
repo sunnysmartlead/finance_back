@@ -291,11 +291,31 @@ namespace Finance
             configuration.CreateMap<SetUpdateItemInput<Material>, UpdateItem>()
                 .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
                 .ReverseMap();
+
+            configuration.CreateMap<SetUpdateItemInput<LossCost>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
+                .ReverseMap();
+
+            configuration.CreateMap<SetUpdateItemInput<ManufacturingCost>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
+                .ReverseMap();
+            configuration.CreateMap<SetUpdateItemInput<QualityCostListDto>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
+                .ReverseMap();
+
+            configuration.CreateMap<SetUpdateItemInput<OtherCostItem>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
+                .ReverseMap();
+
+            configuration.CreateMap<SetUpdateItemInput<ProductionControlInfoListDto>, UpdateItem>()
+                .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
+                .ReverseMap();
             configuration.CreateMap<Material, Material>();
             configuration.CreateMap<LossCost, LossCost>();
             configuration.CreateMap<ManufacturingCost, ManufacturingCost>();
             configuration.CreateMap<QualityCostListDto, QualityCostListDto>();
             configuration.CreateMap<OtherCostItem, OtherCostItem>();
+            configuration.CreateMap<ProductionControlInfoListDto, ProductionControlInfoListDto>();
 
 
             //贸易合规国家库
