@@ -21,9 +21,25 @@ namespace Finance.MakeOffers
         /// </summary>
         public decimal AllInteriorGrossMargin { get; set; }
         /// <summary>
+        /// 目标价(内部)增加客供料毛利率
+        /// </summary>
+        public decimal AllInteriorClientGrossMargin { get; set; }
+        /// <summary>
+        /// 目标价(内部)剔除NRE分摊费用毛利率
+        /// </summary>
+        public decimal AllInteriorNreGrossMargin { get; set; }
+        /// <summary>
         /// 目标价(客户)整套毛利率
         /// </summary>
         public decimal AllClientGrossMargin { get; set; }
+        /// <summary>
+        /// 增加客供料毛利率
+        /// </summary>
+        public decimal AllClientClientGrossMargin { get; set; }
+        /// <summary>
+        /// 剔除NRE分摊费用毛利率
+        /// </summary>
+        public decimal AllClientNreGrossMargin { get; set; }
         /// <summary>
         /// 模组数量主键
         /// </summary>
