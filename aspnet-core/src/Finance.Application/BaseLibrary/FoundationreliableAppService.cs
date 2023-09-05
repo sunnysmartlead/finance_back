@@ -283,8 +283,8 @@ namespace Finance.BaseLibrary
                         entity.IsDeleted = false;
                         entity.Classification = initRow.GetCell(0).ToString();
                         entity.Name = initRow.GetCell(1).ToString();
-                        entity.Unit = initRow.GetCell(2).ToString();
-                        entity.Price = double.Parse(initRow.GetCell(3).ToString());
+                        entity.Unit = initRow.GetCell(3).ToString();
+                        entity.Price = double.Parse(initRow.GetCell(2).ToString());
                         entity.Laboratory = initRow.GetCell(4).ToString();
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
