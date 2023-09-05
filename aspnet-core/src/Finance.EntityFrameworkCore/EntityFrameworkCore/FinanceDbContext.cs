@@ -389,6 +389,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<FProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<UpdateItem> UpdateItem { get; set; }
+        public virtual DbSet<PriceEvalJson> PriceEvalJson { get; set; }
 
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)

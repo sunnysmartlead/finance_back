@@ -1,34 +1,22 @@
-﻿using System;
+﻿using Abp.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.PriceEval.Dto
+namespace Finance.PriceEval
 {
     /// <summary>
-    /// 查询已经生成的核价表 参数输入
+    /// 储存核价表生成的Json
     /// </summary>
-    public class GetPriceEvaluationTableResultInput
+    public class PriceEvalJson : Entity<long>
     {
         /// <summary>
         /// 审批流程主表Id
         /// </summary>
-        [Required]
         public virtual long AuditFlowId { get; set; }
-
-        /// <summary>
-        /// 模组数量Id（即零件Id）
-        /// </summary>
-        [Required]
-        public virtual long ProductId { get; set; }
-
-        /// <summary>
-        /// 方案表ID
-        /// </summary>
-        public long SolutionId { get; set; }
-
 
         /// <summary>
         /// 梯度Id
@@ -36,19 +24,24 @@ namespace Finance.PriceEval.Dto
         public virtual long GradientId { get; set; }
 
         /// <summary>
+        /// 方案表ID
+        /// </summary>
+        public long SolutionId { get; set; }
+
+        /// <summary>
         /// 年份
         /// </summary>
-        [Required]
         public virtual int Year { get; set; }
 
         /// <summary>
         /// 年份类型
         /// </summary>
+        [Required]
         public virtual YearType UpDown { get; set; }
 
         /// <summary>
-        /// 是否为全生命周期核价表
+        /// 储存核价表的Json
         /// </summary>
-        public virtual bool IsAll { get; set; }
+        public virtual string Json { get; set; }
     }
 }
