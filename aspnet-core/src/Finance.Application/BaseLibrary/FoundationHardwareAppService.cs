@@ -146,6 +146,7 @@ namespace Finance.BaseLibrary
                 return foundationHardwares;
             }
             else {
+
                 // 设置查询条件
                 var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
                 if (!string.IsNullOrEmpty(input.SoftwareName))

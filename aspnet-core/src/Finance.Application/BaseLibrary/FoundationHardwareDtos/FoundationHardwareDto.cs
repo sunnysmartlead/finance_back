@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance.BaseLibrary
 {
@@ -23,7 +24,15 @@ namespace Finance.BaseLibrary
         public string SoftwareState { get; set; }
         public string SoftwareBusiness { get; set; }
         public string LastModifierUserName { get; set; }
+        /// <summary>
+        /// 追溯软件
+        /// </summary>
+        public string TraceabilitySoftware { get; set; }
 
+        /// <summary>
+        /// 追溯软件费用
+        /// </summary>
+        public decimal TraceabilitySoftwareCost { get; set; }
         public List<FoundationHardwareItemDto> ListHardware { get; set; } = new List<FoundationHardwareItemDto>();
     }
 }
