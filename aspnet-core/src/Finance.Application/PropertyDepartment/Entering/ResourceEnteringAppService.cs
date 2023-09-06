@@ -126,8 +126,7 @@ namespace Finance.Entering
                             //索引
                             if (electronicDto is not null)
                             {
-                                int index = initialElectronicDto.ElectronicBomList.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
-                                electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId, AuditFlowId, elecBom.ElectronicId);
+                                int index = initialElectronicDto.ElectronicBomList.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));                               
                                 initialElectronicDto.ElectronicBomList[index] = electronicDto;
                             }
                         }
@@ -176,7 +175,7 @@ namespace Finance.Entering
                                 if (electronicDto is not null)
                                 {
                                     int index = electronicDtos.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
-                                    electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId, auditFlowId, elecBom.ElectronicId);
+                                    electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId,item.ProductId, auditFlowId, elecBom.ElectronicId);
                                     electronicDtos[index] = electronicDto;
                                 }
                             }
