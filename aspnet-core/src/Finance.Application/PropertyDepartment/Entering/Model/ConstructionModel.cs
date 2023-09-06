@@ -78,6 +78,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 币种
         /// </summary>
+        [FriendlyRequired("币种", skip: true)]
         public string Currency { get; set; }
         /// <summary>
         /// 装配数量

@@ -24,15 +24,18 @@ namespace Finance.Ext
         private IRepository<Solution, long> _resourceSchemeTable;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public string Opinion { get; set; } = "Opinion";
+        public bool _skip { get; set; }
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="eroName">异常属性名称</param>
-        /// <param name="specialVerifica">该属性是否进行特殊验证</param>
-        public FriendlyRequiredAttribute(string eroName, SpecialVerification specialVerifica = SpecialVerification.Nothing)
+        /// <param name="eroName"></param>
+        /// <param name="specialVerifica"></param>
+        /// <param name="skip"></param>
+        public FriendlyRequiredAttribute(string eroName, SpecialVerification specialVerifica = SpecialVerification.Nothing,bool skip=false)
         {
             errorName = eroName;
             specialVerification = specialVerifica;
+            _skip = skip;
             _httpContextAccessor = IocManager.Instance.Resolve<IHttpContextAccessor>();
             _auditFlowRepository = IocManager.Instance.Resolve<IRepository<WorkflowInstance, long>>();
             _resourceSchemeTable = IocManager.Instance.Resolve<IRepository<Solution, long>>();
@@ -91,6 +94,12 @@ namespace Finance.Ext
         /// <returns></returns>
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
+            //如果是true的话,无论流程是保存还是提交,都需要校验
+            if(_skip)
+            {
+                // 需要验证
+                return base.IsValid(value, validationContext);
+            }
             var parameterValue = GetParameterValue(Opinion, validationContext.ObjectInstance);
             if (parameterValue != null && parameterValue.ToString() == FinanceConsts.Done)
             {

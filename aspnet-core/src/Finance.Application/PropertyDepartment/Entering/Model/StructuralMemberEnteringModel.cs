@@ -19,7 +19,7 @@ namespace Finance.Entering.Model
         /// <summary>
         /// 流程Id
         /// </summary>
-        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification,true)]
         public long AuditFlowId { get; set; }
       
         /// <summary>
