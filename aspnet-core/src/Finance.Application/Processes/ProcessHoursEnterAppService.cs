@@ -7,6 +7,7 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.PropertyDepartment.Entering.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -341,6 +342,23 @@ namespace Finance.Processes
             }
 
             return processHoursEnterDtoList;
+        }
+
+       /// <summary>
+        /// 查看项目走量        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual  async Task<List<ModuleNumberDto>> GetListModuleNumberDtoAsync(ProcessHoursEnterModuleNumberDto input)
+        {
+            List<ModuleNumberDto> moduleNumberDtos= new List<ModuleNumberDto>();
+            var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == input.SolutionId).ToList();
+            foreach (var item in query)
+            {
+
+            }
+
+            // 数据返回
+            return moduleNumberDtos;
         }
 
 
