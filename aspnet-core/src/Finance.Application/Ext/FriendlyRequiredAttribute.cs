@@ -28,9 +28,9 @@ namespace Finance.Ext
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="eroName"></param>
-        /// <param name="specialVerifica"></param>
-        /// <param name="skip"></param>
+        /// <param name="eroName">异常属性名称</param>
+        /// <param name="specialVerifica">该属性是否进行特殊验证</param>
+        /// <param name="skip">如果是true的话,无论流程是保存还是提交,都需要校验</param>
         public FriendlyRequiredAttribute(string eroName, SpecialVerification specialVerifica = SpecialVerification.Nothing,bool skip=false)
         {
             errorName = eroName;
