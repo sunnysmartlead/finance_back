@@ -39,7 +39,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                  .ForMember(u => u.RebateMoney, p => p.MapFrom(input => ListToJson(input.RebateMoney)));
 
             configuration.CreateMap<StructureBomInfo, ConstructionModel>()
-                 .ForMember(u => u.StructureId, p => p.MapFrom(input => input.Id));
+                 .ForMember(u => u.StructureId, p => p.MapFrom(input => input.Id))
+                 .ForMember(u => u.Id, options => options.Ignore());
 
             //从数据库实体类 映射到交互类
             configuration.CreateMap<EnteringElectronic, ElectronicDto>()

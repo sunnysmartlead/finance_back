@@ -617,6 +617,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId));
                         if (structureElectronic != null)
                         {
+                            construction.Id= structureElectronic.Id;
                             construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                             construction.Currency = structureElectronic.Currency;//币种                       
                             construction.SolutionId = item.SolutionId;//方案ID
