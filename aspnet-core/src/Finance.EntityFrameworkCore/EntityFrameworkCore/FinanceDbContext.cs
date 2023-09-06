@@ -124,6 +124,12 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<BiddingStrategy> BiddingStrategy { set; get; }
         // 报价设备
         public virtual DbSet<DeviceQuotation> DeviceQuotation { set; get; }
+        // 报价方案
+        public virtual DbSet<SolutionQuotation> SolutionQuotation { set; get; }
+        // 报价NRE
+        public virtual DbSet<NreQuotation> NreQuotation { set; get; }
+        // 报价样品
+        public virtual DbSet<SampleQuotation> SampleQuotation { set; get; }
         // 报价审核表
         public virtual DbSet<AuditQuotationList> AuditQuotationList { set; get; }
         // Nre Nre  零件是否全部录入 依据实体类
