@@ -2,11 +2,13 @@
 using Abp.UI;
 using AutoMapper;
 using Finance.Dto;
+using Finance.Ext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.ProductDevelopment.Dto
 {
@@ -162,10 +164,12 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 审批流程表ID
         /// </summary>
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// ModelCount表id
         /// </summary>
+        
         public long ProductId { get; set; }
         /// <summary>
         /// 产品名称（零件1、零件2...）
@@ -175,6 +179,7 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 方案表ID
         /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 方案号
@@ -188,14 +193,17 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 板部件名称
         /// </summary>
+        [FriendlyRequired("板部件名称", SpecialVerification.Nothing)]
         public string BoardName { get; set; }
         /// <summary>
         /// 板部件长
         /// </summary>
+       [FriendlyRequired("板部件长", SpecialVerification.Nothing)]
         public decimal BoardLenth { get; set; }
         /// <summary>
         /// 板部件宽
         /// </summary>
+        [FriendlyRequired("板部件宽", SpecialVerification.Nothing)]
         public decimal BoardWidth { get; set; }
         /// <summary>
         /// 板部件面积

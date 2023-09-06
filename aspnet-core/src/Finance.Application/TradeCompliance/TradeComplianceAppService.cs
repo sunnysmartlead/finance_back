@@ -84,9 +84,9 @@ namespace Finance.TradeCompliance
         internal async Task<long> GetMinGradient(long auditFlowId)
         {
             List<Gradient> gradients = await _gradient.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
-            List<decimal> gradientList = gradients.Select(p => p.GradientValue).Distinct().ToList();
-            long GradientValue = Convert.ToInt64(gradientList.Min());
-            return GradientValue;
+            List<long> gradientList = gradients.Select(p => p.Id).Distinct().ToList();
+            long GradientId = gradientList.Min();
+            return GradientId;
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace Finance.TradeCompliance
             return tradeComplianceCheckDto;
         }
 
-        internal virtual async Task<bool> IsProductsTradeComplianceOK(long flowId)
+        public virtual async Task<bool> IsProductsTradeComplianceOK(long flowId)
         {
             bool isOk = true;
             var solutionIdList = await _solutionTableRepository.GetAllListAsync(p => p.AuditFlowId == flowId);
