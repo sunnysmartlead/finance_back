@@ -285,10 +285,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
-                    {
+                    {                       
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
-                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
+                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);                  
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                         EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(BomInfo.Id));
                         if (enteringElectronic != null)
@@ -333,7 +333,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
                             }
                             electronicDto.MaterialsUseCount.Add(yearOrValueKvMode);
-                        }
+                        }                
                         //取基础单价库  查询条件 物料编码 冻结状态  有效结束日期
                         List<UInitPriceForm> uInitPriceForms = await _configUInitPriceForm.GetAllListAsync(p => p.MaterialCode.Equals(BomInfo.SapItemNum) && p.FreezeOrNot.Equals(FreezeOrNot.Thaw) && p.EffectiveDate < DateTime.Now && p.ExpirationDate > DateTime.Now);//&&!p.FrozenState&&p.EffectiveEndDate>DateTime.Now
                         List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
@@ -406,16 +406,17 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 单个 物料编号的计算
         /// </summary>
         /// <param name="SolutionId"></param>
+        /// <param name="ProductId"></param>
         /// <param name="auditFlowId"></param>
         /// <param name="ElectronicId"></param>
         /// <returns></returns>
-        internal async Task<ElectronicDto> ElectronicBom(long SolutionId, long auditFlowId, long ElectronicId)
+        internal async Task<ElectronicDto> ElectronicBom(long SolutionId,long ProductId, long auditFlowId, long ElectronicId)
         {
             //查询PCS中的梯度
             List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
             ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
             //通过零件号获取 模组数量中的 年度模组数量以及年份               
-            List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(SolutionId)))
+            List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(ProductId)))
                 .Select(a => new ModelCountYear
                 {
                     ProductId = a.ProductId,
@@ -433,6 +434,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             foreach (GradientValueModel gradientItem in gradient)
             {
                 YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
+                yearOrValueKvMode.YearOrValueModes = new();
                 yearOrValueKvMode.Kv = gradientItem.Kv;
                 foreach (ModelCountYear modelCountYear in modelCountYearList)
                 {
