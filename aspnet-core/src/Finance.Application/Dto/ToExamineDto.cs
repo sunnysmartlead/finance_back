@@ -17,10 +17,10 @@ namespace Finance.Dto
         /// 节点实例Id
         /// </summary>
         public virtual long NodeInstanceId { get; set; }
-
         /// <summary>
         /// 审批意见
         /// </summary>
+        [FriendlyRequired("审批意见")]
         public string Opinion { get; set; }
         /// <summary>
         /// 审批评论
