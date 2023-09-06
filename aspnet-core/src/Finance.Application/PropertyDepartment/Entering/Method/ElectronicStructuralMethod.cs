@@ -1221,6 +1221,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                 List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
                 //获取汇率值
                 YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(Year));
+                if (exchangeRateModel is null)
+                {
+                    exchangeRateModel = exchangeRateValues.OrderByDescending(p => p.Year).FirstOrDefault();
+                }
                 return exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
             }           
         }
@@ -1269,7 +1273,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<UInitPriceFormYearOrValueMode> uInitPriceFormYearOrValueModes = JsonConvert.DeserializeObject<List<UInitPriceFormYearOrValueMode>>(uInitPriceForm.UInitPriceFormYearOrValueModes);
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
-
+                    if (rebateRateYearOrValueMode is null)
+                    {
+                        rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                    }
                     return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
@@ -1322,6 +1329,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<UInitPriceFormYearOrValueMode> uInitPriceFormYearOrValueModes = JsonConvert.DeserializeObject<List<UInitPriceFormYearOrValueMode>>(uInitPriceForm.UInitPriceFormYearOrValueModes);
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
+                    if (rebateRateYearOrValueMode is null)
+                    {
+                        rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                    }
                     return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
