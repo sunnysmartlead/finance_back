@@ -193,17 +193,17 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 板部件名称
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.Nothing)]
+        [FriendlyRequired("板部件名称", SpecialVerification.Nothing)]
         public string BoardName { get; set; }
         /// <summary>
         /// 板部件长
         /// </summary>
-       [FriendlyRequired("方案id", SpecialVerification.Nothing)]
+       [FriendlyRequired("板部件长", SpecialVerification.Nothing)]
         public decimal BoardLenth { get; set; }
         /// <summary>
         /// 板部件宽
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.Nothing)]
+        [FriendlyRequired("板部件宽", SpecialVerification.Nothing)]
         public decimal BoardWidth { get; set; }
         /// <summary>
         /// 板部件面积
