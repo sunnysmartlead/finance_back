@@ -19,8 +19,7 @@ namespace Finance.Dto
         public virtual long NodeInstanceId { get; set; }
         /// <summary>
         /// 审批意见
-        /// </summary>
-        [FriendlyRequired("审批意见")]
+        /// </summary>      
         public string Opinion { get; set; }
         /// <summary>
         /// 审批评论
