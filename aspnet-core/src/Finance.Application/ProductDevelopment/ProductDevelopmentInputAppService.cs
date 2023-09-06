@@ -100,7 +100,7 @@ namespace Finance.ProductDevelopment
         /// <summary>
         /// 返回产品开发部录入信息
         /// </summary>
-        public async Task<ProductDevelopmentInputDto> PostProductDevelopmentInput(ProductDevelopmentInputDto dto)
+        public async Task<PostProductDevelopmentInputDto> PostProductDevelopmentInput(PostProductDevelopmentInputDto dto)
         {
 
             //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
@@ -108,7 +108,7 @@ namespace Finance.ProductDevelopment
             List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
                         .Where(p => dto.AuditFlowId.Equals(p.AuditFlowId))
                         .Where(p => dto.SolutionId.Equals(p.SolutionId)).ToListAsync();
-            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+            PostProductDevelopmentInputDto result = new PostProductDevelopmentInputDto();
             if (data.Count==1)
             {
                 result.Picture3DFileId=data.FirstOrDefault().Picture3DFileId.ToString();

@@ -7,5 +7,7 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class GetFoundationHardwaresInput: PagedInputDto
     {
+        public string SoftwareName { get; set; }
+        public string DeviceName { get; set; }
     }
 }

@@ -22,12 +22,12 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// <summary>
         /// 流程的id
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.AuditFlowIdVerification)]
+        [FriendlyRequired("方案id", SpecialVerification.AuditFlowIdVerification, true)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// 方案的id
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification, true)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 电子料BOM Id
@@ -60,7 +60,7 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// <summary>
         /// 币种
         /// </summary>
-        [FriendlyRequired("币种")]
+        [FriendlyRequired("币种",skip: true)]
         public string Currency { get; set; }
         /// <summary>
         /// 系统单价（原币）
@@ -105,7 +105,7 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// <summary>
         /// 物料管制状态
         /// </summary> 
-        [FriendlyRequired("物料管制状态不能为空")]
+        [FriendlyRequired("物料管制状态不能为空",skip: true)]
         public virtual string MaterialControlStatus { get; set; }
     }
     public class IsALLElectronicDto

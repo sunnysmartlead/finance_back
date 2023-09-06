@@ -17,7 +17,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 方案的id
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification, true)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 结构料 Id
@@ -26,7 +26,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 币种
         /// </summary>    
-        [FriendlyRequired("币种")]
+        [FriendlyRequired("币种",skip: true)]
         public string Currency { get; set; }             
         /// <summary>
         /// 物料可返利金额
@@ -75,7 +75,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 物料管制状态
         /// </summary> 
-        [FriendlyRequired("物料管制状态")]
+        [FriendlyRequired("物料管制状态",skip: true)]
         public virtual string MaterialControlStatus { get; set; }
     }
 }

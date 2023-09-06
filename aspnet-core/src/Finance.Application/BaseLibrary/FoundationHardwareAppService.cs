@@ -3,7 +3,9 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
@@ -83,29 +85,96 @@ namespace Finance.BaseLibrary
         /// <returns>结果</returns>
         public virtual async Task<List<FoundationHardwareDto>> GetListAllAsync(GetFoundationHardwaresInput input)
         {
-            // 设置查询条件
-            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
-
-
-            // 查询数据
-            var list = query.ToList();
-            //数据转换
-            var dtos = ObjectMapper.Map<List<FoundationHardware>, List<FoundationHardwareDto>>(list, new List<FoundationHardwareDto>());
-            foreach (var item in dtos)
+            if (null != input.DeviceName && !input.DeviceName.Equals("") && (null == input.SoftwareName || input.SoftwareName.Equals("")))
             {
-                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
-                var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == item.Id).ToList();
+                List<FoundationHardwareDto> foundationHardwares =  new List<FoundationHardwareDto>();
+                var FoundationHardwareDtoId = await (from u in _foundationFoundationHardwareItemRepository.GetAll()
+                                   join ur in _foundationHardwareRepository.GetAll() on u.FoundationHardwareId equals ur.Id
+                                   where  u.HardwareName.Contains(input.DeviceName)
+                                   select new
+                                   {
+                                      Id = ur.Id
+                                   }).Distinct().ToListAsync();
 
-                //数据转换
-                var dtosItem = ObjectMapper.Map<List<FoundationHardwareItem>, List<FoundationHardwareItemDto>>(FoundationDeviceItemlist, new List<FoundationHardwareItemDto>());
-                item.ListHardware = dtosItem;
-                if (user != null)
+                foreach (var item in FoundationHardwareDtoId)
                 {
-                    item.LastModifierUserName = user.Name;
+                    FoundationHardwareDto foundationHardwareDto = new FoundationHardwareDto();
+                    FoundationHardware entity = await _foundationHardwareRepository.GetAsync(item.Id);
+                    var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == entity.Id).ToList();
+
+                    //数据转换
+                    var dtosItem = ObjectMapper.Map<List<FoundationHardwareItem>, List<FoundationHardwareItemDto>>(FoundationDeviceItemlist, new List<FoundationHardwareItemDto>());
+                 
+                    foundationHardwareDto =  ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto());
+                    foundationHardwareDto.ListHardware = dtosItem;
+                    foundationHardwares.Add(foundationHardwareDto);
+
+
                 }
+                    return foundationHardwares;
             }
-            // 数据返回
-            return dtos;
+            if (null != input.DeviceName && !input.DeviceName.Equals("") && null != input.SoftwareName && !input.SoftwareName.Equals(""))
+            {
+                List<FoundationHardwareDto> foundationHardwares = new List<FoundationHardwareDto>();
+                var FoundationHardwareDtoId = await (from u in _foundationFoundationHardwareItemRepository.GetAll()
+                                                     join ur in _foundationHardwareRepository.GetAll() on u.FoundationHardwareId equals ur.Id
+                                                     where u.HardwareName.Contains(input.DeviceName) &&  ur.SoftwareName.Contains(input.SoftwareName)
+                                                     select new
+                                                     {
+                                                         Id = ur.Id
+                                                     }).Distinct().ToListAsync();
+
+                foreach (var item in FoundationHardwareDtoId)
+                {
+                    FoundationHardwareDto foundationHardwareDto = new FoundationHardwareDto();
+                    FoundationHardware entity = await _foundationHardwareRepository.GetAsync(item.Id);
+                    var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == entity.Id).ToList();
+
+                    //数据转换
+                    var dtosItem = ObjectMapper.Map<List<FoundationHardwareItem>, List<FoundationHardwareItemDto>>(FoundationDeviceItemlist, new List<FoundationHardwareItemDto>());
+                    var user = this._userRepository.GetAll().Where(u => u.Id == entity.LastModifierUserId).ToList().FirstOrDefault();
+                    if (user != null)
+                    {
+                        foundationHardwareDto.LastModifierUserName = user.Name;
+                    }
+                    foundationHardwareDto = ObjectMapper.Map<FoundationHardware, FoundationHardwareDto>(entity, new FoundationHardwareDto());
+                    foundationHardwareDto.ListHardware = dtosItem;
+                    foundationHardwares.Add(foundationHardwareDto);
+
+
+                }
+                return foundationHardwares;
+            }
+            else {
+
+                // 设置查询条件
+                var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
+                if (!string.IsNullOrEmpty(input.SoftwareName))
+                {
+                    query = query.Where(t => t.SoftwareName.Contains(input.SoftwareName));
+                }
+
+                // 查询数据
+                var list = query.ToList();
+                //数据转换
+                var dtos = ObjectMapper.Map<List<FoundationHardware>, List<FoundationHardwareDto>>(list, new List<FoundationHardwareDto>());
+                foreach (var item in dtos)
+                {
+                    var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                    var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == item.Id).ToList();
+
+                    //数据转换
+                    var dtosItem = ObjectMapper.Map<List<FoundationHardwareItem>, List<FoundationHardwareItemDto>>(FoundationDeviceItemlist, new List<FoundationHardwareItemDto>());
+                    item.ListHardware = dtosItem;
+                    if (user != null)
+                    {
+                        item.LastModifierUserName = user.Name;
+                    }
+                }
+                // 数据返回
+                return dtos;
+            }
+       
         }
         /// <summary>
         /// 获取修改
