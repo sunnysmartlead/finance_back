@@ -21,6 +21,11 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using Finance.Processes;
+using Finance.ProductDevelopment.Dto;
+using Newtonsoft.Json;
+using Finance.Ext;
+using Finance.ProjectManagement;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.BaseLibrary
 {
@@ -36,6 +41,11 @@ namespace Finance.BaseLibrary
         private readonly IRepository<ModelCount, long> _modelCountRepository;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+        private readonly IRepository<PriceEvaluation ,long> _priceEvaluationRepository;
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
@@ -50,8 +60,10 @@ namespace Finance.BaseLibrary
             IRepository<ModelCount, long> modelCountRepository,
             IRepository<ModelCountYear, long> modelCountYearRepository,
             IRepository<Solution, long> resourceSchemeTable,
-             IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
-             WorkflowInstanceAppService workflowInstanceAppService
+            IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<PriceEvaluation, long> priceEvaluationRepository,
+            FileCommonService fileCommonService
             )
         {
             _logisticscostRepository = logisticscostRepository;
@@ -62,6 +74,9 @@ namespace Finance.BaseLibrary
             _modelCountYearRepository = modelCountYearRepository;
             _resourceSchemeTable = resourceSchemeTable;
             _workflowInstanceAppService= workflowInstanceAppService;
+            _priceEvaluationRepository = priceEvaluationRepository;
+            _workflowInstanceAppService= workflowInstanceAppService;
+            _fileCommonService = fileCommonService;
         }
 
         /// <summary>
@@ -191,6 +206,37 @@ namespace Finance.BaseLibrary
 
         }
 
+
+        /// <summary>
+        /// 物流成本SOR下载
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async Task<FileResult> GetSorByAuditFlowId(long auditFlowId)
+        {
+            try
+            {
+                var query = this._priceEvaluationRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId).ToList();
+                if (query.Count() < 1) {
+                    throw new FriendlyException("没有对应文件");
+
+                }
+                long SorFileId = JsonConvert.DeserializeObject<List<long>>(query[0].SorFile).FirstOrDefault();
+                //long SorFileId = long.Parse(priceInfo.SorFile);
+                if (null != SorFileId)
+                {
+                    return await _fileCommonService.DownloadFile(SorFileId);
+                }
+                else
+                {
+                    throw new FriendlyException("文件找不到");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
 
         /// <summary>
         /// 获取修改

@@ -52,7 +52,8 @@ namespace Finance.BaseLibrary
             var list = query.Skip(input.PageIndex * input.MaxResultCount).Take(input.MaxResultCount).ToList();
             //数据转换
             var dtos = ObjectMapper.Map<List<FoundationTechnologyDevice>, List<FoundationTechnologyDeviceDto>>(list, new List<FoundationTechnologyDeviceDto>());
-            // 数据返回
+            // 数据
+            // 
             return new PagedResultDto<FoundationTechnologyDeviceDto>(totalCount, dtos);
         }
 
