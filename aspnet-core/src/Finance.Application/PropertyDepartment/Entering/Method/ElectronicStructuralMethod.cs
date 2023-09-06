@@ -617,6 +617,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId));
                         if (structureElectronic != null)
                         {
+                            construction.Id= structureElectronic.Id;
                             construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                             construction.Currency = structureElectronic.Currency;//币种                       
                             construction.SolutionId = item.SolutionId;//方案ID
@@ -1345,7 +1346,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.AuditFlowId = submitElectronicDto.AuditFlowId;//流程的id
                         enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                         enteringElectronic.IsEntering = true;//确认录入           
-                        await _configEnteringElectronic.InsertOrUpdateAsync(enteringElectronic);
+                        await _configEnteringElectronic.InsertAsync(enteringElectronic);
                     }
                     else
                     {
