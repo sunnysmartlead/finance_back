@@ -1589,28 +1589,29 @@ namespace Finance.PriceEval
         /// <returns></returns>
         internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadStreamInput input)
         {
-            if (input.IsAll)
-            {
-                var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
-                DtoExcel(dtoAll);
-                var memoryStream = new MemoryStream();
-                await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
-                return memoryStream;
-            }
-            else
-            {
+            return null;
+            //if (input.IsAll)
+            //{
+            //    var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
+            //    DtoExcel(dtoAll);
+            //    var memoryStream = new MemoryStream();
+            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
+            //    return memoryStream;
+            //}
+            //else
+            //{
 
 
-                var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
+            //    var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
 
-                DtoExcel(dto);
+            //    DtoExcel(dto);
 
 
-                var memoryStream2 = new MemoryStream();
+            //    var memoryStream2 = new MemoryStream();
 
-                await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
-                return memoryStream2;
-            }
+            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
+            //    return memoryStream2;
+            //}
         }
         /// <summary>
         /// 初版产品核价表下载
@@ -1620,36 +1621,38 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
-            var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
+            return null;
 
-            DtoExcel(dtoAll);
-            DtoExcel(dto);
+            //var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
+            //var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
+
+            //DtoExcel(dtoAll);
+            //DtoExcel(dto);
 
 
-            var memoryStream = new MemoryStream();
-            var memoryStream2 = new MemoryStream();
-            var memoryStream3 = new MemoryStream();
+            //var memoryStream = new MemoryStream();
+            //var memoryStream2 = new MemoryStream();
+            //var memoryStream3 = new MemoryStream();
 
-            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
-            await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
-            using (var zipArich = new ZipArchive(memoryStream3, ZipArchiveMode.Create, true))
-            {
+            //await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
+            //await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
+            //using (var zipArich = new ZipArchive(memoryStream3, ZipArchiveMode.Create, true))
+            //{
 
-                var entry = zipArich.CreateEntry($"{dtoAll.Title.Replace("/", "")}.xlsx");
-                using (System.IO.Stream stream = entry.Open())
-                {
-                    stream.Write(memoryStream.ToArray(), 0, memoryStream.Length.To<int>());
-                }
+            //    var entry = zipArich.CreateEntry($"{dtoAll.Title.Replace("/", "")}.xlsx");
+            //    using (System.IO.Stream stream = entry.Open())
+            //    {
+            //        stream.Write(memoryStream.ToArray(), 0, memoryStream.Length.To<int>());
+            //    }
 
-                var entry2 = zipArich.CreateEntry($"{dto.Title.Replace("/", "")}.xlsx");
-                using (System.IO.Stream stream = entry2.Open())
-                {
-                    stream.Write(memoryStream2.ToArray(), 0, memoryStream2.Length.To<int>());
-                }
-            }
+            //    var entry2 = zipArich.CreateEntry($"{dto.Title.Replace("/", "")}.xlsx");
+            //    using (System.IO.Stream stream = entry2.Open())
+            //    {
+            //        stream.Write(memoryStream2.ToArray(), 0, memoryStream2.Length.To<int>());
+            //    }
+            //}
 
-            return new FileContentResult(memoryStream3.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.zip" };
+            //return new FileContentResult(memoryStream3.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.zip" };
 
         }
 
