@@ -188,8 +188,8 @@ namespace Finance.BaseLibrary
                     {
                         FoundationProcedureDto entity = new FoundationProcedureDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(0).ToString();
-                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
                         entity.InstallationName = initRow.GetCell(2).ToString();
                         entity.InstallationPrice = decimal.Parse(initRow.GetCell(3).ToString());
                         entity.InstallationSupplier = initRow.GetCell(4).ToString();
