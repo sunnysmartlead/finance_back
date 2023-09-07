@@ -32,5 +32,9 @@ namespace Finance.MakeOffers
         /// 毛利率 存json  模型为 GrossMarginModel
         /// </summary>
         public string GrossMarginList { get; set; }
+        /// <summary>
+        /// 梯度
+        /// </summary>
+        public string gradient { get; set; }
     }
 }

@@ -21,6 +21,10 @@ namespace Finance.MakeOffers
         /// </summary>
         public string ProjectName { get; set; }
         /// <summary>
+        /// 梯度
+        /// </summary>
+        public string gradient { get; set; }
+        /// <summary>
         /// 目标价(内部) 存json 实体类GrossMarginModel
         /// </summary>
         public string InteriorTarget { get; set; }
