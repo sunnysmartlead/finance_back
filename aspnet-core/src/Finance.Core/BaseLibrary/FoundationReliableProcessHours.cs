@@ -135,5 +135,39 @@ namespace Finance.BaseLibrary
 		public string TraceabilitySoftware { get; set; }
 
 
-	}
+    
+
+        /// <summary>
+        /// 追溯软件费用
+        /// </summary>
+        [Column("traceability_software_cost")]
+        public decimal TraceabilitySoftwareCost { get; set; }
+
+
+        /// <summary>
+        /// 工装单价
+        /// </summary>
+        [Column("frock_price")]
+        public decimal FrockPrice { get; set; }
+
+        /// <summary>
+        /// 检具单价
+        /// </summary>
+        [Column("fixture_price")]
+        public decimal FixturePrice { get; set; }
+
+
+        /// <summary>
+        /// 检具名称
+        /// </summary>
+        [Column("fixture_name")]
+        [StringLength(255, ErrorMessage = "检具名称长度不能超出255字符")]
+        public string FixtureName { get; set; }
+
+        /// <summary>
+        /// 检具数量
+        /// </summary>
+        [Column("fixture_number")]
+        public decimal FixtureNumber { get; set; }
+    }
 }

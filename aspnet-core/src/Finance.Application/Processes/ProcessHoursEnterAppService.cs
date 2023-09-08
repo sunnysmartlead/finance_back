@@ -7,6 +7,7 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.PropertyDepartment.Entering.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -341,6 +342,23 @@ namespace Finance.Processes
             }
 
             return processHoursEnterDtoList;
+        }
+
+       /// <summary>
+        /// 查看项目走量        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual  async Task<List<ModuleNumberDto>> GetListModuleNumberDtoAsync(ProcessHoursEnterModuleNumberDto input)
+        {
+            List<ModuleNumberDto> moduleNumberDtos= new List<ModuleNumberDto>();
+            var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == input.SolutionId).ToList();
+            foreach (var item in query)
+            {
+
+            }
+
+            // 数据返回
+            return moduleNumberDtos;
         }
 
 
@@ -896,7 +914,7 @@ namespace Finance.Processes
                         List<ProcessHoursEnterFrockDto> foundationTechnologyDeviceList = new List<ProcessHoursEnterFrockDto>();
 
                         // 有6列是总结列，不是子表，需要将数量剔除
-                        fromCols = fromCols - 4;
+                        fromCols = fromCols - 6;
                         int fromNum = fromCols / 3;
                         for (int j = 0; j < fromNum; j++)
                         {
@@ -919,9 +937,9 @@ namespace Finance.Processes
                         // 硬件总价
                         rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareTotalPrice = decimal.Parse(row[keys[fromNumIndex]].ToString());
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[fromNumIndex + 1]].ToString());
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwarePrice = decimal.Parse(row[keys[fromNumIndex + 2]].ToString());
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[fromNumIndex + 3]].ToString());
+                        foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[fromNumIndex +3]].ToString());
+                        foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwarePrice = decimal.Parse(row[keys[fromNumIndex + 4]].ToString());
+                        foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[fromNumIndex + 5]].ToString());
 
                         processHoursEnterDto.DevelopCostInfo = foundationReliableProcessHoursdevelopCostInfoResponseDto;
 
@@ -935,7 +953,7 @@ namespace Finance.Processes
                         for (int j = 0; j < frocNum; j++)
                         {
                             ProcessHoursEnterFixtureDto foundationTechnologyFixtureDto = new ProcessHoursEnterFixtureDto();
-                            int fromStartIndex = j * 3 + fromNumIndex + 4;
+                            int fromStartIndex = j * 3 + fromNumIndex + 6;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
@@ -947,41 +965,51 @@ namespace Finance.Processes
                         foundationReliableProcessHoursFixtureResponseDto.ZhiJuArr = foundationTechnologyFixtures;
 
                         // 设备总价
-                        int frocNumIndex = fromNumIndex + 4 + frockCols;
+                        int frocNumIndex = fromNumIndex + frockCols -4;
                         // 工装治具检具总价
                         rowItem.Add(keys[frocNumIndex], row[keys[frocNumIndex - 1]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[frocNumIndex - 1]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex - 2]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex - 3]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex - 4]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex - 5]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex - 6]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex - 7]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex - 8]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex - 9]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex - 10]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[frocNumIndex +9]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex +8]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex +7]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex +6]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex +5]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex +4]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex +3]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex +2]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex +1]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex]].ToString());
                         processHoursEnterDto.ToolInfo = foundationReliableProcessHoursFixtureResponseDto;
 
                         // 解析年度部分
-                        List<ProcessHoursEnteritemDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnteritemDto>();
+                        List<ProcessHoursEnterSopInfoDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnterSopInfoDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();
                         int yearNum = yearCols / 3;
                         for (int j = 0; j < yearNum; j++)
                         {
-                            ProcessHoursEnteritemDto foundationWorkingHourItem = new ProcessHoursEnteritemDto();
+                            ProcessHoursEnterSopInfoDto foundationWorkingHourItem = new ProcessHoursEnterSopInfoDto();
+                            
                             string yearstr = yearStrs[j];
                             Dictionary<string, object> yearItem = new Dictionary<string, object>();
-                            int fromStartIndex = j * 3 + frocNumIndex;
+                            int fromStartIndex = j * 3 + 44;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
-                            foundationWorkingHourItem.LaborHour = decimal.Parse(val0.ToString());
-                            foundationWorkingHourItem.MachineHour = decimal.Parse(val1.ToString());
-                            foundationWorkingHourItem.PersonnelNumber = decimal.Parse(val2.ToString());
-                            foundationWorkingHourItem.Year = yearstr;
+                            foundationWorkingHourItem.Year  = yearstr;
+                            List<ProcessHoursEnteritemDto> processHoursEnteritems = new List<ProcessHoursEnteritemDto>();
+                            for (int g = 0; g < yearNum; g++)
+                            {
+                                ProcessHoursEnteritemDto processHoursEnteritem = new ProcessHoursEnteritemDto();
+                                processHoursEnteritem.LaborHour = decimal.Parse(val0.ToString());
+                                processHoursEnteritem.MachineHour = decimal.Parse(val1.ToString());
+                                processHoursEnteritem.PersonnelNumber = decimal.Parse(val2.ToString());
+                                processHoursEnteritems.Add(processHoursEnteritem);
+                            }
+                            foundationWorkingHourItem.Issues= processHoursEnteritems;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
+
+
                         }
-                        processHoursEnterDto.SopInfoAll = foundationWorkingHourItemDtos;
+                        processHoursEnterDto.SopInfo = foundationWorkingHourItemDtos;
                         ProcessHoursEnterDList.Add(processHoursEnterDto);
 
                     }

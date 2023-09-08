@@ -233,7 +233,7 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         public virtual int Year { get; set; }
 
-         /// <summary>
+        /// <summary>
         /// 年份类型
         /// </summary>
         public virtual YearType UpDown { get; set; }
@@ -314,7 +314,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 其他成本项目2
         /// </summary>
-        public virtual OtherCostItem2 OtherCostItem2 { get; set; }
+        public virtual List<OtherCostItem2> OtherCostItem2 { get; set; }
 
         /// <summary>
         /// 成本合计
@@ -394,10 +394,25 @@ namespace Finance.PriceEval.Dto
     }
 
     /// <summary>
-    /// 其他成本项目
+    /// 其他成本项目2
     /// </summary>
-    public class OtherCostItem2 : EntityDto<int>
+    public class OtherCostItem2 //: EntityDto<int>
     {
+        /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
+        /// 每年的模组数量
+        /// </summary>
+        public virtual decimal Quantity { get; set; }
+
         /// <summary>
         /// 成本项目名称
         /// </summary>
@@ -406,75 +421,113 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 合计
         /// </summary>
-        public virtual decimal Total { get; set; }
+        public virtual decimal? Total { get; set; }
 
 
         /// <summary>
         /// 模具费分摊
         /// </summary>
-        public virtual decimal MoldCosts { get; set; }
+        public virtual decimal? MoldCosts { get; set; }
 
 
         /// <summary>
         /// 治具费分摊
         /// </summary>
-        public virtual decimal FixtureCost { get; set; }
+        public virtual decimal? FixtureCost { get; set; }
 
         /// <summary>
         /// 工装费分摊
         /// </summary>
-        public virtual decimal ToolCost { get; set; }
+        public virtual decimal? ToolCost { get; set; }
 
         /// <summary>
         /// 检具费用分摊
         /// </summary>
-        public virtual decimal InspectionCost { get; set; }
+        public virtual decimal? InspectionCost { get; set; }
 
         /// <summary>
         /// 实验费分摊
         /// </summary>
-        public virtual decimal ExperimentCost { get; set; }
+        public virtual decimal? ExperimentCost { get; set; }
 
         /// <summary>
         /// 专用设备分摊
         /// </summary>
-        public virtual decimal SpecializedEquipmentCost { get; set; }
+        public virtual decimal? SpecializedEquipmentCost { get; set; }
 
         /// <summary>
         /// 测试软件费分摊
         /// </summary>
-        public virtual decimal TestSoftwareCost { get; set; }
+        public virtual decimal? TestSoftwareCost { get; set; }
 
         /// <summary>
         /// 其他费用分摊
         /// </summary>
-        public virtual decimal OtherExpensesCost { get; set; }
+        public virtual decimal? OtherExpensesCost { get; set; }
 
         /// <summary>
         /// 差旅费分摊
         /// </summary>
-        public virtual decimal TravelCost { get; set; }
+        public virtual decimal? TravelCost { get; set; }
 
         /// <summary>
         /// 呆滞物料分摊
         /// </summary>
-        public virtual decimal SluggishCost { get; set; }
+        public virtual decimal? SluggishCost { get; set; }
 
         /// <summary>
         /// 质保金分摊
         /// </summary>
-        public virtual decimal RetentionCost { get; set; }
+        public virtual decimal? RetentionCost { get; set; }
 
         /// <summary>
         /// 线体成本分摊
         /// </summary>
-        public virtual decimal LineCost { get; set; }
+        public virtual decimal? LineCost { get; set; }
 
         /// <summary>
         /// 其他成本
         /// </summary>
-        public virtual decimal OtherCost { get; set; }
+        public virtual decimal? OtherCost { get; set; }
     }
+
+
+    /// <summary>
+    /// 其他成本项目2核价看板列表项
+    /// </summary>
+    public class OtherCostItem2List
+    {
+        /// <summary>
+        /// 成本项目
+        /// </summary>
+        public virtual string ItemName { get; set; }
+
+        /// <summary>
+        /// 总费用
+        /// </summary>
+        public virtual decimal Total { get; set; }
+
+        /// <summary>
+        /// 分摊数量
+        /// </summary>
+        public virtual decimal Count { get; set; }
+
+        /// <summary>
+        /// 单颗成本
+        /// </summary>
+        public virtual decimal Cost { get; set; }
+
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public virtual string Note { get; set; }
+
+        /// <summary>
+        /// 是否分摊
+        /// </summary>
+        public virtual bool IsShare { get; set; }
+    }
+
 
     /// <summary>
     /// 损耗成本
@@ -548,6 +601,11 @@ namespace Finance.PriceEval.Dto
         /// 是否客供
         /// </summary>
         public virtual bool IsCustomerSupply { get; set; }
+
+        /// <summary>
+        /// 是否客供
+        /// </summary>
+        public virtual string IsCustomerSupplyStr { get; set; }
 
         /// <summary>
         /// 装配数量

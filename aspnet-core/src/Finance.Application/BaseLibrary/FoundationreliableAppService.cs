@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.BaseLibrary
 {
@@ -354,7 +355,15 @@ namespace Finance.BaseLibrary
                 throw new Exception(ex.Message);
             }
         }
-
+        /// <summary>
+        /// 获取设备状态信息
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<EnumItem>> GetDeviceStatus()
+        {
+            var res = EnumHelper.GetEnumItems<Status>();
+            return res;
+        }
 
         /// <summary>
         /// 添加日志

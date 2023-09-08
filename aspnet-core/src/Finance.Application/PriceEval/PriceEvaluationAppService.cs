@@ -98,9 +98,9 @@ namespace Finance.PriceEval
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, IRepository<PriceEvalJson, long> priceEvalJsonRepository)
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, priceEvalJsonRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -376,6 +376,7 @@ namespace Finance.PriceEval
             {
                 shareCount.PriceEvaluationId = priceEvaluationId;
                 shareCount.AuditFlowId = auditFlowId;
+                shareCount.ProductId = modelCountIds.First(p => p.product == shareCount.Name).productId;
                 await _shareCountRepository.InsertAsync(shareCount);
             }
 
@@ -480,7 +481,7 @@ namespace Finance.PriceEval
 
 
         /// <summary>
-        /// 创建修改项（物料成本）
+        /// 设置修改项（物料成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -524,7 +525,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（损耗成本）
+        /// 设置修改项（损耗成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -569,7 +570,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（制造成本）
+        /// 设置修改项（制造成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -615,7 +616,7 @@ namespace Finance.PriceEval
 
 
         /// <summary>
-        /// 创建修改项（物流成本）
+        /// 设置修改项（物流成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -659,7 +660,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（质量成本）
+        /// 设置修改项（质量成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -704,20 +705,20 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（其他成本）
+        /// 设置修改项（其他成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<OtherCostItem> input)
+        public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<List<OtherCostItem2List>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                && p.UpdateItemType == UpdateItemType.OtherCost
+                && p.UpdateItemType == UpdateItemType.OtherCostItem2List
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
-                data.UpdateItemType = UpdateItemType.OtherCost;
+                data.UpdateItemType = UpdateItemType.OtherCostItem2List;
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -726,27 +727,7 @@ namespace Finance.PriceEval
             }
         }
 
-        /// <summary>
-        /// 获取修改项（其他成本）
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public async virtual Task<OtherCostItem> GetUpdateItemOtherCost(GetUpdateItemInput input)
-        {
-            var entity = await _updateItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-&& p.UpdateItemType == UpdateItemType.OtherCost
-//&& p.ProductId == input.ProductId
-&& p.GradientId == input.GradientId
-&& p.SolutionId == input.SolutionId
-&& p.Year == input.Year
-&& p.UpDown == p.UpDown);
-            if (entity is null)
-            {
-                return null;
-            }
-            return JsonConvert.DeserializeObject<OtherCostItem>(entity.MaterialJson);
 
-        }
         #endregion
 
         #endregion

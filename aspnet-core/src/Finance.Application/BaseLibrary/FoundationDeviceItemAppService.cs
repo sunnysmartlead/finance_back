@@ -56,6 +56,29 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
+        /// 列表-无分页功能
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<FoundationDeviceItemDto>> GetListAllAsync(GetFoundationDeviceItemsInput input)
+        {
+            // 设置查询条件
+            var query = this._foundationDeviceItemRepository.GetAll().Where(t => t.IsDeleted == false);
+            if (!string.IsNullOrEmpty(input.DeviceName))
+            {
+                query = query.Where(t => t.DeviceName.Contains(input.DeviceName));
+            }
+        
+            // 查询数据
+            var list = query.ToList();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationDeviceItem>, List<FoundationDeviceItemDto>>(list, new List<FoundationDeviceItemDto>());
+
+            // 数据返回
+            return dtos;
+        }
+
+        /// <summary>
         /// 获取修改
         /// </summary>
         /// <param name="id">主键</param>

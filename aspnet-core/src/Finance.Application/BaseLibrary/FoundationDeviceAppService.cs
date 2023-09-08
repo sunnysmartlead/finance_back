@@ -211,8 +211,8 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationDeviceDto entity = new FoundationDeviceDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(0).ToString();
-                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
