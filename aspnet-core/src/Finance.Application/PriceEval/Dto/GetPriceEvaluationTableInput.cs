@@ -26,7 +26,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 方案表ID
         /// </summary>
-        public long SolutionId { get; set; }
+        public virtual long SolutionId { get; set; }
 
         /// <summary>
         /// 投入量

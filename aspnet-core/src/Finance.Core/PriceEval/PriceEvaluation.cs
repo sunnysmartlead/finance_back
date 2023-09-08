@@ -220,7 +220,7 @@ namespace Finance.PriceEval
         public virtual bool TestCost { set; get; }
 
         /// <summary>
-        /// 差旅费摊（二开新增属性）
+        /// 差旅费分摊（二开新增属性）
         /// </summary>
         //[Required]
         public virtual bool TravelCost { set; get; }

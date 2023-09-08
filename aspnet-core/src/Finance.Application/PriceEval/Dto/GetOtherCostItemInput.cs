@@ -40,4 +40,61 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual YearType UpDown { get; set; }
     }
+
+    /// <summary>
+    /// 获取 其他成本项目 参数输入
+    /// </summary>
+    public class GetOtherCostItem2Input
+    {
+        /// <summary>
+        /// 审批流程主表Id
+        /// </summary>
+        [Required]
+        public virtual long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+
+        /// <summary>
+        /// 方案表ID
+        /// </summary>
+        public long SolutionId { get; set; }
+
+        /// <summary>
+        /// 年份
+        /// </summary>
+        [Required]
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        [Required]
+        public virtual YearType UpDown { get; set; }
+    }
+
+    /// <summary>
+    /// 获取 其他成本项目 参数输入
+    /// </summary>
+    public class GetOtherCostItem2ListInput
+    {
+        /// <summary>
+        /// 审批流程主表Id
+        /// </summary>
+        [Required]
+        public virtual long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+
+        /// <summary>
+        /// 方案表ID
+        /// </summary>
+        public long SolutionId { get; set; }
+
+    }
 }
