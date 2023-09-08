@@ -1451,5 +1451,15 @@ namespace Finance.Processes
             await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
             await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
         }
+
+        /// <summary>
+        /// 获取设备状态信息
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<EnumItem>> GetDeviceStatus()
+        {
+            var res = EnumHelper.GetEnumItems<Status>();
+            return res;
+        }
     }
 }
