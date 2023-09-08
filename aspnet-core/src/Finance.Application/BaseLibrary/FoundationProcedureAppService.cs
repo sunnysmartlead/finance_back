@@ -93,7 +93,10 @@ namespace Finance.BaseLibrary
             {
                 query = query.Where(t => t.InstallationName.Contains(input.ProcessName));
             }
-
+            if (!string.IsNullOrEmpty(input.InstallationName))
+            {
+                query = query.Where(t => t.InstallationName.Contains(input.InstallationName));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换
@@ -188,8 +191,8 @@ namespace Finance.BaseLibrary
                     {
                         FoundationProcedureDto entity = new FoundationProcedureDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(0).ToString();
-                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
                         entity.InstallationName = initRow.GetCell(2).ToString();
                         entity.InstallationPrice = decimal.Parse(initRow.GetCell(3).ToString());
                         entity.InstallationSupplier = initRow.GetCell(4).ToString();
