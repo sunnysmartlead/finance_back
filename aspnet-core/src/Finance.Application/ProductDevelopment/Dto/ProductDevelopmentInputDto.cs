@@ -2,11 +2,13 @@
 using Abp.UI;
 using AutoMapper;
 using Finance.Dto;
+using Finance.Ext;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.ProductDevelopment.Dto
 {
@@ -162,10 +164,12 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 审批流程表ID
         /// </summary>
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// ModelCount表id
         /// </summary>
+        
         public long ProductId { get; set; }
         /// <summary>
         /// 产品名称（零件1、零件2...）
@@ -175,6 +179,7 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 方案表ID
         /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 方案号
@@ -188,14 +193,17 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 板部件名称
         /// </summary>
+        [FriendlyRequired("板部件名称", SpecialVerification.Nothing)]
         public string BoardName { get; set; }
         /// <summary>
         /// 板部件长
         /// </summary>
+       [FriendlyRequired("板部件长", SpecialVerification.Nothing)]
         public decimal BoardLenth { get; set; }
         /// <summary>
         /// 板部件宽
         /// </summary>
+        [FriendlyRequired("板部件宽", SpecialVerification.Nothing)]
         public decimal BoardWidth { get; set; }
         /// <summary>
         /// 板部件面积
@@ -341,6 +349,128 @@ namespace Finance.ProductDevelopment.Dto
 
 
     }
+
+
+
+    public class PostProductDevelopmentInputDto
+    {
+        /// 审批流程表ID
+        /// </summary>
+        public long AuditFlowId { get; set; }
+        /// <summary>
+        /// ModelCount表id
+        /// </summary>
+        public long ProductId { get; set; }
+        /// <summary>
+        /// 产品名称（零件1、零件2...）
+        /// </summary>
+        public string Product { get; set; }
+        /// <summary>
+        /// 方案表ID
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 方案号
+        /// </summary>
+        public string SolutionNum { get; set; }
+        /// <summary>
+        /// 3D爆炸图Id
+        /// </summary>
+        public string Picture3DFileId { get; set; }
+        /// <summary>
+        /// 像素M
+        /// </summary>
+        public string Pixel { get; set; }
+        /// <summary>
+        /// FOV
+        /// </summary>
+        public string FOV { get; set; }
+
+        /// <summary>
+        /// 外包装长
+        /// </summary>
+        public string OuterPackagingLength { get; set; }
+        /// <summary>
+        /// 外包装宽
+        /// </summary>
+        public string OuterPackagingWidth { get; set; }
+        /// <summary>
+        /// 外包装高
+        /// </summary>
+        public string OuterPackagingHeight { get; set; }
+        /// <summary>
+        /// 单个产品重量
+        /// </summary>
+        public string SingleProductWeight { get; set; }
+        /// <summary>
+        /// 单箱数量
+        /// </summary>
+        public string SingleBoxQuantity { get; set; }
+        /// <summary>
+        /// 内包装长
+        /// </summary>
+        public string InnerPackagingLength { get; set; }
+        /// <summary>
+        /// 内包装宽
+        /// </summary>
+        public string InnerPackagingWidth { get; set; }
+        /// <summary>
+        /// 内包装高
+        /// </summary>
+        public string InnerPackagingHeight { get; set; }
+        /// <summary>
+        /// 是否打托
+        /// </summary>
+        public string IsHit { get; set; }
+        /// <summary>
+        /// 每托盘箱数
+        /// </summary>
+        public string BoxesPerPallet { get; set; }
+        /// <summary>
+        /// 单箱包装数量
+        /// </summary>
+        public string QuantityPerBox { get; set; }
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public string Remarks { get; set; }
+        /// <summary>
+        /// 客户特殊性需求
+        /// </summary>
+        public string Requirement { get; set; }
+        /// <summary>
+        /// SOR附件Id
+        /// </summary>
+        public string SorId { get; set; }
+        /// <summary>
+        /// 是否成功标志位
+        /// </summary>
+        public bool IsSuccess { get; set; }
+        /// <summary>
+        /// 错误信息
+        /// </summary>
+        public string Message { get; set; }
+
+        /// <summary>
+        /// 运输方式（字典明细表主键）
+        /// </summary>
+        public virtual string ShippingType { get; set; }
+
+        /// <summary>
+        /// 包装方式（字典明细表主键）
+        /// </summary>
+        public virtual string PackagingType { get; set; }
+
+        /// <summary>
+        /// 交货地点
+        /// </summary>
+        public virtual string PlaceOfDelivery { get; set; }
+
+
+
+    }
+
+
     /// <summary>
     /// 自定义mapper映射并对数据类型更改
     /// </summary>

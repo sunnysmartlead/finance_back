@@ -285,10 +285,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
-                    {
+                    {                       
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
-                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
+                        electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);                  
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                         EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(BomInfo.Id));
                         if (enteringElectronic != null)
@@ -333,7 +333,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 yearOrValueKvMode.YearOrValueModes.Add(yearOrValueMode);
                             }
                             electronicDto.MaterialsUseCount.Add(yearOrValueKvMode);
-                        }
+                        }                
                         //取基础单价库  查询条件 物料编码 冻结状态  有效结束日期
                         List<UInitPriceForm> uInitPriceForms = await _configUInitPriceForm.GetAllListAsync(p => p.MaterialCode.Equals(BomInfo.SapItemNum) && p.FreezeOrNot.Equals(FreezeOrNot.Thaw) && p.EffectiveDate < DateTime.Now && p.ExpirationDate > DateTime.Now);//&&!p.FrozenState&&p.EffectiveEndDate>DateTime.Now
                         List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
@@ -406,16 +406,17 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 单个 物料编号的计算
         /// </summary>
         /// <param name="SolutionId"></param>
+        /// <param name="ProductId"></param>
         /// <param name="auditFlowId"></param>
         /// <param name="ElectronicId"></param>
         /// <returns></returns>
-        internal async Task<ElectronicDto> ElectronicBom(long SolutionId, long auditFlowId, long ElectronicId)
+        internal async Task<ElectronicDto> ElectronicBom(long SolutionId,long ProductId, long auditFlowId, long ElectronicId)
         {
             //查询PCS中的梯度
             List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
             ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
             //通过零件号获取 模组数量中的 年度模组数量以及年份               
-            List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(SolutionId)))
+            List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(ProductId)))
                 .Select(a => new ModelCountYear
                 {
                     ProductId = a.ProductId,
@@ -433,6 +434,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             foreach (GradientValueModel gradientItem in gradient)
             {
                 YearOrValueKvMode yearOrValueKvMode = new YearOrValueKvMode();
+                yearOrValueKvMode.YearOrValueModes = new();
                 yearOrValueKvMode.Kv = gradientItem.Kv;
                 foreach (ModelCountYear modelCountYear in modelCountYearList)
                 {
@@ -615,6 +617,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId));
                         if (structureElectronic != null)
                         {
+                            construction.Id= structureElectronic.Id;
                             construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                             construction.Currency = structureElectronic.Currency;//币种                       
                             construction.SolutionId = item.SolutionId;//方案ID
@@ -825,6 +828,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 {
                                     UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)
                                     && p.Year.Equals(item.Year));
+                                    if (uInitPriceFormYearOrValueMode is null)
+                                    {
+                                        uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p=>p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)).OrderByDescending(p=>p.Year).FirstOrDefault();
+                                    }
                                     yearOrValueModeOriginal.Value = uInitPriceFormYearOrValueMode.Value / 1000;
                                 }
                                 yearOrValueModeOriginal.UpDown = item.UpDown;
@@ -832,6 +839,10 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                                 //创建年降对象
                                 UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate) && p.Year.Equals(item.Year));
+                                if (uInitPriceFormYearOrValueModeAnnualDecline is null)
+                                {
+                                    uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 YearOrValueMode yearOrValueModeAnnualDecline = new YearOrValueMode();
                                 yearOrValueModeAnnualDecline.Year = item.Year;
                                 yearOrValueModeAnnualDecline.UpDown = item.UpDown;
@@ -851,6 +862,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
+                                if (rebateRateYearOrValueMode is null)
+                                {
+                                    rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 kvMode.Value += sharedMaterialWarehousesModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
@@ -908,6 +923,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 {
                                     UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)
                                     && p.Year.Equals(item.Year));
+                                    if (uInitPriceFormYearOrValueMode is null)
+                                    {
+                                        uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                    }
                                     yearOrValueModeOriginal.Value = uInitPriceFormYearOrValueMode.Value / 1000;
                                 }
                                 yearOrValueModeOriginal.UpDown = item.UpDown;
@@ -916,6 +935,10 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                                 //创建年降对象
                                 UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate) && p.Year.Equals(item.Year));
+                                if (uInitPriceFormYearOrValueModeAnnualDecline is null)
+                                {
+                                    uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 YearOrValueMode yearOrValueModeAnnualDecline = new YearOrValueMode();
                                 yearOrValueModeAnnualDecline.Year = item.Year;
                                 yearOrValueModeAnnualDecline.UpDown = item.UpDown;
@@ -934,6 +957,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
+                                if (rebateRateYearOrValueMode is null)
+                                {
+                                    rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
@@ -986,6 +1013,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 {
                                     UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)
                                     && p.Year.Equals(item.Year));
+                                    if (uInitPriceFormYearOrValueMode is null)
+                                    {
+                                        uInitPriceFormYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualUntaxedPrice)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                    }
                                     yearOrValueModeOriginal.Value = uInitPriceFormYearOrValueMode.Value / 1000;
                                 }
                                 yearOrValueModeOriginal.UpDown = item.UpDown;
@@ -993,6 +1024,10 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                                 //创建年降对象
                                 UInitPriceFormYearOrValueMode uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate) && p.Year.Equals(item.Year));
+                                if (uInitPriceFormYearOrValueModeAnnualDecline is null)
+                                {
+                                    uInitPriceFormYearOrValueModeAnnualDecline = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.AnnualDeclineRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 YearOrValueMode yearOrValueModeAnnualDecline = new YearOrValueMode();
                                 yearOrValueModeAnnualDecline.Year = item.Year;
                                 yearOrValueModeAnnualDecline.UpDown = item.UpDown;
@@ -1010,6 +1045,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 //返点率
                                 UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                                && p.Year.Equals(item.Year));
+                                if (rebateRateYearOrValueMode is null)
+                                {
+                                    rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                                }
                                 kvMode.Value += materialsUseCountModeCount * yearOrValueModeOriginal.Value * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                             }
                             //将年份和价格对象和物料返利金额添加到列表中
@@ -1182,6 +1221,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                 List<YearOrValueMode> exchangeRateValues = JsonExchangeRateValue(exchangeRate?.ExchangeRateValue);
                 //获取汇率值
                 YearOrValueMode exchangeRateModel = exchangeRateValues.FirstOrDefault(p => p.Year.Equals(Year));
+                if (exchangeRateModel is null)
+                {
+                    exchangeRateModel = exchangeRateValues.OrderByDescending(p => p.Year).FirstOrDefault();
+                }
                 return exchangeRateModel != null ? (decimal)(exchangeRateModel.Value) : 0M;
             }           
         }
@@ -1230,7 +1273,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<UInitPriceFormYearOrValueMode> uInitPriceFormYearOrValueModes = JsonConvert.DeserializeObject<List<UInitPriceFormYearOrValueMode>>(uInitPriceForm.UInitPriceFormYearOrValueModes);
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
-
+                    if (rebateRateYearOrValueMode is null)
+                    {
+                        rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                    }
                     return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
@@ -1283,6 +1329,10 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<UInitPriceFormYearOrValueMode> uInitPriceFormYearOrValueModes = JsonConvert.DeserializeObject<List<UInitPriceFormYearOrValueMode>>(uInitPriceForm.UInitPriceFormYearOrValueModes);
                     UInitPriceFormYearOrValueMode rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.FirstOrDefault(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)
                    && p.Year.Equals(item.Year));
+                    if (rebateRateYearOrValueMode is null)
+                    {
+                        rebateRateYearOrValueMode = uInitPriceFormYearOrValueModes.Where(p => p.UInitPriceFormType.Equals(UInitPriceFormType.RebateRate)).OrderByDescending(p => p.Year).FirstOrDefault();
+                    }
                     return item.Value * unitPrice * exchangeRateModelValue * rebateRateYearOrValueMode.Value;
                 });
                 return yearOrValueKvMode;
@@ -1307,7 +1357,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.AuditFlowId = submitElectronicDto.AuditFlowId;//流程的id
                         enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                         enteringElectronic.IsEntering = true;//确认录入           
-                        await _configEnteringElectronic.InsertOrUpdateAsync(enteringElectronic);
+                        await _configEnteringElectronic.InsertAsync(enteringElectronic);
                     }
                     else
                     {

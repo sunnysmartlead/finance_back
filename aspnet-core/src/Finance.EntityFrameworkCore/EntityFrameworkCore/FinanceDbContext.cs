@@ -122,6 +122,14 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<InternalInformation> InternalInformation { set; get; }
         // 报价审核表 中的 报价策略
         public virtual DbSet<BiddingStrategy> BiddingStrategy { set; get; }
+        // 报价设备
+        public virtual DbSet<DeviceQuotation> DeviceQuotation { set; get; }
+        // 报价方案
+        public virtual DbSet<SolutionQuotation> SolutionQuotation { set; get; }
+        // 报价NRE
+        public virtual DbSet<NreQuotation> NreQuotation { set; get; }
+        // 报价样品
+        public virtual DbSet<SampleQuotation> SampleQuotation { set; get; }
         // 报价审核表
         public virtual DbSet<AuditQuotationList> AuditQuotationList { set; get; }
         // Nre Nre  零件是否全部录入 依据实体类
@@ -389,6 +397,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<FProcesses> FProcesses { get; set; }
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<UpdateItem> UpdateItem { get; set; }
+        public virtual DbSet<PriceEvalJson> PriceEvalJson { get; set; }
 
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
