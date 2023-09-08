@@ -43,6 +43,7 @@ namespace Finance.BaseLibrary
             IRepository<FoundationHardware, long> foundationHardwareRepository)
         {
             _foundationHardwareRepository = foundationHardwareRepository;
+            _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;

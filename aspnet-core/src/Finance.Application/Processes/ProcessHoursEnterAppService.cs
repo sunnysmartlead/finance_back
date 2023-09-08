@@ -2,6 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
+using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
@@ -39,24 +40,48 @@ namespace Finance.Processes
         private readonly IRepository<ProcessHoursEnterUph, long> _processHoursEnterUphRepository;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         private readonly DataInputAppService _dataInputAppService;
+        private readonly IRepository<FoundationDevice, long> _foundationDeviceRepository;
+        private readonly IRepository<FoundationDeviceItem, long> _foundationFoundationDeviceItemRepository;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+        private readonly IRepository<FProcesses, long> _fProcessesRepository;
 
+        private readonly IRepository<FoundationHardware, long> _foundationHardwareRepository;
+        private readonly IRepository<FoundationHardwareItem, long> _foundationFoundationHardwareItemRepository;
 
+        private readonly IRepository<FoundationFixture, long> _foundationFixtureRepository;
+        private readonly IRepository<FoundationFixtureItem, long> _foundationFoundationFixtureItemRepository;
+        private readonly IRepository<FoundationProcedure, long> _foundationProcedureRepository;
+        private readonly IRepository<FoundationWorkingHour, long> _foundationWorkingHourRepository;
+        private readonly IRepository<FoundationWorkingHourItem, long> _foundationFoundationWorkingHourItemRepository;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="processHoursEnterRepository"></param>
         public ProcessHoursEnterAppService(
-               IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Solution, long> resourceSchemeTable, IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository, DataInputAppService dataInputAppService, WorkflowInstanceAppService workflowInstanceAppService)
+                  IRepository<FProcesses, long> fProcessesRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Solution, long> resourceSchemeTable, IRepository<ProcessHoursEnter, long> processHoursEnterRepository, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixtureRepository, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrockRepository, IRepository<ProcessHoursEnteritem, long> processHoursEnterItemRepository, IRepository<ProcessHoursEnterLine, long> processHoursEnterLineRepository, IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository, DataInputAppService dataInputAppService,
+                     IRepository<FoundationDevice, long> foundationDeviceRepository,
+                     IRepository<FoundationHardwareItem, long> foundationFoundationHardwareItemRepository,
+                     IRepository<FoundationHardware, long> foundationHardwareRepository,
+                     IRepository<FoundationDeviceItem, long> foundationFoundationDeviceItemRepository,
+                     IRepository<FoundationFixture, long> foundationFixtureRepository,
+                     IRepository<FoundationProcedure, long> foundationProcedureRepository,
+                      IRepository<FoundationWorkingHour, long> foundationWorkingHourRepository,
+                     IRepository<FoundationFixtureItem, long> foundationFoundationFixtureItemRepository,
+                      IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
+                      WorkflowInstanceAppService workflowInstanceAppService)
         {
+            _foundationDeviceRepository = foundationDeviceRepository;
+            _foundationProcedureRepository = foundationProcedureRepository;
+            _foundationFoundationDeviceItemRepository = foundationFoundationDeviceItemRepository;
             _processHoursEnterRepository = processHoursEnterRepository;
             _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
             _processHoursEnterFixtureRepository = processHoursEnterFixtureRepository;
+            _foundationWorkingHourRepository = foundationWorkingHourRepository;
             _processHoursEnterFrockRepository = processHoursEnterFrockRepository;
             _processHoursEnterItemRepository = processHoursEnterItemRepository;
             _processHoursEnterLineRepository = processHoursEnterLineRepository;
@@ -64,7 +89,13 @@ namespace Finance.Processes
             _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _foundationHardwareRepository = foundationHardwareRepository;
+            _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
             _modelCountYearRepository = modelCountYearRepository;
+            _fProcessesRepository = fProcessesRepository;
+            _foundationFixtureRepository = foundationFixtureRepository;
+            _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
+            _foundationFoundationWorkingHourItemRepository = foundationFoundationWorkingHourItemRepository;
         }
 
         /// <summary>
@@ -98,7 +129,124 @@ namespace Finance.Processes
             return new PagedResultDto<ProcessHoursEnterDto>(totalCount, dtos);
         }
 
+        /// <summary>
+        /// 根据工序编号获取数据
+        /// </summary>
+        /// <param name="id">主键</param>
+        /// <returns></returns>
+        public virtual async Task<ProcessHoursEnterDto> GetEditorByProcessNumber(String ProcessNumber)
+        {
+            //根据工序编号获取工序名称
+            ProcessHoursEnterDto processHoursEnterDto = new ProcessHoursEnterDto();
+            var query = this._fProcessesRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber  && t.IsDeleted ==false).ToList();
+            if (query.Count>0) { 
+                processHoursEnterDto.ProcessNumber = query[0].ProcessNumber;
+                processHoursEnterDto.ProcessName = query[0].ProcessName;
+            }
+            //设备的
+            var queryDevice =  this._foundationDeviceRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
+            if (queryDevice.Count > 0)
+            {
+                processHoursEnterDto.DeviceInfo.DeviceTotalCost = 0;
+                var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == queryDevice[0].Id).ToList();
+                List<ProcessHoursEnterDeviceDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterDeviceDto>();
+                foreach (var item in FoundationDeviceItemlist)
+                {
+                    ProcessHoursEnterDeviceDto processHoursEnterDeviceDto =     new ProcessHoursEnterDeviceDto();
+                    processHoursEnterDeviceDto.DevicePrice = decimal.Parse(item.DevicePrice);
+                    processHoursEnterDeviceDto.DeviceStatus = item.DeviceStatus;
+                    processHoursEnterDeviceDto.DeviceNumber = 0 ;
+                    processHoursEnterDeviceDto.DeviceName= item.DeviceName;
+                    processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
 
+                }
+                processHoursEnterDto.DeviceInfo.DeviceArr = processHoursEnterDeviceDtos;
+            }
+            //追溯部分(硬件及软件开发费用)
+            var queryHardware = this._foundationHardwareRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
+            if (queryHardware.Count > 0)
+            {
+                processHoursEnterDto.DevelopCostInfo.HardwareDeviceTotalPrice = 0;
+                processHoursEnterDto.DevelopCostInfo.OpenDrawingSoftware = queryHardware[0].SoftwareName;
+                processHoursEnterDto.DevelopCostInfo.SoftwarePrice = queryHardware[0].SoftwarePrice;
+                var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == queryHardware[0].Id).ToList();
+                List<ProcessHoursEnterFrockDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterFrockDto>();
+                foreach (var item in FoundationDeviceItemlist)
+                {
+                    ProcessHoursEnterFrockDto processHoursEnterDeviceDto = new ProcessHoursEnterFrockDto();
+                    processHoursEnterDeviceDto.HardwareDevicePrice = item.HardwarePrice;
+                    processHoursEnterDeviceDto.HardwareDeviceNumber = 0;
+                    processHoursEnterDeviceDto.HardwareDeviceName = item.HardwareName;
+                    processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+
+                }
+                processHoursEnterDto.DevelopCostInfo.HardwareInfo = processHoursEnterDeviceDtos;
+            }
+            //工装治具部分
+            var queryFixture = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
+            if (queryFixture.Count > 0)
+            {
+          
+                var FoundationDeviceItemlist = this._foundationFoundationFixtureItemRepository.GetAll().Where(f => f.FoundationFixtureId == queryFixture[0].Id).ToList();
+                List<ProcessHoursEnterFixtureDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterFixtureDto>();
+                foreach (var item in FoundationDeviceItemlist)
+                {
+                    ProcessHoursEnterFixtureDto processHoursEnterDeviceDto = new ProcessHoursEnterFixtureDto();
+                    processHoursEnterDeviceDto.FixturePrice = item.FixturePrice;
+                    processHoursEnterDeviceDto.FixtureNumber = 0;
+                    processHoursEnterDeviceDto.FixtureName = item.FixtureName;
+                    processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+
+                }
+                processHoursEnterDto.ToolInfo.FixtureName = queryFixture[0].FixtureGaugeName;
+                processHoursEnterDto.ToolInfo.FixtureNumber = 0;
+                processHoursEnterDto.ToolInfo.FixturePrice = queryFixture[0].FixtureGaugePrice;
+                processHoursEnterDto.ToolInfo.ZhiJuArr = processHoursEnterDeviceDtos;
+            }
+            //工装
+            var queryProcedure = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
+            if (queryProcedure.Count > 0)
+            {
+
+                processHoursEnterDto.ToolInfo.FrockName = queryProcedure[0].InstallationName;
+                processHoursEnterDto.ToolInfo.FrockPrice = queryProcedure[0].InstallationPrice;
+                processHoursEnterDto.ToolInfo.FrockNumber  = 0;
+                processHoursEnterDto.ToolInfo.TestLineName = queryProcedure[0].TestName;
+                processHoursEnterDto.ToolInfo.TestLinePrice = queryProcedure[0].TestPrice;
+                processHoursEnterDto.ToolInfo.TestLineNumber = 0;
+            }
+            //工时
+            var queryWorkingHour = _foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
+            if (queryWorkingHour.Count > 0)
+            {
+                List<ProcessHoursEnterSopInfoDto> processHoursEnterSopInfoDtos = new List<ProcessHoursEnterSopInfoDto>();
+                var queryYear = (from a in _foundationFoundationWorkingHourItemRepository.GetAllList(p => p.IsDeleted == false && p.FoundationWorkingHourId == queryWorkingHour[0].Id).Select(p => p.Year).Distinct()
+                                 select a).ToList();
+                foreach (var item in queryYear)
+                {
+                    ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
+                    p.Year = item;
+                    var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
+                   List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
+                    foreach (var itemYear in queryYearItem)
+                    {
+                        ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
+                        processHoursEnteritemDto.LaborHour = decimal.Parse(itemYear.LaborHour);
+                        processHoursEnteritemDto.PersonnelNumber = decimal.Parse(itemYear.NumberPersonnel);
+                        processHoursEnteritemDto.MachineHour = decimal.Parse(itemYear.MachineHour);
+                        processHoursEnteritemDtos.Add(processHoursEnteritemDto);
+                    }
+                    p.Issues = processHoursEnteritemDtos;
+                    processHoursEnterSopInfoDtos.Add(p);
+
+                }
+                processHoursEnterDto.SopInfo = processHoursEnterSopInfoDtos;
+
+            }
+
+
+                return processHoursEnterDto;
+        }
         /// <summary>
         /// 列表-无分页功能
         /// </summary>
