@@ -58,6 +58,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 修改项Json
         /// </summary>
+        [Column(TypeName = "CLOB")]
         public virtual string MaterialJson { get; set; }
 
         /// <summary>

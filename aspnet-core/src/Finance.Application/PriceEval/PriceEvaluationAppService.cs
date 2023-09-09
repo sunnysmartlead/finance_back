@@ -499,7 +499,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -516,7 +519,7 @@ namespace Finance.PriceEval
             && p.GradientId == input.GradientId
             && p.SolutionId == input.SolutionId
             && p.Year == input.Year
-            && p.UpDown == p.UpDown);
+            && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -543,7 +546,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -560,7 +566,7 @@ namespace Finance.PriceEval
            && p.GradientId == input.GradientId
            && p.SolutionId == input.SolutionId
            && p.Year == input.Year
-           && p.UpDown == p.UpDown);
+           && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -588,7 +594,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -605,7 +614,7 @@ namespace Finance.PriceEval
           && p.GradientId == input.GradientId
           && p.SolutionId == input.SolutionId
           && p.Year == input.Year
-          && p.UpDown == p.UpDown);
+          && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -634,7 +643,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -651,7 +663,7 @@ namespace Finance.PriceEval
         && p.GradientId == input.GradientId
         && p.SolutionId == input.SolutionId
         && p.Year == input.Year
-        && p.UpDown == p.UpDown);
+        && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -678,7 +690,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -695,7 +710,7 @@ namespace Finance.PriceEval
   && p.GradientId == input.GradientId
   && p.SolutionId == input.SolutionId
   && p.Year == input.Year
-  && p.UpDown == p.UpDown);
+  && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -723,7 +738,10 @@ namespace Finance.PriceEval
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
             }
         }
 
