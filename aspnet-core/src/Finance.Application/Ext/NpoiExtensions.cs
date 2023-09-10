@@ -120,7 +120,7 @@ namespace Finance.Ext
         /// </summary>
         /// <param name="excels">Excel文件流，以及合并后sheet的名称</param>
         /// <returns>合并后的Excel文件流</returns>
-        public static MemoryStream ExcelMerge(params (Stream stream, string sheetName)[] excels)
+        public static MemoryStream ExcelMerge(params (MemoryStream stream, string sheetName)[] excels)
         {
             //设置文件框架
             var workbook = new XSSFWorkbook();
