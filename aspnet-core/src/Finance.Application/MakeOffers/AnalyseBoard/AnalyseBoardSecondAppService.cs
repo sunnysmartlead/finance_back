@@ -75,7 +75,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
     private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
     private readonly IRepository<Sample, long> _sampleRepository;
-    private readonly IRepository<Solution, long> _SolutionRepository;
 
     /// <summary>
     ///报价 项目看板实体类 实体类
@@ -118,7 +117,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<Sample, long> sampleRepository,
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<PooledAnalysisOffers, long> pooledAnalysisOffers,
-        IRepository<Solution, long> SolutionRepository,
         IRepository<GrossMarginForm, long> configGrossMarginForm,
         IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository,
         IRepository<GradientModelYear, long> gradientModelYearRepository,
@@ -143,7 +141,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
         _modelCountYearRepository = modelCountYearRepository;
         _gradientModelRepository = gradientModelRepository;
-        _SolutionRepository = SolutionRepository;
         _sampleRepository = sampleRepository;
         _gradientModelYearRepository = gradientModelYearRepository;
     }
@@ -198,14 +195,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             gepr.GradientId = mintd.Id;
             gepr.ProductId = productld;
             //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-            var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
+         //   var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
             //最小梯度SOP年成本
-            var totalcost = ex.TotalCost;
+         //   var totalcost = ex.TotalCost;
+                        var totalcost =100;
+
             //样品阶段
             if (priceEvaluationStartInputResult.IsHasSample == true)
             {
                 OnlySampleDto onlySampleDto = new();
-                List<OnlySampleModel> onlySampleModels =
+                List<SampleQuotation> onlySampleModels =
                     await _analysisBoardSecondMethod.getSample(sampleDtos, totalcost);
                 onlySampleDto.SolutionName = Solution.SolutionName;
                 onlySampleDto.OnlySampleModels = onlySampleModels;
@@ -229,9 +228,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 gepr.GradientId = gradient.Id;
                 gepr.ProductId = productld;
                 //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-                var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
+                //var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
                 //最小梯度SOP年成本
-                var totalcost = ex.TotalCost;
+              //  var totalcost = ex.TotalCost;
+                var totalcost = 100;
+
                 sopAnalysisModel.Product = Solution.SolutionName;
                 sopAnalysisModel.GradientValue = gradient.GradientValue + "K/Y";
                 List<GrossValue> grosss = new List<GrossValue>();
@@ -257,7 +258,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //sop单价表
         analyseBoardSecondDto.Sops = sops;
         analyseBoardSecondDto.FullLifeCycle =
-            await _analysisBoardSecondMethod.GetPoolAnalysis(priceEvaluationStartInputResult, gross);
+            await _analysisBoardSecondMethod.GetPoolAnalysis(gradients,priceEvaluationStartInputResult, gross);
         analyseBoardSecondDto.GradientQuotedGrossMargins =
             await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients)
             ;

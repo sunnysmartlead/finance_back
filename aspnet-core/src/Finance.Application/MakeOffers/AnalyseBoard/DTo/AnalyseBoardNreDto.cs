@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Finance.Nre;
 using Finance.NrePricing.Dto;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
@@ -17,8 +18,8 @@ public class AnalyseBoardNreDto
     /// 流程号Id
     /// </summary> 
     public long AuditFlowId { get; set; }
-    public List<ReturnSalesDepartmentDto> models{ get; set; }
-    public List<DeviceModel> devices{ get; set; }
+    public List<NreQuotation> models{ get; set; }
+    public List<DeviceQuotation> devices{ get; set; }
     
     /// <summary>
     /// 线体数量
