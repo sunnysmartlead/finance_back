@@ -310,7 +310,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Name="项目部课长审核",
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_核价看板_{MainFlowId}_项目部课长审核",
-                    RoleId = $"{projectChief.Id},{marketProjectChief.Id}"
+                    RoleId = $"{projectChief.Id},{marketProjectChief.Id}",
+                    ProcessIdentifier = "ProjectChiefAudit",
+
                 },
                  new Node
                 {
@@ -318,6 +320,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_项目部课长审核_{MainFlowId}_财务审核",
                     RoleId = financePriceAuditor.Id.ToString(),
+                    ProcessIdentifier = "FinanceDirectorAudit",
                 },
                  new Node
                 {
@@ -325,6 +328,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_财务审核_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_报价反馈_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_确认中标金额_{MainFlowId}_生成报价分析界面选择报价方案",
                     RoleId = salesMan.Id.ToString(),
+                    ProcessIdentifier = "QuoteAnalysis",
+
                  },
                 new Node
                 {
@@ -352,7 +357,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Name="项目部长查看核价表",
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_财务审核_{MainFlowId}_项目部长查看核价表",
-                    RoleId = $"{marketProjectMinister.Id},{projectMinister.Id}"
+                    RoleId = $"{marketProjectMinister.Id},{projectMinister.Id}",
+                    ProcessIdentifier = "ProjectDirectorLook",
+
                 },
                 new Node
                 {
