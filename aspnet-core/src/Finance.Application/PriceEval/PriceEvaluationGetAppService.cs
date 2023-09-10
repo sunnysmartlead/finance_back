@@ -24,6 +24,7 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using LinqKit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
@@ -617,7 +618,7 @@ namespace Finance.PriceEval
 && p.GradientId == input.GradientId
 && p.SolutionId == input.SolutionId
 && p.Year == input.Year
-&& p.UpDown == p.UpDown);
+&& p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -700,7 +701,7 @@ namespace Finance.PriceEval
 
                 foreach (var item in getOtherCostItem2List)
                 {
-                    var getUpdateItemOtherCost = getUpdateItemOtherCosts.FirstOrDefault(p => p.ItemName == item.ItemName);
+                    var getUpdateItemOtherCost = getUpdateItemOtherCosts?.FirstOrDefault(p => p.ItemName == item.ItemName);
                     if (getUpdateItemOtherCost is not null)
                     {
                         item.Total = getUpdateItemOtherCost.Total;
@@ -1950,6 +1951,30 @@ namespace Finance.PriceEval
             //    return memoryStream2;
             //}
         }
+
+        private string GetYearName(YearType yearType)
+        {
+            if (yearType == YearType.Year)
+            {
+                return "年";
+            }
+            else if (yearType == YearType.FirstHalf)
+            {
+                return "上半年";
+
+            }
+            else if (yearType == YearType.SecondHalf)
+            {
+                return "下半年";
+
+            }
+            else
+            {
+                return "无法识别的类型";
+            }
+        }
+
+
         /// <summary>
         /// 初版产品核价表下载
         /// </summary>
@@ -1958,39 +1983,37 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            //var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
-            //var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+            var productId = solution.Productld;
+
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
 
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
-            //var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, }));
 
             DtoExcel(dtoAll);
-            //DtoExcel(dto);
+            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p));
+            dtos.ForEach(p => DtoExcel(p));
 
+            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
+                .SelectAsync(async p =>
+                {
+                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
+                    return new { stream = p.stream, excels = $"{p.p.Year}年{GetYearName(p.p.UpDown)}" };
+                })).ToList();
 
             var memoryStream = new MemoryStream();
-            //var memoryStream2 = new MemoryStream();
-            //var memoryStream3 = new MemoryStream();
+
 
             await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
-            //await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
-            //using (var zipArich = new ZipArchive(memoryStream3, ZipArchiveMode.Create, true))
-            //{
 
-            //    var entry = zipArich.CreateEntry($"{dtoAll.Title.Replace("/", "")}.xlsx");
-            //    using (System.IO.Stream stream = entry.Open())
-            //    {
-            //        stream.Write(memoryStream.ToArray(), 0, memoryStream.Length.To<int>());
-            //    }
 
-            //    var entry2 = zipArich.CreateEntry($"{dto.Title.Replace("/", "")}.xlsx");
-            //    using (System.IO.Stream stream = entry2.Open())
-            //    {
-            //        stream.Write(memoryStream2.ToArray(), 0, memoryStream2.Length.To<int>());
-            //    }
-            //}
+            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
-            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
+            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
+            var memoryStream2 =    NpoiExtensions.ExcelMerge(ex);
+
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
 
         }
 

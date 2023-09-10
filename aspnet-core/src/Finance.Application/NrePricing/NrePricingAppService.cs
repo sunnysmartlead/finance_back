@@ -107,10 +107,10 @@ namespace Finance.NerPricing
         /// 核价需求录入表
         /// </summary>
         private readonly IRepository<PriceEvaluation, long> _resourcePriceEvaluation;
-        /// <summary>
-        /// 流程流转服务
-        /// </summary>
-        private readonly AuditFlowAppService _flowAppService;
+        ///// <summary>
+        ///// 流程流转服务
+        ///// </summary>
+        //private readonly AuditFlowAppService _flowAppService;
         /// <summary>
         ///  Nre  方案是否全部录入 依据实体类
         /// </summary>
@@ -256,7 +256,7 @@ namespace Finance.NerPricing
             IRepository<TraceInfo, long> resourceTraceInfo,
             IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo,
             IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-            IRepository<PriceEvaluation, long> resourcePriceEvaluation, AuditFlowAppService flowAppService,
+            IRepository<PriceEvaluation, long> resourcePriceEvaluation, //AuditFlowAppService flowAppService,
             IRepository<NreIsSubmit, long> resourceNreIsSubmit,
             IRepository<ModelCountYear, long> resourceModelCountYear,
             IRepository<StructBomDifferent, long> structBomDifferent,
@@ -298,7 +298,7 @@ namespace Finance.NerPricing
             _resourceWorkingHoursInfo = resourceWorkingHoursInfo;
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _resourcePriceEvaluation = resourcePriceEvaluation;
-            _flowAppService = flowAppService;
+            //_flowAppService = flowAppService;
             _resourceNreIsSubmit = resourceNreIsSubmit;
             _resourceModelCountYear = resourceModelCountYear;
             _configStructBomDifferent = structBomDifferent;
