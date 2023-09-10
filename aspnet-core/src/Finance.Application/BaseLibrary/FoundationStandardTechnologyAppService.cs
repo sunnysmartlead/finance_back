@@ -507,12 +507,12 @@ namespace Finance.BaseLibrary
                     foundationReliableProcessHours.TestLineNumber = deviceItem.toolInfo.TestLineNumber;
                     foundationReliableProcessHours.TestLinePrice = deviceItem.toolInfo.TestLinePrice;
                     //缺少字段
-                    //foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
-                    //foundationReliableProcessHours.FrockName = deviceItem.toolInfo.FrockName;
-                    //foundationReliableProcessHours.FrockNumber = deviceItem.toolInfo.FrockNumber;
-                    //foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
-                    //foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
-                    //foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
+                    foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
+                    foundationReliableProcessHours.FrockName = deviceItem.toolInfo.FrockName;
+                    foundationReliableProcessHours.FrockNumber = deviceItem.toolInfo.FrockNumber;
+                    foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
+                    foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
+                    foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
 
 
                     //工时

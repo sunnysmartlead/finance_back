@@ -6,6 +6,7 @@ using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
+using Finance.FinanceParameter;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
@@ -58,6 +59,7 @@ namespace Finance.Processes
         private readonly IRepository<FoundationProcedure, long> _foundationProcedureRepository;
         private readonly IRepository<FoundationWorkingHour, long> _foundationWorkingHourRepository;
         private readonly IRepository<FoundationWorkingHourItem, long> _foundationFoundationWorkingHourItemRepository;
+        private readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -71,6 +73,7 @@ namespace Finance.Processes
                      IRepository<FoundationFixture, long> foundationFixtureRepository,
                      IRepository<FoundationProcedure, long> foundationProcedureRepository,
                       IRepository<FoundationWorkingHour, long> foundationWorkingHourRepository,
+                       IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository,
                      IRepository<FoundationFixtureItem, long> foundationFoundationFixtureItemRepository,
                       IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
                       WorkflowInstanceAppService workflowInstanceAppService)
@@ -96,6 +99,7 @@ namespace Finance.Processes
             _foundationFixtureRepository = foundationFixtureRepository;
             _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
             _foundationFoundationWorkingHourItemRepository = foundationFoundationWorkingHourItemRepository;
+            _manufacturingCostInfoRepository = manufacturingCostInfoRepository
         }
 
         /// <summary>
@@ -294,6 +298,8 @@ namespace Finance.Processes
                 processHoursEnter.DevelopCostInfo.SoftwarePrice = item.SoftwarePrice;
                 processHoursEnter.DevelopCostInfo.OpenDrawingSoftware = item.OpenDrawingSoftware;
                 processHoursEnter.DevelopCostInfo.HardwareDeviceTotalPrice = item.HardwareTotalPrice;
+                processHoursEnter.DevelopCostInfo.TraceabilitySoftwareCost = item.TraceabilitySoftwareCost;
+                processHoursEnter.DevelopCostInfo.TraceabilitySoftware = item.TraceabilitySoftware;
 
                 List<ProcessHoursEnterFrockDto> ProcessHoursEnterFrockDtoList = new List<ProcessHoursEnterFrockDto>();
                 foreach (var device in listFrock)
@@ -574,7 +580,9 @@ namespace Finance.Processes
                 }
                 else
                 {
+                    //计算每月产能=组测UPH*制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
                     processHoursEnterUphListDto.Cobuph = 0;
+                    List<ManufacturingCostInfo> result = await _manufacturingCostInfoRepository.GetAll().ToListAsync();
                 }
                 processHoursEnterUphListDtos.Add(processHoursEnterUphListDto);
 
@@ -587,6 +595,7 @@ namespace Finance.Processes
                 }
                 else
                 {
+
                     processHoursEnterLine.Xtsl = 0;
                 }
                 var GxftlList = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "gxftl" && t.ModelCountYearId == row.Id).ToList();
@@ -700,6 +709,8 @@ namespace Finance.Processes
             entity.TestLineNumber = input.ToolInfo.TestLineNumber;
             entity.TestLinePrice = input.ToolInfo.TestLinePrice;
             entity.DevelopTotalPrice = input.ToolInfo.DevelopTotalPrice;
+            entity.TraceabilitySoftware =   input.DevelopCostInfo.TraceabilitySoftware;
+            entity.TraceabilitySoftwareCost =   input.DevelopCostInfo.TraceabilitySoftwareCost;
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
@@ -844,6 +855,8 @@ namespace Finance.Processes
             entity.TestLineNumber = input.ToolInfo.TestLineNumber;
             entity.TestLinePrice = input.ToolInfo.TestLinePrice;
             entity.DevelopTotalPrice = input.ToolInfo.DevelopTotalPrice;
+            entity.TraceabilitySoftware = input.DevelopCostInfo.TraceabilitySoftware;
+            entity.TraceabilitySoftwareCost = input.DevelopCostInfo.TraceabilitySoftwareCost;
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
@@ -1308,6 +1321,8 @@ namespace Finance.Processes
                 entity.TestLineNumber = listItem.ToolInfo.TestLineNumber;
                 entity.TestLinePrice = listItem.ToolInfo.TestLinePrice;
                 entity.DevelopTotalPrice = listItem.ToolInfo.DevelopTotalPrice;
+                entity.TraceabilitySoftware = listItem.DevelopCostInfo.TraceabilitySoftware;
+                entity.TraceabilitySoftwareCost = listItem.DevelopCostInfo.TraceabilitySoftwareCost;
                 entity.CreationTime = DateTime.Now;
                 if (AbpSession.UserId != null)
                 {

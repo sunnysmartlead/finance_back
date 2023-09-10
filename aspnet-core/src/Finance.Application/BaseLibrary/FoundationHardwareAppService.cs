@@ -154,6 +154,10 @@ namespace Finance.BaseLibrary
                 {
                     query = query.Where(t => t.SoftwareName.Contains(input.SoftwareName));
                 }
+                if (!string.IsNullOrEmpty(input.TraceabilitySoftware))
+                {
+                    query = query.Where(t => t.TraceabilitySoftware.Contains(input.TraceabilitySoftware));
+                }
 
                 // 查询数据
                 var list = query.ToList();
