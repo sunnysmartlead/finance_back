@@ -99,7 +99,7 @@ namespace Finance.Processes
             _foundationFixtureRepository = foundationFixtureRepository;
             _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
             _foundationFoundationWorkingHourItemRepository = foundationFoundationWorkingHourItemRepository;
-            _manufacturingCostInfoRepository = manufacturingCostInfoRepository
+            _manufacturingCostInfoRepository = manufacturingCostInfoRepository;
         }
 
         /// <summary>
@@ -580,9 +580,7 @@ namespace Finance.Processes
                 }
                 else
                 {
-                    //计算每月产能=组测UPH*制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
                     processHoursEnterUphListDto.Cobuph = 0;
-                    List<ManufacturingCostInfo> result = await _manufacturingCostInfoRepository.GetAll().ToListAsync();
                 }
                 processHoursEnterUphListDtos.Add(processHoursEnterUphListDto);
 
@@ -1075,7 +1073,15 @@ namespace Finance.Processes
                         List<ProcessHoursEnterFrockDto> foundationTechnologyDeviceList = new List<ProcessHoursEnterFrockDto>();
 
                         // 有6列是总结列，不是子表，需要将数量剔除
-                        fromCols = fromCols - 6;
+                        if (i < 3)
+                        {
+                            fromCols = fromCols - 6;
+                        }
+                        else {
+                            fromCols = 6;
+                        }
+                        
+
                         int fromNum = fromCols / 3;
                         for (int j = 0; j < fromNum; j++)
                         {
