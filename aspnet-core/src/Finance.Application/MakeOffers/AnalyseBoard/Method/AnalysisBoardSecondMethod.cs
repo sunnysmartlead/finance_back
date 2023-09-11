@@ -1022,6 +1022,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
 
             grossMarginModel.GrossMargins = grossMargins;
+            list.Add(grossMarginModel);
         }
 
         return list;
@@ -1033,7 +1034,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<List<GradientQuotedGrossMarginModel>> GetstepsNum(
         PriceEvaluationStartInputResult priceEvaluationStartInputResult, List<Solution> solutions,
-        List<Gradient> gradients)
+        List<Gradient> gradients, List<SopAnalysisModel> sops)
     {
         List<GradientQuotedGrossMarginModel> list = new List<GradientQuotedGrossMarginModel>();
         List<CreateCustomerTargetPriceDto> createCustomerTargetPriceDtos =
@@ -1084,19 +1085,30 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 汇总分析表
     /// </summary>     
     /// <returns></returns>
-    public async Task<List<PooledAnalysisModel>> GetPoolAnalysis(List<Gradient> gradients,
-        PriceEvaluationStartInputResult priceEvaluationStartInputResult, List<decimal> gross)
+    public async Task<List<PooledAnalysisModel>> GetPoolAnalysis(long auditFlowId, List<Gradient> gradients,
+        PriceEvaluationStartInputResult priceEvaluationStartInputResult, List<decimal> gross, List<Solution> solutions,
+        List<SopAnalysisModel> sops)
     {
         List<PooledAnalysisModel> result = new List<PooledAnalysisModel>();
+        List<CreateRequirementDto> createRequirementDtos = priceEvaluationStartInputResult.Requirement;
         PooledAnalysisModel pooledAnalysisModelsl = new();
         var soptime = priceEvaluationStartInputResult.SopTime;
         pooledAnalysisModelsl.ProjectName = "数量";
-       // var nsum = priceEvaluationStartInputResult.ModelCount.Sum(e => e.SumQuantity);
+        var nsum = priceEvaluationStartInputResult.ModelCount.Sum(e => e.SumQuantity);
 
-        var nsum = 100;
+        var years = (from cmc in priceEvaluationStartInputResult.ModelCount
+            from cmcy in cmc.ModelCountYearList
+            select cmcy).Where(p => p.UpDown == YearType.FirstHalf).Select(p => p.Year).Distinct().ToList();
+        if (nsum == 0)
+        {
+            nsum = 1;
+        }
+
+        decimal flxssr = 0;
         decimal td = new();
         long tdid = 1;
-        foreach (var gradient in gradients)
+        decimal xscb = 0;
+        foreach (var gradient in gradients.OrderBy(p => p.GradientValue))
         {
             if (nsum <= gradient.GradientValue)
             {
@@ -1105,7 +1117,36 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
         }
 
-    //    _priceEvaluationGetAppService.GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput() {});
+        foreach (var gradient in gradients)
+        {
+            SopAnalysisModel sop = sops.Where(p => p.GradientValue.Equals(td.ToString()+"K/Y")).ToList().FirstOrDefault();
+            var untiprice = sop.GrossValues.OrderBy(p => p.Gross).Select(p => p.Grossvalue).ToList().FirstOrDefault();
+            foreach (var year in years)
+            {
+                var crms = createRequirementDtos.Where(p => p.Year == year && p.UpDown == YearType.FirstHalf)
+                    .FirstOrDefault();
+                foreach (var solution in solutions)
+                {
+                    var sjsl =
+                        (from cmc in priceEvaluationStartInputResult.ModelCount.Where(p =>
+                                p.Product.Equals(solution.Product))
+                            from cmcy in cmc.ModelCountYearList
+                            select cmcy).Where(p => p.UpDown == YearType.Year).ToList().Sum(e => e.Quantity);
+                    var data = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+                    {
+                        AuditFlowId = auditFlowId, GradientId = tdid, InputCount = 0, SolutionId = solution.Id,
+                        Year = year, UpDown = YearType.FirstHalf
+                    });
+                    var sum = data.Total * sjsl;
+                    flxssr += untiprice * sjsl * (1 - crms.AnnualRebateRequirements / 100) *
+                              (1 - crms.AnnualDeclineRate / 100);
+                    xscb += sum;
+                }
+            }
+        }
+
+
+        //    _priceEvaluationGetAppService.GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput() {});
         List<GrossMarginModel> slsl = new List<GrossMarginModel>();
         foreach (var gros in gross)
         {
@@ -1120,7 +1161,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         result.Add(pooledAnalysisModelsl);
         PooledAnalysisModel pooledAnalysisModelxscb = new();
         pooledAnalysisModelxscb.ProjectName = "销售成本";
-        decimal xscb = 1;
+
         List<GrossMarginModel> xscbsl = new List<GrossMarginModel>();
         foreach (var gros in gross)
         {
@@ -1154,7 +1195,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         PooledAnalysisModel pooledAnalysisModelfl = new();
         pooledAnalysisModelfl.ProjectName = "返利后销售收入";
-        decimal flxssr = 2;
+
         List<GrossMarginModel> fls = new List<GrossMarginModel>();
         foreach (var gros in gross)
         {
@@ -1204,6 +1245,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         PooledAnalysisModel pooledAnalysisModelpjxmll = new();
         pooledAnalysisModelpjxmll.ProjectName = "毛利率";
+        if (flxssr == 0)
+        {
+            flxssr = 1;
+        }
         decimal ml = xsmls / flxssr;
         List<GrossMarginModel> mlls = new List<GrossMarginModel>();
         foreach (var gros in gross)
@@ -1823,6 +1868,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return quotationListSecondDto;
     }
+
     public async Task<AcceptanceBidDto> GetBidView(long processId)
     {
         AcceptanceBidDto quotationListSecondDto = new();
@@ -1830,6 +1876,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return quotationListSecondDto;
     }
+
     public async Task<QuotationListSecondDto> GetFinancialArchive(long processId)
     {
         QuotationListSecondDto quotationListSecondDto = new();

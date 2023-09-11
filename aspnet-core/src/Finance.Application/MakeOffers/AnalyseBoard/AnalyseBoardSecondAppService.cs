@@ -162,13 +162,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(analyseBoardSecondInputDto.auditFlowId);
 
-
-        List<SopAnalysisModel> sopAnalysisModels = new();
-        // 获取线体
-
-        //获取梯度
-        List<GradientInput> gradientInputs = priceEvaluationStartInputResult.Gradient;
-
         //获取梯度
         List<Gradient> gradients =
             await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == analyseBoardSecondInputDto.auditFlowId);
@@ -195,10 +188,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             gepr.GradientId = mintd.Id;
             gepr.ProductId = productld;
             //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-         //   var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
+            //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                Year = soptime, UpDown = YearType.FirstHalf
+            });
+
             //最小梯度SOP年成本
-         //   var totalcost = ex.TotalCost;
-                        var totalcost =100;
+            var totalcost = ex.TotalCost;
 
             //样品阶段
             if (priceEvaluationStartInputResult.IsHasSample == true)
@@ -229,9 +227,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 gepr.ProductId = productld;
                 //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
                 //var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
+                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+                {
+                    AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                    Year = soptime, UpDown = YearType.FirstHalf
+                });
+
                 //最小梯度SOP年成本
-              //  var totalcost = ex.TotalCost;
-                var totalcost = 100;
+                var totalcost = ex.TotalCost;
+                //var totalcost = 100;
 
                 sopAnalysisModel.Product = Solution.SolutionName;
                 sopAnalysisModel.GradientValue = gradient.GradientValue + "K/Y";
@@ -258,9 +262,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //sop单价表
         analyseBoardSecondDto.Sops = sops;
         analyseBoardSecondDto.FullLifeCycle =
-            await _analysisBoardSecondMethod.GetPoolAnalysis(gradients,priceEvaluationStartInputResult, gross);
+            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId,gradients, priceEvaluationStartInputResult, gross, analyseBoardSecondInputDto.solutionTables,sops);
         analyseBoardSecondDto.GradientQuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients)
+            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients,sops)
             ;
         analyseBoardSecondDto.QuotedGrossMargins =
             await _analysisBoardSecondMethod.GetActual(priceEvaluationStartInputResult, Solutions);
@@ -629,8 +633,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long auditFlowId)
     {
-        ManagerApprovalOfferDto managerApprovalOfferDto = await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId);
-      
+        ManagerApprovalOfferDto managerApprovalOfferDto =
+            await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId);
+
         return managerApprovalOfferDto;
     }
 
