@@ -228,7 +228,7 @@ namespace Finance.BaseLibrary
 
 
                     List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
-                    List<FTWorkingHour> foundationWorkingHourItemDtosList = this._fTWorkingHourRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    var foundationWorkingHourItemDtosList = this._fTWorkingHourRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
                     {
                         foreach (var device in foundationWorkingHourItemDtosList)
                         {

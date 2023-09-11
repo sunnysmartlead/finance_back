@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http;
 using MiniExcelLibs;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
+using NPOI.XSSF.Streaming.Values;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using test;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Finance.Processes
 {
@@ -1286,6 +1288,83 @@ namespace Finance.Processes
             }
         }
 
+        /// <summary>
+        /// 根据uph值获取线体数量、共线分摊率
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public async Task<List<ProcessHoursEnterLineDtoList>> ListProcessHoursEnterLine(GetProcessHoursEnterUphListDto input)
+        {
+            List<ProcessHoursEnterLineDtoList> list = new List<ProcessHoursEnterLineDtoList>();
+            if (input != null) {
+                foreach (var item in input.ProcessHoursEnterUphListDtos)
+                {
+                    ProcessHoursEnterLineDtoList processHoursEnterLineDto = new ProcessHoursEnterLineDtoList();
+                    //=组测UPH
+                    decimal Zcuph =  (decimal)item.Zcuph;
+
+                    decimal rateOfMobilization = 0;
+                    decimal MonthlyWorkingDays = 0;
+                    decimal DailyShift = 0;
+                    decimal WorkingHours = 0;
+                    //获取年份 
+                    ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(item.ModelCountYearId);
+                    //查询制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
+                    var manufacturingCostInfo =   this._manufacturingCostInfoRepository.GetAll().Where(t=> t.Year == modelCountYear.Year).ToList();
+                    if (manufacturingCostInfo.Count>0)
+                    {
+                        //嫁接率
+                         rateOfMobilization =   manufacturingCostInfo[0].RateOfMobilization;
+                        //月工作天数
+                         MonthlyWorkingDays = (decimal)manufacturingCostInfo[0].MonthlyWorkingDays;
+                        //每日班次
+                         DailyShift = (decimal)manufacturingCostInfo[0].DailyShift;
+                        //每班正常工作时间
+                         WorkingHours = (decimal)manufacturingCostInfo[0].WorkingHours;
+                    }
+                    //每月产能
+                    decimal Capacity = Zcuph * rateOfMobilization * MonthlyWorkingDays * DailyShift * WorkingHours;
+                    //每月需求
+                    decimal month = 0;
+                    if (modelCountYear.UpDown == YearType.Year)
+                    {
+                        month = 12;
+                    }
+                    else {
+                        month = 6;
+                    }
+                    //每月需求
+                    decimal lineQuantity = modelCountYear.Quantity * 1000 / month;
+                    //线体数量
+                    decimal Xtsl  =  lineQuantity / Capacity;
+                    //线体分摊率
+                    decimal x = (Capacity / Xtsl);
+                    decimal xtftl  =  (lineQuantity / x)*(decimal)0.8;
+                    decimal XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
+                    decimal GtVale = decimal.Parse(xtftl.ToString("0.00"));
+
+                    processHoursEnterLineDto.Xtsl = XtslVale;
+                    processHoursEnterLineDto.Gxftl = GtVale;
+                    processHoursEnterLineDto.ModelCountYearId = item.ModelCountYearId;
+                    if (modelCountYear.UpDown == YearType.FirstHalf)
+                    {
+
+                        processHoursEnterLineDto.Year = modelCountYear.Year + "上半年";
+                    }
+                    else if (modelCountYear.UpDown == YearType.SecondHalf)
+                    {
+                        processHoursEnterLineDto.Year = modelCountYear.Year + "下半年";
+                    }
+                    else
+                    {
+                        processHoursEnterLineDto.Year = modelCountYear.Year.ToString();
+                    }
+                    list.Add(processHoursEnterLineDto);
+
+                }
+            }
+            return list;
+        }
 
         /// <summary>
         /// 创建整个界面保存
