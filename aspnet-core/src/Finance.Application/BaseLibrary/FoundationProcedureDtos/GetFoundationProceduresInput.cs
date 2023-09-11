@@ -15,5 +15,10 @@ namespace Finance.BaseLibrary
         /// 工装名称
         /// </summary>
         public string InstallationName { get; set; }
+
+        /// <summary>
+        /// 测试线名称
+        /// </summary>
+        public string TestName { get; set; }
     }
 }

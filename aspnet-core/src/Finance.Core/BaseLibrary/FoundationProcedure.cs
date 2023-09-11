@@ -24,7 +24,7 @@ namespace Finance.BaseLibrary
 		/// 工装单价
 		/// </summary>
 		[Column("installation_price")]
-		public decimal? InstallationPrice { get; set; }
+		public decimal InstallationPrice { get; set; }
 
 		/// <summary>
 		/// 工装供应商
@@ -65,7 +65,7 @@ namespace Finance.BaseLibrary
 		/// 测试线单价
 		/// </summary>
 		[Column("test_price")]
-		public decimal? TestPrice { get; set; }
+		public decimal TestPrice { get; set; }
 
 
 	}

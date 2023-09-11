@@ -97,6 +97,10 @@ namespace Finance.BaseLibrary
             {
                 query = query.Where(t => t.InstallationName.Contains(input.InstallationName));
             }
+            if (!string.IsNullOrEmpty(input.TestName))
+            {
+                query = query.Where(t => t.TestName.Contains(input.TestName));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换

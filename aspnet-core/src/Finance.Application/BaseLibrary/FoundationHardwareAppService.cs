@@ -43,6 +43,7 @@ namespace Finance.BaseLibrary
             IRepository<FoundationHardware, long> foundationHardwareRepository)
         {
             _foundationHardwareRepository = foundationHardwareRepository;
+            _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
@@ -152,6 +153,10 @@ namespace Finance.BaseLibrary
                 if (!string.IsNullOrEmpty(input.SoftwareName))
                 {
                     query = query.Where(t => t.SoftwareName.Contains(input.SoftwareName));
+                }
+                if (!string.IsNullOrEmpty(input.TraceabilitySoftware))
+                {
+                    query = query.Where(t => t.TraceabilitySoftware.Contains(input.TraceabilitySoftware));
                 }
 
                 // 查询数据

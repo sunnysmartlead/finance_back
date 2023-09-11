@@ -32,7 +32,7 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("fixture_gauge_price")]
 		[StringLength(255, ErrorMessage = "检具单价长度不能超出255字符")]
-		public decimal? FixtureGaugePrice { get; set; }
+		public decimal FixtureGaugePrice { get; set; }
 
 		/// <summary>
 		/// 检具状态
