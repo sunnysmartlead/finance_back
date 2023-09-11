@@ -28,7 +28,7 @@ namespace Finance.EngineeringDepartment
         }
 
         /// <summary>
-        /// 添加国家
+        /// 添加根线切线
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -41,7 +41,7 @@ namespace Finance.EngineeringDepartment
         }
 
         /// <summary>
-        /// 编辑国家
+        /// 编辑根线切线
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -57,6 +57,7 @@ namespace Finance.EngineeringDepartment
                 }
                 else
                 {
+                    entity.Year = input.Year;
                     entity.LaborHour = input.LaborHour;
                     entity.MachineHour = input.MachineHour;
                     entity.PerFollowUpQuantity = input.PerFollowUpQuantity;
@@ -71,7 +72,7 @@ namespace Finance.EngineeringDepartment
         }
 
         /// <summary>
-        /// 删除国家
+        /// 删除根线切线
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -82,7 +83,7 @@ namespace Finance.EngineeringDepartment
         }
 
         /// <summary>
-        /// 获取国家库列表
+        /// 获取根线切线库列表
         /// </summary>
         /// <returns></returns>
         public async Task<PagedResultDto<WorkingHoursV2Dto>> PostFollowLineTangentList(PagedInputDto input)
