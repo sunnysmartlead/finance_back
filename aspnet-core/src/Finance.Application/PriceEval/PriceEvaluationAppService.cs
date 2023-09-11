@@ -495,6 +495,7 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.Material;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -502,6 +503,8 @@ namespace Finance.PriceEval
                 entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
 
                 entity.File = input.File;
+
+                await _updateItemRepository.UpdateAsync(entity);
                 //ObjectMapper.Map(input, entity);
             }
         }
@@ -542,6 +545,8 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.LossCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -550,6 +555,7 @@ namespace Finance.PriceEval
 
                 entity.File = input.File;
                 //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -590,6 +596,8 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.ManufacturingCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -598,6 +606,7 @@ namespace Finance.PriceEval
 
                 entity.File = input.File;
                 //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -639,6 +648,8 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.LogisticsCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -647,6 +658,7 @@ namespace Finance.PriceEval
 
                 entity.File = input.File;
                 //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -686,6 +698,8 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.QualityCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -694,6 +708,7 @@ namespace Finance.PriceEval
 
                 entity.File = input.File;
                 //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -734,6 +749,8 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.OtherCostItem2List;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
@@ -742,6 +759,7 @@ namespace Finance.PriceEval
 
                 entity.File = input.File;
                 //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 

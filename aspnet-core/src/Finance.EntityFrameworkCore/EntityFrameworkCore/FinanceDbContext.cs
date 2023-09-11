@@ -401,7 +401,7 @@ namespace Finance.EntityFrameworkCore
         /// <summary>
         /// 跟线切线工时参数库
         /// </summary>
-        public virtual DbSet<QualityCostRatio> FollowLineTangent { get; set; }
+        public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
@@ -568,7 +568,7 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<ProcessHoursEnterUph>().ToTable("PHEnterUph");
             modelBuilder.Entity<FProcesses>().ToTable("FProcesses");
             modelBuilder.Entity<FTWorkingHour>().ToTable("FTSWorkingHour");
-            modelBuilder.Entity<FTWorkingHour>().ToTable("FollowLineTangent");
+            modelBuilder.Entity<FollowLineTangent>().ToTable("FollowLineTangent");
 
             base.OnModelCreating(modelBuilder);
         }
