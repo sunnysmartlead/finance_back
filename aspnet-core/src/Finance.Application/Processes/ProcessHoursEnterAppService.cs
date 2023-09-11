@@ -145,7 +145,7 @@ namespace Finance.Processes
             //根据工序编号获取工序名称
             ProcessHoursEnterDto processHoursEnterDto = new ProcessHoursEnterDto();
             var query = this._fProcessesRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber  && t.IsDeleted ==false).ToList();
-            if (query.Count>0) { 
+            if (query.Count>0) {
                 processHoursEnterDto.ProcessNumber = query[0].ProcessNumber;
                 processHoursEnterDto.ProcessName = query[0].ProcessName;
             }
@@ -192,7 +192,7 @@ namespace Finance.Processes
             var queryFixture = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
             if (queryFixture.Count > 0)
             {
-          
+
                 var FoundationDeviceItemlist = this._foundationFoundationFixtureItemRepository.GetAll().Where(f => f.FoundationFixtureId == queryFixture[0].Id).ToList();
                 List<ProcessHoursEnterFixtureDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterFixtureDto>();
                 foreach (var item in FoundationDeviceItemlist)
@@ -1082,7 +1082,7 @@ namespace Finance.Processes
                         else {
                             fromCols = 6;
                         }
-                        
+
 
                         int fromNum = fromCols / 3;
                         for (int j = 0; j < fromNum; j++)
@@ -1307,7 +1307,7 @@ namespace Finance.Processes
                     decimal MonthlyWorkingDays = 0;
                     decimal DailyShift = 0;
                     decimal WorkingHours = 0;
-                    //获取年份 
+                    //获取年份
                     ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(item.ModelCountYearId);
                     //查询制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
                     var manufacturingCostInfo =   this._manufacturingCostInfoRepository.GetAll().Where(t=> t.Year == modelCountYear.Year).ToList();
