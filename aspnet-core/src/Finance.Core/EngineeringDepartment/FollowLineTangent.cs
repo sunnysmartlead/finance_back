@@ -11,23 +11,6 @@ namespace Finance.EngineeringDepartment
 {
     public class FollowLineTangent : FullAuditedEntity<long>
     {
-        /// <summary>
-        /// 审批流程表ID
-        /// </summary>
-        [Required]
-        [Column("AUDITFLOWID")]
-        public long AuditFlowId { get; set; }
-        /// <summary>
-        /// ModelCount表id
-        /// </summary>
-        [Column("PRODUCTID")]
-        public long ProductId { get; set; }
-
-        /// <summary>
-        /// 方案表ID
-        /// </summary>
-        [Column("SOLUTIONID")]
-        public long SolutionId { get; set; }
 
         /// <summary>
         /// 年份
