@@ -1333,18 +1333,29 @@ namespace Finance.Processes
                     else {
                         month = 6;
                     }
-                    //每月需求
-                    decimal lineQuantity = modelCountYear.Quantity * 1000 / month;
-                    //线体数量
-                    decimal Xtsl  =  lineQuantity / Capacity;
-                    //线体分摊率
-                    decimal x = (Capacity / Xtsl);
-                    decimal xtftl  =  (lineQuantity / x)*(decimal)0.8;
-                    decimal XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
-                    decimal GtVale = decimal.Parse(xtftl.ToString("0.00"));
+                    if (Capacity != 0.000M)
+                    {
 
-                    processHoursEnterLineDto.Xtsl = XtslVale;
-                    processHoursEnterLineDto.Gxftl = GtVale;
+
+                        //每月需求
+                        decimal lineQuantity = modelCountYear.Quantity * 1000 / month;
+                        //线体数量
+                        decimal Xtsl = lineQuantity / Capacity;
+
+                        //线体分摊率
+                        decimal x = (Capacity / Xtsl);
+                        decimal xtftl = (lineQuantity / x) * (decimal)0.8;
+                        decimal XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
+                        decimal GtVale = decimal.Parse(xtftl.ToString("0.00"));
+
+                        processHoursEnterLineDto.Xtsl = XtslVale;
+                        processHoursEnterLineDto.Gxftl = GtVale;
+                    }
+                    else {
+
+                        processHoursEnterLineDto.Xtsl = 0;
+                        processHoursEnterLineDto.Gxftl = 0;
+                    }
                     processHoursEnterLineDto.ModelCountYearId = item.ModelCountYearId;
                     if (modelCountYear.UpDown == YearType.FirstHalf)
                     {
