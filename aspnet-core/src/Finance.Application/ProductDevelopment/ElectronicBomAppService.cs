@@ -282,7 +282,7 @@ namespace Finance.ProductDevelopment
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                if (solutionId.Count <= allProductIsSubmits.Count + 1)
+                if (solutionId.Count == allProductIsSubmits.Count + 1)
                 {
                     //嵌入工作流
                     await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
