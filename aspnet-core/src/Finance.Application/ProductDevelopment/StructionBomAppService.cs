@@ -30,7 +30,7 @@ namespace Finance.ProductDevelopment
     /// <summary>
     /// 结构BOM录入接口类
     /// </summary>
-    
+
     public class StructionBomAppService : FinanceAppServiceBase
     {
         private readonly ILogger<StructionBomAppService> _logger;
@@ -107,7 +107,7 @@ namespace Finance.ProductDevelopment
                 List<string> superTypes = new List<string> { FinanceConsts.ElectronicName, FinanceConsts.StructuralName, FinanceConsts.GlueMaterialName, FinanceConsts.SMTOutSourceName, FinanceConsts.PackingMaterialName };
 
                 string daLei = "";
-                for (int i = 1; i < lastRowNum +1; i++)
+                for (int i = 1; i < lastRowNum + 1; i++)
                 {
                     var row = sheet.GetRow(i);
                     StructureBomDto dto = new StructureBomDto();
@@ -115,16 +115,18 @@ namespace Finance.ProductDevelopment
                     for (int j = 0; j < 15; j++)
                     {
                         //输出
-                        if (null==row.GetCell(j)||string.IsNullOrEmpty(row.GetCell(j).ToString()))
+                        if (null == row.GetCell(j) || string.IsNullOrEmpty(row.GetCell(j).ToString()))
                         {
-                            if (j>1) {
-                                throw new FriendlyException("第"+(i+1)+"行第"+(j+1)+"列未进行有效填录，请检查！");
+                            if (j > 1)
+                            {
+                                throw new FriendlyException("第" + (i + 1) + "行第" + (j + 1) + "列未进行有效填录，请检查！");
                             }
                         }
                         else
                         {
-                            try {
-                                if (j==0)
+                            try
+                            {
+                                if (j == 0)
                                 {
                                     isMatch = Regex.IsMatch(row.GetCell(j).ToString(), @"^\d+$");
                                     if (isMatch)
@@ -134,14 +136,15 @@ namespace Finance.ProductDevelopment
                                     else
                                     {
                                         superType = row.GetCell(j).ToString();
-                                        if (!superTypes.Contains(superType)) {
-                                            throw new FriendlyException("结构Bom中超级大种类不包含："+superType+"，请检查！");
+                                        if (!superTypes.Contains(superType))
+                                        {
+                                            throw new FriendlyException("结构Bom中超级大种类不包含：" + superType + "，请检查！");
                                         }
 
                                         break;
                                     }
                                 }
-                                else if (j==1)
+                                else if (j == 1)
                                 {
                                     daLei = row.GetCell(j).ToString();
                                 }
@@ -155,22 +158,23 @@ namespace Finance.ProductDevelopment
                                     dto = DataToList(dto, row.GetCell(j), j);
                                 }
                             }
-                            catch {
-                                throw new FriendlyException("第"+(i+1)+"行第"+(j+1)+"列数据格式错误，请检查！");
+                            catch
+                            {
+                                throw new FriendlyException("第" + (i + 1) + "行第" + (j + 1) + "列数据格式错误，请检查！");
                             }
                         }
                     }
-                    
+
                     if (isMatch)
                     {
-                        dto.SuperTypeName= superType;
+                        dto.SuperTypeName = superType;
                         dto.CategoryName = daLei;
                         list.Add(dto);
                     }
                 }
             }
 
-            result.StructureBomDtos=list;
+            result.StructureBomDtos = list;
             result.IsSuccess = true;
             return result;
 
@@ -187,59 +191,59 @@ namespace Finance.ProductDevelopment
         {
             if (data == null) { return null; }
 
-            if (column==0)
+            if (column == 0)
             {
-                dto.IdNumber=int.Parse(data.ToString());
+                dto.IdNumber = int.Parse(data.ToString());
             }
-            else if (column==2)
+            else if (column == 2)
             {
-                dto.TypeName=data.ToString();
+                dto.TypeName = data.ToString();
             }
-            else if (column==3)
+            else if (column == 3)
             {
-                dto.IsInvolveItem=data.ToString();
+                dto.IsInvolveItem = data.ToString();
             }
-            else if (column==4)
+            else if (column == 4)
             {
                 dto.SapItemNum = Regex.Replace(data.ToString(), @"\s", "");
             }
-            else if (column==5)
+            else if (column == 5)
             {
-                dto.DrawingNumName=data.ToString();
+                dto.DrawingNumName = data.ToString();
             }
-            else if (column==6)
+            else if (column == 6)
             {
-                dto.AssemblyQuantity=double.Parse(data.ToString());
+                dto.AssemblyQuantity = double.Parse(data.ToString());
             }
-            else if (column==7)
+            else if (column == 7)
             {
-                dto.OverallDimensionSize=data.ToString();
+                dto.OverallDimensionSize = data.ToString();
             }
-            else if (column==8)
+            else if (column == 8)
             {
-                dto.MaterialName=data.ToString();
+                dto.MaterialName = data.ToString();
             }
-            else if (column==9)
+            else if (column == 9)
             {
-                dto.WeightNumber=double.Parse(data.ToString());
+                dto.WeightNumber = double.Parse(data.ToString());
             }
-            else if (column==10)
+            else if (column == 10)
             {
-                dto.MoldingProcess=data.ToString();
+                dto.MoldingProcess = data.ToString();
             }
-            else if (column==11)
+            else if (column == 11)
             {
-                dto.IsNewMouldProduct=data.ToString();
+                dto.IsNewMouldProduct = data.ToString();
             }
-            else if (column==12)
+            else if (column == 12)
             {
-                dto.SecondaryProcessingMethod=data.ToString();
+                dto.SecondaryProcessingMethod = data.ToString();
             }
-            else if (column==13)
+            else if (column == 13)
             {
-                dto.SurfaceTreatmentMethod=data.ToString();
+                dto.SurfaceTreatmentMethod = data.ToString();
             }
-            else if (column==14)
+            else if (column == 14)
             {
                 dto.DimensionalAccuracyRemark = data.ToString();
             }
@@ -270,15 +274,15 @@ namespace Finance.ProductDevelopment
         public async Task SaveStructionBom(ProductDevelopmentInputDto dto)
         {
             List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
-            
-            
+
+
             if (productIsSubmits.Count is not 0)
             {
                 throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
             }
             else
             {
-                await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);       
+                await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
                 //查询总方案
                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
                 //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
@@ -292,7 +296,7 @@ namespace Finance.ProductDevelopment
                 structureBomDtos.ForEach(bomInfo =>
                 {
                     bomInfo.AuditFlowId = AuditFlowId;
-                    bomInfo.SolutionId=SolutionId;
+                    bomInfo.SolutionId = SolutionId;
                     bomInfo.ProductId = ProductId;
                 });
 
@@ -303,7 +307,8 @@ namespace Finance.ProductDevelopment
                     await _structureBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
                     _structureBomInfoBakRepository.GetDbContext().Set<StructureBomInfoBak>().AddRange(listBak);
                     _structureBomInfoBakRepository.GetDbContext().SaveChanges();
-                }else
+                }
+                else
                 {
                     throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
                 }
@@ -339,7 +344,7 @@ namespace Finance.ProductDevelopment
                 }
 
                 #region 录入完成之后
-                await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.ProductId, EnumSole = AuditFlowConsts.AF_StructBomImport });
+                await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_StructBomImport });
                 #endregion
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
@@ -350,11 +355,11 @@ namespace Finance.ProductDevelopment
                     await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = dto.NodeInstanceId,
-                        FinanceDictionaryDetailId = dto.Opinion,
+                        FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
                         Comment = dto.Comment,
                     });
                 }
-            }          
+            }
         }
 
         /// <summary>
