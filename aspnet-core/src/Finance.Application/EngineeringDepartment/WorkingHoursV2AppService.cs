@@ -99,6 +99,7 @@ namespace Finance.EngineeringDepartment
                 foreach (var info in list)
                 {
                     WorkingHoursV2Dto dto = new WorkingHoursV2Dto();
+                    dto.Year = info.Year;
                     dto.LaborHour = info.LaborHour;
                     dto.MachineHour = info.MachineHour;
                     dto.PerFollowUpQuantity = info.PerFollowUpQuantity;
