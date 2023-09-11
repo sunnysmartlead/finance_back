@@ -344,6 +344,9 @@ namespace Finance
             configuration.CreateMap<CountryLibrary, CountryLibraryDto>();
             configuration.CreateMap<CountryLibraryDto, CountryLibrary>();
 
+            //工程部-切线跟线工时参数库
+            configuration.CreateMap<FollowLineTangent, WorkingHoursV2Dto>();
+            configuration.CreateMap<WorkingHoursV2Dto, FollowLineTangent>();
         }
     }
 }

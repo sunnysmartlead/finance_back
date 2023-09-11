@@ -34,6 +34,7 @@ using Org.BouncyCastle.Tsp;
 using Rougamo;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -2011,7 +2012,7 @@ namespace Finance.PriceEval
             streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
             var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
-            var memoryStream2 =    NpoiExtensions.ExcelMerge(ex);
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
 
             return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
 
@@ -2122,6 +2123,167 @@ namespace Finance.PriceEval
         #endregion
 
 
+        #region 方案成本对比表
 
+        /// <summary>
+        /// 方案成本对比表
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<List<SolutionContrast>> GetSolutionContrast(GetSolutionContrastInput input)
+        {
+            var bom1 = await GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = input.AuditFlowId,
+                GradientId = input.GradientId,
+                InputCount = 0,
+                SolutionId = input.SolutionId_1,
+                Year = input.Year,
+                UpDown = input.UpDown,
+            });
+
+            var bom2 = await GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = input.AuditFlowId,
+                GradientId = input.GradientId,
+                InputCount = 0,
+                SolutionId = input.SolutionId_2,
+                Year = input.Year,
+                UpDown = input.UpDown,
+            });
+
+            var result = new List<SolutionContrast>
+            {
+                new SolutionContrast { ItemName="Sensor芯片",
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
+                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
+                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
+                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
+
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
+                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
+                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
+                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
+                },
+                new SolutionContrast { ItemName="串行芯片",
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
+                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
+                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
+                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
+
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
+                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
+                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
+                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
+                },
+                new SolutionContrast { ItemName="镜头",
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
+                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
+                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
+                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
+
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
+                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
+                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
+                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
+
+                },
+
+                new SolutionContrast { ItemName="PCBA（除sensor芯片、串行芯片）",
+                    Price_1 = null,
+                    Count_1 = bom1.Material.Count(p=> p.TypeName !="镜头"&& p.TypeName !="串行芯片"&&p.TypeName !="Sensor芯片"),
+                    Rate_1 = null,
+                    Sum_1 =bom1.Material.Where(p=> p.TypeName !="镜头"&& p.TypeName !="串行芯片"&&p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+
+                    Price_2 = null,
+                    Count_2 = bom1.Material.Count(p=> p.TypeName !="镜头"&& p.TypeName !="串行芯片"&&p.TypeName !="Sensor芯片"),
+                    Rate_2 = null,
+                    Sum_2 =bom2.Material.Where(p=> p.TypeName !="镜头"&& p.TypeName !="串行芯片"&&p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                },
+                new SolutionContrast { ItemName="结构件（除lens）",
+                    Price_1 = null,
+                    Count_1 = bom1.Material.Count(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头"),
+                    Rate_1 = null,
+                    Sum_1 =bom1.Material.Where(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+
+                    Price_2 = null,
+                    Count_2 = bom1.Material.Count(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头"),
+                    Rate_2 = null,
+                    Sum_2 =bom2.Material.Where(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                },
+                new SolutionContrast { ItemName="损耗成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 =bom1.LossCost.Sum(p=>p.WastageCost),
+
+                     Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 =bom2.LossCost.Sum(p=>p.WastageCost),
+                },
+                new SolutionContrast { ItemName="制造成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 = bom1.ManufacturingCost.FirstOrDefault(p=>p.CostType == CostType.Total).Subtotal,
+
+                     Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 = bom2.ManufacturingCost.FirstOrDefault(p=>p.CostType == CostType.Total).Subtotal
+                },
+
+                new SolutionContrast { ItemName="物流成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 = bom1.OtherCostItem.LogisticsFee,
+
+                    Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 = bom2.OtherCostItem.LogisticsFee,
+                },
+                new SolutionContrast { ItemName="质量成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 = bom1.OtherCostItem.QualityCost,
+
+                    Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 = bom2.OtherCostItem.QualityCost,
+                },
+                new SolutionContrast { ItemName="其他成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 = bom1.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "总费用").Total,
+
+                    Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 = bom2.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "总费用").Total,
+                },
+                new SolutionContrast { ItemName="总成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    Sum_1 = bom1.TotalCost,
+
+                    Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    Sum_2 = bom2.TotalCost
+                },
+            };
+
+            return result;
+        }
+
+        #endregion
     }
 }
