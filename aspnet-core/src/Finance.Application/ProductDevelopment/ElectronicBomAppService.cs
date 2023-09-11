@@ -32,7 +32,7 @@ namespace Finance.ProductDevelopment
     public class ElectronicBomAppService : FinanceAppServiceBase
     {
         private readonly ILogger<ElectronicBomAppService> _logger;
-        private readonly IRepository<ElectronicBomInfo,long> _electronicBomInfoRepository;
+        private readonly IRepository<ElectronicBomInfo, long> _electronicBomInfoRepository;
         private readonly IRepository<ElectronicBomInfoBak, long> _electronicBomInfoBakRepository;
         private readonly IRepository<ModelCount, long> _modelCountRepository;
         private readonly IRepository<ElecBomDifferent, long> _elecBomDifferentRepository;
@@ -119,17 +119,18 @@ namespace Finance.ProductDevelopment
                     for (int j = 0; j < 7; j++)
                     {
                         //输出
-                        if (null==row.GetCell(j)||string.IsNullOrEmpty(row.GetCell(j).ToString()))
+                        if (null == row.GetCell(j) || string.IsNullOrEmpty(row.GetCell(j).ToString()))
                         {
-                            if (j>1)
+                            if (j > 1)
                             {
-                                throw new FriendlyException("第"+(i+1)+"行第"+(j+1)+"列未进行有效填录，请检查！");
+                                throw new FriendlyException("第" + (i + 1) + "行第" + (j + 1) + "列未进行有效填录，请检查！");
                             }
                         }
                         else
                         {
-                            try {
-                                if (j==0)
+                            try
+                            {
+                                if (j == 0)
                                 {
                                     daLei = row.GetCell(j).ToString();
                                 }
@@ -138,17 +139,18 @@ namespace Finance.ProductDevelopment
                                     dto = DataToList(dto, row.GetCell(j), j);
                                 }
                             }
-                            catch {
-                                throw new FriendlyException("第"+(i+1)+"行第"+(j+1)+"列数据格式错误，请检查！");
-                            }           
+                            catch
+                            {
+                                throw new FriendlyException("第" + (i + 1) + "行第" + (j + 1) + "列数据格式错误，请检查！");
+                            }
                         }
                     }
                     dto.CategoryName = daLei;
                     list.Add(dto);
                 }
             }
-            
-            result.ElectronicBomDtos=list;
+
+            result.ElectronicBomDtos = list;
             result.IsSuccess = true;
             return result;
 
@@ -161,32 +163,35 @@ namespace Finance.ProductDevelopment
         /// <param name="data"></param>
         /// <param name="index"></param>
         /// <returns></returns>
-        public static ElectronicBomDto DataToList(ElectronicBomDto bomInfo ,object data, int index)
+        public static ElectronicBomDto DataToList(ElectronicBomDto bomInfo, object data, int index)
         {
             if (data == null) { return null; }
 
-            if (index==1) {
-                bomInfo.TypeName=data.ToString();
-            } else if (index==2) {
-                bomInfo.IsInvolveItem=data.ToString();
+            if (index == 1)
+            {
+                bomInfo.TypeName = data.ToString();
             }
-            else if (index==3)
+            else if (index == 2)
+            {
+                bomInfo.IsInvolveItem = data.ToString();
+            }
+            else if (index == 3)
             {
                 bomInfo.SapItemNum = Regex.Replace(data.ToString(), @"\s", "");
             }
-            else if (index==4)
+            else if (index == 4)
             {
-                bomInfo.SapItemName=data.ToString();
+                bomInfo.SapItemName = data.ToString();
             }
-            else if (index==5)
+            else if (index == 5)
             {
-                bomInfo.AssemblyQuantity=double.Parse(data.ToString());
+                bomInfo.AssemblyQuantity = double.Parse(data.ToString());
             }
-            else if (index==6)
+            else if (index == 6)
             {
-                bomInfo.EncapsulationSize=data.ToString();
+                bomInfo.EncapsulationSize = data.ToString();
             }
-           
+
 
 
             return bomInfo;
@@ -223,39 +228,41 @@ namespace Finance.ProductDevelopment
             else
             {
                 //查询总方案
-                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
+                List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
 
                 List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
                 long AuditFlowId = dto.AuditFlowId;
                 long SolutionId = dto.SolutionId;
                 long ProductId = dto.ProductId;
-                electronicBomDtos.ForEach(bomInfo => {
+                electronicBomDtos.ForEach(bomInfo =>
+                {
                     bomInfo.AuditFlowId = AuditFlowId;
-                    bomInfo.SolutionId=SolutionId;
+                    bomInfo.SolutionId = SolutionId;
                     bomInfo.ProductId = ProductId;
                 });
 
                 //要保存的bom表list
                 var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
-                if(listBak.Count > 0)
+                if (listBak.Count > 0)
                 {
                     await _electronicBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
                     _electronicBomInfoBakRepository.GetDbContext().Set<ElectronicBomInfoBak>().AddRange(listBak);
                     _electronicBomInfoBakRepository.GetDbContext().SaveChanges();
-                }else
+                }
+                else
                 {
                     throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
                 }
 
                 var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if(bomInfoByProductIds.Count == 0)
+                if (bomInfoByProductIds.Count == 0)
                 {
-                    foreach(var item in electronicBomDtos)
+                    foreach (var item in electronicBomDtos)
                     {
                         ElectronicBomInfo electronicBomInfo = new()
                         {
                             AuditFlowId = item.AuditFlowId,
-                            SolutionId= item.SolutionId,
+                            SolutionId = item.SolutionId,
                             ProductId = item.ProductId,
                             CategoryName = item.CategoryName,
                             TypeName = item.TypeName,
@@ -270,22 +277,22 @@ namespace Finance.ProductDevelopment
                 }
 
                 #region 录入完成之后
-                await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.ProductId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
+                await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
                 #endregion
 
                 List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                if (solutionId.Count == allProductIsSubmits.Count + 1)
+                if (solutionId.Count <= allProductIsSubmits.Count + 1)
                 {
                     //嵌入工作流
                     await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                     {
                         NodeInstanceId = dto.NodeInstanceId,
-                        FinanceDictionaryDetailId = dto.Opinion,
+                        FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
                         Comment = dto.Comment,
                     });
                 }
-            }           
+            }
         }
 
 
@@ -311,13 +318,14 @@ namespace Finance.ProductDevelopment
                 long AuditFlowId = dto.AuditFlowId;
                 long SolutionId = dto.SolutionId;
                 long ProductId = dto.ProductId;
-                boardDtos.ForEach(bomInfo => {
+                boardDtos.ForEach(bomInfo =>
+                {
                     bomInfo.AuditFlowId = AuditFlowId;
-                    bomInfo.SolutionId=SolutionId;
+                    bomInfo.SolutionId = SolutionId;
                     bomInfo.ProductId = ProductId;
                 });
 
-             
+
                 var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
                 if (boardInfoByProductIds.Count == 0)
                 {
@@ -326,14 +334,14 @@ namespace Finance.ProductDevelopment
                         BoardInfo boardInfo = new()
                         {
                             AuditFlowId = item.AuditFlowId,
-                            SolutionId= item.SolutionId,
+                            SolutionId = item.SolutionId,
                             ProductId = item.ProductId,
-                            BoardId=item.BoardId,
-                            BoardName=item.BoardName,
-                            BoardLenth=item.BoardLenth,
-                            BoardWidth=item.BoardWidth,
-                            BoardSquare=item.BoardSquare,
-                            StoneQuantity=item.StoneQuantity,
+                            BoardId = item.BoardId,
+                            BoardName = item.BoardName,
+                            BoardLenth = item.BoardLenth,
+                            BoardWidth = item.BoardWidth,
+                            BoardSquare = item.BoardSquare,
+                            StoneQuantity = item.StoneQuantity,
                         };
                         await _boardInfoRepository.InsertAsync(boardInfo);
                     }
@@ -403,7 +411,7 @@ namespace Finance.ProductDevelopment
                             {
                                 AuditFlowId = item.AuditFlowId,
                                 ProductId = item.ProductId,
-                                SolutionId=solutionId.Id,
+                                SolutionId = solutionId.Id,
                                 ElectronicId = itemId,
                                 ModifyTypeValue = MODIFYTYPE.ADDNEWDATA,
                             };
@@ -438,7 +446,7 @@ namespace Finance.ProductDevelopment
                         {
                             AuditFlowId = item.AuditFlowId,
                             ProductId = item.ProductId,
-                            SolutionId=item.SolutionId,
+                            SolutionId = item.SolutionId,
                             CategoryName = item.CategoryName,
                             TypeName = item.TypeName,
                             IsInvolveItem = item.IsInvolveItem,
@@ -464,7 +472,7 @@ namespace Finance.ProductDevelopment
                             {
                                 AuditFlowId = bomInfoItem.AuditFlowId,
                                 ProductId = bomInfoItem.ProductId,
-                                SolutionId = bomInfoItem.SolutionId, 
+                                SolutionId = bomInfoItem.SolutionId,
                                 ElectronicId = bomInfoItem.Id,
                                 ModifyTypeValue = MODIFYTYPE.DELNEWDATA,
                             };
@@ -571,9 +579,9 @@ namespace Finance.ProductDevelopment
         /// <summary>
         /// 根据流程号方案号查询拼版列表接口
         /// </summary>
-        public async Task<List<BoardDto>> GetBoardInfomation(long auditFlowId,long SolutionId)
+        public async Task<List<BoardDto>> GetBoardInfomation(long auditFlowId, long SolutionId)
         {
-            var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId==SolutionId);
+            var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
             List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
             return boardDto;
         }
