@@ -164,7 +164,7 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 审批流程表ID
         /// </summary>
-        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
+        //[FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]
         public long AuditFlowId { get; set; }
         /// <summary>
         /// ModelCount表id
@@ -179,7 +179,7 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 方案表ID
         /// </summary>
-        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
+        //[FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
         public long SolutionId { get; set; }
         /// <summary>
         /// 方案号

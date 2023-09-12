@@ -288,6 +288,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.MybhgSelect,
                     Activation = $"{MainFlowId}_贸易合规_{MainFlowId}_不合规是否退回",
                     RoleId = tradeComplianceAuditor.Id.ToString(),//和 贸易合规 相同
+                    ProcessIdentifier = "TradeCompliance",
                 },
                 new Node
                 {
@@ -337,6 +338,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_生成报价分析界面选择报价方案_{MainFlowId}_选择是否报价",
                     RoleId = salesMan.Id.ToString(),//和 生成报价分析界面选择报价方案  相同
+                    ProcessIdentifier = "QuoteAnalysis",
                 },
                 new Node
                 {
@@ -344,6 +346,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_选择是否报价_{MainFlowId}_审批报价策略与核价表 || {MainFlowId}_报价反馈_{MainFlowId}_审批报价策略与核价表",
                     RoleId = generalManager.Id.ToString(),
+                    ProcessIdentifier = "QuoteApproval",
                 },
                 new Node
                 {
@@ -367,20 +370,23 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_财务审核_{MainFlowId}_核心器件成本NRE费用拆分",
                     RoleId = costSplit.Id.ToString(),
+                    ProcessIdentifier = "CoreNre",
                 },
                 new Node
                 {
                     Name="确认中标金额",
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_报价反馈_{MainFlowId}_确认中标金额",
-                    RoleId = financeEval.Id.ToString()
+                    RoleId = financeEval.Id.ToString(),
+                    ProcessIdentifier = "BidWinningConfirmation",
                 },
                 new Node
                 {
                     Name="总经理查看中标金额",
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_确认中标金额_{MainFlowId}_总经理查看中标金额",
-                    RoleId = generalManager.Id.ToString()
+                    RoleId = generalManager.Id.ToString(),
+                    ProcessIdentifier = "ConfirmWinningBid",
                 },
                 new Node
                 {
@@ -388,6 +394,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.EvalFeedback,
                     Activation = $"{MainFlowId}_系统生成报价审批表报价单_{MainFlowId}_报价反馈",
                     RoleId = salesMan.Id.ToString(),
+                    ProcessIdentifier = "QuoteFeedback",
                 },
                 new Node
                 {
@@ -395,7 +402,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_不合规是否退回_{MainFlowId}_归档 || {MainFlowId}_确认中标金额_{MainFlowId}_归档 || {MainFlowId}_选择是否报价_{MainFlowId}_归档 || {MainFlowId}_报价反馈_{MainFlowId}_归档",
                     NodeType= NodeType.End,
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id}"
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id}",
+                    ProcessIdentifier = "ArchiveEnd",
                 },
             };
 
