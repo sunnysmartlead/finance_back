@@ -262,9 +262,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //sop单价表
         analyseBoardSecondDto.Sops = sops;
         analyseBoardSecondDto.FullLifeCycle =
-            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId,gradients, priceEvaluationStartInputResult, gross, analyseBoardSecondInputDto.solutionTables,sops);
+            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId, gradients, priceEvaluationStartInputResult,
+                gross, analyseBoardSecondInputDto.solutionTables, sops);
         analyseBoardSecondDto.GradientQuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients,sops)
+            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients, sops)
             ;
         analyseBoardSecondDto.QuotedGrossMargins =
             await _analysisBoardSecondMethod.GetActual(priceEvaluationStartInputResult, Solutions);

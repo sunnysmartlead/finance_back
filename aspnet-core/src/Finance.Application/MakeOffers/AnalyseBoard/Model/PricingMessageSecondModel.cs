@@ -14,7 +14,7 @@ public class PricingMessageSecondModel
     /// <summary>
     /// 方案id
     /// </summary>
-    public string SolutionId { get; set; }
+    public long SolutionId { get; set; }
     /// <summary>
     /// 名称
     /// </summary>
