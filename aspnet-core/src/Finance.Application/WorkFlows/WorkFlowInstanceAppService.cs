@@ -96,10 +96,10 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
-        /// 手动触发贸易合规
+        /// 手动触发贸易合规（手动测试使用时改为public）
         /// </summary>
         /// <returns></returns>
-        public async Task GG()
+        private async Task GG()
         {
             var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
