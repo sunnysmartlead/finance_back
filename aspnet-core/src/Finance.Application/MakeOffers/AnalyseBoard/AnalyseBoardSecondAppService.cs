@@ -647,10 +647,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long auditFlowId)
     {
-        AuditQuotationList auditQuotationList =
-            await _financeAuditQuotationList.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId));
-        string audit = auditQuotationList.AuditQuotationListJson;
-        QuotationListSecondDto quotationListSecondDto = JsonConvert.DeserializeObject<QuotationListSecondDto>(audit);
+      
+        QuotationListSecondDto quotationListSecondDto = await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
         return quotationListSecondDto;
     }
 
@@ -665,6 +663,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId);
         ;
     }
+    /// <summary>
+    /// 财务归档
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <returns></returns>
+    public async Task<QuotationListSecondDto> FinancialFiling(long auditFlowId)
+
+    {
+        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId);
+        ;
+    }
 
     /// <summary>
     /// 报价反馈
@@ -673,9 +682,125 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<QuotationFeedbackDto> GetQuotationFeedback(long auditFlowId)
     {
-        AuditQuotationList auditQuotationList =
-            await _financeAuditQuotationList.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId));
-        return null;
+        
+        QuotationFeedbackDto analyseBoardSecondDto = new();
+        
+        //获取方案
+        List<Solution> Solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
+
+        //获取梯度
+        List<Gradient> gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+        //最小梯度值
+        var mintd = gradients.OrderBy(e => e.GradientValue).First();
+
+        List<GradientGrossMarginModel> gradientGrossMarginModels = new();
+        //获取毛利率
+        List<decimal> gross = await _analysisBoardSecondMethod.GetGrossMargin();
+        //sop年份
+        var soptime = priceEvaluationStartInputResult.SopTime;
+        List<CreateSampleDto> sampleDtos = priceEvaluationStartInputResult.Sample;
+
+
+        List<OnlySampleDto> samples = new List<OnlySampleDto>();
+        //样品阶段
+        foreach (var Solution in Solutions)
+        {
+            var productld = Solution.Productld;
+            var gepr = new GetPriceEvaluationTableResultInput();
+            gepr.AuditFlowId = auditFlowId;
+            gepr.Year = soptime;
+            gepr.UpDown = YearType.Year;
+            gepr.GradientId = mintd.Id;
+            gepr.ProductId = productld;
+            //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
+            //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                Year = soptime, UpDown = YearType.FirstHalf
+            });
+
+            //最小梯度SOP年成本
+            var totalcost = ex.TotalCost;
+
+            //样品阶段
+            if (priceEvaluationStartInputResult.IsHasSample == true)
+            {
+                OnlySampleDto onlySampleDto = new();
+                List<SampleQuotation> onlySampleModels =
+                    await _analysisBoardSecondMethod.getSample(sampleDtos, totalcost);
+                onlySampleDto.SolutionName = Solution.SolutionName;
+                onlySampleDto.OnlySampleModels = onlySampleModels;
+                samples.Add(onlySampleDto);
+            }
+        }
+
+//单价表
+        List<SopAnalysisModel> sops = new List<SopAnalysisModel>();
+        foreach (var gradient in gradients)
+        {
+            foreach (var Solution in Solutions)
+            {
+                SopAnalysisModel sopAnalysisModel = new();
+
+                var productld = Solution.Productld;
+                var gepr = new GetPriceEvaluationTableResultInput();
+                gepr.AuditFlowId = auditFlowId;
+                gepr.Year = soptime;
+                gepr.UpDown = YearType.Year;
+                gepr.GradientId = gradient.Id;
+                gepr.ProductId = productld;
+                //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
+                //var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
+                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+                {
+                    AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                    Year = soptime, UpDown = YearType.FirstHalf
+                });
+
+                //最小梯度SOP年成本
+                var totalcost = ex.TotalCost;
+                //var totalcost = 100;
+
+                sopAnalysisModel.Product = Solution.SolutionName;
+                sopAnalysisModel.GradientValue = gradient.GradientValue + "K/Y";
+                List<GrossValue> grosss = new List<GrossValue>();
+                foreach (var gro in gross)
+                {
+                    GrossValue gr = new GrossValue();
+                    gr.Grossvalue = totalcost / (1 - (gro / 100));
+                    gr.Gross = gro.ToString();
+                    grosss.Add(gr);
+                }
+
+                sopAnalysisModel.GrossValues = grosss;
+                sops.Add(sopAnalysisModel);
+            }
+        }
+
+
+//NRE
+        analyseBoardSecondDto.nres = await _analysisBoardSecondMethod.getNre(auditFlowId,
+            Solutions);
+        //样品阶段
+        analyseBoardSecondDto.SampleOffer = samples;
+        //sop单价表
+        analyseBoardSecondDto.Sops = sops;
+        analyseBoardSecondDto.FullLifeCycle =
+            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId, gradients, priceEvaluationStartInputResult,
+                gross, Solutions, sops);
+        analyseBoardSecondDto.GradientQuotedGrossMargins =
+            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients, sops)
+            ;
+        analyseBoardSecondDto.QuotedGrossMargins =
+            await _analysisBoardSecondMethod.GetActual(priceEvaluationStartInputResult, Solutions);
+
+
+        return analyseBoardSecondDto;
     }
 
     /// <summary>
@@ -683,9 +808,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<List<ManagerApprovalOfferDto>> GetAcceptanceBid(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetAcceptanceBid(long auditFlowId)
     {
-        return null;
+        QuotationListSecondDto quotationListSecondDto = await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
+        return quotationListSecondDto;
     }
 
     /// <summary>
@@ -693,8 +819,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<List<ManagerApprovalOfferDto>> GetBidView(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetBidView(long auditFlowId)
     {
-        return null;
+        QuotationListSecondDto quotationListSecondDto = await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
+        return quotationListSecondDto;
     }
 }

@@ -27,6 +27,14 @@ public class ManagerApprovalOfferDto
 public class ManagerApprovalOfferNre
 {
     /// <summary>
+    /// 方案名
+    /// </summary>
+    public string solutionName { get; set; }
+    /// <summary>
+    /// 方案表ID
+    /// </summary>
+    public long SolutionId { get; set; }
+    /// <summary>
     /// Nre相关
     /// </summary>
     public AnalyseBoardNreDto analyseBoardNreDto{ get; set; }

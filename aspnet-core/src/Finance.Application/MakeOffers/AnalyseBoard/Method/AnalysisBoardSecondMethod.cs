@@ -1827,32 +1827,30 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             */
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
-        
+
         List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
-        QuotationListSecondDto pp =  new QuotationListSecondDto
-            {
-                Date = DateTime.Now, //查询日期
-                RecordNumber = priceEvaluationStartInputResult.Number, // 单据编号
-                Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
-              //  OfferForm = priceEvaluationStartInputResult.DisplayName, //报价形式
-                DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
-               // ClientNature = priceEvaluationStartInputResult.DisplayName, //客户性质
-                TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-               // TerminalClientNature = priceEvaluationStartInputResult.DisplayName, //终端客户性质
-                //开发计划 手工录入
-                SopTime = priceEvaluationStartInputResult.SopTime, //Sop时间
-                ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目周期
-                ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
-                modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
-                PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
-               // QuoteCurrency = priceEvaluationStartInputResult.ExchangeRateKind, //报价币种
-              //  ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率
-                ProjectName = priceEvaluationStartInputResult.ProjectName, //项目名称
-            };
+        QuotationListSecondDto pp = new QuotationListSecondDto
+        {
+            Date = DateTime.Now, //查询日期
+            RecordNumber = priceEvaluationStartInputResult.Number, // 单据编号
+            Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+            //  OfferForm = priceEvaluationStartInputResult.DisplayName, //报价形式
+            DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
+            // ClientNature = priceEvaluationStartInputResult.DisplayName, //客户性质
+            TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
+            // TerminalClientNature = priceEvaluationStartInputResult.DisplayName, //终端客户性质
+            //开发计划 手工录入
+            SopTime = priceEvaluationStartInputResult.SopTime, //Sop时间
+            ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目周期
+            ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
+            modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
+            PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
+            // QuoteCurrency = priceEvaluationStartInputResult.ExchangeRateKind, //报价币种
+            //  ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率
+            ProjectName = priceEvaluationStartInputResult.ProjectName, //项目名称
+        };
         pp.nres = await getNre(processId, solutions);
         //获取核价营销相关数据
-        
-
         //获取梯度
         List<Gradient> gradients =
             await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == processId);
@@ -1890,9 +1888,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         pp.MotionMessage = messageModels;
 
         //核心组件
-        List<CreateColumnFormatProductInformationDto> productList = priceEvaluationStartInputResult.ProductInformation;
-
-
         List<ComponenSocondModel> partsModels = new();
         partsModels.Add(new ComponenSocondModel()
         {
@@ -2075,11 +2070,330 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long processId)
     {
         ManagerApprovalOfferDto managerApprovalOfferDto = new();
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
+
+        List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
+
+        List<UnitPriceSumModel> unitPriceSumModels = new();
+        List<NREUnitSumModel> NreUnitSumModels = new();
+
+        List<string> products = solutions.Select(p => p.Product).ToList();
+
+        List<ManagerApprovalOfferNre> ManagerApprovalOfferNres = new List<ManagerApprovalOfferNre>();
+        foreach (var product in products)
+        {
+            UnitPriceSumModel unitPriceSumModel = new UnitPriceSumModel()
+            {
+                Product = product
+            };
+
+            NREUnitSumModel nreUnitSumModel = new()
+            {
+                Product = product
+            };
+            List<SolutuionAndValue> prs = new();
+            List<SolutuionAndValue> nre = new();
+            foreach (var solution in solutions)
+            {
+                prs.Add(new SolutuionAndValue()
+                {
+                    SolutionId = solution.Id,
+                    value = 5
+                });
+                nre.Add(new SolutuionAndValue()
+                {
+                    SolutionId = solution.Id,
+                    value = 5
+                });
+            }
 
 
+            unitPriceSumModel.solutuionAndValues = prs;
+            nreUnitSumModel.solutuionAndValues = nre;
+            unitPriceSumModels.Add(unitPriceSumModel);
+            NreUnitSumModels.Add(nreUnitSumModel);
+        }
+
+        var nres = await getNre(processId, solutions);
+
+        foreach (var solution in solutions)
+        {
+            ManagerApprovalOfferNre managerApprovalOfferNre = new()
+            {
+                solutionName = solution.SolutionName, SolutionId = solution.Id
+            };
+            List<ManagerApprovalOfferModel> managerApprovalOfferModels = new List<ManagerApprovalOfferModel>();
+            foreach (var product in products)
+            {
+                ManagerApprovalOfferModel model = new ManagerApprovalOfferModel()
+                {
+                    Product = product, SopCost = 4, FullLifeCyclecost = 5, SalesRevenue = 5, SellingCost = 6,
+                    GrossMargin = 12, Price = 10, Commission = 1, SopGrossMargin = 11, GrossMarginCommission = 11,
+                    ClientGrossMargin = 12, NreGrossMargin = 10
+                };
+                managerApprovalOfferModels.Add(model);
+            }
+
+            AnalyseBoardNreDto nr = nres.First();
+            managerApprovalOfferNre.analyseBoardNreDto = nr;
+            managerApprovalOfferNre.ManagerApprovalOfferModels = managerApprovalOfferModels;
+            ManagerApprovalOfferNres.Add(managerApprovalOfferNre);
+        }
+
+        managerApprovalOfferDto.UnitPriceSum = unitPriceSumModels;
+        managerApprovalOfferDto.NreUnitSumModels = NreUnitSumModels;
+        managerApprovalOfferDto.ManagerApprovalOfferNres = ManagerApprovalOfferNres;
         return managerApprovalOfferDto;
     }
 
+    public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long processId)
+    {
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
+
+        List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
+        QuotationListSecondDto pp = new QuotationListSecondDto
+        {
+            Date = DateTime.Now, //查询日期
+        
+            DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
+            // ClientNature = priceEvaluationStartInputResult.DisplayName, //客户性质
+            TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
+            // TerminalClientNature = priceEvaluationStartInputResult.DisplayName, //终端客户性质
+            //开发计划 手工录入
+
+            //  ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率
+        };
+        //获取梯度
+        List<Gradient> gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == processId);
+
+        //最小梯度值
+        var mintd = gradients.OrderBy(e => e.GradientValue).First();
+
+        List<GradientGrossMarginModel> gradientGrossMarginModels = new();
+        //获取毛利率
+        List<decimal> gross = await GetGrossMargin();
+        //sop年份
+        //走量信息
+        List<MotionMessageModel> messageModels = new List<MotionMessageModel>();
+
+        foreach (var gradient in gradients)
+        {
+            MotionMessageModel motionMessageModel = new MotionMessageModel()
+            {
+                MessageName = gradient.GradientValue + "K/Y"
+            };
+            List<SopOrValueMode> sopOrValueModes = new();
+            for (int i = 0; i < 5; i++)
+            {
+                SopOrValueMode sopOrValueMode = new()
+                {
+                };
+                sopOrValueModes.Add(sopOrValueMode);
+            }
+
+            motionMessageModel.Sop = sopOrValueModes;
+
+            messageModels.Add(motionMessageModel);
+        }
+        //核心组件
+        List<ComponenSocondModel> partsModels = new();
+        partsModels.Add(new ComponenSocondModel()
+        {
+            CoreComponent = "Sensor"
+        });
+        partsModels.Add(new ComponenSocondModel()
+        {
+            CoreComponent = "Lens"
+        });
+        partsModels.Add(new ComponenSocondModel()
+        {
+            CoreComponent = "ISP"
+        });
+        partsModels.Add(new ComponenSocondModel()
+        {
+            CoreComponent = "串行芯片"
+        });
+        partsModels.Add(new ComponenSocondModel()
+        {
+            CoreComponent = "线缆"
+        });
+
+        foreach (var parts in partsModels)
+        {
+            List<SolutionOrSpecification> Specifications = new();
+            foreach (var solution in solutions)
+            {
+                SolutionOrSpecification solutionOrSpecification = new SolutionOrSpecification()
+                {
+                    solutionname = solution.SolutionName,
+                    specification = "12"
+                };
+                Specifications.Add(solutionOrSpecification);
+            }
+
+            parts.Specifications = Specifications;
+        }
+
+        pp.componenSocondModels = partsModels;
+        pp.MotionMessage = messageModels;
+        var soptime = priceEvaluationStartInputResult.SopTime;
+        List<CreateSampleDto> sampleDtos = priceEvaluationStartInputResult.Sample;
+
+        List<OnlySampleDto> samples = new List<OnlySampleDto>();
+        //样品阶段
+        foreach (var Solution in solutions)
+        {
+            var productld = Solution.Productld;
+            var gepr = new GetPriceEvaluationTableResultInput();
+            gepr.AuditFlowId = processId;
+            gepr.Year = soptime;
+            gepr.UpDown = YearType.Year;
+            gepr.GradientId = mintd.Id;
+            gepr.ProductId = productld;
+            //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
+            //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = processId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                Year = soptime, UpDown = YearType.FirstHalf
+            });
+
+            //最小梯度SOP年成本
+            var totalcost = ex.TotalCost;
+
+            //样品阶段
+            if (priceEvaluationStartInputResult.IsHasSample == true)
+            {
+                OnlySampleDto onlySampleDto = new();
+                List<SampleQuotation> onlySampleModels =
+                    await getSample(sampleDtos, totalcost);
+                onlySampleDto.SolutionName = Solution.SolutionName;
+                onlySampleDto.OnlySampleModels = onlySampleModels;
+                samples.Add(onlySampleDto);
+            }
+        }
+
+        pp.SampleOffer = samples;
+        
+        //报价策略梯度
+        List<BiddingStrategySecondModel> BiddingStrategySecondModels = new();
+        foreach (var gradient in gradients)
+        {
+            foreach (var solution in solutions)
+            {
+                BiddingStrategySecondModel biddingStrategySecondModel = new()
+                {
+                    GradientId = gradient.Id, Product = solution.Product, gradient = gradient.GradientValue + "K/Y",
+                    SopCost = 1, FullLifeCyclecost = 2, Price = 1, SopGrossMargin = 23, TotallifeCyclegrossMargin = 12,
+                    ClientGrossMargin = 23, NreGrossMargin = 10
+                };
+                BiddingStrategySecondModels.Add(biddingStrategySecondModel);
+            }
+        }
+        
+        pp.BiddingStrategySecondModels = BiddingStrategySecondModels;
+        
+        
+        //报价策略梯度
+        List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct = new();
+        foreach (var gradient in gradients)
+        {
+            foreach (var solution in solutions)
+            {
+                BiddingStrategySecondModel biddingStrategySecondModel = new()
+                {
+                     Product = solution.Product,
+                    SopCost = 1, FullLifeCyclecost = 2, Price = 1, SopGrossMargin = 23, TotallifeCyclegrossMargin = 12,
+                    ClientGrossMargin = 23, NreGrossMargin = 10
+                };
+                BiddingStrategySecondModelsAct.Add(biddingStrategySecondModel);
+            }
+        }
+        
+        pp.BiddingStrategySecondModelsAct = BiddingStrategySecondModelsAct;
+
+        //内部核价
+        List<PricingMessageSecondModel> pricingMessageSecondModels = new List<PricingMessageSecondModel>();
+
+
+        foreach (var Solution in solutions)
+        {
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "BOM成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "制造成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "损耗成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "物流成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "MOQ分摊成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "质量成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "其他成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "总成本"
+            });
+            pricingMessageSecondModels.Add(new PricingMessageSecondModel()
+            {
+                SolutionName = Solution.SolutionName,
+                SolutionId = Solution.Id,
+                Name = "备注"
+            });
+            foreach (var model in pricingMessageSecondModels)
+            {
+                List<SopOrAll> sopOrAlls = new();
+                foreach (var gradient in gradients)
+                {
+                    SopOrAll sop = new();
+                    sop.sop = 12;
+                    sop.all = 24;
+                    sop.GradientValue = gradient.GradientValue;
+                    sopOrAlls.Add(sop);
+                }
+
+                model.sops = sopOrAlls;
+            }
+        }
+
+        pp.pricingMessageSecondModels = pricingMessageSecondModels;
+        return pp;
+    }
 
     public async Task<AcceptanceBidDto> GetAcceptanceBid(long processId)
     {

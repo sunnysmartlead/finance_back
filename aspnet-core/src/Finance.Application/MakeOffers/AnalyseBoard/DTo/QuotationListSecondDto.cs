@@ -108,7 +108,11 @@ public class QuotationListSecondDto
         /// </summary>
         
         public List<BiddingStrategySecondModel> BiddingStrategySecondModels{ get; set; }
+        /// <summary>
+        /// 报价策略实际数量
+        /// </summary>
         
+        public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct{ get; set; }
 }
 
 /// <summary>
