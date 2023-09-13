@@ -2,6 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
+using Finance.Audit;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
@@ -437,6 +438,7 @@ namespace Finance.Processes
                 }
 
                 processHoursEnterDto.SopInfo = processHoursEnteritems;
+
 
                 processHoursEnterDto.DeviceInfo.DeviceTotalCost = 0;
 
@@ -938,7 +940,7 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
-        public async Task<List<ProcessHoursEnterDto>> UploadProcessHoursEnter(IFormFile file)
+        public async Task<List<ProcessHoursEnterDto>> UploadProcessHoursEnter(IFormFile file, long AuditFlowId, long SolutionId)
         {
             try
             {
@@ -1167,10 +1169,18 @@ namespace Finance.Processes
                             List<ProcessHoursEnteritemDto> processHoursEnteritems = new List<ProcessHoursEnteritemDto>();
                             for (int g = 0; g < yearNum; g++)
                             {
+                                Solution entity = await _resourceSchemeTable.GetAsync((long)SolutionId);
+
+                                var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == AuditFlowId && t.ProductId == entity.Productld).ToList();
+
                                 ProcessHoursEnteritemDto processHoursEnteritem = new ProcessHoursEnteritemDto();
                                 processHoursEnteritem.LaborHour = decimal.Parse(val0.ToString());
                                 processHoursEnteritem.MachineHour = decimal.Parse(val1.ToString());
                                 processHoursEnteritem.PersonnelNumber = decimal.Parse(val2.ToString());
+                                if (query.Count>0 && null != query[g])
+                                {
+                                    processHoursEnteritem.ModelCountYearId = query[g].Id;
+                                }
                                 processHoursEnteritems.Add(processHoursEnteritem);
                             }
                             foundationWorkingHourItem.Issues= processHoursEnteritems;
@@ -1459,12 +1469,18 @@ namespace Finance.Processes
                         _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
                     }
                 }
+                Solution solution = await _resourceSchemeTable.GetAsync(input.SolutionId);
 
+                var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == solution.Productld).ToList();
+
+
+             
                 //年
                 if (null != listItem.SopInfo)
                 {
                     foreach (var year in listItem.SopInfo)
                     {
+                  
                         foreach (var yearItem in year.Issues)
                         {
                             ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
@@ -1474,6 +1490,10 @@ namespace Finance.Processes
                             processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                             processHoursEnteritem.MachineHour = yearItem.MachineHour;
                             processHoursEnteritem.ModelCountYearId = yearItem.ModelCountYearId;
+                            if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId ==0)
+                            {
+                                processHoursEnteritem.ModelCountYearId = queryYear[listItem.SopInfo.IndexOf(year)].Id;
+                            }
                             _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
                         }
                     }

@@ -25,6 +25,7 @@ namespace Finance.Processes
         /// 年
         /// </summary>
         public string Year { get; set; }
+        public decimal ModelCountYearId { get; set; }
 
 
 
