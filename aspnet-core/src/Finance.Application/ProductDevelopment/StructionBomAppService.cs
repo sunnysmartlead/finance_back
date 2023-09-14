@@ -13,6 +13,7 @@ using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.UserModel;
@@ -606,6 +607,28 @@ namespace Finance.ProductDevelopment
             return result;
         }
 
+
+        ///// <summary>
+        /////  
+        ///// </summary>
+        ///// <param name="FileName"></param>
+        ///// <returns></returns>
+        ///// <exception cref="UserFriendlyException"></exception>
+        //public IActionResult PostProductDepartmentDownloadExcel(string FileName = "NRE产品部EMC电性能实验费模版下载")
+        //{
+        //    try
+        //    {
+        //        string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE产品部EMC电性能实验费模版.xlsx";
+        //        return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        //        {
+        //            FileDownloadName = $"{FileName}.xlsx"
+        //        };
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new UserFriendlyException(e.Message);
+        //    }
+        //}
 
     }
 }
