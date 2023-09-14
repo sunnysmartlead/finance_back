@@ -27,6 +27,7 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Method;
+using Finance.TradeCompliance;
 using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.PerformanceData;
 using System.IO;
@@ -81,6 +83,7 @@ namespace Finance.PriceEval
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
+        private readonly IRepository<CountryLibrary, long> _countryLibraryRepository;
 
         /// <summary>
         ///  零件是否全部录入 依据实体类
@@ -98,7 +101,8 @@ namespace Finance.PriceEval
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository,
+           IRepository<CountryLibrary, long> countryLibraryRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
@@ -122,11 +126,38 @@ namespace Finance.PriceEval
 
             _workflowInstanceAppService = workflowInstanceAppService;
             _updateItemRepository = updateItemRepository;
+
+            _countryLibraryRepository = countryLibraryRepository;
         }
 
 
 
         #endregion
+
+        /// <summary>
+        /// 手动刷新国家类型
+        /// </summary>
+        /// <returns></returns>
+        private async Task RRRRRRRRRRRRRRRRRRRRR()
+        {
+            var data = await _priceEvaluationRepository.GetAllListAsync();
+            foreach (var item in data)
+            {
+                var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                                  join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                                  where d.Id == item.Country || c.NationalType == "二级管制国家"
+                                  select new
+                                  {
+                                      c.Id,
+                                      c.NationalType,
+                                      DictionaryId = d.Id
+                                  }).ToListAsync();
+                var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == item.Country);
+                var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
+                item.CountryLibraryId = countryLibraryId;
+                await _priceEvaluationRepository.UpdateAsync(item);
+            }
+        }
 
         #region 核价开始
         /// <summary>
@@ -147,6 +178,19 @@ namespace Finance.PriceEval
             {
                 input.CountryType = "空";
             }
+
+
+            var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                              join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                              where d.Id == input.Country || c.NationalType == "二级管制国家"
+                              select new
+                              {
+                                  c.Id,
+                                  c.NationalType,
+                                  DictionaryId = d.Id
+                              }).ToListAsync();
+            var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
+            var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
 
             long auditFlowId;
             //var check = from m in input.ModelCount
@@ -215,6 +259,7 @@ namespace Finance.PriceEval
 
             //PriceEvaluation
             var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
+            priceEvaluation.CountryLibraryId = countryLibraryId;
 
             var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
 
