@@ -1346,12 +1346,18 @@ namespace Finance.Processes
                     //每月需求
                     decimal lineQuantity = modelCountYear.Quantity * 1000 / month;
                     //线体数量
-                    decimal Xtsl  =  lineQuantity / Capacity;
-                    //线体分摊率
-                    decimal x = (Capacity / Xtsl);
-                    decimal xtftl  =  (lineQuantity / x)*(decimal)0.8;
-                    decimal XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
-                    decimal GtVale = decimal.Parse(xtftl.ToString("0.00"));
+                    decimal XtslVale = 0;
+                    decimal GtVale = 0;
+                    if (Capacity == 0)
+                    {
+                        decimal Xtsl = lineQuantity / Capacity;
+                        //线体分摊率
+                        decimal x = (Capacity / Xtsl);
+                        decimal xtftl = (lineQuantity / x) * (decimal)0.8;
+                        XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
+                        GtVale = decimal.Parse(xtftl.ToString("0.00"));
+                    }
+                   
 
                     processHoursEnterLineDto.Xtsl = XtslVale;
                     processHoursEnterLineDto.Gxftl = GtVale;
