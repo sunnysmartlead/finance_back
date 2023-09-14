@@ -2156,7 +2156,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         QuotationListSecondDto pp = new QuotationListSecondDto
         {
             Date = DateTime.Now, //查询日期
-        
+
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             // ClientNature = priceEvaluationStartInputResult.DisplayName, //客户性质
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
@@ -2198,6 +2198,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             messageModels.Add(motionMessageModel);
         }
+
         //核心组件
         List<ComponenSocondModel> partsModels = new();
         partsModels.Add(new ComponenSocondModel()
@@ -2277,7 +2278,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
         pp.SampleOffer = samples;
-        
+
         //报价策略梯度
         List<BiddingStrategySecondModel> BiddingStrategySecondModels = new();
         foreach (var gradient in gradients)
@@ -2293,10 +2294,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 BiddingStrategySecondModels.Add(biddingStrategySecondModel);
             }
         }
-        
+
         pp.BiddingStrategySecondModels = BiddingStrategySecondModels;
-        
-        
+
+
         //报价策略梯度
         List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct = new();
         foreach (var gradient in gradients)
@@ -2305,14 +2306,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 BiddingStrategySecondModel biddingStrategySecondModel = new()
                 {
-                     Product = solution.Product,
+                    Product = solution.Product,
                     SopCost = 1, FullLifeCyclecost = 2, Price = 1, SopGrossMargin = 23, TotallifeCyclegrossMargin = 12,
                     ClientGrossMargin = 23, NreGrossMargin = 10
                 };
                 BiddingStrategySecondModelsAct.Add(biddingStrategySecondModel);
             }
         }
-        
+
         pp.BiddingStrategySecondModelsAct = BiddingStrategySecondModelsAct;
 
         //内部核价
@@ -2417,5 +2418,111 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
         return quotationListSecondDto;
+    }
+
+    public async Task<ExternalQuotationDto> GetExternalQuotation(long processId)
+    {
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
+
+
+        ExternalQuotationDto externalQuotationDto = new()
+        {
+            CustomerName = priceEvaluationStartInputResult.CustomerName,
+            ProjectName = priceEvaluationStartInputResult.ProjectName,
+            SopTime = priceEvaluationStartInputResult.SopTime,
+            ProjectCycle = priceEvaluationStartInputResult.ProjectCycle
+        };
+
+        List<CreateColumnFormatProductInformationDto> createColumnFormatProductInformationDtos =
+            priceEvaluationStartInputResult.ProductInformation;
+        List<ExternalQuotationMxDto> mxs = (from crm in createColumnFormatProductInformationDtos
+            select new ExternalQuotationMxDto()
+            {
+                productName = crm.Name, year = priceEvaluationStartInputResult.SopTime.ToString(),
+
+                amout = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
+            }).ToList();
+
+        externalQuotationDto.mxs = mxs;
+
+        List<SopOrValueMode> sopls = new List<SopOrValueMode>();
+        sopls.Add(new SopOrValueMode()
+        {
+            Year = priceEvaluationStartInputResult.SopTime,
+            Value = 11
+        });
+        sopls.Add(new SopOrValueMode()
+        {
+            Year = priceEvaluationStartInputResult.SopTime + 1,
+            Value = 11
+        });
+        sopls.Add(new SopOrValueMode()
+        {
+            Year = priceEvaluationStartInputResult.SopTime + 2,
+            Value = 11
+        });
+
+        externalQuotationDto.sopls = sopls;
+        return externalQuotationDto;
+    }
+
+    public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId)
+    {
+        CoreComponentAndNreDto coreComponentAndNreDto = new();
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
+
+        //梯度
+        var gradients = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == processId);
+        List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
+
+
+        List<productAndGradient> ProductAndGradients = new();
+        List<String> products = new()
+        {
+            "Sensor芯片", "串行芯片", " 镜头", "PCBA（除sensor芯片、串行芯片）", "结构件（除lens）", "质量成本", "损耗成本", "制造成本", "物流费用", "其他成本",
+            "总成本"
+        };
+
+        foreach (var gradient in gradients)
+        {
+            foreach (var product in products)
+            {
+                ProductAndGradients.Add(new productAndGradient()
+                {
+                    GradientId = gradient.Id,
+                    GradientValue = gradient.GradientValue,
+                    Product = product,
+                    solutionAndprices = (from solution in solutions
+                        select new SolutionAndprice()
+                        {
+                            solutionName = solution.SolutionName,
+                            SolutionId = solution.Id,
+                            Number = 1,
+                            Price = 100,
+                            ExchangeRate = 1,
+                            nsum = 12
+                        }).ToList()
+                });
+            }
+        }
+
+        
+        List<String> nree = new()
+        {
+            "手板件费用", "模具费用", " 工装费用", "治具费用", "检具费用", "生产设备费用", "专用生产设备", "非专用生产设备", "实验费用", "测试软件费用", "差旅费", "其他费用",
+            "合计"
+        };
+        List<NreExpense> nres = (from nrerr in nree
+            select new NreExpense()
+            {
+                nre = nrerr, price = 100, remark = "12"
+            }).ToList();
+        coreComponentAndNreDto.nres = nres;
+        coreComponentAndNreDto.ProductAndGradients = ProductAndGradients;
+        return coreComponentAndNreDto;
     }
 }
