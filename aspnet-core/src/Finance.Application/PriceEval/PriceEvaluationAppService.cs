@@ -256,7 +256,6 @@ namespace Finance.PriceEval
             //}
 
 
-
             //PriceEvaluation
             var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
             priceEvaluation.CountryLibraryId = countryLibraryId;
@@ -495,10 +494,13 @@ namespace Finance.PriceEval
             var shareCounts = await _shareCountRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
             var shareCountsDto = ObjectMapper.Map<List<ShareCountInput>>(shareCounts);
 
+            var gradient = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+
             var gradientModelDto = (await _gradientModelRepository.GetAll().Where(p => p.AuditFlowId == auditFlowId)
                    .Join(_gradientModelYearRepository.GetAll(), p => p.Id, p => p.GradientModelId, (gradientModel, gradientModelYear) => new { gradientModel, gradientModelYear }).ToListAsync()).GroupBy(p => p.gradientModel).Select(p =>
                    {
                        var dto = ObjectMapper.Map<GradientModelInput>(p.Key);
+                       dto.GradientValue = gradient.FirstOrDefault(o => o.Id == p.Key.GradientId).GradientValue;
                        dto.GradientModelYear = ObjectMapper.Map<List<GradientModelYearInput>>(p.Select(o => o.gradientModelYear));
                        return dto;
                    }).ToList();
