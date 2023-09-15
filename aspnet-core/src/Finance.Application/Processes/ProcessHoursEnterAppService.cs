@@ -11,6 +11,7 @@ using Finance.FinanceParameter;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
+using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -1348,13 +1349,30 @@ namespace Finance.Processes
                     //线体数量
                     decimal XtslVale = 0;
                     decimal GtVale = 0;
-                    if (Capacity == 0)
+                    if (!Capacity.Equals(0.000))
                     {
-                        decimal Xtsl = lineQuantity / Capacity;
+                        decimal xtftl = 0;
+                        decimal Xtsl = Math.Ceiling(Math.Round(lineQuantity / Capacity, 2));
                         //线体分摊率
-                        decimal x = (Capacity / Xtsl);
-                        decimal xtftl = (lineQuantity / x) * (decimal)0.8;
-                        XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
+                        if (!Xtsl.Equals(0.000))
+                        {
+                            decimal x = (Capacity / Xtsl);
+                            if (!x.Equals(0.000))
+                            {
+                                xtftl = 0;
+                            }
+                            else {
+                                xtftl = (lineQuantity / x) * (decimal)0.8;
+                            }
+
+                        }
+                        else {
+                            xtftl = 0;
+                        }
+                       
+                   
+
+                        XtslVale = Xtsl;
                         GtVale = decimal.Parse(xtftl.ToString("0.00"));
                     }
                    
