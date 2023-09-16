@@ -995,7 +995,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             foreach (var solution in solutions)
             {
                 GrossMargin grossMargin = new();
-                grossMargin.proudct = solution.SolutionName;
+                grossMargin.product = solution.SolutionName;
                 grossMargin.ProductNumber = carModelCount.SingleCarProductsQuantity;
                 QuotedGrossMarginSimple grossMarginSimple = new();
                 decimal unprice = 1;
@@ -1052,7 +1052,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 GradientQuotedGrossMarginModel grossMarginModel = new GradientQuotedGrossMarginModel();
                 grossMarginModel.gradient = gradient.GradientValue + "K/Y";
-                grossMarginModel.proudct = solution.SolutionName;
+                grossMarginModel.product = solution.SolutionName;
                 var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).First();
                 decimal unprice = smple.ExchangeRate * (decimal.Parse(smple.TargetPrice)); //单价
                 QuotedGrossMarginSimple quotedGrossMarginSimple = new();
