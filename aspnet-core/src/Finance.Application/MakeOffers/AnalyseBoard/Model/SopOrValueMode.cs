@@ -19,5 +19,14 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 值
         /// </summary>
         public decimal Value { get; set; }
+        /// <summary>
+        /// sop值
+        /// </summary>
+        public decimal sopValue { get; set; }
+        /// <summary>
+        /// quan值
+        /// </summary>
+        public decimal fullValue { get; set; }
+        
     }
 }

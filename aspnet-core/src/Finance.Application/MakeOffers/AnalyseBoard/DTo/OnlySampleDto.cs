@@ -21,7 +21,7 @@ public class OnlySampleDto
     /// <summary>
     /// 样品阶段
     /// </summary>
-    public List<OnlySampleModel> OnlySampleModels{ get; set; }
+    public List<SampleQuotation> OnlySampleModels{ get; set; }
 }
 /// <summary>
 /// 样品值
