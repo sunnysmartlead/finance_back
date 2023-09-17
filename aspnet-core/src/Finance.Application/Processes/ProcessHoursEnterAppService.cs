@@ -1037,8 +1037,8 @@ namespace Finance.Processes
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        processHoursEnterDto.ProcessName = (row[keys[1]]).ToString();
-                        processHoursEnterDto.ProcessNumber = (row[keys[0]]).ToString();
+                        processHoursEnterDto.ProcessName = (row[keys[2]]).ToString();
+                        processHoursEnterDto.ProcessNumber = (row[keys[1]]).ToString();
 
                         //获取设备
                         Object deviceInfo = new Object();
@@ -1349,15 +1349,15 @@ namespace Finance.Processes
                     //线体数量
                     decimal XtslVale = 0;
                     decimal GtVale = 0;
-                    if (!Capacity.Equals(0.000))
+                    if (!Capacity.Equals(0.000M))
                     {
                         decimal xtftl = 0;
                         decimal Xtsl = Math.Ceiling(Math.Round(lineQuantity / Capacity, 2));
                         //线体分摊率
-                        if (!Xtsl.Equals(0.000))
+                        if (!Xtsl.Equals(0.000M))
                         {
                             decimal x = (Capacity / Xtsl);
-                            if (!x.Equals(0.000))
+                            if (!x.Equals(0.000M))
                             {
                                 xtftl = 0;
                             }
