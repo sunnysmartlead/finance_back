@@ -99,6 +99,7 @@ namespace Finance.TradeCompliance
                 foreach (var info in list)
                 {
                     CountryLibraryDto dto = new CountryLibraryDto();
+                    dto.DbId = info.Id;
                     dto.NationalType = info.NationalType;
                     dto.Country = info.Country;
                     dto.Rate = info.Rate;
