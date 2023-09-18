@@ -268,7 +268,8 @@ namespace Finance.TradeCompliance
             }
             else
             {
-                return null;
+                throw new FriendlyException("贸易合规数据未正式进库，请检查信息！");
+                
             }
         }
 
