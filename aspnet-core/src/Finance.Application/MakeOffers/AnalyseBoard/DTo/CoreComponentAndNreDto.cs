@@ -7,21 +7,78 @@ namespace Finance.MakeOffers.AnalyseBoard;
 
 public class CoreComponentAndNreDto
 {
-    public virtual decimal TotalMoneyCynCount { get; set; }
-    public virtual int year{ get; set; }
+    public List<productAndGradient> ProductAndGradients { get; set; }
+    public List<NreExpense> nres { get; set; }
     
-    
+}
+
+public class productAndGradient
+{
     /// <summary>
-    /// 梯度
+    /// 梯度Id
     /// </summary>
-    [Required]
-    public virtual List<GradientInput> Gradient { set; get; }
+    public virtual long GradientId { get; set; }
 
-    public  List<string> projects{ set; get; }
-    public  decimal kValue{ set; get; }
-    public List<string> Costitems{ set; get; }
-    public List<string> Nres{ set; get; }
-    public List<Gradient> gradient{ set; get; }
+    /// <summary>
+    /// 梯度(K/Y)
+    /// </summary>
+    public virtual decimal GradientValue { get; set; }
 
+    /// <summary>
+    /// 产品名称
+    /// </summary>
+    public string Product { get; set; }
 
+    public List<SolutionAndprice> solutionAndprices { get; set; }
+   
+}
+
+public class SolutionAndprice
+{
+    /// <summary>
+    /// 方案名
+    /// </summary>
+    public string solutionName { get; set; }
+
+    /// <summary>
+    /// 方案表ID
+    /// </summary>
+    public long SolutionId { get; set; }
+
+    ///数量
+    /// </summary>
+    public int Number { get; set; }
+
+    /// <summary>
+    /// 单价
+    /// </summary>
+    public double Price { get; set; }
+
+    /// <summary>
+    /// 汇率
+    /// </summary>
+    public decimal ExchangeRate { get; set; }
+
+    /// <summary>
+    /// 合计
+    /// </summary>
+    public decimal nsum { get; set; }
+}
+
+public class NreExpense
+{
+    /// <summary>
+    /// 费用
+    /// </summary>
+    public string nre { get; set; }
+
+    /// <summary>
+    /// 金额
+    /// </summary>
+    public decimal price { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string remark { get; set; }
 }
