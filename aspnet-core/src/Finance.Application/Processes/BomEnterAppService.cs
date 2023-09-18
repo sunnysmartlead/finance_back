@@ -260,7 +260,10 @@ namespace Finance.Processes
 
             return ObjectMapper.Map<BomEnter, BomEnterDto>(entity,new BomEnterDto());
         }
-    
+
+
+  
+
         /// <summary>
         /// 创建
         /// </summary>

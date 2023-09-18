@@ -13,7 +13,7 @@ public class DeviceQuotation: FullAuditedEntity<long>
     /// <summary>
     /// 方案的id
     /// </summary>
-    public long SolutionId { get; set; }
+    public long? SolutionId { get; set; }
 
     /// <summary>
     ///设备名称

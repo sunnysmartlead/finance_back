@@ -55,7 +55,7 @@ namespace Finance.Users
         private readonly LogInManager _logInManager;
         private readonly IRepository<Department, long> _departmentRepository;
 
-        private readonly AuditFlowAppService _auditFlowAppService;
+        //private readonly AuditFlowAppService _auditFlowAppService;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -76,7 +76,7 @@ namespace Finance.Users
             IRepository<Role> roleRepository,
             IPasswordHasher<User> passwordHasher,
             IAbpSession abpSession,
-            LogInManager logInManager, IRepository<Department, long> departmentRepository, IRepository<UserRole, long> userRoleRepository, AuditFlowAppService auditFlowAppService)
+            LogInManager logInManager, IRepository<Department, long> departmentRepository, IRepository<UserRole, long> userRoleRepository)
             : base(repository)
         {
             _userManager = userManager;
@@ -87,7 +87,7 @@ namespace Finance.Users
             _logInManager = logInManager;
             _departmentRepository = departmentRepository;
             _userRoleRepository = userRoleRepository;
-            _auditFlowAppService = auditFlowAppService;
+            //_auditFlowAppService = auditFlowAppService;
         }
         /// <summary>
         /// 创建用户
@@ -385,7 +385,7 @@ namespace Finance.Users
                     if (!roleNames.EqualList(inputRoleNames))
                     {
                         CheckErrors(await _userManager.SetRolesAsync(user, input.RoleNames));
-                        await _auditFlowAppService.DeleteFlowRightByUserId(input.Id);
+                        //await _auditFlowAppService.DeleteFlowRightByUserId(input.Id);
                     }
                 }
 
@@ -405,7 +405,7 @@ namespace Finance.Users
         public override async Task DeleteAsync(EntityDto<long> input)
         {
             var user = await _userManager.GetUserByIdAsync(input.Id);
-            await _auditFlowAppService.DeleteFlowRightByUserId(input.Id);
+            //await _auditFlowAppService.DeleteFlowRightByUserId(input.Id);
             await _userManager.DeleteAsync(user);
         }
         /// <summary>

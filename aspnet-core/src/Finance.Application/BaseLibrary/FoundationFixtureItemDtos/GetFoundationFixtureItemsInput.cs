@@ -7,5 +7,6 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class GetFoundationFixtureItemsInput: PagedInputDto
     {
+        public string FixtureName { get; set; }
     }
 }

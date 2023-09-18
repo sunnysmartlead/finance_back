@@ -9,5 +9,6 @@ namespace Finance.BaseLibrary
     {
         public string SoftwareName { get; set; }
         public string DeviceName { get; set; }
+        public string TraceabilitySoftware { get; set; }
     }
 }

@@ -28,7 +28,7 @@ namespace Finance.PriceEval
         public virtual long PriceEvaluationId { get; set; }
 
         /// <summary>
-        /// 年降率（%）
+        /// （%）
         /// </summary>
         [Required]
         public virtual decimal AnnualDeclineRate { get; set; }

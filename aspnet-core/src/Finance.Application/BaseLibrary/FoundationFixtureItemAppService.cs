@@ -37,6 +37,29 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
+        /// 列表-无分页功能
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<FoundationFixtureItemDto>> GetListAllAsync(GetFoundationFixtureItemsInput input)
+        {
+            // 设置查询条件
+            var query = this._foundationFixtureItemRepository.GetAll().Where(t => t.IsDeleted == false);
+            if (!string.IsNullOrEmpty(input.FixtureName))
+            {
+                query = query.Where(t => t.FixtureName.Contains(input.FixtureName));
+            }
+
+            // 查询数据
+            var list = query.ToList();
+            //数据转换
+            var dtos = ObjectMapper.Map<List<FoundationFixtureItem>, List<FoundationFixtureItemDto>>(list, new List<FoundationFixtureItemDto>());
+
+            // 数据返回
+            return dtos;
+        }
+
+        /// <summary>
         /// 列表
         /// </summary>
         /// <param name="input">查询条件</param>

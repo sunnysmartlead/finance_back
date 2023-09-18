@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.BaseLibrary
 {
@@ -354,7 +355,7 @@ namespace Finance.BaseLibrary
                 throw new Exception(ex.Message);
             }
         }
-
+  
 
         /// <summary>
         /// 添加日志

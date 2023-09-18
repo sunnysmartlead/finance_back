@@ -318,11 +318,11 @@ namespace Finance
                 .ForMember(p => p.UpdateItem, p => p.MapFrom(o => JsonConvert.DeserializeObject<List<QualityCostListDto>>(o.MaterialJson)))
                 .ReverseMap();
 
-            configuration.CreateMap<SetUpdateItemInput<OtherCostItem>, UpdateItem>()
+            configuration.CreateMap<SetUpdateItemInput<List<OtherCostItem2List>>, UpdateItem>()
                 .ForMember(p => p.MaterialJson, p => p.MapFrom(o => JsonConvert.SerializeObject(o.UpdateItem)))
                 .ReverseMap();
-            configuration.CreateMap<UpdateItem, SetUpdateItemInput<OtherCostItem>>()
-                .ForMember(p => p.UpdateItem, p => p.MapFrom(o => JsonConvert.DeserializeObject<OtherCostItem>(o.MaterialJson)))
+            configuration.CreateMap<UpdateItem, SetUpdateItemInput<List<OtherCostItem2List>>>()
+                .ForMember(p => p.UpdateItem, p => p.MapFrom(o => JsonConvert.DeserializeObject<List<OtherCostItem2List>>(o.MaterialJson)))
                 .ReverseMap();
 
             configuration.CreateMap<SetUpdateItemInput<List<ProductionControlInfoListDto>>, UpdateItem>()
@@ -344,6 +344,9 @@ namespace Finance
             configuration.CreateMap<CountryLibrary, CountryLibraryDto>();
             configuration.CreateMap<CountryLibraryDto, CountryLibrary>();
 
+            //工程部-切线跟线工时参数库
+            configuration.CreateMap<FollowLineTangent, WorkingHoursV2Dto>();
+            configuration.CreateMap<WorkingHoursV2Dto, FollowLineTangent>();
         }
     }
 }

@@ -228,7 +228,7 @@ namespace Finance.BaseLibrary
 
 
                     List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
-                    List<FTWorkingHour> foundationWorkingHourItemDtosList = this._fTWorkingHourRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    var foundationWorkingHourItemDtosList = this._fTWorkingHourRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
                     {
                         foreach (var device in foundationWorkingHourItemDtosList)
                         {
@@ -507,12 +507,12 @@ namespace Finance.BaseLibrary
                     foundationReliableProcessHours.TestLineNumber = deviceItem.toolInfo.TestLineNumber;
                     foundationReliableProcessHours.TestLinePrice = deviceItem.toolInfo.TestLinePrice;
                     //缺少字段
-                    //foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
+                    foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
                     foundationReliableProcessHours.FrockName = deviceItem.toolInfo.FrockName;
                     foundationReliableProcessHours.FrockNumber = deviceItem.toolInfo.FrockNumber;
-                    //foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
-                    //foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
-                    //foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
+                    foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
+                    foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
+                    foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
 
 
                     //工时

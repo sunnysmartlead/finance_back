@@ -27,6 +27,7 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Method;
+using Finance.TradeCompliance;
 using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.PerformanceData;
 using System.IO;
@@ -81,6 +83,7 @@ namespace Finance.PriceEval
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
+        private readonly IRepository<CountryLibrary, long> _countryLibraryRepository;
 
         /// <summary>
         ///  零件是否全部录入 依据实体类
@@ -98,9 +101,10 @@ namespace Finance.PriceEval
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, IRepository<PriceEvalJson, long> priceEvalJsonRepository)
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository,
+           IRepository<CountryLibrary, long> countryLibraryRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, priceEvalJsonRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -122,11 +126,38 @@ namespace Finance.PriceEval
 
             _workflowInstanceAppService = workflowInstanceAppService;
             _updateItemRepository = updateItemRepository;
+
+            _countryLibraryRepository = countryLibraryRepository;
         }
 
 
 
         #endregion
+
+        /// <summary>
+        /// 手动刷新国家类型
+        /// </summary>
+        /// <returns></returns>
+        private async Task RRRRRRRRRRRRRRRRRRRRR()
+        {
+            var data = await _priceEvaluationRepository.GetAllListAsync();
+            foreach (var item in data)
+            {
+                var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                                  join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                                  where d.Id == item.Country || c.NationalType == "二级管制国家"
+                                  select new
+                                  {
+                                      c.Id,
+                                      c.NationalType,
+                                      DictionaryId = d.Id
+                                  }).ToListAsync();
+                var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == item.Country);
+                var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
+                item.CountryLibraryId = countryLibraryId;
+                await _priceEvaluationRepository.UpdateAsync(item);
+            }
+        }
 
         #region 核价开始
         /// <summary>
@@ -147,6 +178,19 @@ namespace Finance.PriceEval
             {
                 input.CountryType = "空";
             }
+
+
+            var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                              join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                              where d.Id == input.Country || c.NationalType == "二级管制国家"
+                              select new
+                              {
+                                  c.Id,
+                                  c.NationalType,
+                                  DictionaryId = d.Id
+                              }).ToListAsync();
+            var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
+            var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
 
             long auditFlowId;
             //var check = from m in input.ModelCount
@@ -212,9 +256,9 @@ namespace Finance.PriceEval
             //}
 
 
-
             //PriceEvaluation
             var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
+            priceEvaluation.CountryLibraryId = countryLibraryId;
 
             var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
 
@@ -376,6 +420,7 @@ namespace Finance.PriceEval
             {
                 shareCount.PriceEvaluationId = priceEvaluationId;
                 shareCount.AuditFlowId = auditFlowId;
+                shareCount.ProductId = modelCountIds.First(p => p.product == shareCount.Name).productId;
                 await _shareCountRepository.InsertAsync(shareCount);
             }
 
@@ -449,10 +494,13 @@ namespace Finance.PriceEval
             var shareCounts = await _shareCountRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
             var shareCountsDto = ObjectMapper.Map<List<ShareCountInput>>(shareCounts);
 
+            var gradient = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+
             var gradientModelDto = (await _gradientModelRepository.GetAll().Where(p => p.AuditFlowId == auditFlowId)
                    .Join(_gradientModelYearRepository.GetAll(), p => p.Id, p => p.GradientModelId, (gradientModel, gradientModelYear) => new { gradientModel, gradientModelYear }).ToListAsync()).GroupBy(p => p.gradientModel).Select(p =>
                    {
                        var dto = ObjectMapper.Map<GradientModelInput>(p.Key);
+                       dto.GradientValue = gradient.FirstOrDefault(o => o.Id == p.Key.GradientId).GradientValue;
                        dto.GradientModelYear = ObjectMapper.Map<List<GradientModelYearInput>>(p.Select(o => o.gradientModelYear));
                        return dto;
                    }).ToList();
@@ -480,7 +528,7 @@ namespace Finance.PriceEval
 
 
         /// <summary>
-        /// 创建修改项（物料成本）
+        /// 设置修改项（物料成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -494,11 +542,17 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.Material;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+
+                await _updateItemRepository.UpdateAsync(entity);
+                //ObjectMapper.Map(input, entity);
             }
         }
 
@@ -515,7 +569,7 @@ namespace Finance.PriceEval
             && p.GradientId == input.GradientId
             && p.SolutionId == input.SolutionId
             && p.Year == input.Year
-            && p.UpDown == p.UpDown);
+            && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -524,7 +578,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（损耗成本）
+        /// 设置修改项（损耗成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -538,11 +592,17 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.LossCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -559,7 +619,7 @@ namespace Finance.PriceEval
            && p.GradientId == input.GradientId
            && p.SolutionId == input.SolutionId
            && p.Year == input.Year
-           && p.UpDown == p.UpDown);
+           && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -569,7 +629,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（制造成本）
+        /// 设置修改项（制造成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -583,11 +643,17 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.ManufacturingCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -604,7 +670,7 @@ namespace Finance.PriceEval
           && p.GradientId == input.GradientId
           && p.SolutionId == input.SolutionId
           && p.Year == input.Year
-          && p.UpDown == p.UpDown);
+          && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -615,7 +681,7 @@ namespace Finance.PriceEval
 
 
         /// <summary>
-        /// 创建修改项（物流成本）
+        /// 设置修改项（物流成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -629,11 +695,17 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.LogisticsCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -650,7 +722,7 @@ namespace Finance.PriceEval
         && p.GradientId == input.GradientId
         && p.SolutionId == input.SolutionId
         && p.Year == input.Year
-        && p.UpDown == p.UpDown);
+        && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -659,7 +731,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（质量成本）
+        /// 设置修改项（质量成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -673,11 +745,17 @@ namespace Finance.PriceEval
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
                 data.UpdateItemType = UpdateItemType.QualityCost;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
@@ -694,7 +772,7 @@ namespace Finance.PriceEval
   && p.GradientId == input.GradientId
   && p.SolutionId == input.SolutionId
   && p.Year == input.Year
-  && p.UpDown == p.UpDown);
+  && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 return null;
@@ -704,49 +782,35 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 创建修改项（其他成本）
+        /// 设置修改项（其他成本）
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<OtherCostItem> input)
+        public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<List<OtherCostItem2List>> input)
         {
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                && p.UpdateItemType == UpdateItemType.OtherCost
+                && p.UpdateItemType == UpdateItemType.OtherCostItem2List
                 && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.Year == input.Year && p.UpDown == input.UpDown);
             if (entity is null)
             {
                 var data = ObjectMapper.Map<UpdateItem>(input);
-                data.UpdateItemType = UpdateItemType.OtherCost;
+                data.UpdateItemType = UpdateItemType.OtherCostItem2List;
+                data.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
                 await _updateItemRepository.InsertAsync(data);
             }
             else
             {
-                ObjectMapper.Map(input, entity);
+                entity.MaterialJson = JsonConvert.SerializeObject(input.UpdateItem);
+
+                entity.File = input.File;
+                //ObjectMapper.Map(input, entity);
+                await _updateItemRepository.UpdateAsync(entity);
             }
         }
 
-        /// <summary>
-        /// 获取修改项（其他成本）
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        public async virtual Task<OtherCostItem> GetUpdateItemOtherCost(GetUpdateItemInput input)
-        {
-            var entity = await _updateItemRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-&& p.UpdateItemType == UpdateItemType.OtherCost
-//&& p.ProductId == input.ProductId
-&& p.GradientId == input.GradientId
-&& p.SolutionId == input.SolutionId
-&& p.Year == input.Year
-&& p.UpDown == p.UpDown);
-            if (entity is null)
-            {
-                return null;
-            }
-            return JsonConvert.DeserializeObject<OtherCostItem>(entity.MaterialJson);
 
-        }
         #endregion
 
         #endregion

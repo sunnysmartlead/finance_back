@@ -89,7 +89,10 @@ namespace Finance.BaseLibrary
             // 设置查询条件
             var query = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false);
 
-
+            if (!string.IsNullOrEmpty(input.FixtureGaugeName))
+            {
+                query = query.Where(t => t.FixtureGaugeName.Contains(input.FixtureGaugeName));
+            }
             // 查询数据
             var list = query.ToList();
             //数据转换
@@ -148,8 +151,8 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationFixtureDto entity = new FoundationFixtureDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(0).ToString();
-                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
                     
                         var lastColNum = initRow.LastCellNum - 6;
                         var deviceCountt = lastColNum / 4;

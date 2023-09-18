@@ -58,6 +58,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 修改项Json
         /// </summary>
+        [Column(TypeName = "CLOB")]
         public virtual string MaterialJson { get; set; }
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 其他成本
         /// </summary>
-        OtherCost,
+        OtherCostItem2List,
 
         /// <summary>
         /// 物流成本

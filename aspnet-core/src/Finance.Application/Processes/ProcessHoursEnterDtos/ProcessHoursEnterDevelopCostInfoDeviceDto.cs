@@ -42,6 +42,12 @@ namespace Finance.Processes
         public decimal Development { get; set; }
 
         public string TraceabilitySoftware { get; set; }
+
+
+        /// <summary>
+        /// 追溯软件费用
+        /// </summary>
+        public decimal TraceabilitySoftwareCost { get; set; }
     }
 
 

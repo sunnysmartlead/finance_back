@@ -27,6 +27,11 @@ namespace Finance.PriceEval
         [Required]
         public virtual long PriceEvaluationId { get; set; }
 
+        /// <summary>
+        /// 模组Id
+        /// </summary>
+        public virtual long ProductId { get; set; }
+
 
         /// <summary>
         /// 名称

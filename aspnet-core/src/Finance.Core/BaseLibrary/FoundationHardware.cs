@@ -38,7 +38,7 @@ namespace Finance.BaseLibrary
 		/// </summary>
 		[Column("software_price")]
 		[StringLength(255, ErrorMessage = "软件单价长度不能超出255字符")]
-		public decimal? SoftwarePrice { get; set; }
+		public decimal SoftwarePrice { get; set; }
 
 		/// <summary>
 		/// 软件状态

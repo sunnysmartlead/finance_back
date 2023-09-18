@@ -43,6 +43,7 @@ namespace Finance.BaseLibrary
             IRepository<FoundationHardware, long> foundationHardwareRepository)
         {
             _foundationHardwareRepository = foundationHardwareRepository;
+            _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
@@ -152,6 +153,10 @@ namespace Finance.BaseLibrary
                 if (!string.IsNullOrEmpty(input.SoftwareName))
                 {
                     query = query.Where(t => t.SoftwareName.Contains(input.SoftwareName));
+                }
+                if (!string.IsNullOrEmpty(input.TraceabilitySoftware))
+                {
+                    query = query.Where(t => t.TraceabilitySoftware.Contains(input.TraceabilitySoftware));
                 }
 
                 // 查询数据
@@ -331,8 +336,8 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationHardwareDto entity = new FoundationHardwareDto();
                         entity.IsDeleted = false;
-                        entity.ProcessName = initRow.GetCell(0).ToString();
-                        entity.ProcessNumber = initRow.GetCell(1).ToString();
+                        entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        entity.ProcessName = initRow.GetCell(1).ToString();
 
                         var lastColNum = initRow.LastCellNum - 5;
                         var deviceCountt = lastColNum / 4;

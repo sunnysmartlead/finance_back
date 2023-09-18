@@ -38,7 +38,7 @@ namespace Finance.BaseLibrary
 
     }
     /// <summary>
-    /// 日志类型 1 工装  2 EMC  3环境 4 工序 5 设备 6 治具 7 硬件及软件  8 工时库  9 标准工艺库 10 毛利率 11 汇率 12 损耗率 13 质量成本比例 14 贸易合规国家库 15 制造成本计算参数 16 作业价格
+    /// 日志类型 1 工装  2 EMC  3环境 4 工序 5 设备 6 治具 7 硬件及软件  8 工时库  9 标准工艺库 10 毛利率 11 汇率 12 损耗率 13 质量成本比例 14 贸易合规国家库 15 制造成本计算参数 16 作业价格 17 跟线切线参数库
     /// </summary>    
     public enum LogType
     {
@@ -122,5 +122,10 @@ namespace Finance.BaseLibrary
         /// </summary>
         [Description("作业价格")]
         JobPrice = 16,
+        /// <summary>
+        /// 跟线切线参数库
+        /// </summary>
+        [Description("跟线切线参数库")]
+        FollowLineTangent = 17,
     }
 }

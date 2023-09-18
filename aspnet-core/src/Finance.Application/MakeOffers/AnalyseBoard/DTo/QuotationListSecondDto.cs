@@ -108,7 +108,11 @@ public class QuotationListSecondDto
         /// </summary>
         
         public List<BiddingStrategySecondModel> BiddingStrategySecondModels{ get; set; }
+        /// <summary>
+        /// 报价策略实际数量
+        /// </summary>
         
+        public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct{ get; set; }
 }
 
 /// <summary>
@@ -120,6 +124,10 @@ public class BiddingStrategySecondModel
     /// 梯度Id
     /// </summary>
     public virtual long GradientId { get; set; }
+    /// <summary>
+    /// 梯度Id
+    /// </summary>
+    public virtual string gradient { get; set; }
     /// <summary>
     /// 模组数量主键
     /// </summary>
@@ -165,8 +173,19 @@ public class BiddingStrategySecondModel
     /// </summary>
     public decimal GrossMarginCommission { get; set; }
     
+    /// <summary>
+    /// 全生命周期毛利率
+    /// </summary>
+    public decimal TotallifeCyclegrossMargin{ get; set; }
     
-    
+    /// <summary>
+    /// 增加客供料毛利率
+    /// </summary>
+    public decimal ClientGrossMargin { get; set; }
+    /// <summary>
+    /// 剔除NRE分摊费用毛利率
+    /// </summary>
+    public decimal NreGrossMargin { get; set; }
 }
 
 /// <summary>

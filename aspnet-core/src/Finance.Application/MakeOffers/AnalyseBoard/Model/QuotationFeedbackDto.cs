@@ -9,16 +9,10 @@ public class QuotationFeedbackDto
     /// 流程号Id
     /// </summary>
     public long AuditFlowId { get; set; }
-    /// <summary>
-    /// 毛利率
-    /// </summary>
-    public List<decimal> grossMarginList { get; set; }
+   
 
 
-    /// <summary>
-    /// 单价表
-    /// </summary>
-    public List<UnitPriceModel> UnitPrice { get; set; }
+  
 
     /// <summary>
     /// Nre相关

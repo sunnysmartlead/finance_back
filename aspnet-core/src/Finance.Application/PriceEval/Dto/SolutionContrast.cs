@@ -7,10 +7,7 @@ using System.Threading.Tasks;
 
 namespace Finance.PriceEval.Dto
 {
-    /// <summary>
-    /// 获取 其他成本项目 参数输入
-    /// </summary>
-    public class GetOtherCostItemInput
+    public class GetSolutionContrastInput
     {
         /// <summary>
         /// 审批流程主表Id
@@ -21,12 +18,18 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 梯度Id
         /// </summary>
+        [Required]
         public virtual long GradientId { get; set; }
 
         /// <summary>
-        /// 方案表ID
+        /// 方案表ID：1
         /// </summary>
-        public long SolutionId { get; set; }
+        public long SolutionId_1 { get; set; }
+
+        /// <summary>
+        /// 方案表ID：2
+        /// </summary>
+        public long SolutionId_2 { get; set; }
 
         /// <summary>
         /// 年份
@@ -40,61 +43,54 @@ namespace Finance.PriceEval.Dto
         [Required]
         public virtual YearType UpDown { get; set; }
     }
-
     /// <summary>
-    /// 获取 其他成本项目 参数输入
+    /// 方案对比Dto
     /// </summary>
-    public class GetOtherCostItem2Input
+    public class SolutionContrast
     {
         /// <summary>
-        /// 审批流程主表Id
+        /// 项目名
         /// </summary>
-        [Required]
-        public virtual long AuditFlowId { get; set; }
+        public virtual string ItemName { get; set; }
 
         /// <summary>
-        /// 梯度Id
+        /// 方案1：单价
         /// </summary>
-        public virtual long GradientId { get; set; }
+        public virtual decimal? Price_1 { get; set; }
 
         /// <summary>
-        /// 方案表ID
+        /// 方案1：数量
         /// </summary>
-        public long SolutionId { get; set; }
+        public virtual decimal? Count_1 { get; set; }
 
         /// <summary>
-        /// 年份
+        /// 方案1：汇率
         /// </summary>
-        [Required]
-        public virtual int Year { get; set; }
+        public virtual decimal? Rate_1 { get; set; }
 
         /// <summary>
-        /// 年份类型
+        /// 方案2：合计
         /// </summary>
-        [Required]
-        public virtual YearType UpDown { get; set; }
-    }
-
-    /// <summary>
-    /// 获取 其他成本项目 参数输入
-    /// </summary>
-    public class GetOtherCostItem2ListInput
-    {
-        /// <summary>
-        /// 审批流程主表Id
-        /// </summary>
-        [Required]
-        public virtual long AuditFlowId { get; set; }
+        public virtual decimal? Sum_1 { get; set; }
 
         /// <summary>
-        /// 梯度Id
+        /// 方案2：单价
         /// </summary>
-        public virtual long GradientId { get; set; }
+        public virtual decimal? Price_2 { get; set; }
 
         /// <summary>
-        /// 方案表ID
+        /// 方案2：数量
         /// </summary>
-        public long SolutionId { get; set; }
+        public virtual decimal? Count_2 { get; set; }
 
+        /// <summary>
+        /// 方案2：汇率
+        /// </summary>
+        public virtual decimal? Rate_2 { get; set; }
+
+        /// <summary>
+        /// 方案2：合计
+        /// </summary>
+        public virtual decimal? Sum_2 { get; set; }
     }
 }

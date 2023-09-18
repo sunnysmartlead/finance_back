@@ -17,6 +17,10 @@ namespace Finance.MakeOffers
         /// </summary> 
         public long AuditFlowId { get; set; }
         /// <summary>
+        /// 目标单价(内部)
+        /// </summary>
+        public decimal InteriorTargetUnitPrice { get; set; }
+        /// <summary>
         /// 目标价(内部)整套毛利率
         /// </summary>
         public decimal AllInteriorGrossMargin { get; set; }
@@ -29,15 +33,19 @@ namespace Finance.MakeOffers
         /// </summary>
         public decimal AllInteriorNreGrossMargin { get; set; }
         /// <summary>
+        /// 目标单价(客户)
+        /// </summary>
+        public decimal ClientTargetUnitPrice { get; set; }
+        /// <summary>
         /// 目标价(客户)整套毛利率
         /// </summary>
         public decimal AllClientGrossMargin { get; set; }
         /// <summary>
-        /// 增加客供料毛利率
+        /// (客户)增加客供料毛利率
         /// </summary>
         public decimal AllClientClientGrossMargin { get; set; }
         /// <summary>
-        /// 剔除NRE分摊费用毛利率
+        /// (客户)剔除NRE分摊费用毛利率
         /// </summary>
         public decimal AllClientNreGrossMargin { get; set; }
         /// <summary>
@@ -52,18 +60,12 @@ namespace Finance.MakeOffers
         /// 单车产品数量
         /// </summary>
         public long ProductNumber { get; set; }
-        /// <summary>
-        /// 目标单价(内部)
-        /// </summary>
-        public decimal InteriorTargetUnitPrice { get; set; }
+      
         /// <summary>
         /// 目标毛利率(内部)
         /// </summary>
         public decimal InteriorTargetGrossMargin { get; set; }
-        /// <summary>
-        /// 目标单价(客户)
-        /// </summary>
-        public decimal ClientTargetUnitPrice { get; set; }
+      
         /// <summary>
         /// 目标毛利率(客户)
         /// </summary>
@@ -76,5 +78,13 @@ namespace Finance.MakeOffers
         /// 本次报价-毛利率
         /// </summary>
         public decimal OffeGrossMargin { get; set; }
+        /// <summary>
+        /// (本次报价增加客供料毛利率
+        /// </summary>
+        public decimal ClientGrossMargin { get; set; }
+        /// <summary>
+        /// 本次报价剔除NRE分摊费用毛利率
+        /// </summary>
+        public decimal NreGrossMargin { get; set; }
     }
 }

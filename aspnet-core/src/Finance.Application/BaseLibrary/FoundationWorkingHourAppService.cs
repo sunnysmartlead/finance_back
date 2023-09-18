@@ -296,8 +296,8 @@ namespace Finance.BaseLibrary
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        foundationWorkingHourDto.ProcessName = (row[keys[1]]).ToString();
-                        foundationWorkingHourDto.ProcessNumber = (row[keys[0]]).ToString();
+                        foundationWorkingHourDto.ProcessNumber = (row[keys[1]]).ToString();
+                        foundationWorkingHourDto.ProcessName = (row[keys[0]]).ToString();
                         // 解析年度部分
                         List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();
@@ -307,7 +307,7 @@ namespace Finance.BaseLibrary
                             FoundationWorkingHourItemDto foundationWorkingHourItem = new FoundationWorkingHourItemDto();
                             string yearstr = yearStrs[j];
                             Dictionary<string, object> yearItem = new Dictionary<string, object>();
-                            int fromStartIndex = j * 3 + 3;
+                            int fromStartIndex = j * 3 + 2;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
@@ -320,6 +320,12 @@ namespace Finance.BaseLibrary
                         foundationWorkingHourDto.ListFoundationWorkingHour = foundationWorkingHourItemDtos;
 
                         foundationWorkingHourDtos.Add(foundationWorkingHourDto);
+                    }
+                    var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false);
+                    foreach (var item in query)
+                    {
+                        await _foundationWorkingHourRepository.DeleteAsync(s => s.Id == item.Id);
+                        await _foundationFoundationWorkingHourItemRepository.DeleteAsync(s => s.FoundationWorkingHourId == item.Id);
                     }
                     if (null != foundationWorkingHourDtos)
                     {

@@ -14,7 +14,7 @@ public class NreQuotation: FullAuditedEntity<long>
     /// <summary>
     /// 方案的id
     /// </summary>
-    public long SolutionId { get; set; }
+    public long? SolutionId { get; set; }
     /// <summary>
     /// 表单名称  如{手板件费用,模具费,生产设备费}
     /// </summary>
