@@ -1295,12 +1295,16 @@ namespace Finance.NerPricing
                     if (rowExcls.Count is 0) throw new FriendlyException("模板数据为空/未使用标准模板");
                     List<FoundationreliableDto> foundationreliables = await _foundationreliableAppService.GetListAllAsync(new GetFoundationreliablesInput() { MaxResultCount = 9999 });
                     List<EnvironmentalExperimentFeeModel> rows = ObjectMapper.Map<List<EnvironmentalExperimentFeeModel>>(rowExcls);
-                    rows.ForEach(row =>
+                    rows.RemoveAll(p=>p.ProjectName==""||p.ProjectName==null);
+                    int index = 3;
+                    rows.ForEach((row) =>
                     {
                         FoundationreliableDto foundationreliableDto = foundationreliables.FirstOrDefault(p => p.Name == row.ProjectName);
-                        if (foundationreliableDto is null) throw new FriendlyException("实验项目为请根据下拉选择填写!");
+                        if (foundationreliableDto is null) throw new FriendlyException( $"{index}行,您填写的值为{row.ProjectName},实验项目为请根据下拉选择填写!");
                         row.UnitPrice = (decimal)foundationreliableDto.Price;
                         row.Unit = foundationreliableDto.Unit;
+                        row.AdjustmentCoefficient = 1;//调整系数默认为1
+                        index++;
                     });
                     return rows;
                 }
@@ -1801,7 +1805,8 @@ namespace Finance.NerPricing
                             
                                Uph=a.Uph,
                                Value= (decimal)a.Value,
-                               Year= (int)b.Year,                            
+                               Year= (int)b.Year,
+                               Description=a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
                            }).ToList();
                 if (result.Count is not 0)
                 {
@@ -1867,7 +1872,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) //* UphAndValuesd
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
@@ -1877,7 +1882,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
-                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd,
+                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) //* UphAndValuesd,
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
                 modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
@@ -1899,7 +1904,7 @@ namespace Finance.NerPricing
                          ToolingName = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Number = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd
+                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) //* UphAndValuesd
                      }).ToList();
                 modify.FixtureCost = productionEquipmentCostModelsZj;
                 modify.FixtureCostTotal = modify.FixtureCost.Sum(p => p.Cost);
