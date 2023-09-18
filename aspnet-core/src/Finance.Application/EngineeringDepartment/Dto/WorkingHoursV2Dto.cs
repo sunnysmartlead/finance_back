@@ -12,6 +12,10 @@ namespace Finance.EngineeringDepartment.Dto
     public class WorkingHoursV2Dto
     {
         /// <summary>
+        /// 数据库ID
+        /// </summary>
+        public long DbId { get; set; }
+        /// <summary>
         /// 年份
         /// </summary>
 
