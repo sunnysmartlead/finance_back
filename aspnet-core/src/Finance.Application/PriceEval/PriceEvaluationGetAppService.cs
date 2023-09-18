@@ -780,7 +780,9 @@ namespace Finance.PriceEval
                 } ,
             };
                 var ft = otherCostItem2.FirstOrDefault(p => p.ItemName == "分摊数量");
-                ft.Total = getOtherCostItem2List.Sum(p => p.Total) / getOtherCostItem2List.Sum(p => p.Cost);
+
+                var otherCostSum = getOtherCostItem2List.Sum(p => p.Cost);
+                ft.Total = otherCostSum == 0 ? 0 : getOtherCostItem2List.Sum(p => p.Total) / otherCostSum;
 
                 otherCostItem2.ForEach(p =>
                 {
@@ -910,7 +912,7 @@ namespace Finance.PriceEval
             };
             otherCostItem2List.ForEach(item =>
             {
-                item.Count = shareCount.Count;
+                item.Count = shareCount is null ? 0 : shareCount.Count;
                 item.Cost = item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
             });
             otherCostItem2List.Add(new OtherCostItem2List
@@ -1009,7 +1011,7 @@ namespace Finance.PriceEval
 
             data.ForEach(p => p.IsCustomerSupplyStr = p.IsCustomerSupply ? "是" : "否");
 
-            return data;
+            return data.OrderByDescending(p => p.TotalMoneyCyn).ToList();
             async Task<List<Material>> GetAllData(GetBomCostInput input)
             {
                 var gradient = await _gradientRepository.GetAsync(input.GradientId);
@@ -1684,8 +1686,9 @@ namespace Finance.PriceEval
 
             //产品类别
             var modelCount = await _modelCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == solution.Productld);
-            //1-目标毛利率
-            var grossProfitMargin = 1 - GetGrossProfitMargin(modelCount.ProductType);
+            
+            ////1-目标毛利率
+            //var grossProfitMargin = 1 - GetGrossProfitMargin(modelCount.ProductType);
 
 
             //成本比例
@@ -1698,9 +1701,11 @@ namespace Finance.PriceEval
                                    //                        && qy.Year <= input.Year
                                    //                        select qy).OrderByDescending(p => p.Year).Select(p => p.Rate).FirstOrDefaultAsync();
 
-            //材料成本合计（质量成本（MAX)）
-            var totalMaterialCost = (electronicAndStructureList.Sum(p => p.MaterialCost) + electronicAndStructureList.Sum(p => p.MoqShareCount)
-                + logisticsFee + manufacturingCostSubtotal) / grossProfitMargin * costProportion;
+            ////材料成本合计（质量成本（MAX)）
+            //var totalMaterialCost = (electronicAndStructureList.Sum(p => p.MaterialCost) + electronicAndStructureList.Sum(p => p.MoqShareCount)
+            //    + logisticsFee + manufacturingCostSubtotal) / grossProfitMargin * costProportion;
+
+            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) * costProportion;
 
 
             //产品小类名称
