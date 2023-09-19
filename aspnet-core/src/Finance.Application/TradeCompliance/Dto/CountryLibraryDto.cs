@@ -13,7 +13,11 @@ namespace Finance.TradeCompliance.Dto
     /// </summary>
     public class CountryLibraryDto
     {
-     
+
+        /// <summary>
+        /// 数据库ID
+        /// </summary>
+        public long DbId { get; set; }
         /// <summary>
         /// 国家类型
         /// </summary>

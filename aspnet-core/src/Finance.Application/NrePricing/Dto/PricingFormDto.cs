@@ -186,6 +186,10 @@ namespace Finance.NrePricing.Dto
 		[Column("value")]
         public decimal Value { get; set; }
         /// <summary>
+        /// Description注释名
+        /// </summary>
+        public string Description { get; set; }
+        /// <summary>
         /// 年份
         /// </summary>
         public int Year { get; set; }

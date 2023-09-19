@@ -11,6 +11,7 @@ using Finance.FinanceParameter;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
+using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -1036,8 +1037,8 @@ namespace Finance.Processes
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        processHoursEnterDto.ProcessName = (row[keys[1]]).ToString();
-                        processHoursEnterDto.ProcessNumber = (row[keys[0]]).ToString();
+                        processHoursEnterDto.ProcessName = (row[keys[2]]).ToString();
+                        processHoursEnterDto.ProcessNumber = (row[keys[1]]).ToString();
 
                         //获取设备
                         Object deviceInfo = new Object();
@@ -1346,12 +1347,35 @@ namespace Finance.Processes
                     //每月需求
                     decimal lineQuantity = modelCountYear.Quantity * 1000 / month;
                     //线体数量
-                    decimal Xtsl  =  lineQuantity / Capacity;
-                    //线体分摊率
-                    decimal x = (Capacity / Xtsl);
-                    decimal xtftl  =  (lineQuantity / x)*(decimal)0.8;
-                    decimal XtslVale = decimal.Parse(Xtsl.ToString("0.00"));
-                    decimal GtVale = decimal.Parse(xtftl.ToString("0.00"));
+                    decimal XtslVale = 0;
+                    decimal GtVale = 0;
+                    if (!Capacity.Equals(0.000M))
+                    {
+                        decimal xtftl = 0;
+                        decimal Xtsl = Math.Ceiling(Math.Round(lineQuantity / Capacity, 2));
+                        //线体分摊率
+                        if (!Xtsl.Equals(0.000M))
+                        {
+                            decimal x = (Capacity / Xtsl);
+                            if (!x.Equals(0.000M))
+                            {
+                                xtftl = 0;
+                            }
+                            else {
+                                xtftl = (lineQuantity / x) * (decimal)0.8;
+                            }
+
+                        }
+                        else {
+                            xtftl = 0;
+                        }
+                       
+                   
+
+                        XtslVale = Xtsl;
+                        GtVale = decimal.Parse(xtftl.ToString("0.00"));
+                    }
+                   
 
                     processHoursEnterLineDto.Xtsl = XtslVale;
                     processHoursEnterLineDto.Gxftl = GtVale;
