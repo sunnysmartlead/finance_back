@@ -55,6 +55,7 @@ namespace Finance.PriceEval
         #region 类初始化
 
 
+        private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
 
         private readonly IRepository<ProductInformation, long> _productInformationRepository;
         private readonly IRepository<Department, long> _departmentRepository;
@@ -95,7 +96,7 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
-        public PriceEvaluationAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+        public PriceEvaluationAppService(IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
             IRepository<ProductInformation, long> productInformationRepository, IRepository<Department, long> departmentRepository, NrePricingAppService nrePricingAppService, IRepository<AuditFlow, long> auditFlowRepository, IRepository<FileManagement, long> fileManagementRepository, AuditFlowAppService flowAppService, IRepository<NreIsSubmit, long> productIsSubmit,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
@@ -106,6 +107,7 @@ namespace Finance.PriceEval
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
+            _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
             _nrePricingAppService = nrePricingAppService;
@@ -168,271 +170,323 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
-
-            if (input.Opinion.IsNullOrWhiteSpace())
+            if (!input.IsSubmit)
             {
-                input.Opinion = FinanceConsts.EvalReason_Fabg;
-            }
-
-            if (input.CountryType.IsNullOrWhiteSpace())
-            {
-                input.CountryType = "空";
-            }
-
-
-            var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
-                              join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
-                              where d.Id == input.Country || c.NationalType == "二级管制国家"
-                              select new
-                              {
-                                  c.Id,
-                                  c.NationalType,
-                                  DictionaryId = d.Id
-                              }).ToListAsync();
-            var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
-            var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
-
-            long auditFlowId;
-            //var check = from m in input.ModelCount
-            //            join p in input.ProductInformation on m.Product equals p.Product
-            //            select m;
-            //if (check.Count() != input.ModelCount.Count)
-            //{
-            //    throw new FriendlyException($"产品信息和模组数量没有正确对应！");
-            //}
-            if (!input.SorFile.Any())
-            {
-                throw new FriendlyException($"SOR文件没有上传！");
-            }
-
-            ////验证模组信息是否存在重复数据
-            //var isModelCount = input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1);
-            //if (isModelCount)
-            //{
-            //    throw new FriendlyException($"模组数量有重复的零件名称！");
-            //}
-            var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
-            if (isProductInformation)
-            {
-                throw new FriendlyException($"产品信息有重复的零件名称！");
-            }
-
-            var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
-            var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
-            var requirementMinYeay = input.Requirement.Min(p => p.Year);
-
-
-
-            if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
-            {
-                throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
-            }
-
-            if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
-            {
-
-                throw new FriendlyException($"模组数量合计有重复的产品名称！");
-            }
-
-            if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
-            {
-
-                throw new FriendlyException($"模组数量合计有重复的客户零件号！");
-            }
-
-            ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
-            //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
-
-            //var gradientCheck = from m in modelCountDto
-            //                    join p in input.GradientModel on m.PartNumber equals p.Number
-            //                    select m;
-
-            //var dfd = gradientCheck.Count();
-            //var yh35dfd = modelCountDto.Count();
-
-            //if (gradientCheck.Count() != modelCountDto.Count() || modelCountDto.Count() != input.GradientModel.Count)
-            //{
-            //    throw new FriendlyException($"模组数量和梯度模组没有正确对应！");
-            //}
-
-
-            //PriceEvaluation
-            var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
-            priceEvaluation.CountryLibraryId = countryLibraryId;
-
-            var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
-
-            var department = await _departmentRepository.FirstOrDefaultAsync(user.DepartmentId);
-
-            if (department is not null)
-            {
-                priceEvaluation.DraftingCompanyId = department.CompanyId;
-            }
-            priceEvaluation.DraftingDepartmentId = user.DepartmentId;
-
-            //long flowId = await _flowAppService.SavaNewAuditFlowInfo(new Audit.Dto.AuditFlowDto()
-            //{
-            //    QuoteProjectName = input.ProjectName,
-            //    QuoteProjectNumber = input.ProjectCode
-            //});
-            //auditFlowId = flowId;
-
-            auditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
-            {
-                WorkflowId = WorkFlowCreator.MainFlowId,
-                Title = input.Title,
-                FinanceDictionaryDetailId = input.Opinion
-            });
-
-            priceEvaluation.AuditFlowId = auditFlowId;
-            var priceEvaluationId = await _priceEvaluationRepository.InsertAndGetIdAsync(priceEvaluation);
-
-
-            //Sample
-            var samples = ObjectMapper.Map<List<Sample>>(input.Sample);
-            foreach (var sample in samples)
-            {
-                sample.PriceEvaluationId = priceEvaluationId;
-                sample.AuditFlowId = auditFlowId;
-                await _sampleRepository.InsertAsync(sample);
-            }
-
-
-            //Pcs
-            foreach (var createPcsDto in input.Pcs)
-            {
-                var pcs = ObjectMapper.Map<Pcs>(createPcsDto);
-                pcs.PriceEvaluationId = priceEvaluationId;
-                pcs.AuditFlowId = auditFlowId;
-                var pcsId = await _pcsRepository.InsertAndGetIdAsync(pcs);
-                //Pcs 年份
-                foreach (var createPcsYearDto in createPcsDto.PcsYearList)
+                if ((!input.AuditFlowId.HasValue) || input.AuditFlowId.Value == default)
                 {
-                    var pcsYear = ObjectMapper.Map<PcsYear>(createPcsYearDto);
-                    pcsYear.AuditFlowId = auditFlowId;
-                    pcsYear.PcsId = pcsId;
-                    await _pcsYearRepository.InsertAsync(pcsYear);
+                    input.AuditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    {
+                        WorkflowId = WorkFlowCreator.MainFlowId,
+                        Title = input.Title,
+                        FinanceDictionaryDetailId = FinanceConsts.Save,
+                    });
                 }
-            }
 
 
-            //车型下的模组数量
-            foreach (var createCarModelCountDto in input.CarModelCount)
-            {
-                var carModelCount = ObjectMapper.Map<CarModelCount>(createCarModelCountDto);
-                carModelCount.PriceEvaluationId = priceEvaluationId;
-                carModelCount.AuditFlowId = auditFlowId;
-                var productId = await _carModelCountRepository.InsertAndGetIdAsync(carModelCount);
+                var json = JsonConvert.SerializeObject(input);
 
-                foreach (var createModelCountYearDto in createCarModelCountDto.ModelCountYearList)
+                var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+                if (priceEvaluationStartData is null)
                 {
-                    var carModelCountYear = ObjectMapper.Map<CarModelCountYear>(createModelCountYearDto);
-                    carModelCountYear.AuditFlowId = auditFlowId;
-                    carModelCountYear.CarModelCountId = productId;
-                    await _carModelCountYearRepository.InsertAsync(carModelCountYear);
+                    await _priceEvaluationStartDataRepository.InsertAsync(new PriceEvaluationStartData
+                    {
+                        AuditFlowId = input.AuditFlowId.Value,
+                        DataJson = json
+                    });
                 }
-            }
-
-            var modelCountIds = new List<(string number, string product, long productId)>();
-
-            //模组数量合计
-            foreach (var createModelCountDto in input.ModelCount)
-            {
-                var modelCount = ObjectMapper.Map<ModelCount>(createModelCountDto);
-                modelCount.PriceEvaluationId = priceEvaluationId;
-                modelCount.AuditFlowId = auditFlowId;
-                var productId = await _modelCountRepository.InsertAndGetIdAsync(modelCount);
-
-                modelCountIds.Add((createModelCountDto.PartNumber, createModelCountDto.Product, productId));
-
-                foreach (var createModelCountYearDto in createModelCountDto.ModelCountYearList)
+                else
                 {
-                    var modelCountYear = ObjectMapper.Map<ModelCountYear>(createModelCountYearDto);
-                    modelCountYear.ProductId = productId;
-                    modelCountYear.AuditFlowId = auditFlowId;
-                    await _modelCountYearRepository.InsertAsync(modelCountYear);
+                    priceEvaluationStartData.DataJson = json;
                 }
+
+                return new PriceEvaluationStartResult { AuditFlowId = input.AuditFlowId.Value, IsSuccess = true, Message = "添加成功！" };
             }
-
-            //要求
-            var requirements = ObjectMapper.Map<List<Requirement>>(input.Requirement);
-            foreach (var requirement in requirements)
+            else
             {
-                requirement.PriceEvaluationId = priceEvaluationId;
-                requirement.AuditFlowId = auditFlowId;
-                await _requirementRepository.InsertAsync(requirement);
-            }
+                //var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+                //if (priceEvaluationStartData is not null)
+                //{
+                //    input = JsonConvert.DeserializeObject<PriceEvaluationStartInput>(priceEvaluationStartData.DataJson);
+                //}
 
-            //产品信息
-            var productInformations = ObjectMapper.Map<List<ProductInformation>>(input.ProductInformation);
-            foreach (var productInformation in productInformations)
-            {
-                productInformation.PriceEvaluationId = priceEvaluationId;
-                productInformation.AuditFlowId = auditFlowId;
-                await _productInformationRepository.InsertAsync(productInformation);
-            }
+                if (input.Opinion.IsNullOrWhiteSpace())
+                {
+                    input.Opinion = FinanceConsts.EvalReason_Fabg;
+                }
+
+                if (input.CountryType.IsNullOrWhiteSpace())
+                {
+                    input.CountryType = "空";
+                }
 
 
-            //客户目标价
-            var customerTargetPrices = ObjectMapper.Map<List<CustomerTargetPrice>>(input.CustomerTargetPrice);
-            foreach (var customerTargetPrice in customerTargetPrices)
-            {
-                customerTargetPrice.PriceEvaluationId = priceEvaluationId;
-                customerTargetPrice.AuditFlowId = auditFlowId;
-                customerTargetPrice.ProductId = modelCountIds.First(p => p.product == customerTargetPrice.Product).productId;
-                await _customerTargetPriceRepository.InsertAsync(customerTargetPrice);
-            }
+                var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                                  join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                                  where d.Id == input.Country || c.NationalType == "二级管制国家"
+                                  select new
+                                  {
+                                      c.Id,
+                                      c.NationalType,
+                                      DictionaryId = d.Id
+                                  }).ToListAsync();
+                var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
+                var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
 
-            //梯度
-            var gradients = ObjectMapper.Map<List<Gradient>>(input.Gradient);
-            var gradientIds = new List<(long id, decimal gradientValue)>();
-            foreach (var gradient in gradients)
-            {
-                gradient.PriceEvaluationId = priceEvaluationId;
-                gradient.AuditFlowId = auditFlowId;
-                var id = await _gradientRepository.InsertAndGetIdAsync(gradient);
-                gradientIds.Add((id, gradient.GradientValue));
-            }
+                long auditFlowId;
+                //var check = from m in input.ModelCount
+                //            join p in input.ProductInformation on m.Product equals p.Product
+                //            select m;
+                //if (check.Count() != input.ModelCount.Count)
+                //{
+                //    throw new FriendlyException($"产品信息和模组数量没有正确对应！");
+                //}
+                if (!input.SorFile.Any())
+                {
+                    throw new FriendlyException($"SOR文件没有上传！");
+                }
 
-            //梯度模组
-            foreach (var gradientModel in input.GradientModel)
-            {
-                var entity = ObjectMapper.Map<GradientModel>(gradientModel);
-                entity.PriceEvaluationId = priceEvaluationId;
-                entity.AuditFlowId = auditFlowId;
-                entity.GradientId = gradientIds.First(p => p.gradientValue == gradientModel.GradientValue).id;
-                entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
-                var gradientModelId = await _gradientModelRepository.InsertAndGetIdAsync(entity);
-                var gradientModelYears = ObjectMapper.Map<List<GradientModelYear>>(gradientModel.GradientModelYear);
-                foreach (var gradient in gradientModelYears)
+                ////验证模组信息是否存在重复数据
+                //var isModelCount = input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1);
+                //if (isModelCount)
+                //{
+                //    throw new FriendlyException($"模组数量有重复的零件名称！");
+                //}
+                var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
+                if (isProductInformation)
+                {
+                    throw new FriendlyException($"产品信息有重复的零件名称！");
+                }
+
+                var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
+                var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
+                var requirementMinYeay = input.Requirement.Min(p => p.Year);
+
+
+
+                if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
+                {
+                    throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
+                }
+
+                if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
+                {
+
+                    throw new FriendlyException($"模组数量合计有重复的产品名称！");
+                }
+
+                if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
+                {
+
+                    throw new FriendlyException($"模组数量合计有重复的客户零件号！");
+                }
+
+                ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
+                //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
+
+                //var gradientCheck = from m in modelCountDto
+                //                    join p in input.GradientModel on m.PartNumber equals p.Number
+                //                    select m;
+
+                //var dfd = gradientCheck.Count();
+                //var yh35dfd = modelCountDto.Count();
+
+                //if (gradientCheck.Count() != modelCountDto.Count() || modelCountDto.Count() != input.GradientModel.Count)
+                //{
+                //    throw new FriendlyException($"模组数量和梯度模组没有正确对应！");
+                //}
+
+
+                //PriceEvaluation
+                var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
+                priceEvaluation.CountryLibraryId = countryLibraryId;
+
+                var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
+
+                var department = await _departmentRepository.FirstOrDefaultAsync(user.DepartmentId);
+
+                if (department is not null)
+                {
+                    priceEvaluation.DraftingCompanyId = department.CompanyId;
+                }
+                priceEvaluation.DraftingDepartmentId = user.DepartmentId;
+
+                //long flowId = await _flowAppService.SavaNewAuditFlowInfo(new Audit.Dto.AuditFlowDto()
+                //{
+                //    QuoteProjectName = input.ProjectName,
+                //    QuoteProjectNumber = input.ProjectCode
+                //});
+                //auditFlowId = flowId;
+                if ((!input.AuditFlowId.HasValue) || input.AuditFlowId.Value == default)
+                {
+                    auditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    {
+                        WorkflowId = WorkFlowCreator.MainFlowId,
+                        Title = input.Title,
+                        FinanceDictionaryDetailId = input.Opinion
+                    });
+                }
+                else
+                {
+                    auditFlowId = input.AuditFlowId.Value;
+                    await _workflowInstanceAppService.SubmitNode(new WorkFlows.Dto.SubmitNodeInput
+                    {
+                        FinanceDictionaryDetailId = input.Opinion,
+                        Comment = input.Comment,
+                        NodeInstanceId = input.NodeInstanceId,
+                    });
+                }
+
+
+                priceEvaluation.AuditFlowId = auditFlowId;
+                var priceEvaluationId = await _priceEvaluationRepository.InsertAndGetIdAsync(priceEvaluation);
+
+
+                //Sample
+                var samples = ObjectMapper.Map<List<Sample>>(input.Sample);
+                foreach (var sample in samples)
+                {
+                    sample.PriceEvaluationId = priceEvaluationId;
+                    sample.AuditFlowId = auditFlowId;
+                    await _sampleRepository.InsertAsync(sample);
+                }
+
+
+                //Pcs
+                foreach (var createPcsDto in input.Pcs)
+                {
+                    var pcs = ObjectMapper.Map<Pcs>(createPcsDto);
+                    pcs.PriceEvaluationId = priceEvaluationId;
+                    pcs.AuditFlowId = auditFlowId;
+                    var pcsId = await _pcsRepository.InsertAndGetIdAsync(pcs);
+                    //Pcs 年份
+                    foreach (var createPcsYearDto in createPcsDto.PcsYearList)
+                    {
+                        var pcsYear = ObjectMapper.Map<PcsYear>(createPcsYearDto);
+                        pcsYear.AuditFlowId = auditFlowId;
+                        pcsYear.PcsId = pcsId;
+                        await _pcsYearRepository.InsertAsync(pcsYear);
+                    }
+                }
+
+
+                //车型下的模组数量
+                foreach (var createCarModelCountDto in input.CarModelCount)
+                {
+                    var carModelCount = ObjectMapper.Map<CarModelCount>(createCarModelCountDto);
+                    carModelCount.PriceEvaluationId = priceEvaluationId;
+                    carModelCount.AuditFlowId = auditFlowId;
+                    var productId = await _carModelCountRepository.InsertAndGetIdAsync(carModelCount);
+
+                    foreach (var createModelCountYearDto in createCarModelCountDto.ModelCountYearList)
+                    {
+                        var carModelCountYear = ObjectMapper.Map<CarModelCountYear>(createModelCountYearDto);
+                        carModelCountYear.AuditFlowId = auditFlowId;
+                        carModelCountYear.CarModelCountId = productId;
+                        await _carModelCountYearRepository.InsertAsync(carModelCountYear);
+                    }
+                }
+
+                var modelCountIds = new List<(string number, string product, long productId)>();
+
+                //模组数量合计
+                foreach (var createModelCountDto in input.ModelCount)
+                {
+                    var modelCount = ObjectMapper.Map<ModelCount>(createModelCountDto);
+                    modelCount.PriceEvaluationId = priceEvaluationId;
+                    modelCount.AuditFlowId = auditFlowId;
+                    var productId = await _modelCountRepository.InsertAndGetIdAsync(modelCount);
+
+                    modelCountIds.Add((createModelCountDto.PartNumber, createModelCountDto.Product, productId));
+
+                    foreach (var createModelCountYearDto in createModelCountDto.ModelCountYearList)
+                    {
+                        var modelCountYear = ObjectMapper.Map<ModelCountYear>(createModelCountYearDto);
+                        modelCountYear.ProductId = productId;
+                        modelCountYear.AuditFlowId = auditFlowId;
+                        await _modelCountYearRepository.InsertAsync(modelCountYear);
+                    }
+                }
+
+                //要求
+                var requirements = ObjectMapper.Map<List<Requirement>>(input.Requirement);
+                foreach (var requirement in requirements)
+                {
+                    requirement.PriceEvaluationId = priceEvaluationId;
+                    requirement.AuditFlowId = auditFlowId;
+                    await _requirementRepository.InsertAsync(requirement);
+                }
+
+                //产品信息
+                var productInformations = ObjectMapper.Map<List<ProductInformation>>(input.ProductInformation);
+                foreach (var productInformation in productInformations)
+                {
+                    productInformation.PriceEvaluationId = priceEvaluationId;
+                    productInformation.AuditFlowId = auditFlowId;
+                    await _productInformationRepository.InsertAsync(productInformation);
+                }
+
+
+                //客户目标价
+                var customerTargetPrices = ObjectMapper.Map<List<CustomerTargetPrice>>(input.CustomerTargetPrice);
+                foreach (var customerTargetPrice in customerTargetPrices)
+                {
+                    customerTargetPrice.PriceEvaluationId = priceEvaluationId;
+                    customerTargetPrice.AuditFlowId = auditFlowId;
+                    customerTargetPrice.ProductId = modelCountIds.First(p => p.product == customerTargetPrice.Product).productId;
+                    await _customerTargetPriceRepository.InsertAsync(customerTargetPrice);
+                }
+
+                //梯度
+                var gradients = ObjectMapper.Map<List<Gradient>>(input.Gradient);
+                var gradientIds = new List<(long id, decimal gradientValue)>();
+                foreach (var gradient in gradients)
                 {
                     gradient.PriceEvaluationId = priceEvaluationId;
                     gradient.AuditFlowId = auditFlowId;
-                    gradient.GradientModelId = gradientModelId;
-                    gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
-                    await _gradientModelYearRepository.InsertAsync(gradient);
+                    var id = await _gradientRepository.InsertAndGetIdAsync(gradient);
+                    gradientIds.Add((id, gradient.GradientValue));
                 }
-            }
 
-            //分摊数量
-            var shareCounts = ObjectMapper.Map<List<ShareCount>>(input.ShareCount);
-            foreach (var shareCount in shareCounts)
-            {
-                shareCount.PriceEvaluationId = priceEvaluationId;
-                shareCount.AuditFlowId = auditFlowId;
-                shareCount.ProductId = modelCountIds.First(p => p.product == shareCount.Name).productId;
-                await _shareCountRepository.InsertAsync(shareCount);
-            }
+                //梯度模组
+                foreach (var gradientModel in input.GradientModel)
+                {
+                    var entity = ObjectMapper.Map<GradientModel>(gradientModel);
+                    entity.PriceEvaluationId = priceEvaluationId;
+                    entity.AuditFlowId = auditFlowId;
+                    entity.GradientId = gradientIds.First(p => p.gradientValue == gradientModel.GradientValue).id;
+                    entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                    var gradientModelId = await _gradientModelRepository.InsertAndGetIdAsync(entity);
+                    var gradientModelYears = ObjectMapper.Map<List<GradientModelYear>>(gradientModel.GradientModelYear);
+                    foreach (var gradient in gradientModelYears)
+                    {
+                        gradient.PriceEvaluationId = priceEvaluationId;
+                        gradient.AuditFlowId = auditFlowId;
+                        gradient.GradientModelId = gradientModelId;
+                        gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                        await _gradientModelYearRepository.InsertAsync(gradient);
+                    }
+                }
 
-            //_flowAppService.SavaProjectManagerInfo(input.ProjectManager);
-            //await _flowAppService.UpdateAuditFlowInfo(new AuditFlowDetailDto()
-            //{
-            //    AuditFlowId = auditFlowId,
-            //    ProcessIdentifier = AuditFlowConsts.AF_RequirementInput,
-            //    UserId = user.Id,
-            //    Opinion = OPINIONTYPE.Submit_Agreee
-            //});
-            return new PriceEvaluationStartResult { AuditFlowId = auditFlowId, IsSuccess = true, Message = "添加成功！" };
+                //分摊数量
+                var shareCounts = ObjectMapper.Map<List<ShareCount>>(input.ShareCount);
+                foreach (var shareCount in shareCounts)
+                {
+                    shareCount.PriceEvaluationId = priceEvaluationId;
+                    shareCount.AuditFlowId = auditFlowId;
+                    shareCount.ProductId = modelCountIds.First(p => p.product == shareCount.Name).productId;
+                    await _shareCountRepository.InsertAsync(shareCount);
+                }
+
+                //_flowAppService.SavaProjectManagerInfo(input.ProjectManager);
+                //await _flowAppService.UpdateAuditFlowInfo(new AuditFlowDetailDto()
+                //{
+                //    AuditFlowId = auditFlowId,
+                //    ProcessIdentifier = AuditFlowConsts.AF_RequirementInput,
+                //    UserId = user.Id,
+                //    Opinion = OPINIONTYPE.Submit_Agreee
+                //});
+                return new PriceEvaluationStartResult { AuditFlowId = auditFlowId, IsSuccess = true, Message = "添加成功！" };
+            }
         }
 
         /// <summary>
@@ -442,6 +496,18 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<PriceEvaluationStartInputResult> GetPriceEvaluationStartData(long auditFlowId)
         {
+            var priceEvaluationStartData1 = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+            if (priceEvaluationStartData1 is not null)
+            {
+                var result = JsonConvert.DeserializeObject<PriceEvaluationStartInputResult>(priceEvaluationStartData1.DataJson);
+
+                var fileNames1 = await _fileManagementRepository.GetAll().Where(p => result.SorFile.Contains(p.Id))
+                .Select(p => new FileUploadOutputDto { FileId = p.Id, FileName = p.Name, })
+                .ToListAsync();
+                result.Files = fileNames1;
+                return result;
+            }
+
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
             var priceEvaluationDto = ObjectMapper.Map<PriceEvaluationStartInputResult>(priceEvaluation);
 
