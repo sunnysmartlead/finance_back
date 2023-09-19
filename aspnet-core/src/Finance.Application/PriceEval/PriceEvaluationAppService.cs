@@ -56,6 +56,7 @@ namespace Finance.PriceEval
 
 
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
         private readonly IRepository<ProductInformation, long> _productInformationRepository;
         private readonly IRepository<Department, long> _departmentRepository;
@@ -96,7 +97,7 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
-        public PriceEvaluationAppService(IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+        public PriceEvaluationAppService(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
             IRepository<ProductInformation, long> productInformationRepository, IRepository<Department, long> departmentRepository, NrePricingAppService nrePricingAppService, IRepository<AuditFlow, long> auditFlowRepository, IRepository<FileManagement, long> fileManagementRepository, AuditFlowAppService flowAppService, IRepository<NreIsSubmit, long> productIsSubmit,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
@@ -107,6 +108,7 @@ namespace Finance.PriceEval
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
+            _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _productInformationRepository = productInformationRepository;
             _departmentRepository = departmentRepository;
@@ -172,25 +174,31 @@ namespace Finance.PriceEval
         {
             if (!input.IsSubmit)
             {
-                if ((!input.AuditFlowId.HasValue) || input.AuditFlowId.Value == default)
+                long auid;
+                if (input.NodeInstanceId == default)
                 {
-                    input.AuditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
                     {
                         WorkflowId = WorkFlowCreator.MainFlowId,
                         Title = input.Title,
                         FinanceDictionaryDetailId = FinanceConsts.Save,
                     });
                 }
+                else
+                {
+                    var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == input.NodeInstanceId);
+                    auid = nodeInstance.WorkFlowInstanceId;
+                }
 
 
                 var json = JsonConvert.SerializeObject(input);
 
-                var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+                var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auid);
                 if (priceEvaluationStartData is null)
                 {
                     await _priceEvaluationStartDataRepository.InsertAsync(new PriceEvaluationStartData
                     {
-                        AuditFlowId = input.AuditFlowId.Value,
+                        AuditFlowId = auid,
                         DataJson = json
                     });
                 }
@@ -199,7 +207,7 @@ namespace Finance.PriceEval
                     priceEvaluationStartData.DataJson = json;
                 }
 
-                return new PriceEvaluationStartResult { AuditFlowId = input.AuditFlowId.Value, IsSuccess = true, Message = "添加成功！" };
+                return new PriceEvaluationStartResult { AuditFlowId = auid, IsSuccess = true, Message = "添加成功！" };
             }
             else
             {
@@ -316,7 +324,7 @@ namespace Finance.PriceEval
                 //    QuoteProjectNumber = input.ProjectCode
                 //});
                 //auditFlowId = flowId;
-                if ((!input.AuditFlowId.HasValue) || input.AuditFlowId.Value == default)
+                if (input.NodeInstanceId == default)
                 {
                     auditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
                     {
@@ -327,7 +335,9 @@ namespace Finance.PriceEval
                 }
                 else
                 {
-                    auditFlowId = input.AuditFlowId.Value;
+                    var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == input.NodeInstanceId);
+                    auditFlowId = nodeInstance.WorkFlowInstanceId;
+
                     await _workflowInstanceAppService.SubmitNode(new WorkFlows.Dto.SubmitNodeInput
                     {
                         FinanceDictionaryDetailId = input.Opinion,

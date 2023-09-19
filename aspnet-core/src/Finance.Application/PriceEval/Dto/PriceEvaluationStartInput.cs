@@ -35,10 +35,10 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         public virtual bool IsSubmit { get; set; }
 
-        /// <summary>
-        /// 审批流程主表Id（如果是新建流程，填空。非新建，添流程Id）
-        /// </summary>
-        public virtual long? AuditFlowId { get; set; }
+        ///// <summary>
+        ///// 审批流程主表Id（如果是新建流程，填空。非新建，添流程Id）
+        ///// </summary>
+        //public virtual long? AuditFlowId { get; set; }
 
         ///// <summary>
         ///// 核价原因
