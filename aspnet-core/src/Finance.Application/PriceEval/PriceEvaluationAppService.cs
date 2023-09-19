@@ -496,7 +496,7 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<PriceEvaluationStartInputResult> GetPriceEvaluationStartData(long auditFlowId)
         {
-            var priceEvaluationStartData1 = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+            var priceEvaluationStartData1 = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
             if (priceEvaluationStartData1 is not null)
             {
                 var result = JsonConvert.DeserializeObject<PriceEvaluationStartInputResult>(priceEvaluationStartData1.DataJson);
