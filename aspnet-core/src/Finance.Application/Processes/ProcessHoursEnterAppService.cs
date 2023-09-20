@@ -664,7 +664,7 @@ namespace Finance.Processes
                     Comment = input.Comment,
                     FinanceDictionaryDetailId = input.Opinion,
                     NodeInstanceId = input.NodeInstanceId,
-                });
+                }); 
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";

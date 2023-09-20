@@ -162,7 +162,7 @@ namespace Finance.WorkFlows
 
             //改变业务开始节点的数据
             var businessStartNode = nodeInstanceList.First(p => p.NodeId == businessStartNodeId);
-            businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Current;
             businessStartNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
             //把数据定义进业务开始节点
@@ -200,6 +200,8 @@ namespace Finance.WorkFlows
                 //如果节点被激活
                 if (result)
                 {
+                    businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
 
                     foreach (var line in business2Lines.Intersect(targetBusiness2NodeLines))
