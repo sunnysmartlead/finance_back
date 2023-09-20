@@ -141,14 +141,17 @@ namespace Finance.BaseLibrary
                     {
 
                         dtosItem1.Year = entitySolution.Year + "上半年";
+                        dtosItem1.Moon = 6;
                     }
                     else if (entitySolution.UpDown == YearType.SecondHalf)
                     {
                         dtosItem1.Year = entitySolution.Year + "下半年";
+                        dtosItem1.Moon = 6;
                     }
                     else
                     {
                         dtosItem1.Year = entitySolution.Year.ToString();
+                        dtosItem1.Moon = 12;
                     }
 
                 }
@@ -174,14 +177,17 @@ namespace Finance.BaseLibrary
                         {
 
                             logisticscostDto.Year = item1.Year + "上半年";
+                            logisticscostDto.Moon = 6;
                         }
                         else if (item1.UpDown == YearType.SecondHalf)
                         {
                             logisticscostDto.Year = item1.Year + "下半年";
+                            logisticscostDto.Moon = 6;
                         }
                         else
                         {
                             logisticscostDto.Year = item1.Year.ToString();
+                            logisticscostDto.Moon = 12;
                         }
                         logisticscostDto.YearMountCount = item1.Quantity;
                         logisticscostDto.ModelCountYearId = item1.Id;

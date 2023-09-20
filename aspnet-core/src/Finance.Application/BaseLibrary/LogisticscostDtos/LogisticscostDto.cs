@@ -31,6 +31,8 @@ namespace Finance.BaseLibrary
         public decimal YearMountCount { get; set; }
         public long ModelCountYearId { get; set; }
 
+        public long Moon { get; set; }
+
 
         /// <summary>
         ///  0 保存  1 提交
