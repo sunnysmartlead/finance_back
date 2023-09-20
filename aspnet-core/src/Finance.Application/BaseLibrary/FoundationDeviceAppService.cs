@@ -4,6 +4,7 @@ using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
@@ -85,29 +86,62 @@ namespace Finance.BaseLibrary
         /// <returns>结果</returns>
         public virtual async Task<List<FoundationDeviceDto>> GetListAllAsync(GetFoundationDevicesInput input)
         {
-            // 设置查询条件
-            var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
 
-
-            // 查询数据
-            var list = query.ToList();
-            //数据转换
-            var dtos = ObjectMapper.Map<List<FoundationDevice>, List<FoundationDeviceDto>>(list, new List<FoundationDeviceDto>());
-            foreach (var item in dtos)
+            if (null == input.DeviceName || input.DeviceName.Equals(""))
             {
-                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
-                var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == item.Id).ToList();
+                // 设置查询条件
+                var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
 
+
+                // 查询数据
+                var list = query.ToList();
                 //数据转换
-                var dtosItem = ObjectMapper.Map<List<FoundationDeviceItem>, List<FoundationDeviceItemDto>>(FoundationDeviceItemlist, new List<FoundationDeviceItemDto>());
-                item.DeviceList = dtosItem;
-                if (user != null)
+                var dtos = ObjectMapper.Map<List<FoundationDevice>, List<FoundationDeviceDto>>(list, new List<FoundationDeviceDto>());
+                foreach (var item in dtos)
                 {
-                    item.LastModifierUserName = user.Name;
+                    var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                    var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == item.Id).ToList();
+
+                    //数据转换
+                    var dtosItem = ObjectMapper.Map<List<FoundationDeviceItem>, List<FoundationDeviceItemDto>>(FoundationDeviceItemlist, new List<FoundationDeviceItemDto>());
+                    item.DeviceList = dtosItem;
+                    if (user != null)
+                    {
+                        item.LastModifierUserName = user.Name;
+                    }
                 }
+                // 数据返回
+                return dtos;
             }
-            // 数据返回
-            return dtos;
+            else {
+                List<FoundationDeviceDto> foundationDeviceDtos = new List<FoundationDeviceDto>();
+                var FoundationHardwareDtoId = await (from u in _foundationFoundationDeviceItemRepository.GetAll()
+                                                     join ur in _foundationDeviceRepository.GetAll() on u.ProcessHoursEnterId equals ur.Id
+                                                     where u.DeviceName.Contains(input.DeviceName)
+                                                     select new
+                                                     {
+                                                         Id = ur.Id
+                                                     }).Distinct().ToListAsync();
+
+                foreach (var item in FoundationHardwareDtoId)
+                {
+                    FoundationDeviceDto foundationHardwareDto = new FoundationDeviceDto();
+                    FoundationDevice entity = await _foundationDeviceRepository.GetAsync(item.Id);
+                    var FoundationDeviceItem = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == entity.Id).ToList();
+
+                    //数据转换
+                    var dtosItem = ObjectMapper.Map<List<FoundationDeviceItem>, List<FoundationDeviceItemDto>>(FoundationDeviceItem, new List<FoundationDeviceItemDto>());
+
+                    foundationHardwareDto = ObjectMapper.Map<FoundationDevice, FoundationDeviceDto>(entity, new FoundationDeviceDto());
+                    foundationHardwareDto.DeviceList = dtosItem;
+                    foundationDeviceDtos.Add(foundationHardwareDto);
+
+
+                }
+                return foundationDeviceDtos;
+
+            }
+
         }
 
 
