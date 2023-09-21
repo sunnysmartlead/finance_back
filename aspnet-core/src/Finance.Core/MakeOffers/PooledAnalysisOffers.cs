@@ -16,13 +16,20 @@ namespace Finance.MakeOffers
         /// 流程号Id
         /// </summary> 
         public long AuditFlowId { get; set; }
+
         /// <summary>
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
+
         /// <summary>
         /// 毛利率 存json  模型为 GrossMarginModel
         /// </summary>
         public string GrossMarginList { get; set; }
+
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
     }
 }
