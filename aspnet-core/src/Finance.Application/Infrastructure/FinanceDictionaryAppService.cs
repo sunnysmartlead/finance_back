@@ -19,7 +19,10 @@ using Abp.Collections.Extensions;
 namespace Finance.Infrastructure
 {
     /// <summary>
-    /// 财务字典表
+    /// 财务
+    /// 
+    /// 
+    /// 
     /// </summary>
     public class FinanceDictionaryAppService : ApplicationService
     {

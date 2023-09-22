@@ -141,7 +141,7 @@ namespace Finance.BaseLibrary
                     {
 
                         dtosItem1.Year = entitySolution.Year + "上半年";
-                        logisticscostDto.Moon = 6;
+                        dtosItem1.Moon = 6;
                     }
                     else if (entitySolution.UpDown == YearType.SecondHalf)
                     {
@@ -318,7 +318,7 @@ namespace Finance.BaseLibrary
                          select a).ToList();
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
             int quantity = result.Count - count.Count;
-            if (quantity-1 > 0)
+            if (quantity > 0)
             {
                 return "还有" + quantity + "个方案没有提交，请先提交";
             }
