@@ -853,6 +853,56 @@ namespace Finance
         #endregion
 
 
+        #region 页面标识符
+
+        /// <summary>
+        /// NRE_可靠性实验费录入
+        /// </summary>
+        public const string NRE_ReliabilityExperimentFeeInput = "NRE_ReliabilityExperimentFeeInput";
+
+        /// <summary>
+        /// 上传电子BOM 
+        /// </summary>
+        public const string ElectronicsBOM = "ElectronicsBOM";
+
+        /// <summary>
+        /// 上传结构BOM
+        /// </summary>
+        public const string StructureBOM = "StructureBOM";
+
+        /// <summary>
+        /// 工序工时添加
+        /// </summary>
+        public const string FormulaOperationAddition = "FormulaOperationAddition";
+
+
+        /// <summary>
+        /// NRE_EMC实验费录入
+        /// </summary>
+        public const string NRE_EMCExperimentalFeeInput = "NRE_EMCExperimentalFeeInput";
+
+        /// <summary>
+        /// COB制造成本录入
+        /// </summary>
+        public const string COBManufacturingCostEntry = "COBManufacturingCostEntry";
+
+        /// <summary>
+        /// 物流成本录入
+        /// </summary>
+        public const string LogisticsCostEntry = "LogisticsCostEntry";
+
+
+        /// <summary>
+        /// 项目核价审核
+        /// </summary>
+        public const string ProjectChiefAudit = "ProjectChiefAudit";
+
+        
+
+
+        #endregion
+
+
         public const string Sbzt = "Sbzt";
         public const string Sbzt_Zy = "Sbzt_Zy";
         public const string Sbzt_Gy = "Sbzt_Gy";
