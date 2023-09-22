@@ -211,6 +211,48 @@ namespace Finance.PriceEval
             }
             else
             {
+                if (input.Title.IsNullOrWhiteSpace() 
+                    || input.Title.IsNullOrWhiteSpace() 
+                    || input.Drafter.IsNullOrWhiteSpace() 
+                    || input.DrafterNumber.IsNullOrWhiteSpace() 
+                    || input.DraftingDepartment.IsNullOrWhiteSpace() 
+                    || input.DraftingCompany.IsNullOrWhiteSpace()
+                    || input.DraftDate == null
+                    || input.Number.IsNullOrWhiteSpace()
+                    || input.CustomerNature.IsNullOrWhiteSpace()
+                    || input.TerminalName.IsNullOrWhiteSpace()
+                    || input.TerminalNature.IsNullOrWhiteSpace()
+                    //|| input.SopTime==null
+                    || input.ProjectCycle == null
+                    || input.UpdateFrequency.IsNullOrWhiteSpace()
+                    || input.PriceEvalType.IsNullOrWhiteSpace() 
+                    || input.KValue==null
+                    || input.AllocationOfMouldCost==null
+                    || input.AllocationOfFixtureCost==null
+                    || input.FrockCost==null
+                    || input.AllocationOfEquipmentCost==null
+                    || input.FixtureCost==null
+                    || input.ExperimentCost==null
+                    || input.TestCost==null
+                    || input.TravelCost == null
+                    || input.OtherCost==null
+                    || input.LandingFactory.IsNullOrWhiteSpace()
+                    || input.TradeMode.IsNullOrWhiteSpace() 
+                    || input.SalesType.IsNullOrWhiteSpace()
+                    || input.PaymentMethod.IsNullOrWhiteSpace() 
+                    || input.CustomerSpecialRequest.IsNullOrWhiteSpace() 
+                    || input.ShippingType.IsNullOrWhiteSpace()
+                    || input.PackagingType.IsNullOrWhiteSpace()
+                    || input.PlaceOfDelivery.IsNullOrWhiteSpace()
+                    || input.Country.IsNullOrWhiteSpace() 
+                    || input.CountryType.IsNullOrWhiteSpace() 
+                    || input.Deadline==null
+                    || input.ProjectManager==null
+                    || input.Title.IsNullOrWhiteSpace() 
+                    || input.Reason.IsNullOrWhiteSpace() )
+                {
+                    throw new FriendlyException($"表单未填写完毕！");
+                }
                 //var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
                 //if (priceEvaluationStartData is not null)
                 //{

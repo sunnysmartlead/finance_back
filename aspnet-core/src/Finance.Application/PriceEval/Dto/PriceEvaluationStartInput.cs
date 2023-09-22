@@ -53,55 +53,53 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 标题
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string Title { get; set; }
 
         /// <summary>
         /// 拟稿人
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string Drafter { get; set; }
 
         /// <summary>
         /// 拟稿人工号
         /// </summary>
-        [Required]
+        //[Required]
         public virtual long DrafterNumber { get; set; }
 
         /// <summary>
         /// 拟稿部门
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string DraftingDepartment { get; set; }
 
         /// <summary>
         /// 拟稿公司
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string DraftingCompany { get; set; }
 
         /// <summary>
         /// 拟稿日期
         /// </summary>
-        [Required]
-        public virtual DateTime DraftDate { get; set; }
+        //[Required]
+        public virtual DateTime? DraftDate { get; set; }
 
         /// <summary>
         /// 单据编号
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string Number { get; set; }
 
         /// <summary>
         /// 项目名称
         /// </summary>
-        //[Required]
         public virtual string ProjectName { get; set; }
 
         /// <summary>
         /// 项目代码
         /// </summary>
-        //[Required]
         public virtual string ProjectCode { get; set; }
 
         /// <summary>
@@ -112,13 +110,12 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 客户名称
         /// </summary>
-        //[Required]
         public virtual string CustomerName { get; set; }
 
         /// <summary>
         /// 客户类别（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【CustomerNature】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string CustomerNature { get; set; }
 
 
@@ -143,25 +140,24 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// Sop时间（年份）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual int SopTime { get; set; }
 
         /// <summary>
         /// 项目周期（年）
         /// </summary>
-        [Required]
-        public virtual int ProjectCycle { get; set; }
+        //[Required]
+        public virtual int? ProjectCycle { get; set; }
 
         /// <summary>
         /// 价格有效期（字典明细表主键）（二开新增属性）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string UpdateFrequency { get; set; }
 
         /// <summary>
         /// 核价类型（字典明细表主键）（二开新增属性）
         /// </summary>
-        //[Required]
         public virtual string PriceEvalType { get; set; }
 
         /// <summary>
@@ -177,24 +173,24 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 走量系数K
         /// </summary>
-        public virtual decimal KValue { get; set; }
+        public virtual decimal? KValue { get; set; }
 
         /// <summary>
         /// 终端走量（PCS）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual List<CreatePcsDto> Pcs { set; get; }
 
         /// <summary>
         /// 车型模组数量
         /// </summary>
-        [Required]
+        //[Required]
         public virtual List<CreateCarModelCountDto> CarModelCount { set; get; }
 
         /// <summary>
         /// 模组数量合计
         /// </summary>
-        [Required]
+        //[Required]
         public virtual List<CreateModelCountDto> ModelCount { set; get; }
 
 
@@ -219,7 +215,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 要求
         /// </summary>
-        [Required]
+        //[Required]
         public virtual List<CreateRequirementDto> Requirement { set; get; }
 
         /// <summary>
@@ -236,25 +232,25 @@ namespace Finance.PriceEval.Dto
         /// 模具费分摊 
         /// </summary>
         //[Required]
-        public virtual bool AllocationOfMouldCost { set; get; }
+        public virtual bool? AllocationOfMouldCost { set; get; }
 
         /// <summary>
         /// 治具费分摊 
         /// </summary>
         //[Required]
-        public virtual bool AllocationOfFixtureCost { set; get; }
+        public virtual bool? AllocationOfFixtureCost { set; get; }
 
         /// <summary>
         /// 工装费分摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool FrockCost { set; get; }
+        public virtual bool? FrockCost { set; get; }
 
         /// <summary>
         /// 专用设备费分摊
         /// </summary>
         //[Required]
-        public virtual bool AllocationOfEquipmentCost { set; get; }
+        public virtual bool? AllocationOfEquipmentCost { set; get; }
 
         ///// <summary>
         ///// 信赖性费用分摊
@@ -266,31 +262,31 @@ namespace Finance.PriceEval.Dto
         /// 检具费用分摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool FixtureCost { set; get; }
+        public virtual bool? FixtureCost { set; get; }
 
         /// <summary>
         /// 实验费分摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool ExperimentCost { set; get; }
+        public virtual bool? ExperimentCost { set; get; }
 
         /// <summary>
         /// 测试软件费分摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool TestCost { set; get; }
+        public virtual bool? TestCost { set; get; }
 
         /// <summary>
         /// 差旅费摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool TravelCost { set; get; }
+        public virtual bool? TravelCost { set; get; }
 
         /// <summary>
         /// 其他费用分摊（二开新增属性）
         /// </summary>
         //[Required]
-        public virtual bool OtherCost { set; get; }
+        public virtual bool? OtherCost { set; get; }
 
         ///// <summary>
         ///// 开发费分摊
@@ -323,19 +319,19 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 贸易方式（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【TradeMethod】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string TradeMode { get; set; }
 
         /// <summary>
         /// 销售类型（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【SalesType】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string SalesType { get; set; }
 
         /// <summary>
         /// 付款方式
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string PaymentMethod { get; set; }
 
 
@@ -364,26 +360,26 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 运输方式（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【ShippingType】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string ShippingType { get; set; }
 
         /// <summary>
         /// 包装方式（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【PackagingType】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string PackagingType { get; set; }
 
         /// <summary>
         /// 交货地点
         /// </summary>
-        [Required(AllowEmptyStrings = false)]
+        //[Required(AllowEmptyStrings = false)]
         public virtual string PlaceOfDelivery { get; set; }
 
 
         /// <summary>
         /// 国家（字典明细表主键，根据字典名，调用【FinanceDictionary/GetFinanceDictionaryAndDetailByName】取字典，字典名Name是【Country】）
         /// </summary>
-        [Required]
+        //[Required]
         public virtual string Country { get; set; }
 
         /// <summary>
@@ -395,19 +391,19 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 要求核价完成时间
         /// </summary>
-        [Required]
-        public virtual DateTime Deadline { get; set; }
+        //[Required]
+        public virtual DateTime? Deadline { get; set; }
 
         /// <summary>
         /// 项目经理（User表的Id）
         /// </summary>
-        [Required]
-        public virtual long ProjectManager { get; set; }
+        //[Required]
+        public virtual long? ProjectManager { get; set; }
 
         /// <summary>
         /// SOR附件上传
         /// </summary>
-        [Required]
+        //[Required]
         public virtual List<long> SorFile { get; set; }
 
         /// <summary>
