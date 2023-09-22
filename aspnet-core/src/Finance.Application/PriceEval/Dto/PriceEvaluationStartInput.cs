@@ -30,11 +30,15 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class PriceEvaluationStartInput : ToExamineDto
     {
+        /// <summary>
+        /// 如果为false，则为保存；为true，提交。 
+        /// </summary>
+        public virtual bool IsSubmit { get; set; }
+
         ///// <summary>
-        ///// 审批流程主表Id
+        ///// 审批流程主表Id（如果是新建流程，填空。非新建，添流程Id）
         ///// </summary>
-        //[Required]
-        //public virtual long AuditFlowId { get; set; }
+        //public virtual long? AuditFlowId { get; set; }
 
         ///// <summary>
         ///// 核价原因

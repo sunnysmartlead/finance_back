@@ -7,7 +7,7 @@ public class QuotedGrossMarginModel
     /// <summary>
     /// 产品
     /// </summary>
-    public string proudct { get; set; }
+    public string product { get; set; }
     public QuotedGrossMarginSimple QuotedGrossMarginSimple { get; set; }
     
 }
