@@ -185,9 +185,8 @@ namespace Finance.BaseLibrary
                 {
                     var initRow = sheet.GetRow(i);
                     if (initRow == null) break;
-                    var s1 = initRow.GetCell(1);
-                    var s2 = initRow.GetCell(2);
-                    if (null == initRow.GetCell(1) || string.IsNullOrEmpty(initRow.GetCell(2).ToString()))
+                    var s1 = initRow.GetCell(0);
+                    if (null == initRow.GetCell(0))
                     {
                         break;
                     }
