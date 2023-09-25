@@ -11,4 +11,6 @@ public class AnalyseBoardSecondInputDto
     public long auditFlowId { get; set; }
     
     public List<Solution> solutionTables { get; set; }
+
+  
 }

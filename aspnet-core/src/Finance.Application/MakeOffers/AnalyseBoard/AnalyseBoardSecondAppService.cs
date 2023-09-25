@@ -162,7 +162,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(
         AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
     {
-        return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
+        AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
+        try
+        {
+            return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
+        } catch (Exception e)
+        {
+           
+            analyseBoardSecondDto.mes="报价方法"+e.Message;
+            return analyseBoardSecondDto;
+        }
+
     }
 
 
@@ -290,7 +300,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="quotationListDto"></param>
     /// <returns></returns>
-    public async Task PostAuditQuotationListSaveSecond(AnalyseBoardSecondDto analyseBoardSecondDto)
+    public async Task PostIsOfferSave(IsOfferSecondDto analyseBoardSecondDto)
     {
         AuditQuotationList auditQuotationList =
             await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
@@ -331,7 +341,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (isOfferDto.IsOffer)
         {
             //进行报价
-            await PostIsOfferSaveSecond(isOfferDto);
+            await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
             flowDetailDto.Opinion = OPINIONTYPE.Submit_Agreee;
         }
         else
@@ -344,146 +354,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         ReturnDto returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
     }
 
-    /// <summary>
-    /// 报价 保存  接口
-    /// </summary>
-    /// <param name="isOfferDto"></param>
-    /// <returns></returns>
-    public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
-    {
-        //进行报价
-
-        #region Nre 资源部录入 保存
-
-        foreach (var item in isOfferDto.nres)
-        {
-            item.AuditFlowId = isOfferDto.AuditFlowId;
-        }
-
-        _analysisBoardSecondMethod.PostSalesDepartment(isOfferDto.nres);
-
-        // await _nrePricingAppService.PostSalesDepartment(isOfferDto.Nre);
-
-        #endregion
-
-        #region 单价表添加
-
-        foreach (var unit in isOfferDto.UnitPrice)
-        {
-            UnitPriceOffers unitPriceOffer = await _resourceUnitPriceOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProductId.Equals(unit.ProductId));
-            if (unitPriceOffer is not null)
-            {
-                unitPriceOffer.ProductName = unit.ProductName;
-                unitPriceOffer.ProductNumber = unit.ProductNumber;
-                unitPriceOffer.GrossMarginList = JsonConvert.SerializeObject(unit.GrossMarginList);
-                await _resourceUnitPriceOffers.UpdateAsync(unitPriceOffer);
-            }
-            else
-            {
-                UnitPriceOffers unitPrice = new();
-                unitPrice.AuditFlowId = isOfferDto.AuditFlowId;
-                unitPrice.ProductId = unit.ProductId;
-                unitPrice.ProductName = unit.ProductName;
-                unitPrice.ProductNumber = unit.ProductNumber;
-                unitPrice.GrossMarginList = JsonConvert.SerializeObject(unit.GrossMarginList);
-                await _resourceUnitPriceOffers.InsertAsync(unitPrice);
-            }
-        }
-
-        #endregion
-
-        #region 样品阶段
-
-        foreach (var item in isOfferDto.SampleOffer)
-        {
-            item.AuditFlowId = isOfferDto.AuditFlowId;
-        }
-
-        /*
-        foreach (var pooled in isOfferDto.PooledAnalysis)
-        {
-            PooledAnalysisOffers pooledAnalysisOffers = await _resourcePooledAnalysisOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProjectName.Equals(pooled.ProjectName));
-            if (pooledAnalysisOffers is not null)
-            {
-                pooledAnalysisOffers.GrossMarginList = JsonConvert.SerializeObject(pooled.GrossMarginList);
-                await _resourcePooledAnalysisOffers.UpdateAsync(pooledAnalysisOffers);
-            }
-            else
-            {
-                PooledAnalysisOffers pool = new();
-                pool.AuditFlowId = isOfferDto.AuditFlowId;
-                pool.ProjectName = pooled.ProjectName;
-                pool.GrossMarginList = JsonConvert.SerializeObject(pooled.GrossMarginList);
-                await _resourcePooledAnalysisOffers.InsertAsync(pool);
-            }
-        }
-
-        #endregion
-
-        #region 动态单价表添加
-
-        foreach (ProductBoardModel product in isOfferDto.ProductBoard.ProductBoard)
-        {
-            DynamicUnitPriceOffers dynamicUnitPriceOffers =
-                await _resourceDynamicUnitPriceOffers.FirstOrDefaultAsync(p =>
-                    p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProductId.Equals(product.ProductId));
-            if (dynamicUnitPriceOffers is not null)
-            {
-                dynamicUnitPriceOffers.ProductName = product.ProductName;
-                dynamicUnitPriceOffers.ProductNumber = product.ProductNumber;
-                dynamicUnitPriceOffers.InteriorTargetUnitPrice = product.InteriorTargetUnitPrice;
-                dynamicUnitPriceOffers.InteriorTargetGrossMargin = product.InteriorTargetGrossMargin;
-                dynamicUnitPriceOffers.ClientTargetUnitPrice = product.ClientTargetUnitPrice;
-                dynamicUnitPriceOffers.ClientTargetGrossMargin = product.ClientTargetGrossMargin;
-                dynamicUnitPriceOffers.OfferUnitPrice = product.OfferUnitPrice;
-                dynamicUnitPriceOffers.OffeGrossMargin = product.OffeGrossMargin;
-                dynamicUnitPriceOffers.AllInteriorGrossMargin = isOfferDto.ProductBoard.AllInteriorGrossMargin;
-                dynamicUnitPriceOffers.AllClientGrossMargin = isOfferDto.ProductBoard.AllClientGrossMargin;
-                await _resourceDynamicUnitPriceOffers.InsertOrUpdateAsync(dynamicUnitPriceOffers);
-            }
-            else
-            {
-                DynamicUnitPriceOffers dynamic = new();
-                dynamic = ObjectMapper.Map<DynamicUnitPriceOffers>(product);
-                dynamic.AuditFlowId = isOfferDto.AuditFlowId;
-                dynamic.AllInteriorGrossMargin = isOfferDto.ProductBoard.AllInteriorGrossMargin;
-                dynamic.AllClientGrossMargin = isOfferDto.ProductBoard.AllClientGrossMargin;
-                await _resourceDynamicUnitPriceOffers.InsertAsync(dynamic);
-            }
-        }
-
-        #endregion
-
-        #region 项目看板添加
-
-        foreach (var project1 in isOfferDto.ProjectBoard)
-        {
-            ProjectBoardOffers projectBoardOffers = await _resourceProjectBoardOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProjectName.Equals(project1.ProjectName));
-            if (projectBoardOffers is not null)
-            {
-                projectBoardOffers.InteriorTarget = JsonConvert.SerializeObject(project1.InteriorTarget);
-                projectBoardOffers.ClientTarget = JsonConvert.SerializeObject(project1.ClientTarget);
-                projectBoardOffers.Offer = JsonConvert.SerializeObject(project1.Offer);
-                await _resourceProjectBoardOffers.UpdateAsync(projectBoardOffers);
-            }
-            else
-            {
-                ProjectBoardOffers project = new();
-                project.AuditFlowId = isOfferDto.AuditFlowId;
-                project.ProjectName = project1.ProjectName;
-                project.InteriorTarget = JsonConvert.SerializeObject(project1.InteriorTarget);
-                project.ClientTarget = JsonConvert.SerializeObject(project1.ClientTarget);
-                project.Offer = JsonConvert.SerializeObject(project1.Offer);
-                await _resourceProjectBoardOffers.InsertAsync(project);
-            }
-        }
-        */
-
-        #endregion
-    }
+ 
 
     /// <summary>
     /// 总经理报价审批界面一

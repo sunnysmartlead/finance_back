@@ -58,6 +58,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
 
     /// <summary>
+    /// 报价分析看板中的 汇总分析表  实体类
+    /// </summary>
+    private readonly IRepository<PooledAnalysisOffers, long> _resourcePooledAnalysisOffers;
+
+    /// <summary>
     /// 产品信息表
     /// </summary>
     private readonly IRepository<ProductInformation, long> _resourceProductInformation;
@@ -66,6 +71,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
+
+    /// <summary>
+    ///报价 项目看板实体类 实体类
+    /// </summary>
+    private readonly IRepository<ProjectBoardOffers, long> _resourceProjectBoardOffers;
 
     /// <summary>
     /// 财务维护 毛利率方案
@@ -110,6 +120,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     private readonly IRepository<Sample, long> _sampleRepository;
 
+    /// <summary>
+    /// 报价分析看板中的 产品单价表 实体类
+    /// </summary>
+    private readonly IRepository<UnitPriceOffers, long> _resourceUnitPriceOffers;
+
     private readonly NrePricingAppService _nrePricingAppService;
     public readonly PriceEvaluationAppService _priceEvaluationAppService;
 
@@ -122,6 +137,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 汇率录入表
     /// </summary>
     private readonly IRepository<ExchangeRate, long> _resourceExchangeRate;
+
+    /// <summary>
+    /// 报价毛利率测算-阶梯数量
+    /// </summary>
+    private readonly IRepository<ActualUnitPriceOffer, long> _actualUnitPriceOffer;
+
+    /// <summary>
+    /// 报价毛利率测算-实际数量
+    /// </summary>
+    private readonly IRepository<DynamicUnitPriceOffers, long> _dynamicUnitPriceOffers;
+
 
     /// <summary>
     /// 结构BOM录入接口类
@@ -142,9 +168,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<ModelCount, long> modelCount,
         IRepository<DeviceQuotation, long> deviceQuotation,
+        IRepository<UnitPriceOffers, long> resourceUnitPriceOffers,
         PriceEvaluationGetAppService priceEvaluationGetAppService,
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
+        IRepository<ActualUnitPriceOffer, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         PriceEvaluationAppService priceEvaluationAppService,
         IRepository<ExchangeRate, long> resourceExchangeRate,
@@ -152,6 +180,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<AuditFlow, long> resourceAuditFlow,
         ElectronicBomAppService electronicBomAppService,
         StructionBomAppService structionBomAppService,
+        IRepository<PooledAnalysisOffers, long> resourcePooledAnalysisOffers,
         IRepository<Sample, long> sampleRepository,
         IRepository<Solution, long> resourceSchemeTable,
         IRepository<FinanceDictionary, string> financeDictionaryRepository,
@@ -160,14 +189,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ManufacturingCostInfo, long> manufacturingCostInfo,
         IRepository<StructureBomInfo, long> structureBomInfo,
         IRepository<Requirement, long> requirement,
+        IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
         IRepository<ProductInformation, long> productInformation,
+        IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
         NrePricingAppService nrePricingAppService,
         IRepository<GrossMarginForm, long> resourceGrossMarginForm)
     {
         _resourceRequirement = requirement;
+        _resourceProjectBoardOffers = resourceProjectBoardOffers;
         _sampleRepository = sampleRepository;
-
+        _dynamicUnitPriceOffers = dynamicUnitPriceOffers;
+        _resourcePooledAnalysisOffers = resourcePooledAnalysisOffers;
+        _resourceUnitPriceOffers = resourceUnitPriceOffers;
         _resourceSchemeTable = resourceSchemeTable;
         _financeDictionaryRepository = financeDictionaryRepository;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
@@ -178,7 +212,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _gradientRepository = gradientRepository;
         _deviceQuotation = deviceQuotation;
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
-
+        _actualUnitPriceOffer = actualUnitPriceOffer;
         _sampleQuotation = sampleQuotation;
         _nreQuotation = nreQuotation;
         _resourceExchangeRate = resourceExchangeRate;
@@ -348,6 +382,235 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         yearValues.Add(yearValue);
         yearDimensionalityComparisonSecondDto.numk = yearValues;
         return yearDimensionalityComparisonSecondDto;
+    }
+
+    public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
+    {
+        List<Solution> solutions = isOfferDto.Solutions;
+        int version = isOfferDto.version;
+        var AuditFlowId = isOfferDto.AuditFlowId;
+        await InsertSolution(solutions, version);
+//获取报价方案
+        List<SolutionQuotation> solutionQuotations =
+            await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.version == version);
+
+        List<AnalyseBoardNreDto> nres = isOfferDto.nres;
+        InsertNre(nres, solutionQuotations);
+        List<OnlySampleDto> onlySampleDtos = isOfferDto.SampleOffer;
+        InsertSample(onlySampleDtos, solutionQuotations);
+
+        List<SopAnalysisModel> sops = isOfferDto.Sops;
+        InsertSop(sops, version);
+        List<PooledAnalysisModel> FullLifeCycle = isOfferDto.FullLifeCycle;
+        InsertPool(AuditFlowId, FullLifeCycle, version);
+
+        List<ProjectBoardModel> projectBoardModels = isOfferDto.ProjectBoard;
+        Insertboard(AuditFlowId, projectBoardModels, version);
+        List<GradientQuotedGrossMarginModel> jts = isOfferDto.GradientQuotedGrossMargins;
+        InsertGradientQuotedGrossMargin(AuditFlowId, jts, version);
+        List<QuotedGrossMarginProjectModel> models = isOfferDto.QuotedGrossMargins;
+        InsertQuotedGrossMarginProject(AuditFlowId, models, version);
+    }
+    /// <summary>
+    /// 报价毛利率测算 实际数量  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertQuotedGrossMarginProject(long AuditFlowId,
+        List<QuotedGrossMarginProjectModel> grossMarginProjectModels, int version)
+    {
+        var list = new List<DynamicUnitPriceOffers>();
+        foreach (var grossMargin in grossMarginProjectModels)
+        {
+            var project = grossMargin.project;
+            var dys = (from gross in grossMargin.GrossMargins
+                select new DynamicUnitPriceOffers()
+                {
+                    version = version,
+                    AuditFlowId = AuditFlowId,
+                    ProductName = gross.product,
+                    InteriorTargetUnitPrice = gross.quotedGrossMarginSimple.Interior.Price,
+                    AllInteriorGrossMargin = gross.quotedGrossMarginSimple.Interior.GrossMargin,
+                    AllInteriorClientGrossMargin = gross.quotedGrossMarginSimple.Interior.ClientGrossMargin,
+                    AllInteriorNreGrossMargin = gross.quotedGrossMarginSimple.Interior.NreGrossMargin,
+                    ClientTargetUnitPrice = gross.quotedGrossMarginSimple.Client.Price,
+                    AllClientGrossMargin = gross.quotedGrossMarginSimple.Client.GrossMargin,
+                    AllClientClientGrossMargin = gross.quotedGrossMarginSimple.Client.ClientGrossMargin,
+                    AllClientNreGrossMargin = gross.quotedGrossMarginSimple.Client.NreGrossMargin,
+                    OfferUnitPrice = gross.quotedGrossMarginSimple.ThisQuotation.Price,
+                    OffeGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.GrossMargin,
+                    ClientGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.ClientGrossMargin,
+                    NreGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.NreGrossMargin
+                }).ToList();
+            list.AddRange(dys);
+        }
+
+        foreach (var dynamicUnitPriceOffers in list)
+        {
+            _dynamicUnitPriceOffers.InsertAsync(dynamicUnitPriceOffers);
+        }
+    }
+    /// <summary>
+    /// 报价毛利率测算阶梯数量  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertGradientQuotedGrossMargin(long AuditFlowId,
+        List<GradientQuotedGrossMarginModel> gradientQuotedGross, int version)
+    {
+        var list = (from grd in gradientQuotedGross
+            select new ActualUnitPriceOffer()
+            {
+                AuditFlowId = AuditFlowId,
+                version = version,
+                Kv = grd.gradient,
+                InteriorTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Interior),
+                ClientTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Client),
+                Offer = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.ThisQuotation)
+            }).ToList();
+
+        foreach (var actual in list)
+        {
+            _actualUnitPriceOffer.InsertAsync(actual);
+        }
+    }
+    /// <summary>
+    /// 看板保存  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task Insertboard(long AuditFlowId, List<ProjectBoardModel> boards, int version)
+    {
+        var projectbords = (from board in boards
+            select new ProjectBoardOffers()
+            {
+                AuditFlowId = AuditFlowId,
+                ProjectName = board.ProjectName,
+                version = version,
+                InteriorTarget = JsonConvert.SerializeObject(board.InteriorTarget),
+                ClientTarget = JsonConvert.SerializeObject(board.ClientTarget),
+                Offer = JsonConvert.SerializeObject(board.Offer)
+            }).ToList();
+
+        foreach (var projectbord in projectbords)
+        {
+            await _resourceProjectBoardOffers.InsertAsync(projectbord);
+        }
+    }
+    /// <summary>
+    /// 汇总分析  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertPool(long AuditFlowId, List<PooledAnalysisModel> pooledAnalysisModels, int version)
+    {
+        var polls = (from pool in pooledAnalysisModels
+            select new PooledAnalysisOffers()
+            {
+                AuditFlowId = AuditFlowId,
+                ProjectName = pool.ProjectName,
+                version = version,
+                GrossMarginList = JsonConvert.SerializeObject(pool.GrossMarginList)
+            }).ToList();
+        foreach (var pool in polls)
+        {
+            await _resourcePooledAnalysisOffers.InsertAsync(pool);
+        }
+    }
+
+    /// <summary>
+    /// 单价表 保存  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertSop(List<SopAnalysisModel> unitPriceModels, int version)
+    {
+        var unitPriceOffersList = (from unit in unitPriceModels
+            select new UnitPriceOffers()
+            {
+                AuditFlowId = unit.AuditFlowId,
+                ProductName = unit.Product,
+                GradientValue = unit.GradientValue,
+                version = version,
+                GrossMarginList = JsonConvert.SerializeObject(unit.GrossValues)
+            }).ToList();
+        foreach (var uns in unitPriceOffersList)
+        {
+            _resourceUnitPriceOffers.InsertAsync(uns);
+        }
+    }
+
+    /// <summary>
+    /// 样品 保存  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<SolutionQuotation> solutionQuotations)
+    {
+        foreach (var onlySampleDto in onlySampleDtos)
+        {
+            var soltuion = solutionQuotations.Where(p => p.SolutionId == onlySampleDto.SolutionId).FirstOrDefault();
+            List<SampleQuotation> sampleQuotations = onlySampleDto.OnlySampleModels;
+
+            foreach (var sampleQuotation in sampleQuotations)
+            {
+                sampleQuotation.SolutionId = soltuion.Id;
+                _sampleQuotation.InsertAsync(sampleQuotation);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 报价方案 保存  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertSolution(List<Solution> solutions, int version)
+    {
+        List<SolutionQuotation> solutionQuotations = (from solution in solutions
+            select new SolutionQuotation()
+            {
+                SolutionId = solution.Id,
+                AuditFlowId = solution.AuditFlowId,
+                Productld = solution.Productld,
+                ModuleName = solution.ModuleName,
+                SolutionName = solution.SolutionName,
+                Product = solution.Product,
+                IsCOB = solution.IsCOB,
+                ElecEngineerId = solution.ElecEngineerId,
+                StructEngineerId = solution.StructEngineerId,
+                IsFirst = solution.IsFirst,
+                version = version
+            }).ToList();
+        foreach (var solutionQuotation in solutionQuotations)
+        {
+            _solutionQutation.InsertAsync(solutionQuotation);
+        }
+    }
+
+    /// <summary>
+    /// NRE 保存  接口
+    /// </summary>
+    /// <returns></returns>
+    public async Task InsertNre(List<AnalyseBoardNreDto> nres, List<SolutionQuotation> solutionQuotations)
+    {
+        foreach (var nre in nres)
+        {
+            var solutionId = nre.SolutionId;
+            if (solutionId is not null)
+            {
+                var soltuion = solutionQuotations.Where(p => p.SolutionId == nre.SolutionId).FirstOrDefault();
+                List<NreQuotation> nreQuotations = nre.models;
+                List<DeviceQuotation> deviceQuotations = nre.devices;
+                soltuion.numberLine = nre.numberLine;
+                soltuion.collinearAllocationRate = nre.collinearAllocationRate;
+                _solutionQutation.UpdateAsync(soltuion);
+                foreach (var nreQuotation in nreQuotations)
+                {
+                    nreQuotation.SolutionId = soltuion.Id;
+                    _nreQuotation.InsertAsync(nreQuotation);
+                }
+
+                foreach (var deviceQuotation in deviceQuotations)
+                {
+                    deviceQuotation.SolutionId = soltuion.Id;
+                    _deviceQuotation.InsertAsync(deviceQuotation);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -784,7 +1047,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Name = dic.DisplayName, //样品阶段名称
                 Cost = Math.Round(totalcost, 2) //成本：核价看板的最小梯度第一年的成本
             }).ToList();
-       
+
 
         return onlySampleModels;
     }
@@ -857,52 +1120,52 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<NreQuotation> models = new List<NreQuotation>();
             NreQuotation shouban = new();
             shouban.FormName = "手板件费";
-            shouban.PricingMoney = Math.Round(pricingFormDto.HandPieceCostTotal,2);
+            shouban.PricingMoney = Math.Round(pricingFormDto.HandPieceCostTotal, 2);
             handPieceCostTotals += pricingFormDto.HandPieceCostTotal;
             models.Add(shouban);
             NreQuotation mouju = new();
             mouju.FormName = "模具费";
-            mouju.PricingMoney = Math.Round(pricingFormDto.MouldInventoryTotal,2);
+            mouju.PricingMoney = Math.Round(pricingFormDto.MouldInventoryTotal, 2);
             mouldInventoryTotals += pricingFormDto.MouldInventoryTotal;
             models.Add(mouju);
             NreQuotation scsb = new();
             scsb.FormName = "生产设备费";
-            scsb.PricingMoney = Math.Round(pricingFormDto.ProductionEquipmentCostTotal,2);
+            scsb.PricingMoney = Math.Round(pricingFormDto.ProductionEquipmentCostTotal, 2);
             productionEquipmentCostTotals += pricingFormDto.ProductionEquipmentCostTotal;
             models.Add(scsb);
             NreQuotation gzf = new();
             gzf.FormName = "工装费";
-            gzf.PricingMoney = Math.Round(pricingFormDto.ToolingCostTotal,2);
+            gzf.PricingMoney = Math.Round(pricingFormDto.ToolingCostTotal, 2);
             toolingCostTotals += pricingFormDto.ToolingCostTotal;
             models.Add(gzf);
             NreQuotation yjf = new();
             yjf.FormName = "治具费";
-            yjf.PricingMoney =Math.Round( pricingFormDto.FixtureCostTotal,2);
+            yjf.PricingMoney = Math.Round(pricingFormDto.FixtureCostTotal, 2);
             fixtureCostTotals += pricingFormDto.FixtureCostTotal;
             models.Add(yjf);
             NreQuotation jjf = new();
             jjf.FormName = "检具费";
-            jjf.PricingMoney = Math.Round(pricingFormDto.QAQCDepartmentsTotal,2);
+            jjf.PricingMoney = Math.Round(pricingFormDto.QAQCDepartmentsTotal, 2);
             qAQCDepartmentsTotals += pricingFormDto.QAQCDepartmentsTotal;
             models.Add(jjf);
             NreQuotation syf = new();
             syf.FormName = "实验费";
-            syf.PricingMoney = Math.Round(pricingFormDto.LaboratoryFeeModelsTotal,2);
+            syf.PricingMoney = Math.Round(pricingFormDto.LaboratoryFeeModelsTotal, 2);
             laboratoryFeeModelsTotals += pricingFormDto.LaboratoryFeeModelsTotal;
             models.Add(syf);
             NreQuotation csrjf = new();
             csrjf.FormName = "测试软件费";
-            csrjf.PricingMoney = Math.Round(pricingFormDto.SoftwareTestingCostTotal,2);
+            csrjf.PricingMoney = Math.Round(pricingFormDto.SoftwareTestingCostTotal, 2);
             softwareTestingCostTotals += pricingFormDto.SoftwareTestingCostTotal;
             models.Add(csrjf);
             NreQuotation clf = new();
             clf.FormName = "差旅费";
-            clf.PricingMoney = Math.Round(pricingFormDto.TravelExpenseTotal,2);
+            clf.PricingMoney = Math.Round(pricingFormDto.TravelExpenseTotal, 2);
             travelExpenseTotals += pricingFormDto.TravelExpenseTotal;
             models.Add(clf);
             NreQuotation qtfy = new();
             qtfy.FormName = "其他费用";
-            qtfy.PricingMoney = Math.Round(pricingFormDto.RestsCostTotal,2);
+            qtfy.PricingMoney = Math.Round(pricingFormDto.RestsCostTotal, 2);
             restsCostTotals += pricingFormDto.RestsCostTotal;
             models.Add(qtfy);
 
@@ -927,9 +1190,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 DeviceQuotation deviceModel = new();
                 deviceModel.DeviceName = deviceDto.DeviceName;
-                deviceModel.Number =Math.Round( deviceDto.DeviceNumber.Value,2);
-                deviceModel.DevicePrice = Math.Round(deviceDto.DevicePrice.Value,2);
-                deviceModel.equipmentMoney =Math.Round( deviceModel.Number * deviceModel.DevicePrice,2);
+                deviceModel.Number = Math.Round(deviceDto.DeviceNumber.Value, 2);
+                deviceModel.DevicePrice = Math.Round(deviceDto.DevicePrice.Value, 2);
+                deviceModel.equipmentMoney = Math.Round(deviceModel.Number * deviceModel.DevicePrice, 2);
                 deviceModels.Add(deviceModel);
                 hzde.Add(deviceModel);
             }
@@ -944,45 +1207,45 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<NreQuotation> hz = new List<NreQuotation>();
         NreQuotation shoubanhz = new();
         shoubanhz.FormName = "手板件费";
-        shoubanhz.PricingMoney =Math.Round( handPieceCostTotals,2);
+        shoubanhz.PricingMoney = Math.Round(handPieceCostTotals, 2);
         hz.Add(shoubanhz);
         NreQuotation moujuhz = new();
         moujuhz.FormName = "模具费";
-        moujuhz.PricingMoney =Math.Round( mouldInventoryTotals,2);
+        moujuhz.PricingMoney = Math.Round(mouldInventoryTotals, 2);
 
         hz.Add(moujuhz);
         NreQuotation scsbhz = new();
         scsbhz.FormName = "生产设备费";
-        scsbhz.PricingMoney =Math.Round( productionEquipmentCostTotals,2);
+        scsbhz.PricingMoney = Math.Round(productionEquipmentCostTotals, 2);
 
         hz.Add(scsbhz);
         NreQuotation gzfhz = new();
         gzfhz.FormName = "工装费";
-        gzfhz.PricingMoney = Math.Round(toolingCostTotals,2);
+        gzfhz.PricingMoney = Math.Round(toolingCostTotals, 2);
         hz.Add(gzfhz);
         NreQuotation yjfhz = new();
         yjfhz.FormName = "治具费";
-        yjfhz.PricingMoney = Math.Round(fixtureCostTotals,2);
+        yjfhz.PricingMoney = Math.Round(fixtureCostTotals, 2);
         hz.Add(yjfhz);
         NreQuotation jjfhz = new();
         jjfhz.FormName = "检具费";
-        jjfhz.PricingMoney =Math.Round( qAQCDepartmentsTotals,2);
+        jjfhz.PricingMoney = Math.Round(qAQCDepartmentsTotals, 2);
         hz.Add(jjfhz);
         NreQuotation syfhz = new();
         syfhz.FormName = "实验费";
-        syfhz.PricingMoney = Math.Round(laboratoryFeeModelsTotals,2);
+        syfhz.PricingMoney = Math.Round(laboratoryFeeModelsTotals, 2);
         hz.Add(syfhz);
         NreQuotation csrjfhz = new();
         csrjfhz.FormName = "测试软件费";
-        csrjfhz.PricingMoney = Math.Round(softwareTestingCostTotals,2);
+        csrjfhz.PricingMoney = Math.Round(softwareTestingCostTotals, 2);
         hz.Add(csrjfhz);
         NreQuotation clfhz = new();
         clfhz.FormName = "差旅费";
-        clfhz.PricingMoney = Math.Round(travelExpenseTotals,2);
+        clfhz.PricingMoney = Math.Round(travelExpenseTotals, 2);
         hz.Add(clfhz);
         NreQuotation qtfyhz = new();
         qtfyhz.FormName = "其他费用";
-        qtfyhz.PricingMoney =Math.Round( restsCostTotals,2);
+        qtfyhz.PricingMoney = Math.Round(restsCostTotals, 2);
         hz.Add(qtfyhz);
 
         analyseBoardNreDto1.devices = hzde;
@@ -1115,7 +1378,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             foreach (var solution in solutions)
             {
                 GrossMargin grossMargin = new();
-                grossMargin.product = solution.Product+"-"+solution.SolutionName;
+                grossMargin.product = solution.Product + "-" + solution.SolutionName;
                 grossMargin.ProductNumber = carModelCount.SingleCarProductsQuantity;
                 QuotedGrossMarginSimple grossMarginSimple = new();
                 decimal unprice = 1;
@@ -1172,7 +1435,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 GradientQuotedGrossMarginModel grossMarginModel = new GradientQuotedGrossMarginModel();
                 grossMarginModel.gradient = gradient.GradientValue + "K/Y";
-                grossMarginModel.product = solution.Product+"-"+solution.SolutionName;
+                grossMarginModel.product = solution.Product + "-" + solution.SolutionName;
                 var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).First();
                 decimal unprice = smple.ExchangeRate * (decimal.Parse(smple.TargetPrice)); //单价
                 QuotedGrossMarginSimple quotedGrossMarginSimple = new();
@@ -1280,7 +1543,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber = Math.Round( nsum / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(nsum / (1 - (gros / 100)), 2);
 
             slsl.Add(grossMarginModel);
         }
@@ -1295,7 +1558,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber = Math.Round( xscb / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(xscb / (1 - (gros / 100)), 2);
 
             xscbsl.Add(grossMarginModel);
         }
@@ -1312,7 +1575,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber = Math.Round(pjcb / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(pjcb / (1 - (gros / 100)), 2);
 
             pjcbs.Add(grossMarginModel);
         }
@@ -1329,7 +1592,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber =Math.Round( flxssr / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(flxssr / (1 - (gros / 100)), 2);
 
             fls.Add(grossMarginModel);
         }
@@ -1346,7 +1609,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber = Math.Round( dj / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(dj / (1 - (gros / 100)), 2);
 
             pjdj.Add(grossMarginModel);
         }
@@ -1362,7 +1625,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber =Math.Round(  xsmls / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(xsmls / (1 - (gros / 100)), 2);
 
             xsml.Add(grossMarginModel);
         }
@@ -1384,7 +1647,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber =Math.Round(  ml / (1 - (gros / 100)),2);
+            grossMarginModel.GrossMarginNumber = Math.Round(ml / (1 - (gros / 100)), 2);
 
             mlls.Add(grossMarginModel);
         }
