@@ -104,7 +104,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_核价需求录入_{MainFlowId}_核价审批录入 || {MainFlowId}_TR审核_{MainFlowId}_核价审批录入",
                     RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
-                    ProcessIdentifier = "PriceDemandReview",
+                    ProcessIdentifier = FinanceConsts.PriceDemandReview,
                 },
                 new Node
                 {
@@ -176,7 +176,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_NRE手板件 || {MainFlowId}_核价看板_{MainFlowId}_NRE手板件",
                     RoleId= $"{projectManager.Id},{marketProjectManager.Id}",
-                    ProcessIdentifier = "NRE_ManualComponentInput",
+                    ProcessIdentifier =FinanceConsts.NRE_ManualComponentInput,
                 },
                 new Node
                 {
@@ -296,7 +296,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_BOM成本审核_{MainFlowId}_查看每个方案初版BOM成本",
                     RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
-                    ProcessIdentifier = "UnitPriceInputReviewToExamine",
+                    ProcessIdentifier = FinanceConsts.UnitPriceInputReviewToExamine,
                 },
                 new Node
                 {
@@ -304,7 +304,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.HjkbSelect,
                     Activation = $"({MainFlowId}_模具费审核_{MainFlowId}_核价看板 && {MainFlowId}_贸易合规_{MainFlowId}_核价看板 && {MainFlowId}_NRE_EMC实验费审核_{MainFlowId}_核价看板 && {MainFlowId}_NRE_可靠性实验费审核_{MainFlowId}_核价看板 && {MainFlowId}_NRE手板件_{MainFlowId}_核价看板) || ({MainFlowId}_核价需求录入_{MainFlowId}_核价看板 || {MainFlowId}_财务审核_{MainFlowId}_核价看板 || {MainFlowId}_项目部课长审核_{MainFlowId}_核价看板 || {MainFlowId}_审批报价策略与核价表_{MainFlowId}_核价看板)",
                     RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
-                    ProcessIdentifier = "PriceEvaluationBoard",
+                    ProcessIdentifier = FinanceConsts.PriceEvaluationBoard,
                 },
                 new Node
                 {
