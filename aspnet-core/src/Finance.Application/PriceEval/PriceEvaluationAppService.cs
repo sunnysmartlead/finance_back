@@ -521,7 +521,9 @@ namespace Finance.PriceEval
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
             var priceEvaluationDto = ObjectMapper.Map<PriceEvaluationStartInputResult>(priceEvaluation);
 
-            var quoteVersion = await _auditFlowRepository.GetAll().Where(p => p.Id == auditFlowId).Select(p => p.QuoteVersion).FirstOrDefaultAsync();
+            //var quoteVersion = await _auditFlowRepository.GetAll().Where(p => p.Id == auditFlowId).Select(p => p.QuoteVersion).FirstOrDefaultAsync();
+            var quoteVersion = priceEvaluationDto.QuoteVersion;
+
 
             var fileNames = await _fileManagementRepository.GetAll().Where(p => priceEvaluationDto.SorFile.Contains(p.Id))
                 .Select(p => new FileUploadOutputDto { FileId = p.Id, FileName = p.Name, })

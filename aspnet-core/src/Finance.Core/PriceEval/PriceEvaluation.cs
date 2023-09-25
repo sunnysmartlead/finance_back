@@ -87,6 +87,11 @@ namespace Finance.PriceEval
         public virtual string ProjectCode { get; set; }
 
         /// <summary>
+        /// 核报价流程版本
+        /// </summary>
+        public virtual int QuoteVersion { get; set; }
+
+        /// <summary>
         /// 客户代码
         /// </summary>
         public virtual string CustomerCode { get; set; }

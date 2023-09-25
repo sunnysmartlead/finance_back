@@ -159,6 +159,18 @@ namespace Finance.PriceEval
 
         #region 核价表
 
+
+        /// <summary>
+        /// 获取当前新增的项目的版本号
+        /// </summary>
+        /// <param name="projectCode"></param>
+        /// <returns></returns>
+        public async virtual Task<int> GetQuoteVersion(string projectCode)
+        {
+            var count = await _priceEvaluationRepository.CountAsync(p => p.ProjectCode == projectCode);
+            return count + 1;
+        }
+
         /// <summary>
         /// 生成核价表
         /// </summary>
@@ -342,6 +354,7 @@ namespace Finance.PriceEval
                            Year = m.Year
                        };
             var result = await data.ToListAsync();
+
             return new ListResultDto<ModelCountInputCountEditDto>(result);
         }
 
@@ -1686,7 +1699,7 @@ namespace Finance.PriceEval
 
             //产品类别
             var modelCount = await _modelCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == solution.Productld);
-            
+
             ////1-目标毛利率
             //var grossProfitMargin = 1 - GetGrossProfitMargin(modelCount.ProductType);
 
