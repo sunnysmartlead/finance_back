@@ -101,7 +101,7 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_贸易合规");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_上传电子BOM");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
