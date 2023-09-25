@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Finance.BaseLibrary
 {
 
-    /// <summary>
+    /// <summary>环境感知
     /// 基础库---设备明细
     /// </summary>
     [Table("FDeviceItem")]
