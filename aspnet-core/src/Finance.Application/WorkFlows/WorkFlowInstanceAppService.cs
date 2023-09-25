@@ -531,7 +531,7 @@ namespace Finance.WorkFlows
                        from p in pe1.DefaultIfEmpty()
 
                        where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
-                       
+
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -543,8 +543,9 @@ namespace Finance.WorkFlows
                            WorkflowState = w.WorkflowState,
                            WorkFlowInstanceId = h.WorkFlowInstanceId
                        };
-            var count = await data.CountAsync();
-            var result = await data.ToListAsync();
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
             return new PagedResultDto<UserTask>(count, result);
         }
 
