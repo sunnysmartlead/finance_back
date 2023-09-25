@@ -35,6 +35,10 @@ namespace Finance.MakeOffers
         /// <summary>
         /// 本次报价存  json 实体类GrossMarginModel 
         /// </summary>
-        public string Offer { get; set; }      
+        public string Offer { get; set; }    
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }    
     }
 }
