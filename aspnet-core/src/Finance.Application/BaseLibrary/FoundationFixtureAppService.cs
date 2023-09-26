@@ -345,8 +345,12 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationFixtureDto> CreateAsync(FoundationFixtureDto input)
         {
-         
 
+            var query = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             var entity = ObjectMapper.Map<FoundationFixtureDto, FoundationFixture>(input, new FoundationFixture());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -398,6 +402,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationFixtureDto> UpdateAsync(FoundationFixtureDto input)
         {
+            var query = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationFixture entity = await _foundationFixtureRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationFixtureRepository.UpdateAsync(entity);

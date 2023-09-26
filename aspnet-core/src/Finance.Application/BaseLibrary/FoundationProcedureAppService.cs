@@ -248,7 +248,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationProcedureDto> CreateAsync(FoundationProcedureDto input)
         {
-
+            var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             var entity = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(input, new FoundationProcedure());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -271,6 +275,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationProcedureDto> UpdateAsync(FoundationProcedureDto input)
         {
+            var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationProcedure entity = await _foundationProcedureRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity.LastModificationTime = DateTime.Now;

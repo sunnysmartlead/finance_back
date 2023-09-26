@@ -568,7 +568,7 @@ namespace Finance.Processes
                 {
                     processHoursEnterUphListDto.Smtuph = 0;
                 }
-                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.Year == row.Year.ToString()).ToList();
+                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.ModelCountYearId == row.Id).ToList();
                 if (null != ZcuphList && ZcuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Zcuph = ZcuphList[0].Value;
@@ -578,7 +578,7 @@ namespace Finance.Processes
                     processHoursEnterUphListDto.Zcuph = 0;
                 }
 
-                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.Year == row.Year.ToString()).ToList();
+                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.ModelCountYearId == row.Id).ToList();
                 if (null != CobuphList && CobuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Cobuph = CobuphList[0].Value;
