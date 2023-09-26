@@ -192,8 +192,14 @@ namespace Finance.Audit
             //获取核价团队
             var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
+            //获取项目经理
+            var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
+            //项目经理控制的页面
+            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
 
             return list
+
                 //如果当前用户不是电子工程师，就把电子BOM录入页面过滤掉
                 .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM)
 
@@ -218,6 +224,9 @@ namespace Finance.Audit
 
                 //项目核价审核
                 .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit)
+
+                //项目经理
+                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier))
 
                 .ToList();
         }
@@ -254,7 +263,7 @@ namespace Finance.Audit
             auditFlowRightInfoDtoList.AddRange(dto);
 
             //已办
-            var tasked = await _workflowInstanceAppService.GetInstanceHistory();
+            var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
             var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
             {
                 AuditFlowId = p.Key.WorkFlowInstanceId,
@@ -268,35 +277,38 @@ namespace Finance.Audit
                 }).ToList()
             }).ToList();
 
-            //项目经理的全部已办
-            var userRole = from ur in _userRoleRepository.GetAll()
-                           join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
-                           where ur.UserId == AbpSession.UserId
-                           && r.Name.Contains("项目经理")
-                           select r.Name;
-            var isPm = await userRole.AnyAsync();
-            if (isPm)
-            {
-                var auditFlowIds = dto.Select(p => p.AuditFlowId).Union(taskedDto.Select(p => p.AuditFlowId)).Distinct();
-                var taskedPm = await auditFlowIds.SelectAsync(async p => await _workflowInstanceAppService.GetInstanceHistoryByWorkflowInstanceId(p));
-                var taskedDtoPm = taskedPm.SelectMany(p => p.Items).GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
-                {
-                    AuditFlowId = p.Key.WorkFlowInstanceId,
-                    AuditFlowTitle = p.Key.Title,
-                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
-                    {
-                        Id = o.Id,
-                        ProcessName = o.NodeName,
-                        Right = RIGHTTYPE.ReadOnly,
-                        ProcessIdentifier = o.ProcessIdentifier
-                    }).ToList()
-                }).ToList();
-                auditFlowRightInfoDtoList.AddRange(taskedDtoPm);
-            }
-            else
-            {
-                auditFlowRightInfoDtoList.AddRange(taskedDto);
-            }
+            ////项目经理的全部已办
+            //var userRole = from ur in _userRoleRepository.GetAll()
+            //               join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
+            //               where ur.UserId == AbpSession.UserId
+            //               && r.Name.Contains("项目经理")
+            //               select r.Name;
+            //var isPm = await userRole.AnyAsync();
+            //if (isPm)
+            //{
+            //    var auditFlowIds = dto.Select(p => p.AuditFlowId).Union(taskedDto.Select(p => p.AuditFlowId)).Distinct();
+            //    var taskedPm = await auditFlowIds.SelectAsync(async p => await _workflowInstanceAppService.GetInstanceHistoryByWorkflowInstanceId(p));
+            //    var taskedDtoPm = taskedPm.SelectMany(p => p.Items).GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            //    {
+            //        AuditFlowId = p.Key.WorkFlowInstanceId,
+            //        AuditFlowTitle = p.Key.Title,
+            //        AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+            //        {
+            //            Id = o.Id,
+            //            ProcessName = o.NodeName,
+            //            Right = RIGHTTYPE.ReadOnly,
+            //            ProcessIdentifier = o.ProcessIdentifier
+            //        }).ToList()
+            //    }).ToList();
+            //    auditFlowRightInfoDtoList.AddRange(taskedDtoPm);
+            //}
+            //else
+            //{
+            //    auditFlowRightInfoDtoList.AddRange(taskedDto);
+            //}
+
+
+            auditFlowRightInfoDtoList.AddRange(taskedDto);
 
             return auditFlowRightInfoDtoList;
 
