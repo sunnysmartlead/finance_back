@@ -168,8 +168,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
         } catch (Exception e)
         {
-           
-            analyseBoardSecondDto.mes="报价方法"+e.Message;
+
+            analyseBoardSecondDto.mes = "核价数据有问题";
             return analyseBoardSecondDto;
         }
 
@@ -353,6 +353,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         ReturnDto returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
     }
+
+    public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
+    {
+        await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+    }
+    
 
  
 

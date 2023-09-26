@@ -8,6 +8,7 @@ using Abp;
 using Abp.AutoMapper;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
+using Abp.UI;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.FinanceMaintain;
@@ -264,11 +265,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             gepr.ProductId = productld;
             //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
             //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
-            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            ExcelPriceEvaluationTableDto ex = new ExcelPriceEvaluationTableDto();
+            try
             {
-                AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
-                Year = soptime, UpDown = YearType.FirstHalf
-            });
+                 ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+                {
+                    AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
+                    Year = soptime, UpDown = YearType.FirstHalf
+                });
+            }catch (Exception e)
+            {
+
+                throw new UserFriendlyException("核价数据问题");
+
+            }
+
+            
+           
 
             //最小梯度SOP年成本
             var totalcost = ex.TotalCost;
@@ -279,6 +292,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 List<SampleQuotation> onlySampleModels =
                     await getSample(sampleDtos, totalcost);
                 onlySampleDto.SolutionName = Solution.SolutionName;
+                onlySampleDto.SolutionId = Solution.Id;
                 onlySampleDto.OnlySampleModels = onlySampleModels;
                 samples.Add(onlySampleDto);
             }
@@ -1120,51 +1134,66 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<NreQuotation> models = new List<NreQuotation>();
             NreQuotation shouban = new();
             shouban.FormName = "手板件费";
+            shouban.SolutionId = solutionTable.Id;
             shouban.PricingMoney = Math.Round(pricingFormDto.HandPieceCostTotal, 2);
             handPieceCostTotals += pricingFormDto.HandPieceCostTotal;
             models.Add(shouban);
             NreQuotation mouju = new();
             mouju.FormName = "模具费";
+            mouju.SolutionId = solutionTable.Id;
+
             mouju.PricingMoney = Math.Round(pricingFormDto.MouldInventoryTotal, 2);
             mouldInventoryTotals += pricingFormDto.MouldInventoryTotal;
             models.Add(mouju);
             NreQuotation scsb = new();
             scsb.FormName = "生产设备费";
+            scsb.SolutionId = solutionTable.Id;
             scsb.PricingMoney = Math.Round(pricingFormDto.ProductionEquipmentCostTotal, 2);
             productionEquipmentCostTotals += pricingFormDto.ProductionEquipmentCostTotal;
             models.Add(scsb);
             NreQuotation gzf = new();
             gzf.FormName = "工装费";
+            gzf.SolutionId = solutionTable.Id;
+
             gzf.PricingMoney = Math.Round(pricingFormDto.ToolingCostTotal, 2);
             toolingCostTotals += pricingFormDto.ToolingCostTotal;
             models.Add(gzf);
             NreQuotation yjf = new();
             yjf.FormName = "治具费";
+            yjf.SolutionId = solutionTable.Id;
             yjf.PricingMoney = Math.Round(pricingFormDto.FixtureCostTotal, 2);
             fixtureCostTotals += pricingFormDto.FixtureCostTotal;
             models.Add(yjf);
             NreQuotation jjf = new();
             jjf.FormName = "检具费";
+            jjf.SolutionId = solutionTable.Id;
             jjf.PricingMoney = Math.Round(pricingFormDto.QAQCDepartmentsTotal, 2);
             qAQCDepartmentsTotals += pricingFormDto.QAQCDepartmentsTotal;
             models.Add(jjf);
             NreQuotation syf = new();
             syf.FormName = "实验费";
+            syf.SolutionId = solutionTable.Id;
             syf.PricingMoney = Math.Round(pricingFormDto.LaboratoryFeeModelsTotal, 2);
             laboratoryFeeModelsTotals += pricingFormDto.LaboratoryFeeModelsTotal;
             models.Add(syf);
             NreQuotation csrjf = new();
             csrjf.FormName = "测试软件费";
+            csrjf.SolutionId = solutionTable.Id;
+
             csrjf.PricingMoney = Math.Round(pricingFormDto.SoftwareTestingCostTotal, 2);
             softwareTestingCostTotals += pricingFormDto.SoftwareTestingCostTotal;
             models.Add(csrjf);
             NreQuotation clf = new();
             clf.FormName = "差旅费";
+            clf.SolutionId = solutionTable.Id;
+
             clf.PricingMoney = Math.Round(pricingFormDto.TravelExpenseTotal, 2);
             travelExpenseTotals += pricingFormDto.TravelExpenseTotal;
             models.Add(clf);
             NreQuotation qtfy = new();
             qtfy.FormName = "其他费用";
+            qtfy.SolutionId = solutionTable.Id;
+
             qtfy.PricingMoney = Math.Round(pricingFormDto.RestsCostTotal, 2);
             restsCostTotals += pricingFormDto.RestsCostTotal;
             models.Add(qtfy);
@@ -1190,6 +1219,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 DeviceQuotation deviceModel = new();
                 deviceModel.DeviceName = deviceDto.DeviceName;
+                deviceModel.SolutionId = solutionTable.Id;
                 deviceModel.Number = Math.Round(deviceDto.DeviceNumber.Value, 2);
                 deviceModel.DevicePrice = Math.Round(deviceDto.DevicePrice.Value, 2);
                 deviceModel.equipmentMoney = Math.Round(deviceModel.Number * deviceModel.DevicePrice, 2);
