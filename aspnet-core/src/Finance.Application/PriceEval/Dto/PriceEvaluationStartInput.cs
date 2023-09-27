@@ -15,10 +15,7 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class PriceEvaluationStartInputResult : PriceEvaluationStartInput
     {
-        /// <summary>
-        /// 核报价流程版本
-        /// </summary>
-        public virtual int QuoteVersion { get; set; }
+       
 
         /// <summary>
         /// 上传的文件信息（只有Id和FileName有值）
@@ -103,6 +100,11 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         //[Required]
         public virtual string ProjectCode { get; set; }
+
+        /// <summary>
+        /// 核报价流程版本
+        /// </summary>
+        public virtual int QuoteVersion { get; set; }
 
         /// <summary>
         /// 客户代码
