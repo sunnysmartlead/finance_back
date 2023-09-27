@@ -107,7 +107,7 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_上传电子BOM");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 189 && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
@@ -540,7 +540,8 @@ namespace Finance.WorkFlows
                            CreationTime = w.CreationTime,
                            TaskUser = u.Name,
                            WorkflowState = w.WorkflowState,
-                           WorkFlowInstanceId = h.WorkFlowInstanceId
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
+                           ProcessIdentifier = n.ProcessIdentifier
                        };
             var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
             var count = result.Count;
