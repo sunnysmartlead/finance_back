@@ -52,6 +52,10 @@ namespace Finance.WorkFlows
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
 
+
+        private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
+
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -71,7 +75,7 @@ namespace Finance.WorkFlows
             IRepository<InstanceHistory, long> instanceHistoryRepository,
             IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository,
-            UserManager userManager, RoleManager roleManager
+            UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository
             )
         {
             _workflowRepository = workflowRepository;
@@ -93,6 +97,8 @@ namespace Finance.WorkFlows
 
             _userManager = userManager;
             _roleManager = roleManager;
+
+            _priceEvaluationRepository = priceEvaluationRepository;
         }
 
         /// <summary>
@@ -508,6 +514,39 @@ namespace Finance.WorkFlows
             return new PagedResultDto<UserTask>(result.Count, result);
         }
 
+
+        /// <summary>
+        /// 根据当前用户Id 获取已办，基于项目经理过滤
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskCompletedFilter()
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
+
+                       join pe in _priceEvaluationRepository.GetAll() on h.WorkFlowInstanceId equals pe.AuditFlowId into pe1
+                       from p in pe1.DefaultIfEmpty()
+
+                       where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
+
+                       select new UserTask
+                       {
+                           Id = h.NodeInstanceId,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = w.CreationTime,
+                           TaskUser = u.Name,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId
+                       };
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
+            return new PagedResultDto<UserTask>(count, result);
+        }
 
         /// <summary>
         /// 根据用户Id 获取已办

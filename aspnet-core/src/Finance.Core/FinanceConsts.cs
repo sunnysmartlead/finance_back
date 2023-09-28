@@ -897,7 +897,25 @@ namespace Finance
         /// </summary>
         public const string ProjectChiefAudit = "ProjectChiefAudit";
 
-        
+        /// <summary>
+        /// 核价审批录入
+        /// </summary>
+        public const string PriceDemandReview = "PriceDemandReview";
+
+        /// <summary>
+        /// NRE手板件
+        /// </summary>
+        public const string NRE_ManualComponentInput = "NRE_ManualComponentInput";
+
+        /// <summary>
+        /// 查看每个方案初版BOM成本
+        /// </summary>
+        public const string UnitPriceInputReviewToExamine = "UnitPriceInputReviewToExamine";
+
+        /// <summary>
+        /// 核价看板
+        /// </summary>
+        public const string PriceEvaluationBoard = "PriceEvaluationBoard";
 
 
         #endregion
