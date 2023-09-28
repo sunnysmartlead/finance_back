@@ -17,6 +17,7 @@ using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
@@ -68,6 +69,8 @@ namespace Finance.Processes
         private readonly IRepository<FoundationWorkingHour, long> _foundationWorkingHourRepository;
         private readonly IRepository<FoundationWorkingHourItem, long> _foundationFoundationWorkingHourItemRepository;
         private readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
+        private readonly IRepository<FoundationDeviceItem, long> _foundationDeviceItemRepository;
+        private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -84,6 +87,8 @@ namespace Finance.Processes
                        IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository,
                      IRepository<FoundationFixtureItem, long> foundationFoundationFixtureItemRepository,
                       IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
+                      IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
+                      IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
                       WorkflowInstanceAppService workflowInstanceAppService)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
@@ -108,6 +113,9 @@ namespace Finance.Processes
             _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
             _foundationFoundationWorkingHourItemRepository = foundationFoundationWorkingHourItemRepository;
             _manufacturingCostInfoRepository = manufacturingCostInfoRepository;
+            _foundationDeviceItemRepository = foundationDeviceItemRepository;
+            _foundationHardwareItemRepository = foundationHardwareItemRepository;
+            _foundationHardwareItemRepository = foundationHardwareItemRepository;
         }
 
         /// <summary>
@@ -1479,22 +1487,70 @@ namespace Finance.Processes
             // 副表头
             IRow herdRow2 = sheet.CreateRow(1);
             CreateCell(herdRow2, 0, string.Empty, wk);
+            var query = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessNumber).Distinct() select a).ToList();
+            var queryName = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessName).Distinct()  select a).ToList();
+
+            List<string> list = new List<string>();
+            int index = 0;
+            foreach (var item in queryName)
+            {
+                list.Add(item);
+                index++;
+                if (index == 30) 
+                {
+                    break;
+                }
+            }
+
             CreateCell(herdRow2, 1, string.Empty, wk);
             CreateCell(herdRow2, 2, string.Empty, wk);
+            new ExcelCellDropdownParame(1, 1, query.ToArray()).SetCellDropdownList(sheet);
+            new ExcelCellDropdownParame(2, 2, list.ToArray()).SetCellDropdownList(sheet);
+            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
+
+            List<string> listDeviceItem = new List<string>();
+            int indexDevice = 0;
+            foreach (var item in DeviceItem)
+            {
+                listDeviceItem.Add(item);
+                indexDevice++;
+                if (indexDevice == 30)
+                {
+                    break;
+                }
+            }
             CreateCell(herdRow2, 3, "设备1名称", wk);
+            new ExcelCellDropdownParame(3, 3, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 4, "设备1数量", wk);
             CreateCell(herdRow2, 5, "设备1单价", wk);
             CreateCell(herdRow2, 6, "设备2名称", wk);
+            new ExcelCellDropdownParame(6, 6, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 7, "设备2数量", wk);
             CreateCell(herdRow2, 8, "设备2单价", wk);
             CreateCell(herdRow2, 9, "设备3名称", wk);
+            new ExcelCellDropdownParame(9, 9, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 10, "设备3数量", wk);
             CreateCell(herdRow2, 11, "设备3单价", wk);
             CreateCell(herdRow2, 12, "设备总价", wk);
+            var HardwareName = (from a in _foundationHardwareItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.HardwareName).Distinct()select a).ToList();
+
+            List<string> HardwareItem = new List<string>();
+            int indexHardwareItem = 0;
+            foreach (var item in HardwareName)
+            {
+                HardwareItem.Add(item);
+                indexHardwareItem++;
+                if (indexHardwareItem == 30)
+                {
+                    break;
+                }
+            }
             CreateCell(herdRow2, 13, "硬件设备1", wk);
+            new ExcelCellDropdownParame(13, 13, HardwareItem.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 14, "数量", wk);
             CreateCell(herdRow2, 15, "单价设备1", wk);
             CreateCell(herdRow2, 16, "硬件设备2", wk);
+            new ExcelCellDropdownParame(16, 16, HardwareItem.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 17, "数量", wk);
             CreateCell(herdRow2, 18, "单价设备2", wk);
             CreateCell(herdRow2, 19, "硬件总价", wk);
@@ -1503,20 +1559,74 @@ namespace Finance.Processes
             CreateCell(herdRow2, 22, "开图软件", wk);
             CreateCell(herdRow2, 23, "开发费(开图)", wk);
             CreateCell(herdRow2, 24, "软硬件总价", wk);
-
+            var FixtureItem = (from a in _foundationFoundationFixtureItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.FixtureName).Distinct() select a).ToList();
             CreateCell(herdRow2, 25, "治具1名称", wk);
+            List<string> FixtureItemList = new List<string>();
+            int indexFixtureItem = 0;
+            foreach (var item in FixtureItem)
+            {
+                FixtureItemList.Add(item);
+                indexFixtureItem++;
+                if (indexFixtureItem == 25)
+                {
+                    break;
+                }
+            }
+            new ExcelCellDropdownParame(25, 25, FixtureItemList.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 26, "数量", wk);
             CreateCell(herdRow2, 27, "治具单价", wk);
             CreateCell(herdRow2, 28, "治具2名称", wk);
+            new ExcelCellDropdownParame(28, 28, FixtureItemList.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 29, "数量", wk);
             CreateCell(herdRow2, 30, "治具单价", wk);
+
+            var FixtureGaugeNameItem = (from a in _foundationFixtureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.FixtureGaugeName).Distinct()       select a).ToList();
             CreateCell(herdRow2, 31, "检具名称", wk);
+            List<string> FixtureGaugeNameList = new List<string>();
+            int indexFixtureGaugeName = 0;
+            foreach (var item in FixtureGaugeNameItem)
+            {
+                FixtureGaugeNameList.Add(item);
+                indexFixtureItem++;
+                if (indexFixtureGaugeName == 30)
+                {
+                    break;
+                }
+            }
+            new ExcelCellDropdownParame(31, 31, FixtureGaugeNameList.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 32, "数量", wk);
             CreateCell(herdRow2, 33, "检具单价", wk);
+            var ProcessNameItem = (from a in _foundationProcedureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessName).Distinct()   select a).ToList();
+            List<string> ProcessNameList = new List<string>();
+            int indexProcessName = 0;
+            foreach (var item in ProcessNameItem)
+            {
+                ProcessNameList.Add(item);
+                indexProcessName++;
+                if (indexProcessName == 30)
+                {
+                    break;
+                }
+            }
             CreateCell(herdRow2, 34, "工装名称", wk);
+            new ExcelCellDropdownParame(34, 34, ProcessNameList.ToArray()).SetCellDropdownList(sheet);
             CreateCell(herdRow2, 35, "数量", wk);
             CreateCell(herdRow2, 36, "工装单价", wk);
+            var TestNameItem = (from a in _foundationProcedureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.TestName).Distinct()select a).ToList();
+            List<string> TestNameList = new List<string>();
+            int indexTestName = 0;
+            foreach (var item in TestNameItem)
+            {
+                TestNameList.Add(item);
+                indexTestName++;
+                if (indexTestName == 30)
+                {
+                    break;
+                }
+            }
             CreateCell(herdRow2, 37, "测试线名称", wk);
+            new ExcelCellDropdownParame(37, 37, TestNameList.ToArray()).SetCellDropdownList(sheet);
+
             CreateCell(herdRow2, 38, "数量", wk);
             CreateCell(herdRow2, 39, "线束单价", wk);
             CreateCell(herdRow2, 40, "工装治具检具总价", wk);
