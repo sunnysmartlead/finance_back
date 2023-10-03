@@ -199,7 +199,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationHardwareDto> CreateAsync(FoundationHardwareDto input)
         {
-
+            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             var entity = ObjectMapper.Map<FoundationHardwareDto, FoundationHardware>(input, new FoundationHardware());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -252,6 +256,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationHardwareDto> UpdateAsync(FoundationHardwareDto input)
         {
+            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationHardware entity = await _foundationHardwareRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationHardwareRepository.UpdateAsync(entity);

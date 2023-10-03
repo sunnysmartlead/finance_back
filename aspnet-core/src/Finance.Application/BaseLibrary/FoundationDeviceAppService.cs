@@ -164,6 +164,12 @@ namespace Finance.BaseLibrary
         [HttpPost]
         public virtual async Task<FoundationDeviceDto> CreateAsync(FoundationDeviceDto input)
         {
+
+            var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count>0) {
+                throw new Exception("工序编号重复！");
+            }
+            
             var entity = ObjectMapper.Map<FoundationDeviceDto, FoundationDevice>(input, new FoundationDevice());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -423,6 +429,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationDeviceDto> UpdateAsync(FoundationDeviceDto input)
         {
+            var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationDevice entity = await _foundationDeviceRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationDeviceRepository.UpdateAsync(entity);

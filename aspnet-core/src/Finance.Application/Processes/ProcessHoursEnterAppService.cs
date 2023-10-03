@@ -15,10 +15,15 @@ using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
 using NPOI.XSSF.Streaming.Values;
+using NPOI.XSSF.UserModel;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
@@ -64,6 +69,8 @@ namespace Finance.Processes
         private readonly IRepository<FoundationWorkingHour, long> _foundationWorkingHourRepository;
         private readonly IRepository<FoundationWorkingHourItem, long> _foundationFoundationWorkingHourItemRepository;
         private readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
+        private readonly IRepository<FoundationDeviceItem, long> _foundationDeviceItemRepository;
+        private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -80,6 +87,8 @@ namespace Finance.Processes
                        IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository,
                      IRepository<FoundationFixtureItem, long> foundationFoundationFixtureItemRepository,
                       IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
+                      IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
+                      IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
                       WorkflowInstanceAppService workflowInstanceAppService)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
@@ -104,6 +113,9 @@ namespace Finance.Processes
             _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
             _foundationFoundationWorkingHourItemRepository = foundationFoundationWorkingHourItemRepository;
             _manufacturingCostInfoRepository = manufacturingCostInfoRepository;
+            _foundationDeviceItemRepository = foundationDeviceItemRepository;
+            _foundationHardwareItemRepository = foundationHardwareItemRepository;
+            _foundationHardwareItemRepository = foundationHardwareItemRepository;
         }
 
         /// <summary>
@@ -146,13 +158,14 @@ namespace Finance.Processes
         {
             //根据工序编号获取工序名称
             ProcessHoursEnterDto processHoursEnterDto = new ProcessHoursEnterDto();
-            var query = this._fProcessesRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber  && t.IsDeleted ==false).ToList();
-            if (query.Count>0) {
+            var query = this._fProcessesRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
+            if (query.Count > 0)
+            {
                 processHoursEnterDto.ProcessNumber = query[0].ProcessNumber;
                 processHoursEnterDto.ProcessName = query[0].ProcessName;
             }
             //设备的
-            var queryDevice =  this._foundationDeviceRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
+            var queryDevice = this._foundationDeviceRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
             if (queryDevice.Count > 0)
             {
                 processHoursEnterDto.DeviceInfo.DeviceTotalCost = 0;
@@ -160,11 +173,11 @@ namespace Finance.Processes
                 List<ProcessHoursEnterDeviceDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterDeviceDto>();
                 foreach (var item in FoundationDeviceItemlist)
                 {
-                    ProcessHoursEnterDeviceDto processHoursEnterDeviceDto =     new ProcessHoursEnterDeviceDto();
+                    ProcessHoursEnterDeviceDto processHoursEnterDeviceDto = new ProcessHoursEnterDeviceDto();
                     processHoursEnterDeviceDto.DevicePrice = decimal.Parse(item.DevicePrice);
                     processHoursEnterDeviceDto.DeviceStatus = item.DeviceStatus;
-                    processHoursEnterDeviceDto.DeviceNumber = 0 ;
-                    processHoursEnterDeviceDto.DeviceName= item.DeviceName;
+                    processHoursEnterDeviceDto.DeviceNumber = 0;
+                    processHoursEnterDeviceDto.DeviceName = item.DeviceName;
                     processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
 
                 }
@@ -218,7 +231,7 @@ namespace Finance.Processes
 
                 processHoursEnterDto.ToolInfo.FrockName = queryProcedure[0].InstallationName;
                 processHoursEnterDto.ToolInfo.FrockPrice = queryProcedure[0].InstallationPrice;
-                processHoursEnterDto.ToolInfo.FrockNumber  = 0;
+                processHoursEnterDto.ToolInfo.FrockNumber = 0;
                 processHoursEnterDto.ToolInfo.TestLineName = queryProcedure[0].TestName;
                 processHoursEnterDto.ToolInfo.TestLinePrice = queryProcedure[0].TestPrice;
                 processHoursEnterDto.ToolInfo.TestLineNumber = 0;
@@ -235,7 +248,7 @@ namespace Finance.Processes
                     ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
                     p.Year = item;
                     var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
-                   List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
+                    List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
                     foreach (var itemYear in queryYearItem)
                     {
                         ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
@@ -253,7 +266,7 @@ namespace Finance.Processes
             }
 
 
-                return processHoursEnterDto;
+            return processHoursEnterDto;
         }
         /// <summary>
         /// 列表-无分页功能
@@ -365,7 +378,7 @@ namespace Finance.Processes
                         processHoursEnteritemDto.LaborHour = yearItem.LaborHour;
                         processHoursEnteritemDto.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritemDto.MachineHour = yearItem.MachineHour;
-                        processHoursEnteritemDto.ModelCountYearId= yearItem.ModelCountYearId;
+                        processHoursEnteritemDto.ModelCountYearId = yearItem.ModelCountYearId;
                         processHoursEnteritems1.Add(processHoursEnteritemDto);
                     }
                     processHoursEnteritem.Issues = processHoursEnteritems1;
@@ -503,13 +516,13 @@ namespace Finance.Processes
             return processHoursEnterDtoList;
         }
 
-       /// <summary>
+        /// <summary>
         /// 查看项目走量        /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual  async Task<List<ModuleNumberDto>> GetListModuleNumberDtoAsync(ProcessHoursEnterModuleNumberDto input)
+        public virtual async Task<List<ModuleNumberDto>> GetListModuleNumberDtoAsync(ProcessHoursEnterModuleNumberDto input)
         {
-            List<ModuleNumberDto> moduleNumberDtos= new List<ModuleNumberDto>();
+            List<ModuleNumberDto> moduleNumberDtos = new List<ModuleNumberDto>();
             var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == input.SolutionId).ToList();
             foreach (var item in query)
             {
@@ -568,7 +581,7 @@ namespace Finance.Processes
                 {
                     processHoursEnterUphListDto.Smtuph = 0;
                 }
-                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.Year == row.Year.ToString()).ToList();
+                var ZcuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "zcuph" && t.ModelCountYearId == row.Id).ToList();
                 if (null != ZcuphList && ZcuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Zcuph = ZcuphList[0].Value;
@@ -578,7 +591,7 @@ namespace Finance.Processes
                     processHoursEnterUphListDto.Zcuph = 0;
                 }
 
-                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.Year == row.Year.ToString()).ToList();
+                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.ModelCountYearId == row.Id).ToList();
                 if (null != CobuphList && CobuphList.Count > 0)
                 {
                     processHoursEnterUphListDto.Cobuph = CobuphList[0].Value;
@@ -664,7 +677,7 @@ namespace Finance.Processes
                     Comment = input.Comment,
                     FinanceDictionaryDetailId = input.Opinion,
                     NodeInstanceId = input.NodeInstanceId,
-                }); 
+                });
 
                 //提交完成  可以在这里做审核处理
                 return "提交完成";
@@ -712,8 +725,8 @@ namespace Finance.Processes
             entity.TestLineNumber = input.ToolInfo.TestLineNumber;
             entity.TestLinePrice = input.ToolInfo.TestLinePrice;
             entity.DevelopTotalPrice = input.ToolInfo.DevelopTotalPrice;
-            entity.TraceabilitySoftware =   input.DevelopCostInfo.TraceabilitySoftware;
-            entity.TraceabilitySoftwareCost =   input.DevelopCostInfo.TraceabilitySoftwareCost;
+            entity.TraceabilitySoftware = input.DevelopCostInfo.TraceabilitySoftware;
+            entity.TraceabilitySoftwareCost = input.DevelopCostInfo.TraceabilitySoftwareCost;
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
             {
@@ -1082,7 +1095,8 @@ namespace Finance.Processes
                         {
                             fromCols = fromCols - 6;
                         }
-                        else {
+                        else
+                        {
                             fromCols = 6;
                         }
 
@@ -1109,7 +1123,7 @@ namespace Finance.Processes
                         // 硬件总价
                         rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareTotalPrice = decimal.Parse(row[keys[fromNumIndex]].ToString());
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[fromNumIndex +3]].ToString());
+                        foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[fromNumIndex + 3]].ToString());
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwarePrice = decimal.Parse(row[keys[fromNumIndex + 4]].ToString());
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[fromNumIndex + 5]].ToString());
 
@@ -1137,18 +1151,18 @@ namespace Finance.Processes
                         foundationReliableProcessHoursFixtureResponseDto.ZhiJuArr = foundationTechnologyFixtures;
 
                         // 设备总价
-                        int frocNumIndex = fromNumIndex + frockCols -4;
+                        int frocNumIndex = fromNumIndex + frockCols - 4;
                         // 工装治具检具总价
                         rowItem.Add(keys[frocNumIndex], row[keys[frocNumIndex - 1]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[frocNumIndex +9]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex +8]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex +7]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex +6]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex +5]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex +4]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex +3]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex +2]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex +1]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[frocNumIndex + 9]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex + 8]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex + 7]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex + 6]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex + 5]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex + 4]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex + 3]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex + 2]].ToString());
+                        foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex + 1]].ToString());
                         foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex]].ToString());
                         processHoursEnterDto.ToolInfo = foundationReliableProcessHoursFixtureResponseDto;
 
@@ -1159,14 +1173,14 @@ namespace Finance.Processes
                         for (int j = 0; j < yearNum; j++)
                         {
                             ProcessHoursEnterSopInfoDto foundationWorkingHourItem = new ProcessHoursEnterSopInfoDto();
-                            
+
                             string yearstr = yearStrs[j];
                             Dictionary<string, object> yearItem = new Dictionary<string, object>();
                             int fromStartIndex = j * 3 + 44;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
-                            foundationWorkingHourItem.Year  = yearstr;
+                            foundationWorkingHourItem.Year = yearstr;
                             List<ProcessHoursEnteritemDto> processHoursEnteritems = new List<ProcessHoursEnteritemDto>();
                             for (int g = 0; g < yearNum; g++)
                             {
@@ -1178,13 +1192,13 @@ namespace Finance.Processes
                                 processHoursEnteritem.LaborHour = decimal.Parse(val0.ToString());
                                 processHoursEnteritem.MachineHour = decimal.Parse(val1.ToString());
                                 processHoursEnteritem.PersonnelNumber = decimal.Parse(val2.ToString());
-                                if (query.Count>0 && null != query[g])
+                                if (query.Count > 0 && null != query[g])
                                 {
                                     processHoursEnteritem.ModelCountYearId = query[g].Id;
                                 }
                                 processHoursEnteritems.Add(processHoursEnteritem);
                             }
-                            foundationWorkingHourItem.Issues= processHoursEnteritems;
+                            foundationWorkingHourItem.Issues = processHoursEnteritems;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
 
 
@@ -1307,31 +1321,35 @@ namespace Finance.Processes
         public async Task<List<ProcessHoursEnterLineDtoList>> ListProcessHoursEnterLine(GetProcessHoursEnterUphListDto input)
         {
             List<ProcessHoursEnterLineDtoList> list = new List<ProcessHoursEnterLineDtoList>();
-            if (input != null) {
+            if (input != null)
+            {
                 foreach (var item in input.ProcessHoursEnterUphListDtos)
                 {
                     ProcessHoursEnterLineDtoList processHoursEnterLineDto = new ProcessHoursEnterLineDtoList();
                     //=组测UPH
-                    decimal Zcuph =  (decimal)item.Zcuph;
+                    decimal Zcuph = (decimal)item.Zcuph;
 
                     decimal rateOfMobilization = 0;
                     decimal MonthlyWorkingDays = 0;
                     decimal DailyShift = 0;
-                    decimal WorkingHours = 0;
+                    decimal WorkingHours = 0; ;
+                    decimal CapacityUtilizationRate = 0; ;
                     //获取年份
                     ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(item.ModelCountYearId);
                     //查询制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
-                    var manufacturingCostInfo =   this._manufacturingCostInfoRepository.GetAll().Where(t=> t.Year == modelCountYear.Year).ToList();
-                    if (manufacturingCostInfo.Count>0)
+                    var manufacturingCostInfo = this._manufacturingCostInfoRepository.GetAll().Where(t => t.Year == modelCountYear.Year).ToList();
+                    if (manufacturingCostInfo.Count > 0)
                     {
                         //嫁接率
-                         rateOfMobilization =   manufacturingCostInfo[0].RateOfMobilization;
+                        rateOfMobilization = manufacturingCostInfo[0].RateOfMobilization;
                         //月工作天数
-                         MonthlyWorkingDays = (decimal)manufacturingCostInfo[0].MonthlyWorkingDays;
+                        MonthlyWorkingDays = (decimal)manufacturingCostInfo[0].MonthlyWorkingDays;
                         //每日班次
-                         DailyShift = (decimal)manufacturingCostInfo[0].DailyShift;
+                        DailyShift = (decimal)manufacturingCostInfo[0].DailyShift;
                         //每班正常工作时间
-                         WorkingHours = (decimal)manufacturingCostInfo[0].WorkingHours;
+                        WorkingHours = (decimal)manufacturingCostInfo[0].WorkingHours;
+                        //产能利用率
+                        CapacityUtilizationRate = (decimal)manufacturingCostInfo[0].CapacityUtilizationRate;
                     }
                     //每月产能
                     decimal Capacity = Zcuph * rateOfMobilization * MonthlyWorkingDays * DailyShift * WorkingHours;
@@ -1341,7 +1359,8 @@ namespace Finance.Processes
                     {
                         month = 12;
                     }
-                    else {
+                    else
+                    {
                         month = 6;
                     }
                     //每月需求
@@ -1361,21 +1380,46 @@ namespace Finance.Processes
                             {
                                 xtftl = 0;
                             }
-                            else {
-                                xtftl = (lineQuantity / x) * (decimal)0.8;
+                            else
+                            {
+                                decimal b = Capacity * Xtsl;
+                                if (!b.Equals(0.000M))
+                                {
+                                    if (!CapacityUtilizationRate.Equals((0.000M)))
+                                    {
+                                        xtftl = (lineQuantity / b) / CapacityUtilizationRate;
+                                    }
+                                    else
+                                    {
+                                        xtftl = 0;
+                                    }
+                                }
+                                else
+                                {
+                                    xtftl = 0;
+                                }
                             }
 
                         }
-                        else {
+                        else
+                        {
                             xtftl = 0;
                         }
-                       
-                   
+
+
+                        if (xtftl > 1)
+                        {
+                            xtftl = 100;
+                        }
+                        if (xtftl < 1)
+                        {
+                            xtftl = xtftl * 100;
+                        }
 
                         XtslVale = Xtsl;
                         GtVale = decimal.Parse(xtftl.ToString("0.00"));
                     }
-                   
+
 
                     processHoursEnterLineDto.Xtsl = XtslVale;
                     processHoursEnterLineDto.Gxftl = GtVale;
@@ -1398,6 +1442,749 @@ namespace Finance.Processes
                 }
             }
             return list;
+        }
+
+        /// <summary>
+        /// 模版下载
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> TemplateDownload(GetProcessHoursEntersInput input)
+        {
+            //无数据的情况下
+            Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+            var yearCountList = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
+
+            IWorkbook wk = new XSSFWorkbook();
+            ISheet sheet = wk.CreateSheet("Sheet1");
+            sheet.DefaultRowHeight = 25 * 20;
+            // 表头设置
+            IRow herdRow = sheet.CreateRow(0);
+            CreateCell(herdRow, 0, "序号", wk);
+            sheet.SetColumnWidth(0, 10 * 300);
+            CreateCell(herdRow, 1, "工序编号", wk);
+            sheet.SetColumnWidth(1, 10 * 300);
+            CreateCell(herdRow, 2, "工序名称", wk);
+            sheet.SetColumnWidth(2, 10 * 400);
+            CreateCell(herdRow, 3, "设备", wk);
+            sheet.SetColumnWidth(3, 10 * 500);
+            CreateCell(herdRow, 13, "追溯部分(硬件及软件开发费用)", wk);
+            sheet.SetColumnWidth(4, 10 * 500);
+            CreateCell(herdRow, 25, "工装治具部分", wk);
+            sheet.SetColumnWidth(5, 10 * 500);
+
+            MergedRegion(sheet, 0, 1, 0, 0);
+            MergedRegion(sheet, 0, 1, 1, 1);
+            MergedRegion(sheet, 0, 1, 2, 2);
+            MergedRegion(sheet, 0, 0, 3, 12);
+            MergedRegion(sheet, 0, 0, 13, 24);
+            MergedRegion(sheet, 0, 0, 25, 40);
+
+            int colIndex = 0;
+
+
+            // 副表头
+            IRow herdRow2 = sheet.CreateRow(1);
+            CreateCell(herdRow2, 0, string.Empty, wk);
+            var query = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessNumber).Distinct() select a).ToList();
+            var queryName = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessName).Distinct()  select a).ToList();
+
+            List<string> list = new List<string>();
+            int index = 0;
+            foreach (var item in queryName)
+            {
+                list.Add(item);
+                index++;
+                if (index == 30) 
+                {
+                    break;
+                }
+            }
+
+            CreateCell(herdRow2, 1, string.Empty, wk);
+            CreateCell(herdRow2, 2, string.Empty, wk);
+            new ExcelCellDropdownParame(1, 1, query.ToArray()).SetCellDropdownList(sheet);
+            new ExcelCellDropdownParame(2, 2, list.ToArray()).SetCellDropdownList(sheet);
+            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
+
+            List<string> listDeviceItem = new List<string>();
+            int indexDevice = 0;
+            foreach (var item in DeviceItem)
+            {
+                listDeviceItem.Add(item);
+                indexDevice++;
+                if (indexDevice == 30)
+                {
+                    break;
+                }
+            }
+            CreateCell(herdRow2, 3, "设备1名称", wk);
+            new ExcelCellDropdownParame(3, 3, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 4, "设备1数量", wk);
+            CreateCell(herdRow2, 5, "设备1单价", wk);
+            CreateCell(herdRow2, 6, "设备2名称", wk);
+            new ExcelCellDropdownParame(6, 6, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 7, "设备2数量", wk);
+            CreateCell(herdRow2, 8, "设备2单价", wk);
+            CreateCell(herdRow2, 9, "设备3名称", wk);
+            new ExcelCellDropdownParame(9, 9, listDeviceItem.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 10, "设备3数量", wk);
+            CreateCell(herdRow2, 11, "设备3单价", wk);
+            CreateCell(herdRow2, 12, "设备总价", wk);
+            var HardwareName = (from a in _foundationHardwareItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.HardwareName).Distinct()select a).ToList();
+
+            List<string> HardwareItem = new List<string>();
+            int indexHardwareItem = 0;
+            foreach (var item in HardwareName)
+            {
+                HardwareItem.Add(item);
+                indexHardwareItem++;
+                if (indexHardwareItem == 30)
+                {
+                    break;
+                }
+            }
+            CreateCell(herdRow2, 13, "硬件设备1", wk);
+            new ExcelCellDropdownParame(13, 13, HardwareItem.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 14, "数量", wk);
+            CreateCell(herdRow2, 15, "单价设备1", wk);
+            CreateCell(herdRow2, 16, "硬件设备2", wk);
+            new ExcelCellDropdownParame(16, 16, HardwareItem.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 17, "数量", wk);
+            CreateCell(herdRow2, 18, "单价设备2", wk);
+            CreateCell(herdRow2, 19, "硬件总价", wk);
+            CreateCell(herdRow2, 20, "追溯软件", wk);
+            CreateCell(herdRow2, 21, "开发费(追溯)", wk);
+            CreateCell(herdRow2, 22, "开图软件", wk);
+            CreateCell(herdRow2, 23, "开发费(开图)", wk);
+            CreateCell(herdRow2, 24, "软硬件总价", wk);
+            var FixtureItem = (from a in _foundationFoundationFixtureItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.FixtureName).Distinct() select a).ToList();
+            CreateCell(herdRow2, 25, "治具1名称", wk);
+            List<string> FixtureItemList = new List<string>();
+            int indexFixtureItem = 0;
+            foreach (var item in FixtureItem)
+            {
+                FixtureItemList.Add(item);
+                indexFixtureItem++;
+                if (indexFixtureItem == 25)
+                {
+                    break;
+                }
+            }
+            new ExcelCellDropdownParame(25, 25, FixtureItemList.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 26, "数量", wk);
+            CreateCell(herdRow2, 27, "治具单价", wk);
+            CreateCell(herdRow2, 28, "治具2名称", wk);
+            new ExcelCellDropdownParame(28, 28, FixtureItemList.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 29, "数量", wk);
+            CreateCell(herdRow2, 30, "治具单价", wk);
+
+            var FixtureGaugeNameItem = (from a in _foundationFixtureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.FixtureGaugeName).Distinct()       select a).ToList();
+            CreateCell(herdRow2, 31, "检具名称", wk);
+            List<string> FixtureGaugeNameList = new List<string>();
+            int indexFixtureGaugeName = 0;
+            foreach (var item in FixtureGaugeNameItem)
+            {
+                FixtureGaugeNameList.Add(item);
+                indexFixtureItem++;
+                if (indexFixtureGaugeName == 30)
+                {
+                    break;
+                }
+            }
+            new ExcelCellDropdownParame(31, 31, FixtureGaugeNameList.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 32, "数量", wk);
+            CreateCell(herdRow2, 33, "检具单价", wk);
+            var ProcessNameItem = (from a in _foundationProcedureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessName).Distinct()   select a).ToList();
+            List<string> ProcessNameList = new List<string>();
+            int indexProcessName = 0;
+            foreach (var item in ProcessNameItem)
+            {
+                ProcessNameList.Add(item);
+                indexProcessName++;
+                if (indexProcessName == 30)
+                {
+                    break;
+                }
+            }
+            CreateCell(herdRow2, 34, "工装名称", wk);
+            new ExcelCellDropdownParame(34, 34, ProcessNameList.ToArray()).SetCellDropdownList(sheet);
+            CreateCell(herdRow2, 35, "数量", wk);
+            CreateCell(herdRow2, 36, "工装单价", wk);
+            var TestNameItem = (from a in _foundationProcedureRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.TestName).Distinct()select a).ToList();
+            List<string> TestNameList = new List<string>();
+            int indexTestName = 0;
+            foreach (var item in TestNameItem)
+            {
+                TestNameList.Add(item);
+                indexTestName++;
+                if (indexTestName == 30)
+                {
+                    break;
+                }
+            }
+            CreateCell(herdRow2, 37, "测试线名称", wk);
+            new ExcelCellDropdownParame(37, 37, TestNameList.ToArray()).SetCellDropdownList(sheet);
+
+            CreateCell(herdRow2, 38, "数量", wk);
+            CreateCell(herdRow2, 39, "线束单价", wk);
+            CreateCell(herdRow2, 40, "工装治具检具总价", wk);
+
+            int c = 40;
+            int d = 6;
+
+            for (int i = 0; i < yearCountList.Count; i++)
+            {
+                if (i == 0)
+                {
+                    string year = "";
+                    if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                    {
+                        year = yearCountList[i].Year + "上半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
+                    {
+                        year = yearCountList[i].Year + "下半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.Year))
+                    {
+                        year = yearCountList[i].Year + "";
+
+                    }
+
+                    CreateCell(herdRow, c + 1, year, wk);
+                    sheet.SetColumnWidth(d, 10 * 500);
+
+                    MergedRegion(sheet, 0, 0, c + 1, c + 3);
+                    c += 4;
+                    d += 2;
+                }
+                else
+                {
+                    string year = "";
+                    if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                    {
+                        year = yearCountList[i].Year + "上半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
+                    {
+                        year = yearCountList[i].Year + "下半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.Year))
+                    {
+                        year = yearCountList[i].Year + "";
+
+                    }
+
+                    CreateCell(herdRow, c, year, wk);
+                    sheet.SetColumnWidth(d, 10 * 500);
+
+                    MergedRegion(sheet, 0, 0, c, c + 2);
+                    c += 3;
+                    d += 1;
+                }
+
+
+            }
+            int e = 40;
+            for (int i = 0; i < yearCountList.Count; i++)
+            {
+                CreateCell(herdRow2, e + 1, "标准人工工时", wk);
+                CreateCell(herdRow2, e + 2, "标准机器工时", wk);
+                CreateCell(herdRow2, e + 3, "人员数量", wk);
+                e += 3;
+            }
+
+
+
+
+            using (FileStream sw = File.Create("FoundationWorkingHour.xlsx"))
+            {
+                wk.Write(sw);
+            }
+            return new FileStreamResult(File.Open("FoundationWorkingHour.xlsx", FileMode.Open), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FProcesses" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
+        }
+
+
+
+        /// <summary>
+        /// 导出工时工序
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<FileStreamResult> exportDownload(GetProcessHoursEntersInput input)
+        {
+            //无数据的情况下
+            Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+            var yearCountList = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
+
+            IWorkbook wk = new XSSFWorkbook();
+            ISheet sheet = wk.CreateSheet("Sheet1");
+            sheet.DefaultRowHeight = 25 * 20;
+            // 表头设置
+            IRow herdRow = sheet.CreateRow(0);
+            CreateCell(herdRow, 0, "序号", wk);
+            sheet.SetColumnWidth(0, 10 * 300);
+            CreateCell(herdRow, 1, "工序编号", wk);
+            sheet.SetColumnWidth(1, 10 * 300);
+            CreateCell(herdRow, 2, "工序名称", wk);
+            sheet.SetColumnWidth(2, 10 * 400);
+            CreateCell(herdRow, 3, "设备", wk);
+            sheet.SetColumnWidth(3, 10 * 500);
+            CreateCell(herdRow, 4, "追溯部分(硬件及软件开发费用)", wk);
+            sheet.SetColumnWidth(4, 10 * 500);
+            CreateCell(herdRow, 5, "工装治具部分", wk);
+            sheet.SetColumnWidth(5, 10 * 500);
+
+            MergedRegion(sheet, 0, 1, 0, 0);
+            MergedRegion(sheet, 0, 1, 1, 1);
+            MergedRegion(sheet, 0, 1, 2, 2);
+            MergedRegion(sheet, 0, 0, 3, 15);
+            MergedRegion(sheet, 0, 0, 16, 27);
+            MergedRegion(sheet, 0, 0, 28, 43);
+
+            int colIndex = 0;
+
+
+            // 副表头
+            IRow herdRow2 = sheet.CreateRow(1);
+            CreateCell(herdRow2, 0, string.Empty, wk);
+            CreateCell(herdRow2, 1, string.Empty, wk);
+            CreateCell(herdRow2, 2, string.Empty, wk);
+            CreateCell(herdRow2, 3, "设备1名称", wk);
+            CreateCell(herdRow2, 4, "设备1状态", wk);
+            CreateCell(herdRow2, 5, "设备1数量", wk);
+            CreateCell(herdRow2, 6, "设备1单价", wk);
+            CreateCell(herdRow2, 7, "设备2名称", wk);
+            CreateCell(herdRow2, 8, "设备2状态", wk);
+            CreateCell(herdRow2, 9, "设备2数量", wk);
+            CreateCell(herdRow2, 10, "设备2单价", wk);
+            CreateCell(herdRow2, 11, "设备3名称", wk);
+            CreateCell(herdRow2, 12, "设备3状态", wk);
+            CreateCell(herdRow2, 13, "设备3数量", wk);
+            CreateCell(herdRow2, 14, "设备3单价", wk);
+            CreateCell(herdRow2, 15, "设备总价", wk);
+
+            CreateCell(herdRow2, 16, "硬件设备1", wk);
+            CreateCell(herdRow2, 17, "数量", wk);
+            CreateCell(herdRow2, 18, "单价设备1", wk);
+            CreateCell(herdRow2, 19, "硬件设备2", wk);
+            CreateCell(herdRow2, 20, "数量", wk);
+            CreateCell(herdRow2, 21, "单价设备2", wk);
+            CreateCell(herdRow2, 22, "硬件总价", wk);
+            CreateCell(herdRow2, 23, "追溯软件", wk);
+            CreateCell(herdRow2, 24, "开发费(追溯)", wk);
+            CreateCell(herdRow2, 25, "开图软件", wk);
+            CreateCell(herdRow2, 26, "开发费(开图)", wk);
+            CreateCell(herdRow2, 27, "软硬件总价", wk);
+
+            CreateCell(herdRow2, 28, "治具1名称", wk);
+            CreateCell(herdRow2, 29, "数量", wk);
+            CreateCell(herdRow2, 30, "治具单价", wk);
+            CreateCell(herdRow2, 31, "治具2名称", wk);
+            CreateCell(herdRow2, 32, "数量", wk);
+            CreateCell(herdRow2, 33, "治具单价", wk);
+            CreateCell(herdRow2, 34, "检具名称", wk);
+            CreateCell(herdRow2, 35, "数量", wk);
+            CreateCell(herdRow2, 36, "检具单价", wk);
+            CreateCell(herdRow2, 37, "工装名称", wk);
+            CreateCell(herdRow2, 38, "数量", wk);
+            CreateCell(herdRow2, 39, "工装单价", wk);
+            CreateCell(herdRow2, 40, "测试线名称", wk);
+            CreateCell(herdRow2, 41, "数量", wk);
+            CreateCell(herdRow2, 42, "线束单价", wk);
+            CreateCell(herdRow2, 43, "工装治具检具总价", wk);
+
+            int c = 43;
+            int d = 6;
+
+            for (int i = 0; i < yearCountList.Count; i++)
+            {
+                if (i == 0)
+                {
+                    string year = "";
+                    if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                    {
+                        year = yearCountList[i].Year + "上半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
+                    {
+                        year = yearCountList[i].Year + "下半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.Year))
+                    {
+                        year = yearCountList[i].Year + "";
+
+                    }
+
+                    CreateCell(herdRow, c + 1, year, wk);
+                    sheet.SetColumnWidth(d, 10 * 500);
+
+                    MergedRegion(sheet, 0, 0, c + 1, c + 3);
+                    c += 4;
+                    d += 2;
+                }
+                else
+                {
+                    string year = "";
+                    if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                    {
+                        year = yearCountList[i].Year + "上半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
+                    {
+                        year = yearCountList[i].Year + "下半年";
+
+                    }
+                    if (yearCountList[i].UpDown.Equals(YearType.Year))
+                    {
+                        year = yearCountList[i].Year + "";
+
+                    }
+
+                    CreateCell(herdRow, c, year, wk);
+                    sheet.SetColumnWidth(d, 10 * 500);
+
+                    MergedRegion(sheet, 0, 0, c, c + 2);
+                    c += 3;
+                    d += 1;
+                }
+
+
+            }
+            int e = 43;
+            for (int i = 0; i < yearCountList.Count; i++)
+            {
+                CreateCell(herdRow2, e + 1, "标准人工工时", wk);
+                CreateCell(herdRow2, e + 2, "标准机器工时", wk);
+                CreateCell(herdRow2, e + 3, "人员数量", wk);
+                e += 3;
+            }
+
+            // 设置查询条件
+            var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
+
+            // 查询数据
+            //数据转换
+            int row = 1;
+            foreach (var item in list)
+            {
+                row =row +1;
+                IRow herdRow3 = sheet.CreateRow(row);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(herdRow3, 0, item.Id.ToString(), wk);
+                CreateCell(herdRow3, 1, item.ProcessNumber, wk);
+                CreateCell(herdRow3, 2, item.ProcessName, wk);
+                //设备的信息
+                var listDevice = _processHoursEnterDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
+                if (null != listDevice[0].DeviceName)
+                {
+                    CreateCell(herdRow3, 3, listDevice[0].DeviceName, wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 3, string.Empty, wk);
+                }
+                if (null != listDevice[0].DeviceStatus)
+                {
+                    CreateCell(herdRow3, 4, listDevice[0].DeviceStatus, wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 4, string.Empty, wk);
+                }
+
+                if (null != listDevice[0].DeviceNumber)
+                {
+                    CreateCell(herdRow3, 5, listDevice[0].DeviceNumber.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 5, string.Empty, wk);
+                }
+                if (null != listDevice[0].DevicePrice)
+                {
+                    CreateCell(herdRow3, 6, listDevice[0].DevicePrice.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 6, string.Empty, wk);
+
+                }
+                if (null != listDevice[1].DeviceName)
+                {
+                    CreateCell(herdRow3, 7, listDevice[1].DeviceName.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 7, string.Empty, wk);
+
+                }
+                if (null != listDevice[1].DeviceStatus)
+                {
+                    CreateCell(herdRow3, 8, listDevice[1].DeviceStatus.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 8, string.Empty, wk);
+
+                }
+                if (null != listDevice[1].DeviceNumber)
+                {
+                    CreateCell(herdRow3, 9, listDevice[1].DeviceNumber.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 9, string.Empty, wk);
+
+                }
+                if (null != listDevice[1].DevicePrice)
+                {
+                    CreateCell(herdRow3, 10, listDevice[1].DevicePrice.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 10, string.Empty, wk);
+
+                }
+                if (null != listDevice[2].DeviceName)
+                {
+                    CreateCell(herdRow3, 11, listDevice[2].DeviceName.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 11, string.Empty, wk);
+
+                }
+                if (null != listDevice[2].DeviceStatus)
+                {
+                    CreateCell(herdRow3, 12, listDevice[2].DeviceStatus.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 12, string.Empty, wk);
+
+                }
+
+                if (null != listDevice[2].DeviceNumber)
+                {
+                    CreateCell(herdRow3, 13, listDevice[2].DeviceNumber.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 13, string.Empty, wk);
+
+                }
+                if (null != listDevice[2].DevicePrice)
+                {
+                    CreateCell(herdRow3, 14, listDevice[2].DevicePrice.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 14, string.Empty, wk);
+
+                }
+                if (null != item.DeviceTotalPrice)
+                {
+                    CreateCell(herdRow3, 15, item.DeviceTotalPrice.ToString(), wk);
+
+                }
+                else
+                {
+                    CreateCell(herdRow3, 15, string.Empty, wk);
+
+                }
+
+                //追溯部分(硬件及软件开发费用)
+                var listFrock = _processHoursEnterFrockRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
+                CreateCell(herdRow3, 16, listFrock[0].HardwareDeviceName, wk);
+                CreateCell(herdRow3, 17, listFrock[0].HardwareDeviceNumber.ToString(), wk);
+                CreateCell(herdRow3, 18, listFrock[0].HardwareDevicePrice.ToString(), wk);
+
+                CreateCell(herdRow3, 19, listFrock[1].HardwareDeviceName, wk);
+                CreateCell(herdRow3, 20, listFrock[1].HardwareDeviceNumber.ToString(), wk);
+                CreateCell(herdRow3, 21, listFrock[1].HardwareDevicePrice.ToString(), wk);
+                // 硬件总价
+                CreateCell(herdRow3, 22, ((listFrock[0].HardwareDevicePrice * listFrock[0].HardwareDeviceNumber) + (listFrock[1].HardwareDevicePrice * listFrock[1].HardwareDeviceNumber)).ToString(), wk);
+                //追溯软件
+                if (null != item.TraceabilitySoftware)
+                {
+                    CreateCell(herdRow3, 23, item.TraceabilitySoftware.ToString(), wk);
+                }
+                else {
+                    CreateCell(herdRow3, 23,string.Empty, wk);
+                }
+         
+                //开发费(追溯)
+                if (null != item.TraceabilitySoftware)
+                {
+                    CreateCell(herdRow3, 24, item.TraceabilitySoftwareCost.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 24, string.Empty, wk);
+                }
+                //开图软件
+                if (null != item.OpenDrawingSoftware)
+                {
+                    CreateCell(herdRow3, 25, item.OpenDrawingSoftware.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 25, string.Empty, wk);
+                }
+                //开发费(开图)
+                if (null != item.SoftwarePrice)
+                {
+                    CreateCell(herdRow3, 26, item.SoftwarePrice.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 26, string.Empty, wk);
+                }
+                //软硬件总价
+                if (null != item.HardwareTotalPrice)
+                {
+                    CreateCell(herdRow3, 27, item.HardwareTotalPrice.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 27, string.Empty, wk);
+                }
+
+                //工装治具部分
+                var listFixture = _processHoursEnterFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
+                CreateCell(herdRow3, 28, listFixture[0].FixtureName, wk);
+                CreateCell(herdRow3, 29, listFixture[0].FixtureNumber.ToString(), wk);
+                CreateCell(herdRow3, 30, listFixture[0].FixturePrice.ToString(), wk);
+
+                CreateCell(herdRow3, 31, listFixture[1].FixtureName, wk);
+                CreateCell(herdRow3, 32, listFixture[1].FixtureNumber.ToString(), wk);
+                CreateCell(herdRow3, 33, listFixture[1].FixturePrice.ToString(), wk);
+                if (null != item.FixtureName)
+                {
+                    CreateCell(herdRow3, 34, item.FixtureName.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 34, string.Empty, wk);
+                }
+                CreateCell(herdRow3, 35, item.FixtureNumber.ToString(), wk);
+                CreateCell(herdRow3, 36, item.FixturePrice.ToString(), wk);
+                if (null != item.FrockName)
+                {
+                    CreateCell(herdRow3, 37, item.FrockName.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 37, string.Empty, wk);
+                }
+                CreateCell(herdRow3, 38, item.FrockNumber.ToString(), wk);
+                CreateCell(herdRow3, 39, item.FrockPrice.ToString(), wk);
+                if (null != item.TestLineName)
+                {
+                    CreateCell(herdRow3, 40, item.TestLineName.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 40, string.Empty, wk);
+                }
+                CreateCell(herdRow3, 41, item.TestLineNumber.ToString(), wk);
+
+                CreateCell(herdRow3, 42, item.TestLinePrice.ToString(), wk);
+                if (null != item.TestLinePrice)
+                {
+                    CreateCell(herdRow3, 42, item.TestLinePrice.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 42, string.Empty, wk);
+                }
+                if (null != item.DevelopTotalPrice)
+                {
+                    CreateCell(herdRow3, 43, item.DevelopTotalPrice.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(herdRow3, 43, string.Empty, wk);
+                }
+
+
+
+                //标准工时
+                var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
+                                 select a).ToList();
+                List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
+                foreach (var device in queryYear)
+                {
+                    ProcessHoursEnterSopInfoDto processHoursEnteritem = new ProcessHoursEnterSopInfoDto();
+                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == device).ToList();
+                    List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
+                    foreach (var yearItem in deviceYear)
+                    {
+                        ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
+                        processHoursEnteritemDto.LaborHour = yearItem.LaborHour;
+                        processHoursEnteritemDto.PersonnelNumber = yearItem.PersonnelNumber;
+                        processHoursEnteritemDto.MachineHour = yearItem.MachineHour;
+                        processHoursEnteritemDto.ModelCountYearId = yearItem.ModelCountYearId;
+                        processHoursEnteritems1.Add(processHoursEnteritemDto);
+                    }
+                    processHoursEnteritem.Issues = processHoursEnteritems1;
+                    processHoursEnteritems.Add(processHoursEnteritem);
+                }
+
+                //标准工时
+     
+                int yaer = 43;
+
+
+                if (queryYear.Count > 0)
+                {
+                    for (int i = 0; i < queryYear.Count; i++)
+                    {
+
+                        yaer += 3;
+                        CreateCell(herdRow3, yaer - 2, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
+                        CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
+                        CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].PersonnelNumber.ToString(), wk);
+                    }
+
+                }
+
+
+            }
+
+
+
+            using (FileStream sw = File.Create("FoundationWorkingHour.xlsx"))
+            {
+                wk.Write(sw);
+            }
+            return new FileStreamResult(File.Open("FoundationWorkingHour.xlsx", FileMode.Open), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = "FProcesses" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+            };
         }
 
         /// <summary>
@@ -1498,13 +2285,13 @@ namespace Finance.Processes
                 var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == solution.Productld).ToList();
 
 
-             
+
                 //年
                 if (null != listItem.SopInfo)
                 {
                     foreach (var year in listItem.SopInfo)
                     {
-                  
+
                         foreach (var yearItem in year.Issues)
                         {
                             ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
@@ -1514,7 +2301,7 @@ namespace Finance.Processes
                             processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
                             processHoursEnteritem.MachineHour = yearItem.MachineHour;
                             processHoursEnteritem.ModelCountYearId = yearItem.ModelCountYearId;
-                            if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId ==0)
+                            if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId == 0)
                             {
                                 processHoursEnteritem.ModelCountYearId = queryYear[listItem.SopInfo.IndexOf(year)].Id;
                             }
@@ -1604,6 +2391,73 @@ namespace Finance.Processes
         {
             var res = EnumHelper.GetEnumItems<Status>();
             return res;
+        }
+
+        /// <summary>
+        /// 创建单元格并设置值
+        /// </summary>
+        /// <param name="row">行</param>
+        /// <param name="colIndex">单元格index</param>
+        /// <param name="vaule">值</param>
+        public static void CreateCell(IRow row, int colIndex, string vaule, IWorkbook wk)
+        {
+            ICell cel = row.CreateCell(colIndex);
+            SetICellStyle(cel, wk);
+            cel.SetCellValue(vaule);
+        }
+
+
+        public static void SetICellStyle(ICell MyCell, IWorkbook wk)
+        {
+            ICellStyle cellStyle = wk.CreateCellStyle();
+            cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+            cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+            //文字水平和垂直对齐方式  
+            cellStyle.Alignment = NPOI.SS.UserModel.HorizontalAlignment.Center;
+            cellStyle.VerticalAlignment = NPOI.SS.UserModel.VerticalAlignment.Center;
+            //是否换行  
+            //cellStyle.WrapText = true;  //若字符串过大换行填入单元格
+            //缩小字体填充  
+            //cellStyle.ShrinkToFit = true;//若字符串过大缩小字体后填入单元格
+            //IFont font = wk.CreateFont();
+            //设置字体加粗样式
+            //font.Boldweight = short.MaxValue;
+            MyCell.CellStyle = cellStyle;//赋给单元格
+        }
+
+        /// <summary>
+        /// 合并单元格
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="firstRow">开始行</param>
+        /// <param name="lastRow">结束行</param>
+        /// <param name="firstCol">开始列</param>
+        /// <param name="lastCol">结束列</param>
+        public static void MergedRegion(ISheet sheet, int firstRow, int lastRow, int firstCol, int lastCol)
+        {
+            CellRangeAddress region = new CellRangeAddress(firstRow, lastRow, firstCol, lastCol);
+            sheet.AddMergedRegion(region);
+        }
+
+        /// <summary>
+        /// 处理字段为null判断
+        /// </summary>
+        /// <param name="sheet"></param>
+        public string AndleNull(T value)
+        {
+           
+            if (null != value)
+            {
+                return value.ToString();
+            }
+            else
+            {
+                return string.Empty;
+
+
+            }
         }
     }
 }
