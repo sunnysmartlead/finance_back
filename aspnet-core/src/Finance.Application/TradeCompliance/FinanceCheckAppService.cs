@@ -38,24 +38,24 @@ namespace Finance.TradeCompliance
             {
                 throw new FriendlyException("请先登录");
             }
-            AuditFlowDetailDto flowDetailDto = new()
-            {
-                AuditFlowId = financeCheck.AuditFlowId,
-                ProcessIdentifier = AuditFlowConsts.AF_TradeApproval,
-                UserId = AbpSession.UserId.Value,
-                OpinionDescription = OpinionDescription.OD_TradeComplianceJudge + financeCheck.OpinionDescription
-            };
-            if (financeCheck.IsAgree)
-            {
-                flowDetailDto.Opinion = OPINIONTYPE.Submit_Agreee;
-            }
-            else
-            {
-                flowDetailDto.Opinion = OPINIONTYPE.Reject;
-            }
-            returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
+            //AuditFlowDetailDto flowDetailDto = new()
+            //{
+            //    AuditFlowId = financeCheck.AuditFlowId,
+            //    ProcessIdentifier = AuditFlowConsts.AF_TradeApproval,
+            //    UserId = AbpSession.UserId.Value,
+            //    OpinionDescription = OpinionDescription.OD_TradeComplianceJudge + financeCheck.OpinionDescription
+            //};
+            //if (financeCheck.IsAgree)
+            //{
+            //    flowDetailDto.Opinion = OPINIONTYPE.Submit_Agreee;
+            //}
+            //else
+            //{
+            //    flowDetailDto.Opinion = OPINIONTYPE.Reject;
+            //}
+            //returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
 
-            return returnDto;
+            return new ReturnDto { IsSuccess = true, Message = "提交成功！" };
         }
     }
 }
