@@ -42,6 +42,10 @@ public class SopAnalysisModel
     /// </summary>
    
     public virtual string Product { get; set; }
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
     public List<GrossValue> GrossValues{ get; set; }
     
     
