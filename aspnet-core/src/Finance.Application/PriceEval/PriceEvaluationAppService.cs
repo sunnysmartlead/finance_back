@@ -230,7 +230,7 @@ namespace Finance.PriceEval
 
                 var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
                                   join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
-                                  where d.Id == input.Country || c.NationalType == "二级管制国家"
+                                  where d.Id == input.Country || c.NationalType == "2"
                                   select new
                                   {
                                       c.Id,
