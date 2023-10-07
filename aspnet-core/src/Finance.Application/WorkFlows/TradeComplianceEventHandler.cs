@@ -59,18 +59,31 @@ namespace Finance.WorkFlows
                     }
                     if (eventData.Entity.NodeId == "主流程_贸易合规")
                     {
-
-                        var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
-                        if (isOk)
+                        try
                         {
-                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+
+                            //var isOk = true;
+                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                            if (isOk)
                             {
-                                NodeInstanceId = eventData.Entity.Id,
-                                FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
-                                Comment = "系统判断合规"
-                            });
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                                    Comment = "系统判断合规"
+                                });
+                            }
+                            else
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                                    Comment = "系统判断不合规"
+                                });
+                            }
                         }
-                        else
+                        catch (Exception)
                         {
                             await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                             {
