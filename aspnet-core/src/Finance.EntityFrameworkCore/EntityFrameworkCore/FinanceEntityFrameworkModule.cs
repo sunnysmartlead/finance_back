@@ -30,6 +30,8 @@ namespace Finance.EntityFrameworkCore
                     {
                         FinanceDbContextConfigurer.Configure(options.DbContextOptions, options.ConnectionString);
                     }
+                    //TODO: Debug 用完需注释，避免影响整体性能
+                    options.DbContextOptions.EnableSensitiveDataLogging();
                 });
             }
         }

@@ -1466,8 +1466,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 GradientQuotedGrossMarginModel grossMarginModel = new GradientQuotedGrossMarginModel();
                 grossMarginModel.gradient = gradient.GradientValue + "K/Y";
                 grossMarginModel.product = solution.Product + "-" + solution.SolutionName;
-                var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).First();
-                decimal unprice = smple.ExchangeRate * (decimal.Parse(smple.TargetPrice)); //单价
+                var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).ToList();
+                decimal unprice = smple.Count==0?0:smple.First().ExchangeRate * (decimal.Parse(smple.First().TargetPrice)); //单价
                 QuotedGrossMarginSimple quotedGrossMarginSimple = new();
                 TargetPrice Interior = new TargetPrice();
                 Interior.Price = unprice;
@@ -1530,7 +1530,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal xscb = 0;
         foreach (var gradient in gradients.OrderBy(p => p.GradientValue))
         {
-            if (nsum <= gradient.GradientValue)
+            if (nsum <= gradient.GradientValue*1000)
             {
                 td = gradient.GradientValue;
                 tdid = gradient.Id;

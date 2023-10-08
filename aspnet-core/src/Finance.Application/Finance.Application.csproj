@@ -17,6 +17,7 @@
     <None Remove="PriceEval\FileModel\**" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Abp.Web.Common" Version="7.1.0" />
     <PackageReference Include="DynamicExpresso.Core" Version="2.16.0" />
     <PackageReference Include="FreeSpire.XLS" Version="12.7.0" />
     <PackageReference Include="LinqKit.Core" Version="1.2.2" />
