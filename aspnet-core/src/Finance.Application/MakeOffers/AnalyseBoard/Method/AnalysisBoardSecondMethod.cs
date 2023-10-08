@@ -483,7 +483,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var actual in list)
         {
-            //_actualUnitPriceOffer.InsertAsync(actual);
+            _actualUnitPriceOffer.InsertAsync(actual);
         }
     }
     /// <summary>

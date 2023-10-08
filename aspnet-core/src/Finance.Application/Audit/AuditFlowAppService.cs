@@ -452,7 +452,8 @@ namespace Finance.Audit
             }
             input.UserId = AbpSession.UserId.Value;
 
-            if (input.ProcessIdentifier != AuditFlowConsts.AF_RequirementInput)
+            var list = new List<string> { AuditFlowConsts.AF_RequirementInput, AuditFlowConsts.AF_TradeApproval };
+            if (!list.Contains(input.ProcessIdentifier))
             {
                 var auditFlowRight = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProcessIdentifier == input.ProcessIdentifier && p.UserId == input.UserId && p.RightType == RIGHTTYPE.Edit);
                 if (auditFlowRight.Count == 0)

@@ -975,10 +975,22 @@ namespace Finance.BaseLibrary
                             deviceItem.Add("deviceNumber", val2);
                             deviceItem.Add("devicePrice", val3);
 
-                            foundationTechnologyDevice.DevicePrice = val3.ToString();
-                            foundationTechnologyDevice.DeviceName = val0.ToString();
-                            foundationTechnologyDevice.DeviceNumber = val2.ToString();
-                            foundationTechnologyDevice.DeviceStatus = val1.ToString();
+                            if (null != val3)
+                            {
+                                foundationTechnologyDevice.DevicePrice = val3.ToString();
+                            }
+                            if (null != val0)
+                            {
+                                foundationTechnologyDevice.DeviceName = val0.ToString();
+                            }
+                            if (null != val2)
+                            {
+                                foundationTechnologyDevice.DeviceNumber = val2.ToString();
+                            }
+                            if (null != val1)
+                            {
+                                foundationTechnologyDevice.DeviceStatus = val1.ToString();
+                            }
                             foundationTechnologyDeviceDtoList.Add(foundationTechnologyDevice);
                         }
                         // 设备总价
@@ -1004,27 +1016,63 @@ namespace Finance.BaseLibrary
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
                             FoundationTechnologyFrockDto foundationTechnologyFrockDto = new FoundationTechnologyFrockDto();
-                            foundationTechnologyFrockDto.HardwareDeviceName = val0.ToString();
-                            foundationTechnologyFrockDto.HardwareDeviceNumber = decimal.Parse(val1.ToString());
-                            foundationTechnologyFrockDto.HardwareDevicePrice = decimal.Parse(val2.ToString());
+                            if (null != val0)
+                            {
+                                foundationTechnologyFrockDto.HardwareDeviceName = val0.ToString();
+                            }
+                            if (val1 != val0)
+                            {
+                                foundationTechnologyFrockDto.HardwareDeviceNumber = decimal.Parse(val1.ToString());
+                            }
+                            if (val2 != val0)
+                            {
+                                foundationTechnologyFrockDto.HardwareDevicePrice = decimal.Parse(val2.ToString());
+                            }
+               
                             foundationTechnologyDeviceList.Add(foundationTechnologyFrockDto);
                         }
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareInfo = foundationTechnologyDeviceList;
                         // 设备总价
                         int fromNumIndex = ddevNumIndex + fromCols;
 
-                        // 硬件总价
-                        rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
+                        if (null != row[keys[fromNumIndex]])
+                        {
+                            // 硬件总价
+                            rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
+                        }
+                
                         // 追溯软件
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.TraceabilitySoftware = (row[keys[fromNumIndex + 1]].ToString());
+                        if (null != row[keys[fromNumIndex + 1]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.TraceabilitySoftware = (row[keys[fromNumIndex + 1]].ToString());
+
+                        }
                         // 开发费(追溯)
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.Development = decimal.Parse(row[keys[fromNumIndex + 2]].ToString());
+           
+                        if (null != row[keys[fromNumIndex + 2]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.Development = decimal.Parse(row[keys[fromNumIndex + 2]].ToString());
+
+                        }
                         // 开图软件
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.DrawingSoftware = (row[keys[fromNumIndex + 3]].ToString());
+                        if (null != row[keys[fromNumIndex + 3]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.DrawingSoftware = (row[keys[fromNumIndex + 3]].ToString());
+
+                        }
                         // 开发费(开图)
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.PictureDevelopment = decimal.Parse(row[keys[fromNumIndex + 4]].ToString());
+      
+                        if (null != row[keys[fromNumIndex + 4]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.PictureDevelopment = decimal.Parse(row[keys[fromNumIndex + 4]].ToString());
+
+                        }
                         // 软硬件总价
-                        foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwareHardPrice = decimal.Parse(row[keys[fromNumIndex + 5]].ToString());
+                        if (null != row[keys[fromNumIndex + 5]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwareHardPrice = decimal.Parse(row[keys[fromNumIndex + 5]].ToString());
+
+                        }
 
                         foundationReliableProcessHoursResponse.DevelopCostInfo = foundationReliableProcessHoursdevelopCostInfoResponseDto;
 
@@ -1034,7 +1082,7 @@ namespace Finance.BaseLibrary
                         // 解析工装治具部分
                         FoundationReliableProcessHoursFixtureResponseDto foundationReliableProcessHoursFixtureResponseDto = new FoundationReliableProcessHoursFixtureResponseDto();
                         List<FoundationTechnologyFixtureDto> foundationTechnologyFixtures = new List<FoundationTechnologyFixtureDto>();
-                        int frocNum = (frockCols - 10) / 3;
+                        int frocNum = (16 - 10) / 3;
                         for (int j = 0; j < frocNum; j++)
                         {
                             FoundationTechnologyFixtureDto foundationTechnologyFixtureDto = new FoundationTechnologyFixtureDto();
@@ -1042,9 +1090,19 @@ namespace Finance.BaseLibrary
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
-                            foundationTechnologyFixtureDto.FixtureName = val0.ToString();
-                            foundationTechnologyFixtureDto.FixtureNumber = decimal.Parse(val1.ToString());
-                            foundationTechnologyFixtureDto.FixturePrice = decimal.Parse(val2.ToString());
+                            if (null != val0)
+                            {
+                                foundationTechnologyFixtureDto.FixtureName = val0.ToString();
+                            }
+                            if (null != val1)
+                            {
+                                foundationTechnologyFixtureDto.FixtureNumber = decimal.Parse(val1.ToString());
+                            }
+                            if (null != val2)
+                            {
+                                foundationTechnologyFixtureDto.FixturePrice = decimal.Parse(val2.ToString());
+
+                            }
                             foundationTechnologyFixtures.Add(foundationTechnologyFixtureDto);
                         }
                         foundationReliableProcessHoursFixtureResponseDto.zhiJuArr = foundationTechnologyFixtures;
@@ -1053,16 +1111,51 @@ namespace Finance.BaseLibrary
                         int frocNumIndex = fromNumIndex + 6 + frockCols;
                         // 工装治具检具总价
                         rowItem.Add(keys[frocNumIndex], row[keys[frocNumIndex - 1]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[frocNumIndex - 1]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex - 2]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex - 3]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex - 4]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex - 5]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex - 6]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex - 7]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex - 8]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex - 9]].ToString());
-                        foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex - 10]].ToString());
+                        if (null != row[keys[frocNumIndex - 1]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[frocNumIndex - 1]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 2]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex - 2]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 3]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex - 3]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 4]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex - 4]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 5]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex - 5]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 6]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex - 6]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 7]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex - 7]].ToString());
+                        }
+                        if (null != row[keys[frocNumIndex - 8]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex - 8]].ToString());
+
+                        }
+                        if (null != row[keys[frocNumIndex - 9]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex - 9]].ToString());
+
+                        }
+                    ; if (null != row[keys[frocNumIndex - 10]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex - 10]].ToString());
+
+                        }
+
+          
                         foundationReliableProcessHoursResponse.toolInfo = foundationReliableProcessHoursFixtureResponseDto;
 
                         // 解析年度部分
@@ -1078,9 +1171,24 @@ namespace Finance.BaseLibrary
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
-                            foundationWorkingHourItem.LaborHour = val0.ToString();
-                            foundationWorkingHourItem.MachineHour = val1.ToString(); ;
-                            foundationWorkingHourItem.NumberPersonnel = val2.ToString();
+                         
+                            if (null != val0)
+                            {
+                                foundationWorkingHourItem.LaborHour = val0.ToString();
+
+                            }
+                            if (null != val1)
+                            {
+                                foundationWorkingHourItem.MachineHour = val1.ToString(); ;
+
+                            }
+                            if (null != val2)
+                            {
+                                foundationWorkingHourItem.NumberPersonnel = val2.ToString();
+
+                            }
+                          
+                     
                             foundationWorkingHourItem.Year = yearstr;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
                         }
