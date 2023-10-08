@@ -168,7 +168,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
         } catch (Exception e)
         {
-
             analyseBoardSecondDto.mes = "核价数据有问题";
             return analyseBoardSecondDto;
         }
