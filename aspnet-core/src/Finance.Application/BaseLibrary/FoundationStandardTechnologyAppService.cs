@@ -538,6 +538,7 @@ namespace Finance.BaseLibrary
                         foundationReliableProcessHours.LastModifierUserId = AbpSession.UserId.Value;
                     }
                     foundationReliableProcessHours.LastModificationTime = DateTime.Now;
+                    foundationReliableProcessHours.StandardTechnologyId = foundationDevice;
                     _foundationFoundationReliableProcessHoursRepository.InsertAsync(foundationReliableProcessHours);
 
                     var ID = _foundationFoundationReliableProcessHoursRepository.InsertAndGetId(foundationReliableProcessHours);
@@ -962,8 +963,8 @@ namespace Finance.BaseLibrary
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        foundationReliableProcessHoursResponse.ProcessName = (row[keys[1]]).ToString();
-                        foundationReliableProcessHoursResponse.ProcessNumber = (row[keys[0]]).ToString();
+                        foundationReliableProcessHoursResponse.ProcessName = (row[keys[2]]).ToString();
+                        foundationReliableProcessHoursResponse.ProcessNumber = (row[keys[1]]).ToString();
 
                         //获取设备
                         Object deviceInfo = new Object();
@@ -1016,7 +1017,7 @@ namespace Finance.BaseLibrary
 
                         // 有6列是总结列，不是子表，需要将数量剔除
                         fromCols = fromCols - 6;
-                        int fromNum = fromCols / 3;
+                        int fromNum =2;
                         for (int j = 0; j < fromNum; j++)
                         {
                             Dictionary<string, object> fromItem = new Dictionary<string, object>();
@@ -1042,7 +1043,7 @@ namespace Finance.BaseLibrary
                         }
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareInfo = foundationTechnologyDeviceList;
                         // 设备总价
-                        int fromNumIndex = ddevNumIndex + fromCols;
+                        int fromNumIndex = 22;
 
                         if (null != row[keys[fromNumIndex]])
                         {
@@ -1117,7 +1118,7 @@ namespace Finance.BaseLibrary
                         foundationReliableProcessHoursFixtureResponseDto.zhiJuArr = foundationTechnologyFixtures;
 
                         // 设备总价
-                        int frocNumIndex = fromNumIndex + 6 + frockCols;
+                        int frocNumIndex = 22 + 6 + 16;
                         // 工装治具检具总价
                         rowItem.Add(keys[frocNumIndex], row[keys[frocNumIndex - 1]].ToString());
                         if (null != row[keys[frocNumIndex - 1]])
