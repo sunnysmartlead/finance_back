@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Finance.MakeOffers.AnalyseBoard.DTo;
 
 namespace Finance.MakeOffers.AnalyseBoard;
@@ -14,4 +15,10 @@ public interface IAnalyseBoardSecondAppService
     /// <param name="analyseBoardSecondInputDto"></param>
     /// <returns></returns>
     Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(AnalyseBoardSecondInputDto analyseBoardSecondInputDto);
+    /// <summary>
+    /// 计算毛利率
+    /// </summary>
+    /// <param name="productBoardProcessDto"></param>
+    /// <returns></returns>
+    Task<List<SpreadSheetCalculateDto>> PostSpreadSheetCalculate(ProductBoardProcessDto productBoardProcessDto);
 }

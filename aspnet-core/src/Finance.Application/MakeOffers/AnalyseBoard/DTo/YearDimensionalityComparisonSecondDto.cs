@@ -39,7 +39,7 @@ public class YearValue
     /// <summary>
     /// 年份
     /// </summary>
-    public string year { get; set; }
+    public long year { get; set; }
 
     /// <summary>
     /// 值

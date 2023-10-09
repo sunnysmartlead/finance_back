@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,6 +28,7 @@ using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using test;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
@@ -338,15 +340,156 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     public async Task<YearDimensionalityComparisonSecondDto> YearDimensionalityComparison(
-        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+        YearProductBoardProcessSecond_DynamicProductDto yearProductBoardProcessSecondDto)
     {
         YearDimensionalityComparisonSecondDto yearDimensionalityComparisonSecondDto = new();
-        List<YearValue> yearValues = new();
-        YearValue yearValue = new();
-        yearValue.year = "2023";
-        yearValue.value = 12;
-        yearValues.Add(yearValue);
-        yearDimensionalityComparisonSecondDto.numk = yearValues;
+        var auditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
+        //获取对应方案的年份
+        List<int> YearList = await GetYear(auditFlowId);
+        if (yearProductBoardProcessSecondDto.Boards.Count > 0)
+        {
+            //List<long> AllProductId = new();
+            //yearProductBoardProcessSecondDto.Boards.ForEach(p => AllProductId.Add(p.ProductId));
+            var LyearValues = new List<YearValue>();
+            //数量
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                foreach (var p in yearProductBoardProcessSecondDto.Boards)
+                {
+                    yv.value += await SalesQuantity(auditFlowId, p.ProductId, yl);
+                }
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.numk = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //单价
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                foreach (var p in yearProductBoardProcessSecondDto.Boards)
+                {
+                    yv.value += await SellingPrice(auditFlowId, p.ProductId, 1M, yl, p.UnitPrice, 0.0M);
+                }
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.Prices = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //销售成本
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                foreach (var p in yearProductBoardProcessSecondDto.Boards)
+                {
+                    decimal unitCost = 0.0M;
+                    var modelCountYear = await _resourceModelCountYear.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(p.ProductId) && p.Year.Equals(yl));
+                    PriceEvaluationTableDto priceEvaluationTableDto = new();
+                    if (modelCountYear != null && !string.IsNullOrWhiteSpace(modelCountYear.TableJson))
+                    {
+                        priceEvaluationTableDto = JsonConvert.DeserializeObject<PriceEvaluationTableDto>(modelCountYear.TableJson);
+                        if (priceEvaluationTableDto.TotalCost is not 0.0M)
+                            unitCost = priceEvaluationTableDto.TotalCost;
+                    }
+                    decimal Count = await SalesQuantity(auditFlowId, p.ProductId, yl);
+                    yv.value += unitCost * Count;
+                }
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.SellingCost = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //单位平均成本
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                //该 年所有 模组的成本
+                decimal cost = yearDimensionalityComparisonSecondDto.SellingCost.Where(sl => sl.year == yl).Select(sl => sl.value).FirstOrDefault();
+                //该  年所有 模组的数量
+                decimal count = yearDimensionalityComparisonSecondDto.numk.Where(n => n.year == yl).Select(n => n.value).FirstOrDefault();
+                yv.value = cost / count;
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.AverageCost = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //销售收入(元)
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                foreach (var p in yearProductBoardProcessSecondDto.Boards)
+                {
+                    //上一年的单价
+                    decimal ALLYearPrice = yearDimensionalityComparisonSecondDto.Prices.Where(sl => sl.year == yl).Select(sl => sl.value).FirstOrDefault();
+                    //销售数量
+                    decimal Count = await SalesQuantity(auditFlowId, p.ProductId, yl);
+                    //var prop = await AllincomeYear(processId, Year, 1M, DictiolastYearUnitPrice[item.ProductId]);
+                    //该 年份 毛利率 全生命周期的 收入
+                    decimal InteriorALLincome = ALLYearPrice * Count;
+                    //该 毛利率 全生命周期的 折让
+                    decimal InteriorALLAllowance = await Allowance(auditFlowId, yl, InteriorALLincome);
+                    decimal modelTotal = InteriorALLincome - InteriorALLAllowance;
+                    yv.value += modelTotal;
+                }
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.SalesRevenue = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //销售毛利(元)
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                foreach (var p in yearProductBoardProcessSecondDto.Boards)
+                {
+                    //上一年的单价
+                    decimal ALLYearPrice = yearDimensionalityComparisonSecondDto.Prices.Where(sl => sl.year == yl).Select(sl => sl.value).FirstOrDefault();
+                    //销售数量
+                    decimal Count = await SalesQuantity(auditFlowId, p.ProductId, yl);
+                    //var prop = await AllincomeYear(processId, Year, 1M, DictiolastYearUnitPrice[item.ProductId]);
+                    //该 年份 毛利率 全生命周期的 收入
+                    decimal InteriorALLincome = ALLYearPrice * Count;
+                    //某一年 某一个模组 返利金额
+                    decimal TargetGrossMarginALLRebateMoney = await SomeModelCountRebateMoneyYear(auditFlowId, p.ProductId, yl, 1M, InteriorALLincome);
+                    //该 毛利率 全生命周期的税费损失
+                    decimal GrossMarginALLRebateMoney = await SomeModelCountAddTaxRateYear(TargetGrossMarginALLRebateMoney, yl);
+                    //返利后销售成本
+                    decimal unitCost = 0.0M;
+                    var modelCountYear = await _resourceModelCountYear.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(p.ProductId) && p.Year.Equals(yl));
+                    PriceEvaluationTableDto priceEvaluationTableDto = new();
+                    if (modelCountYear != null && !string.IsNullOrWhiteSpace(modelCountYear.TableJson))
+                    {
+                        priceEvaluationTableDto = JsonConvert.DeserializeObject<PriceEvaluationTableDto>(modelCountYear.TableJson);
+                        if (priceEvaluationTableDto.TotalCost is not 0.0M)
+                            unitCost = priceEvaluationTableDto.TotalCost;
+                    }
+                    decimal cost = unitCost * Count;
+                    //该 毛利率 全生命周期的 折让
+                    decimal InteriorALLAllowance = await Allowance(auditFlowId, yl, InteriorALLincome);
+                    decimal modelTotal = InteriorALLincome - cost - TargetGrossMarginALLRebateMoney - GrossMarginALLRebateMoney - InteriorALLAllowance;
+                    yv.value += modelTotal;
+                }
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.SalesMargin = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+            //毛利率(%)
+            foreach (var yl in YearList)
+            {
+                var yv = new YearValue();
+                yv.year = yl;
+                //该 年份 的 毛利
+                decimal grossmargin = yearDimensionalityComparisonSecondDto.SalesMargin.Where(sm => sm.year == yl).Select(sm => sm.value).FirstOrDefault();
+                //该 年份 的 返利后的收入
+                decimal income = yearDimensionalityComparisonSecondDto.SalesRevenue.Where(sr => sr.year == yl).Select(sr => sr.value).FirstOrDefault();
+                yv.value = income == 0 ? 0 : (grossmargin / income) * 100;
+                LyearValues.Add(yv);
+            }
+            yearDimensionalityComparisonSecondDto.GrossMargin = JsonConvert.DeserializeObject<List<YearValue>>(JsonConvert.SerializeObject(LyearValues));
+            LyearValues.Clear();
+        }
         return yearDimensionalityComparisonSecondDto;
     }
 
@@ -2645,4 +2788,215 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         coreComponentAndNreDto.ProductAndGradients = ProductAndGradients;
         return coreComponentAndNreDto;
     }
+    /// <summary>
+    /// 汇总分析表 根据 整套 毛利率 计算(本次报价)
+    /// </summary>
+    public async Task<List<SpreadSheetCalculateDto>> SpreadSheetCalculate(long processId, decimal GrossMargin, List<DynamicProductBoardModel> AllUnitPrice)
+    {
+        List<SpreadSheetCalculateDto> spreadSheetCalculateDtos = new List<SpreadSheetCalculateDto>();
+        SpreadSheetCalculateDto spreadSheetCalculateDto = new SpreadSheetCalculateDto();
+        spreadSheetCalculateDto.ProjectName = "数量";
+        decimal modelTotal = _resourceModelCount.GetAllList().Where(p => p.AuditFlowId.Equals(processId)).Sum(p => p.ModelTotal);
+        spreadSheetCalculateDto.Value = modelTotal;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "销售成本";
+        decimal Targetvalue = await AllsellingCost(processId);
+        spreadSheetCalculateDto.Value = Targetvalue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "单位平均成本";
+        decimal InteriorTargetValue = 0.0M;
+        if (spreadSheetCalculateDtos[0].Value is not 0.0M) InteriorTargetValue = spreadSheetCalculateDtos[1].Value / spreadSheetCalculateDtos[0].Value;
+        spreadSheetCalculateDto.Value = InteriorTargetValue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "返利后销售收入";
+        //该 毛利率 全生命周期的 收入
+        decimal ALLincome = await AllincomeDynamic(processId, 1M, AllUnitPrice);
+        //该 毛利率 全生命周期的 折让
+        decimal ALLAllowance = await SomeAllAllowance(processId, GrossMargin, AllUnitPrice);
+        //目标价内部 返利后收入
+        decimal SRValue = ALLincome - ALLAllowance;
+        spreadSheetCalculateDto.Value = SRValue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "平均单价";
+        //目标价 内部 平均单价
+        decimal PJDJValue = 0.0M;
+        if (modelTotal is not 0.0M) PJDJValue = SRValue / modelTotal;
+        spreadSheetCalculateDto.Value = PJDJValue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "销售毛利";
+        //全生命周期的返利金额 
+        decimal TargetGrossMarginALLRebateMoney = await SomeAllRebateMoney(processId, GrossMargin, AllUnitPrice);
+        //全生命周期的税费损失
+        decimal TargetALLAddTaxRate = await SomeAllAddTaxRate(processId, GrossMargin, AllUnitPrice);
+        decimal XXMLValue = SRValue - Targetvalue - TargetGrossMarginALLRebateMoney - TargetALLAddTaxRate;
+        spreadSheetCalculateDto.Value = XXMLValue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        spreadSheetCalculateDto.ProjectName = "毛利率";
+        //目标价 内部 毛利率
+        decimal InteriorMLLValue = 0.0M;
+        if (SRValue is not 0.0M) InteriorMLLValue = (XXMLValue / SRValue) * 100;
+        spreadSheetCalculateDto.Value = InteriorMLLValue;
+        spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
+        return spreadSheetCalculateDtos;
+    }
+    
+    #region Base Method
+
+    /// <summary>
+    /// 计算 动态单价汇总表 全生命周期的  收入
+    /// </summary>
+    /// <returns></returns>
+    private async Task<decimal> AllincomeDynamic(long processId, decimal grossMargin, List<DynamicProductBoardModel> unitPrice)
+    {
+        //年份
+        List<int> YearList = await GetYear(processId);
+
+        decimal ALLYearIncome = 0.0M;
+        foreach (DynamicProductBoardModel boardModel in unitPrice)//循环每一个模组
+        {
+            //上一年的单价
+            decimal lastYearUnitPrice = boardModel.UnitPrice;
+            foreach (var Year in YearList)
+            {
+                //每一年的单价
+                decimal ALLYearPrice = await SellingPrice(processId, boardModel.ProductId, grossMargin, Year, lastYearUnitPrice, 0.0M);
+                lastYearUnitPrice = ALLYearPrice;
+                //销售数量
+                decimal Count = await SalesQuantity(processId, boardModel.ProductId, Year);
+                decimal prop = ALLYearPrice * Count;
+                ALLYearIncome += prop;
+            }
+        }
+        return ALLYearIncome;
+    }
+    /// <summary>
+    /// 计算 某个单价  前声明周期的  折让
+    /// </summary>
+    /// <param name="processId"></param>
+    /// <param name="grossMargin"></param>
+    /// <returns></returns>
+    private async Task<decimal> SomeAllAllowance(long processId, decimal grossMargin, List<DynamicProductBoardModel> AllUnitPrice)
+    {
+        //年份
+        List<int> YearList = await GetYear(processId);
+
+        decimal ALLallowance = 0.0M;
+        foreach (var unitPrice in AllUnitPrice)//循环每一个模组
+        {
+            //上一年的单价
+            decimal lastYearUnitPrice = unitPrice.UnitPrice;
+            foreach (var year in YearList)
+            {
+                //销售数量
+                var salesQuantity = await SalesQuantity(processId, unitPrice.ProductId, year);
+                //售价(单价)
+                var sellingPrice = await SellingPrice(processId, unitPrice.ProductId, grossMargin, year, lastYearUnitPrice, 0.0M);
+                lastYearUnitPrice = sellingPrice;
+                var everyIncome = salesQuantity * sellingPrice;
+                //折让
+                ALLallowance += await Allowance(processId, year, everyIncome);
+            }
+        }
+        return ALLallowance;
+    }
+    /// <summary>
+    /// 计算 某个单价 全模组全生命周期 返利金额 之和   收入(Income方法)*返利比例(取需求录入 要求中的  年度返利要求)
+    /// </summary>
+    /// <returns></returns>
+    private async Task<decimal> SomeAllRebateMoney(long processId, decimal grossMargin, List<DynamicProductBoardModel> AllUnitPrice)
+    {
+        //年份
+        List<int> YearList = await GetYear(processId);
+        decimal AllRebateMoney = 0.0M;
+
+        foreach (var unitPrice in AllUnitPrice)//循环每一个模组
+        {
+            //上一年的单价
+            decimal lastYearUnitPrice = unitPrice.UnitPrice;
+            foreach (var Year in YearList)
+            {
+                //返利比例
+                decimal rebatePercentage = _resourceRequirement.GetAllList(p => p.AuditFlowId.Equals(processId)).Where(p => p.Year.Equals(Year)).Select(p => p.AnnualRebateRequirements).FirstOrDefault();
+                //销售数量
+                var salesQuantity = await SalesQuantity(processId, unitPrice.ProductId, Year);
+                //售价(单价)
+                var sellingPrice = await SellingPrice(processId, unitPrice.ProductId, grossMargin, Year, lastYearUnitPrice, 0.0M);
+                lastYearUnitPrice = sellingPrice;
+                var everyIncome = salesQuantity * sellingPrice;
+                AllRebateMoney += (rebatePercentage / 100) * everyIncome;
+            }
+        }
+        return AllRebateMoney;
+    }
+    /// <summary>
+    /// 计算 某个单价 全模组全生命周期 税费损失 之和   收入(Income方法)*返利比例(取需求录入 要求中的  年度返利要求)
+    /// </summary>
+    /// <returns></returns>
+    private async Task<decimal> SomeAllAddTaxRate(long processId, decimal grossMargin, List<DynamicProductBoardModel> AllUnitPrice)
+    {
+        //年份
+        List<int> YearList = await GetYear(processId);
+        decimal AddTaxRate = 0.0M;
+        foreach (var unitPrice in AllUnitPrice)//循环每一个模组
+        {
+            //上一年的单价
+            decimal lastYearUnitPrice = unitPrice.UnitPrice;
+            foreach (var Year in YearList)
+            {
+                //返利比例
+                decimal rebatePercentage = _resourceRequirement.GetAllList(p => p.AuditFlowId.Equals(processId)).Where(p => p.Year.Equals(Year)).Select(p => p.AnnualRebateRequirements).FirstOrDefault();
+                //上一年的单价
+                //decimal lastYearUnitPrice = await SellingPrice(processId, ModelCount, grossMargin, Year-1, 0.0M, 0.0M);
+                //每一个模组的收入
+                //var everyIncome = await Income(processId, ModelCount, grossMargin, Year, lastYearUnitPrice, 0.0M);
+                //销售数量
+                var salesQuantity = await SalesQuantity(processId, unitPrice.ProductId, Year);
+                //售价(单价)
+                var sellingPrice = await SellingPrice(processId, unitPrice.ProductId, grossMargin, Year, lastYearUnitPrice, 0.0M);
+                lastYearUnitPrice = sellingPrice;
+                var everyIncome = salesQuantity * sellingPrice;
+                //增值税率
+                ManufacturingCostInfo manufacturingCostInfo = await _resourceManufacturingCostInfo.FirstOrDefaultAsync(p => p.Year.Equals(Year));
+                if (manufacturingCostInfo is null) manufacturingCostInfo = _resourceManufacturingCostInfo.GetAllList().OrderByDescending(p => p.Year).FirstOrDefault();
+                decimal addTaxRate = manufacturingCostInfo.VatRate;
+                decimal TaxRate = ((rebatePercentage / 100) * everyIncome) * (addTaxRate / 100);
+                AddTaxRate += TaxRate;
+            }
+        }
+        return AddTaxRate;
+    }
+    /// <summary>
+    /// 计算 某一年 某个模组 全模组全生命周期 返利金额 之和   收入(Income方法)*返利比例(取需求录入 要求中的  年度返利要求)
+    /// </summary>
+    /// <returns></returns>
+    private async Task<decimal> SomeModelCountRebateMoneyYear(long processId, long ProductId, int year, decimal grossMargin, decimal income)
+    {
+
+
+        decimal AllRebateMoney = 0.0M;
+        //返利比例
+        decimal rebatePercentage = _resourceRequirement.GetAllList(p => p.AuditFlowId.Equals(processId)).Where(p => p.Year.Equals(year)).Select(p => p.AnnualRebateRequirements).FirstOrDefault();
+
+
+        AllRebateMoney += rebatePercentage / 100 * income;
+
+        return AllRebateMoney;
+    }
+    /// <summary>
+    /// 计算 某一年 某个模组 全生命周期 税费损失 之和   收入(Income方法)*返利比例(取需求录入 要求中的  年度返利要求)
+    /// </summary>
+    /// <returns></returns>
+    private async Task<decimal> SomeModelCountAddTaxRateYear(decimal FL, int year)
+    {
+
+
+        decimal AddTaxRate = 0.0M;
+
+        ManufacturingCostInfo manufacturingCostInfo = await _resourceManufacturingCostInfo.FirstOrDefaultAsync(p => p.Year.Equals(year));
+        if (manufacturingCostInfo is null) manufacturingCostInfo = _resourceManufacturingCostInfo.GetAllList().OrderByDescending(p => p.Year).FirstOrDefault();
+        decimal addTaxRate = manufacturingCostInfo.VatRate;
+        AddTaxRate += FL * addTaxRate / 100;
+        return AddTaxRate;
+    }
+    #endregion
 }
