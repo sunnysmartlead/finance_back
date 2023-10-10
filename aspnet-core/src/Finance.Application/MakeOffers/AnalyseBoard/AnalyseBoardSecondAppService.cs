@@ -195,16 +195,28 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <summary>
     /// 汇总分析表 根据 整套 毛利率 计算(本次报价)
     /// </summary>
-    public async Task<TargetPrice> PostSpreadSheetCalculate(SpreadSheetCalculateSecondDto productBoardProcessDto)
+    //public async Task<TargetPrice> PostSpreadSheetCalculate(SpreadSheetCalculateSecondDto productBoardProcessDto)
+    //{
+    //    try
+    //    {
+    //        return null;
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        throw new FriendlyException(e.Message);
+    //    }
+    //}
+    public async Task<List<SpreadSheetCalculateDto>> PostSpreadSheetCalculate(ProductBoardProcessDto productBoardProcessDto)
     {
         try
         {
-            return null;
+            return await _analysisBoardSecondMethod.SpreadSheetCalculate(productBoardProcessDto.AuditFlowId, 1M, productBoardProcessDto.ProductBoards);
         }
         catch (Exception e)
         {
             throw new FriendlyException(e.Message);
         }
+
     }
 
     /// <summary>
@@ -239,14 +251,26 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     /// <summary>
     /// 查看年份维度对比(全部模组)
+    /// 全部模组=所有模组+梯度集合上传
+    /// 单独具体的模组=对应模组id(梯度id为null)集合
+    /// 单独的梯度+模组=对应的模组id+梯度id集合
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
     public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparison(
-        YearProductBoardProcessSecondDto yearProductBoardProcessDto)
+        YearProductBoardProcessSecond_DynamicProductDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.YearDimensionalityComparison(yearProductBoardProcessDto);
     }
+    ///// <summary>
+    ///// 查看年份维度对比（各模组+整套）
+    ///// </summary>
+    ///// <param name = "productBoardProcessDto" ></param >
+    ///// <returns ></returns >
+    //public async Task<List<YearDimensionalityComparisonDto>> PostSomeYearDimensionalityComparison(YearProductBoardProcessSecond_DynamicProductDto productBoardProcessDto)
+    //{
+    //    return null;/*await _analysisBoardSecondMethod.YearDimensionalityComparison(productBoardProcessDto);*/
+    //}
 
     /// <summary>
     /// 下载对外报价单
