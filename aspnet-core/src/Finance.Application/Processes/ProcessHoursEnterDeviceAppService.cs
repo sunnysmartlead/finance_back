@@ -83,6 +83,7 @@ namespace Finance.Processes
                     p.DeviceName    = item1.DeviceName;
                     p.DeviceStatus = item1.DeviceStatus;
                     p.DevicePrice = item1.DevicePrice;
+                    p.DeviceNumber = item1.DeviceNumber;
                     listProcessHoursEnterDeviceDto.Add(p);
                 }
             }
