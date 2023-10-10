@@ -6,4 +6,8 @@ public class GradientQuotedGrossMarginModel:QuotedGrossMarginModel
     /// 梯度
     /// </summary>
     public string gradient { get; set; }
+    /// <summary>
+    /// 梯度Id
+    /// </summary>
+    public long gradientId { get; set; }
 }

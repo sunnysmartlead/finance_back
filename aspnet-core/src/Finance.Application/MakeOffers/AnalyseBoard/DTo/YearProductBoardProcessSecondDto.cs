@@ -49,7 +49,7 @@ public class DynamicProductBoardModelSecond
     /// 梯度数量主键 若无需获取对应梯度
     /// 此行不传
     /// </summary>
-    public long GradientId { get; set; }
+    public long? GradientId { get; set; }
     /// <summary>
     /// 本次报价-单价
     /// </summary>

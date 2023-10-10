@@ -350,6 +350,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             //List<long> AllProductId = new();
             //yearProductBoardProcessSecondDto.Boards.ForEach(p => AllProductId.Add(p.ProductId));
+            //获取梯度
+            List<Gradient> gradients =await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            //不需要此字段
             var LyearValues = new List<YearValue>();
             //数量
             foreach (var yl in YearList)
@@ -393,6 +396,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         if (priceEvaluationTableDto.TotalCost is not 0.0M)
                             unitCost = priceEvaluationTableDto.TotalCost;
                     }
+
                     decimal Count = await SalesQuantity(auditFlowId, p.ProductId, yl);
                     yv.value += unitCost * Count;
                 }
@@ -1314,7 +1318,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             foreach (var solution in solutions)
             {
                 GradientQuotedGrossMarginModel grossMarginModel = new GradientQuotedGrossMarginModel();
+                grossMarginModel.gradientId = gradient.Id;
                 grossMarginModel.gradient = gradient.GradientValue + "K/Y";
+                grossMarginModel.productId = solution.Productld;
                 grossMarginModel.product = solution.Product+"-"+solution.SolutionName;
                 var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).First();
                 decimal unprice = smple.ExchangeRate * (decimal.Parse(smple.TargetPrice)); //单价
