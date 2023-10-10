@@ -1112,11 +1112,12 @@ namespace Finance.PriceEval
 
                                      join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
 
-                                     join s in _solutionRepository.GetAll() on eb.SolutionId equals s.Id
-                                     join m in _modelCountRepository.GetAll() on s.Productld equals m.Id
-                                     join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
-                                     where lri.SuperType == fd.DisplayName
-                                     && eb.AuditFlowId == input.AuditFlowId && lriy.Year == lossYear
+                                     //join s in _solutionRepository.GetAll() on eb.SolutionId equals s.Id
+                                     //join m in _modelCountRepository.GetAll() on s.Productld equals m.Id
+                                     //join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
+                                     where
+                                     //lri.SuperType == fd.DisplayName && 
+                                     eb.AuditFlowId == input.AuditFlowId && lriy.Year == lossYear
                                      && eb.SolutionId == input.SolutionId && ec.SolutionId == input.SolutionId
 
                                      select new Material
@@ -1152,12 +1153,13 @@ namespace Finance.PriceEval
 
                                     join er in _exchangeRateRepository.GetAll() on se.Currency equals er.ExchangeRateKind
 
-                                    join s in _solutionRepository.GetAll() on sb.SolutionId equals s.Id
-                                    join m in _modelCountRepository.GetAll() on s.Productld equals m.Id
-                                    join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
-                                    where lri.SuperType == fd.DisplayName
+                                    //join s in _solutionRepository.GetAll() on sb.SolutionId equals s.Id
+                                    //join m in _modelCountRepository.GetAll() on s.Productld equals m.Id
+                                    //join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
 
-                                    && sb.TypeName == lri.CategoryName &&
+                                    where
+                                    //lri.SuperType == fd.DisplayName && 
+                                    sb.TypeName == lri.CategoryName &&
                                     sb.AuditFlowId == input.AuditFlowId && lriy.Year == lossYear
                                      && sb.SolutionId == input.SolutionId && se.SolutionId == input.SolutionId
 
@@ -1168,7 +1170,7 @@ namespace Finance.PriceEval
                                         CategoryName = sb.CategoryName,
                                         TypeName = sb.TypeName,
                                         Sap = sb.SapItemNum,
-                                        MaterialName = sb.MaterialName,
+                                        MaterialName = sb.DrawingNumName,//改成图号名称  //sb.MaterialName,
                                         AssemblyCount = sb.AssemblyQuantity,//装配数量
                                         SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
                                         CurrencyText = se.Currency,
@@ -1258,8 +1260,8 @@ namespace Finance.PriceEval
                 yearCount.ForEach(p =>
                 {
                     var dto = GetGroupTest(p, input, gradient, solution.Productld).Result;
-                    if(dto!=null)
-                    dtoList.Add(dto);
+                    if (dto != null)
+                        dtoList.Add(dto);
                 });
                 //var dtoList = yearCount.Select(p => mfcs.ToList());
                 //所有年份的直接制造成本
@@ -1322,7 +1324,7 @@ namespace Finance.PriceEval
             }
             else
             {
-                var entity = await GetData(input, gradient,solution.Productld);
+                var entity = await GetData(input, gradient, solution.Productld);
                 return entity;
             }
 
@@ -1356,7 +1358,7 @@ namespace Finance.PriceEval
 
         #region 获取数据库中存储的制造成本
 
-        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput input, List<CostType> costType,long sProductld)
+        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput input, List<CostType> costType, long sProductld)
         {
             //var sdf= _bomEnterTotalRepository.GetAll().Where(p=>p.AuditFlowId==input.AuditFlowId && p.SolutionId == input.s)
             var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == sProductld
