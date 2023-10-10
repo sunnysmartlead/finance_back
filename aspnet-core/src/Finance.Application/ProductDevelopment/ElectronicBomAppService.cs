@@ -312,9 +312,10 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveBoard(ProductDevelopmentInputDto dto)
         {
-            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
             if (productIsSubmits.Count is not 0)
             {
+                return;
                 throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
             }
             else
@@ -354,6 +355,15 @@ namespace Finance.ProductDevelopment
                         await _boardInfoRepository.InsertAsync(boardInfo);
                     }
                 }
+
+                #region 录入完成之后
+                //为提交操作才执行插库、流转工作流操作
+                if (dto.Opinion == FinanceConsts.Done)
+                {
+                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
+
+                }
+                #endregion
             }
         }
 
@@ -364,11 +374,13 @@ namespace Finance.ProductDevelopment
         /// <returns></returns>
         public async Task ClearElecBomImportState(long Id)
         {
-            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
-            foreach (NreIsSubmit item in productIsSubmits)
-            {
-                await _productIsSubmit.HardDeleteAsync(item);
-            }
+            //List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(Id) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+            //foreach (NreIsSubmit item in productIsSubmits)
+            //{
+            //    await _productIsSubmit.HardDeleteAsync(item);
+            //}
+
+            await _productIsSubmit.HardDeleteAsync(p=>(p.AuditFlowId == Id && p.EnumSole== AuditFlowConsts.AF_ElectronicBomImport)|| (p.AuditFlowId == Id && p.EnumSole == AuditFlowConsts.AF_ElectronicBomImportPb));
         }
 
         /// <summary>
