@@ -32,6 +32,7 @@ using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
+using Spire.Xls.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
@@ -106,6 +107,8 @@ namespace Finance.PriceEval
         private readonly IRepository<PriceEvalJson, long> _priceEvalJsonRepository;
         private readonly NrePricingAppService _nrePricingAppService;
         private readonly IRepository<ShareCount, long> _shareCountRepository;
+
+        private string errMessage = string.Empty;
 
 
         /// <summary>
@@ -690,7 +693,8 @@ namespace Finance.PriceEval
             }
             else
             {
-                return await GetData(input.Year, input.UpDown, yearCount.FirstOrDefault(p => p.Year == input.Year && p.UpDown == input.UpDown).Quantity);
+                var quantity = yearCount.FirstOrDefault(p => p.Year == input.Year && p.UpDown == input.UpDown);
+                return await GetData(input.Year, input.UpDown, quantity == null ? 0 : quantity.Quantity);
             }
 
             async Task<List<OtherCostItem2>> GetData(int year, YearType upDown, decimal quantity)
@@ -1249,8 +1253,15 @@ namespace Finance.PriceEval
                     .Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld).Select(p => p.Year).ToListAsync();
 
                 //获取数据
-                var dtoList = await yearCount.SelectAsync(async p => await GetGroupTest(p));
-
+                //var dtoList = await yearCount.SelectAsync(async p => await GetGroupTest(p,input,gradient, solution.Productld));
+                var dtoList = new List<ManufacturingCost>();
+                yearCount.ForEach(p =>
+                {
+                    var dto = GetGroupTest(p, input, gradient, solution.Productld).Result;
+                    if(dto!=null)
+                    dtoList.Add(dto);
+                });
+                //var dtoList = yearCount.Select(p => mfcs.ToList());
                 //所有年份的直接制造成本
                 var manufacturingCostDirectList = dtoList.Select(p => p.ManufacturingCostDirect);
 
@@ -1311,88 +1322,94 @@ namespace Finance.PriceEval
             }
             else
             {
-                var entity = await GetData(input.Year);
+                var entity = await GetData(input, gradient,solution.Productld);
                 return entity;
             }
 
-            async Task<List<ManufacturingCost>> GetData(int year)
-            {
-                #region 获取组测
 
-                var dto = await GetGroupTest(year);
 
-                #endregion
+        }
+        async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld)
+        {
+            #region 获取组测
 
-                #region SMT和COB 其他
-                List<ManufacturingCost> entity = new List<ManufacturingCost>(); //没做好，暂时写空 //await GetDbCost(year, new List<CostType> { CostType.SMT, CostType.COB, CostType.Other });
-                entity.Add(dto);
+            var dto = await GetGroupTest(input.Year, input, gradient, sProductld);
 
-                //entity.Insert(2, dto);
-
-                #endregion
-
-                #region 合计
-                var total = GetTotal(input.Year, entity);
-                entity.Add(total);
-                #endregion
-
-                return entity;
-            }
-
-            #region 获取数据库中存储的制造成本
-
-            async Task<List<ManufacturingCost>> GetDbCost(int year, List<CostType> costType)
-            {
-                //var sdf= _bomEnterTotalRepository.GetAll().Where(p=>p.AuditFlowId==input.AuditFlowId && p.SolutionId == input.s)
-                var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == solution.Productld
-                                             && t.Year == year && costType.Contains(t.CostType))
-                                    .Select(t => new ManufacturingCost
-                                    {
-                                        Id = year,
-                                        CostType = t.CostType,
-                                        GradientKy = 0,
-                                        MonthlyDemand = 0,
-                                        ManufacturingCostDirect = t.CostType == CostType.Other ? null : new ManufacturingCostDirect
-                                        {
-                                            Id = year,
-                                            DirectLabor = t.DirectLabor1.Value,
-                                            EquipmentDepreciation = t.EquipmentDepreciation1.Value,
-                                            LineChangeCost = t.LineChangeCost1.Value,
-                                            ManufacturingExpenses = t.ManufacturingExpenses1.Value,
-                                            Subtotal = t.Subtotal1.Value,
-                                        },
-                                        ManufacturingCostIndirect = t.CostType == CostType.Other ? null : new ManufacturingCostIndirect
-                                        {
-                                            Id = year,
-                                            DirectLabor = t.DirectLabor2.Value,
-                                            EquipmentDepreciation = t.EquipmentDepreciation2.Value,
-                                            ManufacturingExpenses = t.ManufacturingExpenses2.Value,
-                                            Subtotal = t.Subtotal2.Value
-                                        },
-                                        Subtotal = t.Subtotal,
-                                    }).ToListAsync();
-                data.ForEach(p =>
-                {
-                    p.CostItem = p.CostType switch
-                    {
-                        CostType.GroupTest => PriceEvalConsts.GroupTest,
-                        CostType.SMT => PriceEvalConsts.SMT,
-                        CostType.COB => PriceEvalConsts.COB,
-                        CostType.Total => PriceEvalConsts.Total,
-                        CostType.Other => PriceEvalConsts.Other,
-                        _ => throw new FriendlyException($"CostType输入参数不正确。参数为：{p.CostType}"),
-                    };
-                });
-                return data;
-            }
             #endregion
 
-            #region 组测
+            #region SMT和COB 其他
+            List<ManufacturingCost> entity = new List<ManufacturingCost>(); //没做好，暂时写空 //await GetDbCost(year, new List<CostType> { CostType.SMT, CostType.COB, CostType.Other });
+            if (dto != null)
+                entity.Add(dto);
 
-            async Task<ManufacturingCost> GetGroupTest(int year)
+            //entity.Insert(2, dto);
+
+            #endregion
+
+            #region 合计
+            var total = GetTotal(input.Year, entity);
+            entity.Add(total);
+            #endregion
+
+            return entity;
+        }
+
+        #region 获取数据库中存储的制造成本
+
+        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput input, List<CostType> costType,long sProductld)
+        {
+            //var sdf= _bomEnterTotalRepository.GetAll().Where(p=>p.AuditFlowId==input.AuditFlowId && p.SolutionId == input.s)
+            var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == sProductld
+                                         && t.Year == input.Year && costType.Contains(t.CostType))
+                                .Select(t => new ManufacturingCost
+                                {
+                                    Id = input.Year,
+                                    CostType = t.CostType,
+                                    GradientKy = 0,
+                                    MonthlyDemand = 0,
+                                    ManufacturingCostDirect = t.CostType == CostType.Other ? null : new ManufacturingCostDirect
+                                    {
+                                        Id = input.Year,
+                                        DirectLabor = t.DirectLabor1.Value,
+                                        EquipmentDepreciation = t.EquipmentDepreciation1.Value,
+                                        LineChangeCost = t.LineChangeCost1.Value,
+                                        ManufacturingExpenses = t.ManufacturingExpenses1.Value,
+                                        Subtotal = t.Subtotal1.Value,
+                                    },
+                                    ManufacturingCostIndirect = t.CostType == CostType.Other ? null : new ManufacturingCostIndirect
+                                    {
+                                        Id = input.Year,
+                                        DirectLabor = t.DirectLabor2.Value,
+                                        EquipmentDepreciation = t.EquipmentDepreciation2.Value,
+                                        ManufacturingExpenses = t.ManufacturingExpenses2.Value,
+                                        Subtotal = t.Subtotal2.Value
+                                    },
+                                    Subtotal = t.Subtotal,
+                                }).ToListAsync();
+            data.ForEach(p =>
+            {
+                p.CostItem = p.CostType switch
+                {
+                    CostType.GroupTest => PriceEvalConsts.GroupTest,
+                    CostType.SMT => PriceEvalConsts.SMT,
+                    CostType.COB => PriceEvalConsts.COB,
+                    CostType.Total => PriceEvalConsts.Total,
+                    CostType.Other => PriceEvalConsts.Other,
+                    _ => throw new FriendlyException($"CostType输入参数不正确。参数为：{p.CostType}"),
+                };
+            });
+            return data;
+        }
+        #endregion
+
+        #region 组测
+
+        async Task<ManufacturingCost> GetGroupTest(int year, GetManufacturingCostInput input, Gradient gradient, long sProductld)
+        {
+            try
             {
                 //工序工时年份
-                var yearInfo = await _yearInfoRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld && p.Year == year && p.Part == YearPart.WorkingHour);
+                var yearInfo = await _yearInfoRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.WorkingHour);
 
 
                 //获取制造成本参数
@@ -1402,10 +1419,12 @@ namespace Finance.PriceEval
                     manufacturingCostInfo = await _manufacturingCostInfoRepository.GetAll().OrderByDescending(p => p.Year).FirstOrDefaultAsync();
                 }
 
-                var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.GradientId == input.GradientId && p.ProductId == solution.Productld);
+                var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.GradientId == input.GradientId && p.ProductId == sProductld);
+                if (gradientModel == null)
+                    errMessage = "梯度模式数据未找到";
                 //模组数量
                 //var modelCountYear = await _modelCountYearRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.Year == year);
-                var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == gradientModel.Id && p.ProductId == solution.Productld && p.Year == year);
+                var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == gradientModel.Id && p.ProductId == sProductld && p.Year == year);
 
                 //计算连续乘积的委托
                 Func<List<decimal>, decimal> product = p =>
@@ -1433,7 +1452,7 @@ namespace Finance.PriceEval
                 var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
 
                 //工时工序静态字段表
-                var workingHoursInfo = await _workingHoursInfoRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld).ToListAsync();
+                var workingHoursInfo = await _workingHoursInfoRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld).ToListAsync();
 
 
                 //设备金额
@@ -1451,7 +1470,7 @@ namespace Finance.PriceEval
                 var monthlyCapacity = dailyCapacityPerShift * 26 * 2;
 
                 //产能利用率
-                var capacityUtilization = monthlyDemand / (monthlyCapacity * lineCount);
+                var capacityUtilization = monthlyDemand == 0 ? 0 : monthlyDemand / (monthlyCapacity * lineCount);
 
                 //分摊后折旧
                 var allocatedDepreciation = monthlyDepreciation * capacityUtilization;
@@ -1471,7 +1490,7 @@ namespace Finance.PriceEval
 
                 //工时工序
                 var workingHoursInputInfo = await _yearInfoRepository
-                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld && p.Year == year && p.Part == YearPart.SwitchLine);
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.SwitchLine);
 
                 //跟线工价
                 var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
@@ -1496,9 +1515,9 @@ namespace Finance.PriceEval
                     MonthlyDemand = monthlyDemand,
                     Id = year,
                     //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）/月需求量（新增：除以月需求量）
-                    DirectLabor = directLaborNo / monthlyDemand,
+                    DirectLabor = monthlyDemand == 0 ? 0 : directLaborNo / monthlyDemand,
                     DirectLaborNo = directLaborNo,
-                    EquipmentDepreciation = allocatedDepreciation / monthlyDemand,
+                    EquipmentDepreciation = monthlyDemand == 0 ? 0 : allocatedDepreciation / monthlyDemand,
                     EquipmentDepreciationNo = allocatedDepreciation,
                     LineChangeCost = lineChangeCost,
                     ManufacturingExpenses = (rateEntryInfo.DirectManufacturingRate * manufacturingHours) / 3600,
@@ -1533,56 +1552,59 @@ namespace Finance.PriceEval
                     ManufacturingCostIndirect = manufacturingCostIndirect,
                     Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
                 };
-                //dto.Round2();//保留两位小数
                 return dto;
             }
-
-
-            #endregion
-
-            #region 合计
-
-            static ManufacturingCost GetTotal(int year, List<ManufacturingCost> entity)
+            catch (Exception E)
             {
-                var manufacturingCostDirectTotal = entity.Select(p => p.ManufacturingCostDirect).Where(p => p is not null);
-                var manufacturingCostIndirectTotal = entity.Select(p => p.ManufacturingCostIndirect).Where(p => p is not null);
-
-                var manufacturingCostDirectTotalDto = new ManufacturingCostDirect
-                {
-                    Id = year,
-                    DirectLabor = manufacturingCostDirectTotal.Sum(p => p.DirectLabor),
-                    EquipmentDepreciation = manufacturingCostDirectTotal.Sum(p => p.EquipmentDepreciation),
-                    LineChangeCost = manufacturingCostDirectTotal.Sum(p => p.LineChangeCost),
-                    ManufacturingExpenses = manufacturingCostDirectTotal.Sum(p => p.ManufacturingExpenses),
-                    Subtotal = manufacturingCostDirectTotal.Sum(p => p.Subtotal),
-                };
-                var manufacturingCostIndirectTotalDto = new ManufacturingCostIndirect
-                {
-                    Id = year,
-                    EquipmentDepreciation = manufacturingCostIndirectTotal.Sum(p => p.EquipmentDepreciation),
-                    DirectLabor = manufacturingCostIndirectTotal.Sum(p => p.DirectLabor),
-                    ManufacturingExpenses = manufacturingCostIndirectTotal.Sum(p => p.ManufacturingExpenses),
-                    Subtotal = manufacturingCostIndirectTotal.Sum(p => p.Subtotal),
-                };
-                //manufacturingCostDirectTotalDto.Round2();//保留2位小数
-                //manufacturingCostIndirectTotalDto.Round2();//保留2位小数
-
-                var total = new ManufacturingCost
-                {
-                    Id = year,
-                    CostItem = PriceEvalConsts.Total,
-                    CostType = CostType.Total,
-                    GradientKy = entity.Sum(p => p.GradientKy),
-                    ManufacturingCostDirect = manufacturingCostDirectTotalDto,
-                    ManufacturingCostIndirect = manufacturingCostIndirectTotalDto,
-                    Subtotal = entity.Sum(p => p.Subtotal),
-                };
-                //total.Round2();//保留2位小数
-                return total;
+                return null;
             }
-
-            #endregion
+            //dto.Round2();//保留两位小数
         }
+
+
+        #endregion
+
+        #region 合计
+        static ManufacturingCost GetTotal(int year, List<ManufacturingCost> entity)
+        {
+            var manufacturingCostDirectTotal = entity.Select(p => p.ManufacturingCostDirect).Where(p => p is not null);
+            var manufacturingCostIndirectTotal = entity.Select(p => p.ManufacturingCostIndirect).Where(p => p is not null);
+
+            var manufacturingCostDirectTotalDto = new ManufacturingCostDirect
+            {
+                Id = year,
+                DirectLabor = manufacturingCostDirectTotal.Sum(p => p.DirectLabor),
+                EquipmentDepreciation = manufacturingCostDirectTotal.Sum(p => p.EquipmentDepreciation),
+                LineChangeCost = manufacturingCostDirectTotal.Sum(p => p.LineChangeCost),
+                ManufacturingExpenses = manufacturingCostDirectTotal.Sum(p => p.ManufacturingExpenses),
+                Subtotal = manufacturingCostDirectTotal.Sum(p => p.Subtotal),
+            };
+            var manufacturingCostIndirectTotalDto = new ManufacturingCostIndirect
+            {
+                Id = year,
+                EquipmentDepreciation = manufacturingCostIndirectTotal.Sum(p => p.EquipmentDepreciation),
+                DirectLabor = manufacturingCostIndirectTotal.Sum(p => p.DirectLabor),
+                ManufacturingExpenses = manufacturingCostIndirectTotal.Sum(p => p.ManufacturingExpenses),
+                Subtotal = manufacturingCostIndirectTotal.Sum(p => p.Subtotal),
+            };
+            //manufacturingCostDirectTotalDto.Round2();//保留2位小数
+            //manufacturingCostIndirectTotalDto.Round2();//保留2位小数
+
+            var total = new ManufacturingCost
+            {
+                Id = year,
+                CostItem = PriceEvalConsts.Total,
+                CostType = CostType.Total,
+                GradientKy = entity.Sum(p => p.GradientKy),
+                ManufacturingCostDirect = manufacturingCostDirectTotalDto,
+                ManufacturingCostIndirect = manufacturingCostIndirectTotalDto,
+                Subtotal = entity.Sum(p => p.Subtotal),
+            };
+            //total.Round2();//保留2位小数
+            return total;
+        }
+
+        #endregion
 
         #endregion
 

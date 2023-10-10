@@ -886,7 +886,8 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
                 SopOrValueMode sopOrValueMode = new SopOrValueMode();
                 foreach (var boardModel in dynamicProductBoardModels)
                 {
-                    if (!DictiolastYearUnitPrice.ContainsKey(boardModel.ProductId)) DictiolastYearUnitPrice[boardModel.ProductId] = boardModel.UnitPrice;
+                    if (!DictiolastYearUnitPrice.ContainsKey(boardModel.ProductId))
+                        DictiolastYearUnitPrice[boardModel.ProductId] = boardModel.UnitPrice;
                     decimal ALLYearPrice = await SellingPrice(processId, boardModel.ProductId, 1M, Year, DictiolastYearUnitPrice[boardModel.ProductId], 0.0M);
                     DictiolastYearUnitPrice[boardModel.ProductId] = ALLYearPrice;
                     sopOrValueMode.Value += ALLYearPrice;
@@ -983,7 +984,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
                     DictiolastYearUnitPrice[dynamicProductBoardModel.ProductId] = ALLYearPrice;
                     //销售数量
                     decimal Count = await SalesQuantity(processId, dynamicProductBoardModel.ProductId, Year);
-                    var prop = await AllincomeYear(processId, Year, 1M, DictiolastYearUnitPrice[dynamicProductBoardModel.ProductId]);
+                    //var prop = await AllincomeYear(processId, Year, 1M, DictiolastYearUnitPrice[dynamicProductBoardModel.ProductId]);
                     //该 年份 毛利率 全生命周期的 收入
                     decimal InteriorALLincome = ALLYearPrice * Count;
                     //某一年 某一个模组 返利金额
@@ -1029,7 +1030,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             }
             yearDimensionalityComparisonDto.YearList = JsonConvert.DeserializeObject<List<SopOrValueMode>>(JsonConvert.SerializeObject(sopOrValueModes));
             sopOrValueModes.Clear();
-            yearDimensionalityComparisonDto.Totak = (ALLgrossmargin / ALLincome)*100;
+            yearDimensionalityComparisonDto.Totak = ALLincome == 0 ? 0 : (ALLgrossmargin / ALLincome) * 100;
             yearDimensionalityComparisonDtos.Add(JsonConvert.DeserializeObject<YearDimensionalityComparisonDto>(JsonConvert.SerializeObject(yearDimensionalityComparisonDto)));
             return yearDimensionalityComparisonDtos;
         }

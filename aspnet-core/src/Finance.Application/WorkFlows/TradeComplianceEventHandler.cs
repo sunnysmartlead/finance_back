@@ -48,62 +48,79 @@ namespace Finance.WorkFlows
         /// <param name="eventData"></param>
         public async void HandleEvent(EntityUpdatedEventData<NodeInstance> eventData)
         {
-            using var uow = _unitOfWorkManager.Begin();
-            using (_unitOfWorkManager.Current.SetTenantId(1))
+            using (var uow = _unitOfWorkManager.Begin())
             {
-                //必须被激活才能执行
-                if (eventData.Entity.NodeInstanceStatus != NodeInstanceStatus.Current)
+                using (_unitOfWorkManager.Current.SetTenantId(1))
                 {
-                    return;
-                }
-                if (eventData.Entity.NodeId == "主流程_贸易合规")
-                {
+                    //必须被激活才能执行
+                    if (eventData.Entity.NodeInstanceStatus != NodeInstanceStatus.Current)
+                    {
+                        return;
+                    }
+                    if (eventData.Entity.NodeId == "主流程_贸易合规")
+                    {
+                        try
+                        {
 
-                    var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
-                    if (isOk)
+                            //var isOk = true;
+                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                            if (isOk)
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                                    Comment = "系统判断合规"
+                                });
+                            }
+                            else
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                                    Comment = "系统判断不合规"
+                                });
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                                Comment = "系统判断不合规"
+                            });
+                        }
+                    }
+
+                    //如果是自动生成相关的流转页面
+                    var autoFlows = new List<string> { "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
+                    if (autoFlows.Contains(eventData.Entity.NodeId))
                     {
                         await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                         {
                             NodeInstanceId = eventData.Entity.Id,
-                            FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
-                            Comment = "系统判断合规"
+                            FinanceDictionaryDetailId = FinanceConsts.Done,
+                            Comment = "系统自动流转"
                         });
                     }
-                    else
+
+                    //如果是流转到电子BOM退回页面的
+                    if (eventData.Entity.NodeId == "主流程_上传电子BOM")
                     {
-                        await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
-                        {
-                            NodeInstanceId = eventData.Entity.Id,
-                            FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
-                            Comment = "系统判断不合规"
-                        });
+                        await _electronicBomAppService.ClearElecBomImportState(eventData.Entity.WorkFlowInstanceId);
                     }
-                }
 
-                //如果是自动生成相关的流转页面
-                var autoFlows = new List<string> {  "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
-                if (autoFlows.Contains(eventData.Entity.NodeId))
-                {
-                    await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                    //如果是流转到结构BOM退回页面的
+                    if (eventData.Entity.NodeId == "主流程_上传结构BOM")
                     {
-                        NodeInstanceId = eventData.Entity.Id,
-                        FinanceDictionaryDetailId = FinanceConsts.Done,
-                        Comment = "系统自动流转"
-                    });
+                        await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
+                    }
+
                 }
 
-                //如果是流转到电子BOM退回页面的
-                if (eventData.Entity.NodeId == "主流程_上传电子BOM")
-                {
-                    await _electronicBomAppService.ClearElecBomImportState(eventData.Entity.WorkFlowInstanceId);
-                }
-
-                //如果是流转到结构BOM退回页面的
-                if (eventData.Entity.NodeId == "主流程_上传结构BOM")
-                {
-                    await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
-                }
-
+                uow.Complete();
             }
 
         }
