@@ -164,6 +164,10 @@ namespace Finance.PriceEval.Dto
     {
         public virtual int Index { get; set; }
 
+        public virtual string IsThirdPartyName { get; set; }
+
+        public virtual string Count { get; set; }
+
     }
     public class ExcelSoftwareTestingCotsModel : SoftwareTestingCotsModel
     {
