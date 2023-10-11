@@ -32,6 +32,11 @@ namespace Finance.PriceEval
         /// </summary>
         public virtual long ProductId { get; set; }
 
+        /// <summary>
+        /// 分摊年数（年的数量）
+        /// </summary>
+        public virtual int Year { get; set; }
+
 
         /// <summary>
         /// 名称

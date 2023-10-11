@@ -103,7 +103,11 @@ namespace Finance.PriceEval
 
         protected readonly IRepository<Solution, long> _solutionRepository;
         private readonly IRepository<UpdateItem, long> _updateItemRepository;
+
+
+        private readonly IRepository<BomEnter, long> _bomEnterRepository;
         private readonly IRepository<BomEnterTotal, long> _bomEnterTotalRepository;
+
         private readonly IRepository<PriceEvalJson, long> _priceEvalJsonRepository;
         private readonly NrePricingAppService _nrePricingAppService;
         private readonly IRepository<ShareCount, long> _shareCountRepository;
@@ -116,7 +120,7 @@ namespace Finance.PriceEval
         /// </summary>
         public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
           IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
-     IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
+     IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
             IRepository<ShareCount, long> shareCountRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
@@ -150,10 +154,11 @@ namespace Finance.PriceEval
 
             _updateItemRepository = updateItemRepository;
             _solutionRepository = solutionRepository;
-            _bomEnterTotalRepository = bomEnterTotalRepository;
+            _bomEnterRepository = bomEnterRepository;
             _nrePricingAppService = nrePricingAppService;
 
             _shareCountRepository = shareCountRepository;
+            _bomEnterTotalRepository = bomEnterTotalRepository;
         }
 
 
@@ -1119,7 +1124,10 @@ namespace Finance.PriceEval
                                      join ec in _enteringElectronicRepository.GetAll() on eb.Id equals ec.ElectronicId
 
                                      join lri in _lossRateInfoRepository.GetAll()
-                                     on new { eb.TypeName, eb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
+                                     //on new { eb.TypeName, eb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
+                                     on eb.TypeName equals lri.CategoryName
+
+
                                      join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
                                      join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
@@ -1161,7 +1169,8 @@ namespace Finance.PriceEval
 
                                     //join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.MaterialCategory
                                     join lri in _lossRateInfoRepository.GetAll()
-                                    on new { sb.TypeName, sb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
+                                    //on new { sb.TypeName, sb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
+                                    on sb.TypeName equals lri.CategoryName
 
                                     join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
@@ -1372,10 +1381,29 @@ namespace Finance.PriceEval
 
         #region 获取数据库中存储的制造成本
 
-        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput input, List<CostType> costType, long sProductld)
+        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput input, List<CostType> costType, long productId)
         {
-            //var sdf= _bomEnterTotalRepository.GetAll().Where(p=>p.AuditFlowId==input.AuditFlowId && p.SolutionId == input.s)
-            var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == sProductld
+            //var sdf = _bomEnterRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId && p.Year == input.Year);
+
+            //var cob = await (from b in _bomEnterRepository.GetAll()
+            //                 join y in _modelCountYearRepository.GetAll() on b.ModelCountYearId equals y.Id
+            //                 where y.UpDown == input.UpDown
+            //                 && b.AuditFlowId == input.AuditFlowId && b.SolutionId == input.SolutionId && b.Year == input.Year.ToString()
+            //                 select new ManufacturingCost 
+            //                 {
+            //                     Id = input.Year,
+            //                     CostType = CostType.COB,
+            //                     GradientKy 
+            //                 }).FirstOrDefaultAsync();
+
+            //var other = await (from b in _bomEnterTotalRepository.GetAll()
+            //                   join y in _modelCountYearRepository.GetAll() on b.ModelCountYearId equals y.Id
+            //                   where y.UpDown == input.UpDown
+            //                        && b.AuditFlowId == input.AuditFlowId && b.SolutionId == input.SolutionId && b.Year == input.Year.ToString()
+            //                   select b).FirstOrDefaultAsync();
+
+
+            var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == productId
                                          && t.Year == input.Year && costType.Contains(t.CostType))
                                 .Select(t => new ManufacturingCost
                                 {
