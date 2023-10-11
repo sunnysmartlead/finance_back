@@ -1028,7 +1028,7 @@ namespace Finance.PriceEval
 
             data.ForEach(p => p.IsCustomerSupplyStr = p.IsCustomerSupply ? "是" : "否");
 
-            return data.OrderByDescending(p => p.TotalMoneyCyn).ToList();
+            return data.OrderBy(p => p.SuperType.BomSort()).ThenByDescending(p => p.TotalMoneyCyn).ToList();
             async Task<List<Material>> GetAllData(GetBomCostInput input)
             {
                 var gradient = await _gradientRepository.GetAsync(input.GradientId);
@@ -1103,11 +1103,23 @@ namespace Finance.PriceEval
                 async Task<List<Material>> GetData(int year, YearType upDown)
                 {
                     var lossYear = year - sopYear;
+
+                    //产品大类名
+                    var productTypeName = await (from m in _modelCountRepository.GetAll()
+                                                 join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
+                                                 where m.Id == productId
+                                                 select fd.DisplayName).FirstOrDefaultAsync();
+                    //产品大类是否存在于损耗率中
+                    var productTypeNameIsHasFromLossRate = await _lossRateInfoRepository.GetAll().AnyAsync(p => p.SuperType == productTypeName);
+
+                    var filterProductTypeName = productTypeNameIsHasFromLossRate ? productTypeName : FinanceConsts.ProductTypeNameOther;
+
                     //获取【电子料】表
                     var electronic = from eb in _electronicBomInfoRepository.GetAll()
                                      join ec in _enteringElectronicRepository.GetAll() on eb.Id equals ec.ElectronicId
 
-                                     join lri in _lossRateInfoRepository.GetAll() on eb.TypeName equals lri.CategoryName
+                                     join lri in _lossRateInfoRepository.GetAll()
+                                     on new { eb.TypeName, eb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
                                      join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
                                      join er in _exchangeRateRepository.GetAll() on ec.Currency equals er.ExchangeRateKind
@@ -1116,14 +1128,14 @@ namespace Finance.PriceEval
                                      //join m in _modelCountRepository.GetAll() on s.Productld equals m.Id
                                      //join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
                                      where
-                                     //lri.SuperType == fd.DisplayName && 
+                                     lri.SuperType == filterProductTypeName &&
                                      eb.AuditFlowId == input.AuditFlowId && lriy.Year == lossYear
                                      && eb.SolutionId == input.SolutionId && ec.SolutionId == input.SolutionId
 
                                      select new Material
                                      {
                                          Id = $"{PriceEvaluationGetAppService.ElectronicBomName}{eb.Id}",
-                                         SuperType = lri.SuperType,
+                                         SuperType = FinanceConsts.ElectronicName,//lri.SuperType,
                                          CategoryName = eb.CategoryName,
                                          TypeName = eb.TypeName,
                                          Sap = eb.SapItemNum,
@@ -1147,7 +1159,9 @@ namespace Finance.PriceEval
                     var structure = from sb in _structureBomInfoRepository.GetAll()
                                     join se in _structureElectronicRepository.GetAll() on sb.Id equals se.StructureId
 
-                                    join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.MaterialCategory
+                                    //join lri in _lossRateInfoRepository.GetAll() on sb.CategoryName equals lri.MaterialCategory
+                                    join lri in _lossRateInfoRepository.GetAll()
+                                    on new { sb.TypeName, sb.CategoryName } equals new { TypeName = lri.CategoryName, CategoryName = lri.MaterialCategory }
 
                                     join lriy in _lossRateYearInfoRepository.GetAll() on lri.Id equals lriy.LossRateInfoId
 
@@ -1158,7 +1172,7 @@ namespace Finance.PriceEval
                                     //join fd in _financeDictionaryDetailRepository.GetAll() on m.ProductType equals fd.Id
 
                                     where
-                                    //lri.SuperType == fd.DisplayName && 
+                                    lri.SuperType == filterProductTypeName &&
                                     sb.TypeName == lri.CategoryName &&
                                     sb.AuditFlowId == input.AuditFlowId && lriy.Year == lossYear
                                      && sb.SolutionId == input.SolutionId && se.SolutionId == input.SolutionId
@@ -1166,7 +1180,7 @@ namespace Finance.PriceEval
                                     select new Material
                                     {
                                         Id = $"{PriceEvaluationGetAppService.StructureBomName}{sb.Id}",
-                                        SuperType = lri.SuperType,
+                                        SuperType = sb.SuperTypeName,// lri.SuperType,
                                         CategoryName = sb.CategoryName,
                                         TypeName = sb.TypeName,
                                         Sap = sb.SapItemNum,
@@ -1215,7 +1229,7 @@ namespace Finance.PriceEval
 
         }
 
-        /// <summary>
+        /// <summary>SELE
         /// 获取 bom成本（含损耗）汇总表 Dto
         /// </summary>
         /// <param name="input"></param>
