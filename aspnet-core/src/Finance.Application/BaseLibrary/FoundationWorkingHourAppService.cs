@@ -305,8 +305,8 @@ namespace Finance.BaseLibrary
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        foundationWorkingHourDto.ProcessNumber = (row[keys[1]]).ToString();
-                        foundationWorkingHourDto.ProcessName = (row[keys[2]]).ToString();
+                        foundationWorkingHourDto.ProcessNumber = (row[keys[0]]).ToString();
+                        foundationWorkingHourDto.ProcessName = (row[keys[1]]).ToString();
                         // 解析年度部分
                         List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();
