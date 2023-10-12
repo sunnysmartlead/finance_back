@@ -258,6 +258,34 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
+            //退回意见必填校验
+            var fd = new List<string> {
+                FinanceConsts.YesOrNo,
+                FinanceConsts.EvalFeedback,
+                FinanceConsts.StructBomEvalSelect,
+                FinanceConsts.BomEvalSelect,
+                FinanceConsts.MybhgSelect,
+                FinanceConsts.HjkbSelect,
+                FinanceConsts.ElectronicBomEvalSelect,
+            };
+            var list = await _financeDictionaryDetailRepository.GetAll().Where(p => fd.Contains(p.FinanceDictionaryId)).Select(p => p.Id).ToListAsync();
+
+            var yes = new List<string> { FinanceConsts.YesOrNo_Yes,
+                FinanceConsts.EvalFeedback_Js,
+                FinanceConsts.StructBomEvalSelect_Yes,
+                FinanceConsts.BomEvalSelect_Yes,
+                FinanceConsts.MybhgSelect_No,
+                FinanceConsts.HjkbSelect_Yes,
+                FinanceConsts.ElectronicBomEvalSelect_Yes, };
+            foreach (var item in yes)
+            {
+                list.Remove(item);
+            }
+            if (list.Contains(input.FinanceDictionaryDetailId))
+            {
+                throw new FriendlyException($"必须填写退回原因！");
+            }
+
             await SubmitNodeInterfece(input);
         }
 

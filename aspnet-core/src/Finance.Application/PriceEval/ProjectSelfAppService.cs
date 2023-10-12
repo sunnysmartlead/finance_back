@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 using MiniExcelLibs;
 using System.IO;
+using System.Linq.Dynamic.Core;
 
 namespace Finance.PriceEval
 {
@@ -159,8 +160,19 @@ namespace Finance.PriceEval
         {
             var stream = excle.OpenReadStream();
             var rows = MiniExcel.Query<CreateProjectSelfInput>(stream).ToList();
+
+
+
             var entitys = ObjectMapper.Map<List<ProjectSelf>>(rows);
-            await Repository.BulkInsertAsync(entitys);
+
+
+            foreach (var entity in entitys)
+            {
+                var id = await Repository.GetAll().Where(p => p.Code == entity.Code).Select(p => p.Id).FirstOrDefaultAsync();
+                entity.Id = id;
+            }
+
+            await Repository.BulkInsertOrUpdateAsync(entitys);
 
             await _baseStoreLogRepository.InsertAsync(new BaseStoreLog
             {

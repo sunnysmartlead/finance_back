@@ -103,10 +103,10 @@ namespace Finance.PriceEval
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
-           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository,
-           IRepository<CountryLibrary, long> countryLibraryRepository)
+           WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository,
+           IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
@@ -945,15 +945,14 @@ namespace Finance.PriceEval
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
 
-
             var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
+
 
             var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
             //模组名
-            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == solution.Productld).Select(p => p.Product).FirstOrDefaultAsync();
+            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.SolutionId).Select(p => p.Product).FirstOrDefaultAsync();
             dto.ProjectName = $"{modelCountName}——{dto.ProjectName}";
-
 
             dto.HandPieceCost = dto.HandPieceCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
             dto.MouldInventory = dto.MouldInventory.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
@@ -961,7 +960,7 @@ namespace Finance.PriceEval
             dto.FixtureCost = dto.FixtureCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
             dto.QAQCDepartments = dto.QAQCDepartments.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
             dto.ProductionEquipmentCost = dto.ProductionEquipmentCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            //dto.LaboratoryFeeModels = dto.LaboratoryFeeModels.Select((p, i) => { p.Index = i + 1; p.Count = (p.DataThoroughly + p.DataDV + p.DataPV) + p.Unit; return p; }).ToList();
+            dto.LaboratoryFeeModels = dto.LaboratoryFeeModels.Select((p, i) => { p.Index = i + 1; p.Count = (p.CountBottomingOut + p.CountDV + p.CountPV) + p.Unit; p.IsThirdPartyName = p.IsThirdParty ? "是" : "否"; return p; }).ToList();
             dto.SoftwareTestingCost = dto.SoftwareTestingCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
             dto.TravelExpense = dto.TravelExpense.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
             dto.RestsCost = dto.RestsCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
@@ -992,43 +991,12 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
-            var solution = await _solutionRepository.GetAsync(input.SolutionId);
-
-            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
+            var memoryStream =await NreTableDownloadStream(input);
 
 
-            var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
+            //var memoryStream = new MemoryStream();
 
-            //模组名
-            var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.SolutionId).Select(p => p.Product).FirstOrDefaultAsync();
-            dto.ProjectName = $"{modelCountName}——{dto.ProjectName}";
-
-            dto.HandPieceCost = dto.HandPieceCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.MouldInventory = dto.MouldInventory.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.ToolingCost = dto.ToolingCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.FixtureCost = dto.FixtureCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.QAQCDepartments = dto.QAQCDepartments.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.ProductionEquipmentCost = dto.ProductionEquipmentCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            //dto.LaboratoryFeeModels = dto.LaboratoryFeeModels.Select((p, i) => { p.Index = i + 1; p.Count = (p.DataThoroughly + p.DataDV + p.DataPV) + p.Unit; return p; }).ToList();
-            dto.SoftwareTestingCost = dto.SoftwareTestingCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.TravelExpense = dto.TravelExpense.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-            dto.RestsCost = dto.RestsCost.Select((p, i) => { p.Index = i + 1; return p; }).ToList();
-
-            dto.HandPieceCostSum = dto.HandPieceCost.Sum(p => p.Cost);
-            dto.MouldInventorySum = dto.MouldInventory.Sum(p => p.Cost);
-            dto.ToolingCostSum = dto.ToolingCost.Sum(p => p.Cost);
-            dto.FixtureCostSum = dto.FixtureCost.Sum(p => p.Cost);
-            dto.QAQCDepartmentsSum = dto.QAQCDepartments.Sum(p => p.Cost);
-            dto.ProductionEquipmentCostSum = dto.ProductionEquipmentCost.Sum(p => p.Cost);
-            dto.LaboratoryFeeModelsSum = dto.LaboratoryFeeModels.Sum(p => p.AllCost);
-            dto.SoftwareTestingCostSum = dto.SoftwareTestingCost.Sum(p => p.Cost);
-            dto.TravelExpenseSum = dto.TravelExpense.Sum(p => p.Cost);
-            dto.RestsCostSum = dto.RestsCost.Sum(p => p.Cost);
-
-
-            var memoryStream = new MemoryStream();
-
-            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/NRE.xlsx", dto);
+            //await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/NRE.xlsx", dto);
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "NRE核价表.xlsx" };
         }
