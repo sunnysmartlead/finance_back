@@ -113,7 +113,7 @@ namespace Finance.EntityFrameworkCore
         // 报价分析看板中的 动态单价表 实体类
         public virtual DbSet<DynamicUnitPriceOffers> DynamicUnitPriceOffers { set; get; }
         // 报价分析看板中的 阶梯数量表 实体类
-        public virtual DbSet<ActualUnitPriceOffer> ActualUnitPriceOffers { set; get; }
+        //public virtual DbSet<ActualUnitPriceOffer> ActualUnitPriceOffers { set; get; }
         // 报价分析看板中的 汇总分析表  实体类
         public virtual DbSet<PooledAnalysisOffers> PooledAnalysisOffers { set; get; }
         //报价 项目看板实体类 实体类

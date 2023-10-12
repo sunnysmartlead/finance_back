@@ -134,9 +134,17 @@ namespace Finance.BaseLibrary
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 foreach (var dtosItem1 in dtosItem)
                 {
+
                     ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)dtosItem1.ModelCountYearId);
+                    List<GradientModelYear> gradientModelYears = _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == entity.Productld && p.Year == entitySolution.Year && p.UpDown == entitySolution.UpDown).ToList();
+                    if (gradientModelYears.Count > 0)
+                    {
+                        dtosItem1.YearMountCount = gradientModelYears[0].Count;
+                    }
+                    else {
+                        dtosItem1.YearMountCount = 0;
+                    }
                     dtosItem1.ModelCountYearId = entitySolution.Id;
-                    dtosItem1.YearMountCount = entitySolution.Quantity;
                     if (entitySolution.UpDown == YearType.FirstHalf)
                     {
 
@@ -189,7 +197,17 @@ namespace Finance.BaseLibrary
                             logisticscostDto.Year = item1.Year.ToString();
                             logisticscostDto.Moon = 12;
                         }
-                        logisticscostDto.YearMountCount = item1.Quantity;
+                        ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)item1.Id);
+
+                        List<GradientModelYear> gradientModelYears = _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == entity.Productld && p.Year == entitySolution.Year && p.UpDown == entitySolution.UpDown).ToList();
+                        if (gradientModelYears.Count > 0)
+                        {
+                            logisticscostDto.YearMountCount = gradientModelYears[0].Count;
+                        }
+                        else
+                        {
+                            logisticscostDto.YearMountCount = 0;
+                        }
                         logisticscostDto.ModelCountYearId = item1.Id;
                         logisticscostDto.FreightPrice = 0;
                         logisticscostDto.MonthlyDemandPrice= 0;

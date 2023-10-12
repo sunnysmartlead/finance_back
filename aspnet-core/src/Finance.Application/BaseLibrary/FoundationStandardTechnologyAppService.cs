@@ -231,9 +231,8 @@ namespace Finance.BaseLibrary
                     foundationReliableProcess.toolInfo.FrockPrice = 0;
                     foundationReliableProcess.toolInfo.HardwareDeviceTotalPrice = foundationReliableProcessHours.HardwareDeviceTotalPrice;
                     foundationReliableProcess.toolInfo.SoftwarePrice = foundationReliableProcessHours.SoftwarePrice;
-                    foundationReliableProcess.toolInfo.FixtureName = "";
+                    foundationReliableProcess.toolInfo.FixtureName = foundationReliableProcessHours.FrockName;
                     foundationReliableProcess.toolInfo.FixtureNumber = 0;
-                    foundationReliableProcess.toolInfo.FixtureName = "";
 
 
                     List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
@@ -409,9 +408,8 @@ namespace Finance.BaseLibrary
                     {
                         foundationReliableProcess.ToolInfo.SoftwarePrice = 0;
                     }
-                    foundationReliableProcess.ToolInfo.FixtureName = "";
-                    foundationReliableProcess.ToolInfo.FixtureNumber = 0;
-                    foundationReliableProcess.ToolInfo.FixtureName = "";
+                    foundationReliableProcess.ToolInfo.FixtureName = foundationReliableProcessHours.FixtureName;
+                    foundationReliableProcess.ToolInfo.FixtureNumber = foundationReliableProcessHours.FixtureNumber;
 
 
                     List<ProcessHoursEnterSopInfoDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnterSopInfoDto>();
@@ -584,26 +582,6 @@ namespace Finance.BaseLibrary
                         }
                     }
 
-                    if (null != deviceItem.toolInfo.zhiJuArr)
-                    {
-                        foreach (var device in deviceItem.toolInfo.zhiJuArr)
-                        {
-                            FoundationTechnologyFixture technologyFixture = new FoundationTechnologyFixture();
-                            technologyFixture.FixturePrice = device.FixturePrice;
-                            technologyFixture.FixtureName = device.FixtureName;
-                            technologyFixture.FixtureNumber = device.FixtureNumber;
-                            technologyFixture.CreationTime = DateTime.Now;
-                            technologyFixture.FoundationReliableHoursId = ID;
-                            if (AbpSession.UserId != null)
-                            {
-                                technologyFixture.CreatorUserId = AbpSession.UserId.Value;
-                                technologyFixture.LastModificationTime = DateTime.Now;
-                                technologyFixture.LastModifierUserId = AbpSession.UserId.Value;
-                            }
-                            _foundationTechnologyFixtureRepository.InsertAsync(technologyFixture);
-
-                        }
-                    }
                     if (null != deviceItem.toolInfo.zhiJuArr)
                     {
                         foreach (var device in deviceItem.toolInfo.zhiJuArr)
