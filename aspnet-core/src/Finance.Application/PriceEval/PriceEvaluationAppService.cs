@@ -8,6 +8,7 @@ using Abp.Linq.Extensions;
 using AutoMapper;
 using Finance.Audit;
 using Finance.Audit.Dto;
+using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
@@ -104,9 +105,11 @@ namespace Finance.PriceEval
             IRepository<GradientModelYear, long> gradientModelYearRepository, IRepository<ShareCount, long> shareCountRepository,
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
            WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository,
-           IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository)
+           IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, IRepository<Logisticscost, long> logisticscostRepository,
+           IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
-                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository)
+                  gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
+                  qualityCostRatioRepository, qualityCostRatioYearRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
@@ -515,6 +518,14 @@ namespace Finance.PriceEval
                 .Select(p => new FileUploadOutputDto { FileId = p.Id, FileName = p.Name, })
                 .ToListAsync();
                 result.Files = fileNames1;
+
+                foreach (var item in result.ModelCount)
+                {
+                    var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == item.ProductType);
+                    item.ProductTypeName = dictionaryDetail.DisplayName;
+                }
+
+
                 return result;
             }
 
@@ -597,6 +608,13 @@ namespace Finance.PriceEval
 
             priceEvaluationDto.QuoteVersion = quoteVersion;
             priceEvaluationDto.Files = fileNames;
+
+            foreach (var item in modelCountDto)
+            {
+                var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id == item.ProductType);
+                item.ProductTypeName = dictionaryDetail.DisplayName;
+            }
+
             return priceEvaluationDto;
         }
 
@@ -918,7 +936,10 @@ namespace Finance.PriceEval
             //质量成本
             var qualityCost = data.OtherCostItem.QualityCost;
 
-            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost;
+            //其他成本
+            var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
+
+            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost+ other;
 
             var list = new List<ProportionOfProductCostListDto>
             {
@@ -927,6 +948,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="制造成本", Proportion= manufacturingCost},
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
+                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other/sum},
             };
 
             var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
