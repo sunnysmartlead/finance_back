@@ -39,7 +39,7 @@ namespace Finance.NrePricing.Model
         public List<LaboratoryFeeModel> laboratoryFeeModels { get; set; }
     }
     /// <summary>
-    /// 实验费 模型
+    /// EMC 实验费 模型
     /// </summary>
     public class LaboratoryFeeModel
     {
@@ -92,7 +92,7 @@ namespace Finance.NrePricing.Model
         public string Remark { get; set; }
     }
     /// <summary>
-    /// 实验费 Excel模型
+    /// EMC 实验费 Excel模型
     /// </summary>
     public class LaboratoryFeeExcelModel
     {
@@ -101,61 +101,30 @@ namespace Finance.NrePricing.Model
         /// </summary>
         public long Id { get; set; }
         /// <summary>
-        /// 实验项目
+        /// 试验项目(根据与客户协定项目)
         /// </summary>
         [ExcelColumnName("试验项目")]
-        public string TestItem { get; set; }
+        public string ProjectName { get; set; }
         /// <summary>
         /// 是否指定第三方 (是 true   否 false)
         /// </summary>
         [ExcelColumnName("是否指定第三方")]
         public string IsThirdParty { get; set; }
         /// <summary>
-        /// 单价
+        /// 计数-摸底
         /// </summary>
-        [ExcelColumnName("单价")]
-        public decimal UnitPrice { get; set; }
-
+        [ExcelColumnName("计数-摸底")]
+        public decimal CountBottomingOut { get; set; }
         /// <summary>
-        /// 调整系数
+        /// 计数-DV
         /// </summary>
-        [ExcelColumnName("调整系数")]
-        public decimal Coefficient { get; set; }
+        [ExcelColumnName("计数-DV")]
+        public decimal CountDV { get; set; }
         /// <summary>
-        /// 计价单位
+        /// 计数-PV
         /// </summary>
-        [ExcelColumnName("计价单位")]
-        public decimal Unit { get; set; }
-
-
-        /// <summary>
-        /// 时间-摸底
-        /// </summary>
-        [ExcelColumnName("时间-摸底")]       
-        public decimal DataThoroughly { get; set; }
-        /// <summary>
-        /// 时间-DV
-        /// </summary>
-        [ExcelColumnName("时间-DV")]     
-        public decimal DataDV { get; set; }
-        /// <summary>
-        /// 时间-PV
-        /// </summary>
-        [ExcelColumnName("时间-PV")]      
-        public decimal DataPV { get; set; }
-
-        ///// <summary>
-        ///// 单位
-        ///// </summary>
-        //[ExcelColumnName("单位")]
-        //public string Unit { get; set; }
-
-
-        /// <summary>
-        /// 总费用
-        /// </summary>
-        [ExcelColumnName("总费用")]
-        public decimal AllCost { get; set; }
+        [ExcelColumnName("计数-PV")]
+        public decimal CountPV { get; set; }
         /// <summary>
         /// 备注
         /// </summary>
