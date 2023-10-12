@@ -516,6 +516,60 @@ namespace Finance.Processes
             return processHoursEnterDtoList;
         }
 
+
+
+        /// <summary>
+        /// 列表-无分页功能
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<List<ProcessHoursEnterSopInfoDto>> GetYearAsync(GetProcessHoursEntersInput input)
+        {
+            // 设置查询条件
+  
+                //无数据的情况下
+                Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+                var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
+            List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
+            foreach (var device in query)
+            {
+                ProcessHoursEnterSopInfoDto processHoursEnteritem = new ProcessHoursEnterSopInfoDto();
+                List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
+                foreach (var yearItem in query)
+                {
+                    ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
+                    processHoursEnteritemDto.LaborHour = 0;
+                    processHoursEnteritemDto.PersonnelNumber = 0;
+                    processHoursEnteritemDto.MachineHour = 0;
+                    processHoursEnteritemDto.ModelCountYearId = yearItem.Id;
+                    processHoursEnteritem.Issues.Add(processHoursEnteritemDto);
+                }
+
+                if (device.UpDown == YearType.FirstHalf)
+                {
+
+                    processHoursEnteritem.Year = device.Year + "上半年";
+                }
+                else if (device.UpDown == YearType.SecondHalf)
+                {
+                    processHoursEnteritem.Year = device.Year + "下半年";
+                }
+                else
+                {
+                    processHoursEnteritem.Year = device.Year.ToString();
+                }
+                processHoursEnteritems.Add(processHoursEnteritem);
+
+            }
+
+
+
+
+            return processHoursEnteritems;
+        }
+
+
         /// <summary>
         /// 查看项目走量        /// </summary>
         /// <param name="input">查询条件</param>
@@ -1381,7 +1435,7 @@ namespace Finance.Processes
                         if (!Xtsl.Equals(0.000M))
                         {
                             decimal x = (Capacity / Xtsl);
-                            if (!x.Equals(0.000M))
+                            if (x.Equals(0.000M))
                             {
                                 xtftl = 0;
                             }
