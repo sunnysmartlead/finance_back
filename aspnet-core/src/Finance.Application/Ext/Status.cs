@@ -13,7 +13,7 @@ namespace test
     public enum Status
     {
 
-        [Description("专用)")]
+        [Description("专用")]
         zy,
 
         [Description("共用")]

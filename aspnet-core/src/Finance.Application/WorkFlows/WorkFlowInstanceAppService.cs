@@ -52,6 +52,10 @@ namespace Finance.WorkFlows
         private readonly UserManager _userManager;
         private readonly RoleManager _roleManager;
 
+
+        private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
+
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -71,7 +75,7 @@ namespace Finance.WorkFlows
             IRepository<InstanceHistory, long> instanceHistoryRepository,
             IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository,
-            UserManager userManager, RoleManager roleManager
+            UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository
             )
         {
             _workflowRepository = workflowRepository;
@@ -93,6 +97,8 @@ namespace Finance.WorkFlows
 
             _userManager = userManager;
             _roleManager = roleManager;
+
+            _priceEvaluationRepository = priceEvaluationRepository;
         }
 
         /// <summary>
@@ -101,7 +107,7 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 130 && p.NodeId == "主流程_贸易合规");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 189 && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
@@ -162,7 +168,7 @@ namespace Finance.WorkFlows
 
             //改变业务开始节点的数据
             var businessStartNode = nodeInstanceList.First(p => p.NodeId == businessStartNodeId);
-            businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Current;
             businessStartNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
             //把数据定义进业务开始节点
@@ -200,6 +206,8 @@ namespace Finance.WorkFlows
                 //如果节点被激活
                 if (result)
                 {
+                    businessStartNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
 
                     foreach (var line in business2Lines.Intersect(targetBusiness2NodeLines))
@@ -250,6 +258,34 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
+            //退回意见必填校验
+            var fd = new List<string> {
+                FinanceConsts.YesOrNo,
+                FinanceConsts.EvalFeedback,
+                FinanceConsts.StructBomEvalSelect,
+                FinanceConsts.BomEvalSelect,
+                FinanceConsts.MybhgSelect,
+                FinanceConsts.HjkbSelect,
+                FinanceConsts.ElectronicBomEvalSelect,
+            };
+            var list = await _financeDictionaryDetailRepository.GetAll().Where(p => fd.Contains(p.FinanceDictionaryId)).Select(p => p.Id).ToListAsync();
+
+            var yes = new List<string> { FinanceConsts.YesOrNo_Yes,
+                FinanceConsts.EvalFeedback_Js,
+                FinanceConsts.StructBomEvalSelect_Yes,
+                FinanceConsts.BomEvalSelect_Yes,
+                FinanceConsts.MybhgSelect_No,
+                FinanceConsts.HjkbSelect_Yes,
+                FinanceConsts.ElectronicBomEvalSelect_Yes, };
+            foreach (var item in yes)
+            {
+                list.Remove(item);
+            }
+            if (list.Contains(input.FinanceDictionaryDetailId))
+            {
+                throw new FriendlyException($"必须填写退回原因！");
+            }
+
             await SubmitNodeInterfece(input);
         }
 
@@ -361,7 +397,7 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
-                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id);
+                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
                             if (route.Any())
                             {
                                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
@@ -506,6 +542,40 @@ namespace Finance.WorkFlows
             return new PagedResultDto<UserTask>(result.Count, result);
         }
 
+
+        /// <summary>
+        /// 根据当前用户Id 获取已办，基于项目经理过滤
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskCompletedFilter()
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
+
+                       join pe in _priceEvaluationRepository.GetAll() on h.WorkFlowInstanceId equals pe.AuditFlowId into pe1
+                       from p in pe1.DefaultIfEmpty()
+
+                       where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
+
+                       select new UserTask
+                       {
+                           Id = h.NodeInstanceId,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = w.CreationTime,
+                           TaskUser = u.Name,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
+                           ProcessIdentifier = n.ProcessIdentifier
+                       };
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
+            return new PagedResultDto<UserTask>(count, result);
+        }
 
         /// <summary>
         /// 根据用户Id 获取已办

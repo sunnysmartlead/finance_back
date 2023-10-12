@@ -13,7 +13,7 @@ public class AnalyseBoardNreDto
     /// <summary>
     /// 方案表ID
     /// </summary>
-    public long SolutionId { get; set; }
+    public long? SolutionId { get; set; }
     /// <summary>
     /// 流程号Id
     /// </summary> 

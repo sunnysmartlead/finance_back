@@ -18,7 +18,7 @@ public class GrossMargin
     /// <summary>
     /// 产品
     /// </summary>
-    public string proudct { get; set; }
+    public string product { get; set; }
     
     /// <summary>
     /// 单车产品数量

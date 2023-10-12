@@ -134,6 +134,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationWorkingHourDto> CreateAsync(FoundationWorkingHourDto input)
         {
+            var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             var entity = ObjectMapper.Map<FoundationWorkingHourDto, FoundationWorkingHour>(input,new FoundationWorkingHour());
 
             entity.CreationTime = DateTime.Now;
@@ -184,7 +189,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationWorkingHourDto> UpdateAsync(FoundationWorkingHourDto input)
         {
-        
+            var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationWorkingHour entity = await _foundationWorkingHourRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationWorkingHourRepository.UpdateAsync(entity);
@@ -296,8 +305,8 @@ namespace Finance.BaseLibrary
                         IDictionary<String, Object> row = rows[i];
                         Dictionary<string, object> rowItem = new Dictionary<string, object>();
                         //总数居
-                        foundationWorkingHourDto.ProcessNumber = (row[keys[1]]).ToString();
-                        foundationWorkingHourDto.ProcessName = (row[keys[0]]).ToString();
+                        foundationWorkingHourDto.ProcessNumber = (row[keys[0]]).ToString();
+                        foundationWorkingHourDto.ProcessName = (row[keys[1]]).ToString();
                         // 解析年度部分
                         List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();

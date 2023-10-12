@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NUglify.JavaScript.Syntax;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -81,6 +82,24 @@ namespace Finance.Ext
                     }
                 }
 
+            }
+        }
+
+        /// <summary>
+        /// 结构料Bom排序
+        /// </summary>
+        /// <param name="superTypeName"></param>
+        /// <returns></returns>
+        public static int BomSort(this string superTypeName)
+        {
+            switch (superTypeName)
+            {
+                case FinanceConsts.ElectronicName: return 1;
+                case FinanceConsts.StructuralName: return 2;
+                case FinanceConsts.GlueMaterialName: return 3;
+                case FinanceConsts.SMTOutSourceName: return 4;
+                case FinanceConsts.PackingMaterialName: return 5;
+                default: return 100;
             }
         }
     }

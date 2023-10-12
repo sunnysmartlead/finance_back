@@ -14,6 +14,7 @@ public class AnalyseBoardSecondDto : ResultDto
     /// 流程号Id
     /// </summary>
     public long AuditFlowId { get; set; }
+
     /// <summary>
     /// 毛利率
     /// </summary>
@@ -44,14 +45,22 @@ public class AnalyseBoardSecondDto : ResultDto
     /// 报价毛利率测算 实际数量
     /// </summary>
     public List<QuotedGrossMarginProjectModel> QuotedGrossMargins { get; set; }
+
     /// <summary>
     /// 报价毛利率测算阶梯数量
     /// </summary>
     public List<GradientQuotedGrossMarginModel> GradientQuotedGrossMargins { get; set; }
+
     /// <summary>
     /// 项目全生命周期汇总分析表-实际数量
     /// </summary>
-    public List<PooledAnalysisModel> FullLifeCycle{ get; set; }
-    
+    public List<PooledAnalysisModel> FullLifeCycle { get; set; }
 
+    /// <summary>
+    /// 项目看板
+    /// </summary>
+    public List<ProjectBoardModel> ProjectBoard { get; set; }
+
+
+    public string mes { get; set; }
 }

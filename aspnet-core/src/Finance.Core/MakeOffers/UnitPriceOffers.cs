@@ -36,5 +36,13 @@ namespace Finance.MakeOffers
         /// 梯度
         /// </summary>
         public string gradient { get; set; }
+        /// <summary>
+        /// 梯度(K/Y)
+        /// </summary>
+        public virtual string GradientValue { get; set; }
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
     }
 }

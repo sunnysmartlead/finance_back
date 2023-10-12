@@ -41,6 +41,9 @@ namespace Finance
         public const string SMTOutSourceName = "SMT外协";
         public const string PackingMaterialName = "包材";
 
+        public const string ProductTypeNameOther = "其他";
+
+
         public const string EccnCode_Eccn = "ECCN";
         public const string EccnCode_Ear99 = "EAR99";
         public const string EccnCode_Uninvolved = "不涉及";
@@ -849,6 +852,74 @@ namespace Finance
         /// 核价看板选项 退回到【NRE-EMC实验费录入】
         /// </summary>
         public const string HjkbSelect_Nreemcsyflr = "HjkbSelect_Nreemcsyflr";
+
+        #endregion
+
+
+        #region 页面标识符
+
+        /// <summary>
+        /// NRE_可靠性实验费录入
+        /// </summary>
+        public const string NRE_ReliabilityExperimentFeeInput = "NRE_ReliabilityExperimentFeeInput";
+
+        /// <summary>
+        /// 上传电子BOM 
+        /// </summary>
+        public const string ElectronicsBOM = "ElectronicsBOM";
+
+        /// <summary>
+        /// 上传结构BOM
+        /// </summary>
+        public const string StructureBOM = "StructureBOM";
+
+        /// <summary>
+        /// 工序工时添加
+        /// </summary>
+        public const string FormulaOperationAddition = "FormulaOperationAddition";
+
+
+        /// <summary>
+        /// NRE_EMC实验费录入
+        /// </summary>
+        public const string NRE_EMCExperimentalFeeInput = "NRE_EMCExperimentalFeeInput";
+
+        /// <summary>
+        /// COB制造成本录入
+        /// </summary>
+        public const string COBManufacturingCostEntry = "COBManufacturingCostEntry";
+
+        /// <summary>
+        /// 物流成本录入
+        /// </summary>
+        public const string LogisticsCostEntry = "LogisticsCostEntry";
+
+
+        /// <summary>
+        /// 项目核价审核
+        /// </summary>
+        public const string ProjectChiefAudit = "ProjectChiefAudit";
+
+        /// <summary>
+        /// 核价审批录入
+        /// </summary>
+        public const string PriceDemandReview = "PriceDemandReview";
+
+        /// <summary>
+        /// NRE手板件
+        /// </summary>
+        public const string NRE_ManualComponentInput = "NRE_ManualComponentInput";
+
+        /// <summary>
+        /// 查看每个方案初版BOM成本
+        /// </summary>
+        public const string UnitPriceInputReviewToExamine = "UnitPriceInputReviewToExamine";
+
+        /// <summary>
+        /// 核价看板
+        /// </summary>
+        public const string PriceEvaluationBoard = "PriceEvaluationBoard";
+
 
         #endregion
 

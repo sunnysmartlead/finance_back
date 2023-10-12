@@ -76,6 +76,10 @@ namespace Finance.Audit
         /// </summary>
         public const string AF_ElectronicBomImport = "ElectronicBomImport";
         /// <summary>
+        /// 电子bom导入界面-拼版
+        /// </summary>
+        public const string AF_ElectronicBomImportPb = "ElectronicBomImportPb";
+        /// <summary>
         /// 电子bom审核界面
         /// </summary>
         public const string AF_ElectronicBomAudit = "ElectronicBomAudit";

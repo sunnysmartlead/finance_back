@@ -199,7 +199,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationHardwareDto> CreateAsync(FoundationHardwareDto input)
         {
-
+            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             var entity = ObjectMapper.Map<FoundationHardwareDto, FoundationHardware>(input, new FoundationHardware());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -252,6 +256,11 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task<FoundationHardwareDto> UpdateAsync(FoundationHardwareDto input)
         {
+            var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
+            if (query.Count > 0)
+            {
+                throw new Exception("工序编号重复！");
+            }
             FoundationHardware entity = await _foundationHardwareRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
             entity = await _foundationHardwareRepository.UpdateAsync(entity);
@@ -354,9 +363,12 @@ namespace Finance.BaseLibrary
                             foundationHardwareDto.HardwareBusiness = initRow.GetCell(pindex + 3).ToString();
                             entity.ListHardware.Add(foundationHardwareDto);
                         }
-                        entity.SoftwareName = initRow.GetCell(2 + deviceCountt * 4).ToString();
-                        entity.SoftwareState = initRow.GetCell(3 + deviceCountt * 4).ToString();
-                        entity.SoftwarePrice = decimal.Parse(initRow.GetCell(4 + deviceCountt * 4).ToString());
+                        
+                        entity.TraceabilitySoftware = initRow.GetCell(2 + deviceCountt * 4).ToString();
+                        entity.TraceabilitySoftwareCost = decimal.Parse(initRow.GetCell(3 + deviceCountt * 4).ToString());
+                            entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
+                        entity.SoftwareState = initRow.GetCell(5 + deviceCountt * 4).ToString();
+                        entity.SoftwarePrice = decimal.Parse(initRow.GetCell(6 + deviceCountt * 4).ToString());
                         list.Add(entity);
                     }
 
@@ -466,9 +478,11 @@ namespace Finance.BaseLibrary
             }
             int a = dtos[0].ListHardware.Count * 4 + 2;
 
-            cols.Add(new DynamicExcelColumn("FixtureGaugeName") { Index = a, Name = "软件名称", Width = 30 });
-            cols.Add(new DynamicExcelColumn("FixtureGaugeState") { Index = a + 1, Name = "软件状态", Width = 30 });
-            cols.Add(new DynamicExcelColumn("FixtureGaugePrice") { Index = a + 2, Name = "软件单价", Width = 30 });
+            cols.Add(new DynamicExcelColumn("TraceabilitySoftware") { Index = a, Name = "追溯软件", Width = 30 });
+            cols.Add(new DynamicExcelColumn("TraceabilitySoftwareCost") { Index = a+1, Name = "追溯软件费用", Width = 30 });
+            cols.Add(new DynamicExcelColumn("FixtureGaugeName") { Index = a+2, Name = "软件名称", Width = 30 });
+            cols.Add(new DynamicExcelColumn("FixtureGaugeState") { Index = a + 3, Name = "软件状态", Width = 30 });
+            cols.Add(new DynamicExcelColumn("FixtureGaugePrice") { Index = a + 4, Name = "软件单价", Width = 30 });
             var config = new OpenXmlConfiguration
             {
                 DynamicColumns = cols.ToArray()
@@ -486,7 +500,9 @@ namespace Finance.BaseLibrary
                     ["ProcessName"] = foundationHardwareDto.ProcessName,
                     ["FixtureGaugeName"] = foundationHardwareDto.SoftwareName,
                     ["FixtureGaugePrice"] = foundationHardwareDto.SoftwarePrice,
-                    ["FixtureGaugeState"] = foundationHardwareDto.SoftwareState
+                    ["FixtureGaugeState"] = foundationHardwareDto.SoftwareState,
+                    ["TraceabilitySoftware"] = foundationHardwareDto.TraceabilitySoftware,
+                    ["TraceabilitySoftwareCost"] = foundationHardwareDto.TraceabilitySoftwareCost,
                 };
                 for (int j = 0; j < foundationHardwareDto.ListHardware.Count; j++)
                 {

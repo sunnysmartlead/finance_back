@@ -55,7 +55,11 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public decimal collinearAllocationRate { get; set; }
     /// <summary>
-    /// 启用状态，0启用，1不用
+    /// 启用状态，0启用，1不用\
     /// </summary>
     public int status { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
 }

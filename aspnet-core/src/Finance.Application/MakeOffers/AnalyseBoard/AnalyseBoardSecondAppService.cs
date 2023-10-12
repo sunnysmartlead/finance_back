@@ -162,124 +162,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(
         AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
     {
-        AnalyseBoardSecondDto analyseBoardSecondDto = new();
-        var auditFlowId = analyseBoardSecondInputDto.auditFlowId;
-        //获取方案
-        List<Solution> Solutions = analyseBoardSecondInputDto.solutionTables;
-        //获取核价营销相关数据
-        var priceEvaluationStartInputResult =
-            await _priceEvaluationAppService.GetPriceEvaluationStartData(analyseBoardSecondInputDto.auditFlowId);
-
-        //获取梯度
-        List<Gradient> gradients =
-            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == analyseBoardSecondInputDto.auditFlowId);
-        //最小梯度值
-        var mintd = gradients.OrderBy(e => e.GradientValue).First();
-
-        List<GradientGrossMarginModel> gradientGrossMarginModels = new();
-        //获取毛利率
-        List<decimal> gross = await _analysisBoardSecondMethod.GetGrossMargin();
-        //sop年份
-        var soptime = priceEvaluationStartInputResult.SopTime;
-        List<CreateSampleDto> sampleDtos = priceEvaluationStartInputResult.Sample;
-
-
-        List<OnlySampleDto> samples = new List<OnlySampleDto>();
-        //样品阶段
-        foreach (var Solution in Solutions)
+        AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
+        try
         {
-            var productld = Solution.Productld;
-            var gepr = new GetPriceEvaluationTableResultInput();
-            gepr.AuditFlowId = auditFlowId;
-            gepr.Year = soptime;
-            gepr.UpDown = YearType.Year;
-            gepr.GradientId = mintd.Id;
-            gepr.ProductId = productld;
-            //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-            //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
-            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
-            {
-                AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
-                Year = soptime, UpDown = YearType.FirstHalf
-            });
-
-            //最小梯度SOP年成本
-            var totalcost = ex.TotalCost;
-
-            //样品阶段
-            if (priceEvaluationStartInputResult.IsHasSample == true)
-            {
-                OnlySampleDto onlySampleDto = new();
-                List<SampleQuotation> onlySampleModels =
-                    await _analysisBoardSecondMethod.getSample(sampleDtos, totalcost);
-                onlySampleDto.SolutionName = Solution.SolutionName;
-                onlySampleDto.OnlySampleModels = onlySampleModels;
-                samples.Add(onlySampleDto);
-            }
+            return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
+        } catch (Exception e)
+        {
+            analyseBoardSecondDto.mes = e.Message;
+            return analyseBoardSecondDto;
         }
 
-//单价表
-        List<SopAnalysisModel> sops = new List<SopAnalysisModel>();
-        foreach (var gradient in gradients)
-        {
-            foreach (var Solution in Solutions)
-            {
-                SopAnalysisModel sopAnalysisModel = new();
-
-                var productld = Solution.Productld;
-                var gepr = new GetPriceEvaluationTableResultInput();
-                gepr.AuditFlowId = auditFlowId;
-                gepr.Year = soptime;
-                gepr.UpDown = YearType.Year;
-                gepr.GradientId = gradient.Id;
-                gepr.ProductId = productld;
-                //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-                //var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
-                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
-                {
-                    AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
-                    Year = soptime, UpDown = YearType.FirstHalf
-                });
-
-                //最小梯度SOP年成本
-                var totalcost = ex.TotalCost;
-                //var totalcost = 100;
-
-                sopAnalysisModel.Product = Solution.SolutionName;
-                sopAnalysisModel.GradientValue = gradient.GradientValue + "K/Y";
-                List<GrossValue> grosss = new List<GrossValue>();
-                foreach (var gro in gross)
-                {
-                    GrossValue gr = new GrossValue();
-                    gr.Grossvalue = totalcost / (1 - (gro / 100));
-                    gr.Gross = gro.ToString();
-                    grosss.Add(gr);
-                }
-
-                sopAnalysisModel.GrossValues = grosss;
-                sops.Add(sopAnalysisModel);
-            }
-        }
-
-
-//NRE
-        analyseBoardSecondDto.nres = await _analysisBoardSecondMethod.getNre(analyseBoardSecondInputDto.auditFlowId,
-            analyseBoardSecondInputDto.solutionTables);
-        //样品阶段
-        analyseBoardSecondDto.SampleOffer = samples;
-        //sop单价表
-        analyseBoardSecondDto.Sops = sops;
-        analyseBoardSecondDto.FullLifeCycle =
-            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId, gradients, priceEvaluationStartInputResult,
-                gross, analyseBoardSecondInputDto.solutionTables, sops);
-        analyseBoardSecondDto.GradientQuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients, sops)
-            ;
-        analyseBoardSecondDto.QuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetActual(priceEvaluationStartInputResult, Solutions);
-
-
-        return analyseBoardSecondDto;
     }
 
 
@@ -303,16 +195,28 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <summary>
     /// 汇总分析表 根据 整套 毛利率 计算(本次报价)
     /// </summary>
-    public async Task<TargetPrice> PostSpreadSheetCalculate(SpreadSheetCalculateSecondDto productBoardProcessDto)
+    //public async Task<TargetPrice> PostSpreadSheetCalculate(SpreadSheetCalculateSecondDto productBoardProcessDto)
+    //{
+    //    try
+    //    {
+    //        return null;
+    //    }
+    //    catch (Exception e)
+    //    {
+    //        throw new FriendlyException(e.Message);
+    //    }
+    //}
+    public async Task<List<SpreadSheetCalculateDto>> PostSpreadSheetCalculate(ProductBoardProcessDto productBoardProcessDto)
     {
         try
         {
-            return null;
+            return await _analysisBoardSecondMethod.SpreadSheetCalculate(productBoardProcessDto.AuditFlowId, 1M, productBoardProcessDto.ProductBoards);
         }
         catch (Exception e)
         {
             throw new FriendlyException(e.Message);
         }
+
     }
 
     /// <summary>
@@ -347,14 +251,26 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     /// <summary>
     /// 查看年份维度对比(全部模组)
+    /// 全部模组=所有模组+梯度集合上传
+    /// 单独具体的模组=对应模组id(梯度id为null)集合
+    /// 单独的梯度+模组=对应的模组id+梯度id集合
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
     public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparison(
-        YearProductBoardProcessSecondDto yearProductBoardProcessDto)
+        YearProductBoardProcessSecond_DynamicProductDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.YearDimensionalityComparison(yearProductBoardProcessDto);
     }
+    ///// <summary>
+    ///// 查看年份维度对比（各模组+整套）
+    ///// </summary>
+    ///// <param name = "productBoardProcessDto" ></param >
+    ///// <returns ></returns >
+    //public async Task<List<YearDimensionalityComparisonDto>> PostSomeYearDimensionalityComparison(YearProductBoardProcessSecond_DynamicProductDto productBoardProcessDto)
+    //{
+    //    return null;/*await _analysisBoardSecondMethod.YearDimensionalityComparison(productBoardProcessDto);*/
+    //}
 
     /// <summary>
     /// 下载对外报价单
@@ -407,7 +323,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="quotationListDto"></param>
     /// <returns></returns>
-    public async Task PostAuditQuotationListSaveSecond(AnalyseBoardSecondDto analyseBoardSecondDto)
+    public async Task PostIsOfferSave(IsOfferSecondDto analyseBoardSecondDto)
     {
         AuditQuotationList auditQuotationList =
             await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
@@ -448,7 +364,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (isOfferDto.IsOffer)
         {
             //进行报价
-            await PostIsOfferSaveSecond(isOfferDto);
+            await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
             flowDetailDto.Opinion = OPINIONTYPE.Submit_Agreee;
         }
         else
@@ -461,146 +377,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         ReturnDto returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
     }
 
-    /// <summary>
-    /// 报价 保存  接口
-    /// </summary>
-    /// <param name="isOfferDto"></param>
-    /// <returns></returns>
-    public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
+    public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
     {
-        //进行报价
-
-        #region Nre 资源部录入 保存
-
-        foreach (var item in isOfferDto.nres)
-        {
-            item.AuditFlowId = isOfferDto.AuditFlowId;
-        }
-
-        _analysisBoardSecondMethod.PostSalesDepartment(isOfferDto.nres);
-
-        // await _nrePricingAppService.PostSalesDepartment(isOfferDto.Nre);
-
-        #endregion
-
-        #region 单价表添加
-
-        foreach (var unit in isOfferDto.UnitPrice)
-        {
-            UnitPriceOffers unitPriceOffer = await _resourceUnitPriceOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProductId.Equals(unit.ProductId));
-            if (unitPriceOffer is not null)
-            {
-                unitPriceOffer.ProductName = unit.ProductName;
-                unitPriceOffer.ProductNumber = unit.ProductNumber;
-                unitPriceOffer.GrossMarginList = JsonConvert.SerializeObject(unit.GrossMarginList);
-                await _resourceUnitPriceOffers.UpdateAsync(unitPriceOffer);
-            }
-            else
-            {
-                UnitPriceOffers unitPrice = new();
-                unitPrice.AuditFlowId = isOfferDto.AuditFlowId;
-                unitPrice.ProductId = unit.ProductId;
-                unitPrice.ProductName = unit.ProductName;
-                unitPrice.ProductNumber = unit.ProductNumber;
-                unitPrice.GrossMarginList = JsonConvert.SerializeObject(unit.GrossMarginList);
-                await _resourceUnitPriceOffers.InsertAsync(unitPrice);
-            }
-        }
-
-        #endregion
-
-        #region 样品阶段
-
-        foreach (var item in isOfferDto.SampleOffer)
-        {
-            item.AuditFlowId = isOfferDto.AuditFlowId;
-        }
-
-        /*
-        foreach (var pooled in isOfferDto.PooledAnalysis)
-        {
-            PooledAnalysisOffers pooledAnalysisOffers = await _resourcePooledAnalysisOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProjectName.Equals(pooled.ProjectName));
-            if (pooledAnalysisOffers is not null)
-            {
-                pooledAnalysisOffers.GrossMarginList = JsonConvert.SerializeObject(pooled.GrossMarginList);
-                await _resourcePooledAnalysisOffers.UpdateAsync(pooledAnalysisOffers);
-            }
-            else
-            {
-                PooledAnalysisOffers pool = new();
-                pool.AuditFlowId = isOfferDto.AuditFlowId;
-                pool.ProjectName = pooled.ProjectName;
-                pool.GrossMarginList = JsonConvert.SerializeObject(pooled.GrossMarginList);
-                await _resourcePooledAnalysisOffers.InsertAsync(pool);
-            }
-        }
-
-        #endregion
-
-        #region 动态单价表添加
-
-        foreach (ProductBoardModel product in isOfferDto.ProductBoard.ProductBoard)
-        {
-            DynamicUnitPriceOffers dynamicUnitPriceOffers =
-                await _resourceDynamicUnitPriceOffers.FirstOrDefaultAsync(p =>
-                    p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProductId.Equals(product.ProductId));
-            if (dynamicUnitPriceOffers is not null)
-            {
-                dynamicUnitPriceOffers.ProductName = product.ProductName;
-                dynamicUnitPriceOffers.ProductNumber = product.ProductNumber;
-                dynamicUnitPriceOffers.InteriorTargetUnitPrice = product.InteriorTargetUnitPrice;
-                dynamicUnitPriceOffers.InteriorTargetGrossMargin = product.InteriorTargetGrossMargin;
-                dynamicUnitPriceOffers.ClientTargetUnitPrice = product.ClientTargetUnitPrice;
-                dynamicUnitPriceOffers.ClientTargetGrossMargin = product.ClientTargetGrossMargin;
-                dynamicUnitPriceOffers.OfferUnitPrice = product.OfferUnitPrice;
-                dynamicUnitPriceOffers.OffeGrossMargin = product.OffeGrossMargin;
-                dynamicUnitPriceOffers.AllInteriorGrossMargin = isOfferDto.ProductBoard.AllInteriorGrossMargin;
-                dynamicUnitPriceOffers.AllClientGrossMargin = isOfferDto.ProductBoard.AllClientGrossMargin;
-                await _resourceDynamicUnitPriceOffers.InsertOrUpdateAsync(dynamicUnitPriceOffers);
-            }
-            else
-            {
-                DynamicUnitPriceOffers dynamic = new();
-                dynamic = ObjectMapper.Map<DynamicUnitPriceOffers>(product);
-                dynamic.AuditFlowId = isOfferDto.AuditFlowId;
-                dynamic.AllInteriorGrossMargin = isOfferDto.ProductBoard.AllInteriorGrossMargin;
-                dynamic.AllClientGrossMargin = isOfferDto.ProductBoard.AllClientGrossMargin;
-                await _resourceDynamicUnitPriceOffers.InsertAsync(dynamic);
-            }
-        }
-
-        #endregion
-
-        #region 项目看板添加
-
-        foreach (var project1 in isOfferDto.ProjectBoard)
-        {
-            ProjectBoardOffers projectBoardOffers = await _resourceProjectBoardOffers.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(isOfferDto.AuditFlowId) && p.ProjectName.Equals(project1.ProjectName));
-            if (projectBoardOffers is not null)
-            {
-                projectBoardOffers.InteriorTarget = JsonConvert.SerializeObject(project1.InteriorTarget);
-                projectBoardOffers.ClientTarget = JsonConvert.SerializeObject(project1.ClientTarget);
-                projectBoardOffers.Offer = JsonConvert.SerializeObject(project1.Offer);
-                await _resourceProjectBoardOffers.UpdateAsync(projectBoardOffers);
-            }
-            else
-            {
-                ProjectBoardOffers project = new();
-                project.AuditFlowId = isOfferDto.AuditFlowId;
-                project.ProjectName = project1.ProjectName;
-                project.InteriorTarget = JsonConvert.SerializeObject(project1.InteriorTarget);
-                project.ClientTarget = JsonConvert.SerializeObject(project1.ClientTarget);
-                project.Offer = JsonConvert.SerializeObject(project1.Offer);
-                await _resourceProjectBoardOffers.InsertAsync(project);
-            }
-        }
-        */
-
-        #endregion
+        await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
+    
+
+ 
 
     /// <summary>
     /// 总经理报价审批界面一
