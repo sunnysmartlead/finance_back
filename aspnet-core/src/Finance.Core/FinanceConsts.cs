@@ -41,6 +41,9 @@ namespace Finance
         public const string SMTOutSourceName = "SMT外协";
         public const string PackingMaterialName = "包材";
 
+        public const string ProductTypeNameOther = "其他";
+
+
         public const string EccnCode_Eccn = "ECCN";
         public const string EccnCode_Ear99 = "EAR99";
         public const string EccnCode_Uninvolved = "不涉及";
