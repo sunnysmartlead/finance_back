@@ -721,6 +721,24 @@ namespace Finance.PropertyDepartment.Entering.Method
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 //超级大种类  结构料 胶水等辅材 SMT外协 包材
+                // 按照结构料、胶水、包材顺序排序
+                structureBomInfosGr = structureBomInfosGr.OrderBy(m =>
+                {
+                    if (m.Contains("结构料"))
+                    {
+                        return 1;
+                    }
+                    else if (m.Contains("胶水"))
+                    {
+                        return 2;
+                    }
+                    else if (m.Contains("包材"))
+                    {
+                        return 3;
+                    }
+
+                    return 4;
+                }).ToList();
                 foreach (string SuperTypeName in structureBomInfosGr)
                 {
                     List<StructureBomInfo> StructureMaterialnfp = structureBomInfos.Where(p => p.SuperTypeName.Equals(SuperTypeName)).ToList(); //查找属于这一超级大类的
@@ -1099,6 +1117,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                         kvModes.Add(kvMode);
                     }
                 }
+                //重新计算年降
+                yearOrValueModesAnnualDecline = CalculateAnnualDecline(yearOrValueModesAnnualDecline, yearOrValueModesOriginal);
                 return (yearOrValueModesOriginal, yearOrValueModesAnnualDecline, kvModes, Moq, CurrencyCode, MaterialControlStatus);
             }
             catch (Exception e)
@@ -1458,7 +1478,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                 {
                     if (yearOrValueKvModes[i - 1].Value != 0)
                     {
-                        inTheRate.YearOrValueModes[i].Value = 1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value;
+                        inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value)*100;
                     }
                 }
             }
@@ -1488,11 +1508,34 @@ namespace Finance.PropertyDepartment.Entering.Method
                 {
                     if (yearOrValueKvModes[i - 1].Value != 0)
                     {
-                        inTheRate.YearOrValueModes[i].Value = 1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value;
+                        inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value)*100;
                     }
                 }
             }
             return structural;
+        }
+        /// <summary>
+        /// 计算年降
+        /// </summary>
+        /// <param name="InTheRate">项目物料的年降率</param>
+        /// <param name="systemiginalCurrency">系统单价(原币)</param>
+        /// <returns></returns>
+        internal List<YearOrValueKvMode> CalculateAnnualDecline(List<YearOrValueKvMode> InTheRate,List<YearOrValueKvMode> systemiginalCurrency)
+        {
+            foreach (YearOrValueKvMode inTheRate in InTheRate)
+            {
+                List<YearOrValueMode> yearOrValueKvModes = systemiginalCurrency.FirstOrDefault(p => p.Kv.Equals(inTheRate.Kv)).YearOrValueModes;
+                //第一年的年降不需要,默认为0
+                inTheRate.YearOrValueModes[0].Value = 0;
+                for (int i = 1; i < inTheRate.YearOrValueModes.Count; i++)
+                {
+                    if (yearOrValueKvModes[i - 1].Value != 0)
+                    {
+                        inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value) * 100;
+                    }
+                }
+            }
+            return InTheRate;
         }
         /// <summary>
         /// 结构件单价录入提交 有则添加无则修改
@@ -1538,7 +1581,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     throw new FriendlyException(e.Message);
                 }
             }
-        }
+        }             
         /// <summary>
         /// 结构件单价提交 有则添加无则修改
         /// </summary>

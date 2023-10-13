@@ -38,8 +38,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
 {
     /// <summary>
     /// 
-    /// </summary>   
-    [AbpAuthorize]
+    /// </summary>  
     public class UnitPriceLibraryAppService : ApplicationService, IUnitPriceLibraryAppService
     {
         /// <summary>
@@ -133,9 +132,6 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             _qualityCostRatio = qualityCostRatio;
             _qualityCostRatioYear = qualityCostRatioYear;
         }
-
-
-
         /// <summary>
         /// 查询单价库信息
         /// </summary>
@@ -163,7 +159,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 添加 (刷新整个基础单价库)
         /// </summary>
         /// <param Name="stationBind"></param>
-        /// <returns></returns>
+        /// <returns></returns>   
         public async Task PostUInitPriceForm(IFormFile file)
         {
             try
@@ -692,6 +688,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 查询毛利率方案(查询依据 GrossMarginName)
         /// </summary>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task<PagedResultDto<GrossMarginDto>> GetGrossMargin(GrossMarginInputDto input)
         {
             try
@@ -715,6 +712,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="price"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task PostGrossMargin(BacktrackGrossMarginDto price)
         {
             try
@@ -755,6 +753,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="Id"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task DeleteGrossMargin(long Id)
         {
             GrossMarginForm entity = await _configGrossMarginForm.FirstOrDefaultAsync(p => p.Id.Equals(Id));
@@ -770,6 +769,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="exchangeRate"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task PostExchangeRate(ExchangeRateDto exchangeRate)
         {
             try
@@ -800,6 +800,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="input"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
+        [AbpAuthorize]
         public async Task<PagedResultDto<ExchangeRateDto>> GetExchangeRate(ExchangeRateInputDto input)
         {
             try
@@ -823,6 +824,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="Id"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task DeleteExchangeRate(long Id)
         {
             ExchangeRate entity = await _configExchangeRate.FirstOrDefaultAsync(Id);
@@ -838,6 +840,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
+        [AbpAuthorize]
         public IActionResult ExportOfLossRateTemplate(string FileName = "损耗率模版")
         {
             try
@@ -859,6 +862,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="filename"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
+        [AbpAuthorize]
         public async Task LossRateImport(IFormFile filename)
         {
             try
@@ -903,6 +907,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="filterPagedInputDto"></param>
         /// <returns></returns>       
+        [AbpAuthorize]
         public async Task<PagedResultDto<LossRatesDto>> LossRateQuery(FilterPagedInputDto filterPagedInputDto)
         {
             try
@@ -942,6 +947,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 损耗率导出
         /// </summary>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task<IActionResult> LossRateExport()
         {
             PagedResultDto<LossRatesDto> lossRatesDtos = await LossRateQuery(new FilterPagedInputDto() { Filter = "", MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
@@ -973,6 +979,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// </summary>
         /// <param name="qualityCostRatioDtos"></param>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task QualityCostRatioSubmission(List<QualityCostRatioDto> qualityCostRatioDtos)
         {
             //判断前端传入所有数据的年份是否相同
@@ -994,6 +1001,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 查询质量成本比例
         /// </summary>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task<PagedResultDto<QualityCostRatioDto>> QueryQualityCostRatio(FilterPagedInputDto filterPagedInputDto)
         {
             List<QualityCostRatio> qualityCostRatios = await _qualityCostRatio.GetAllListAsync();
@@ -1023,7 +1031,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         }
         /// <summary>
         /// 添加日志
-        /// </summary>       
+        /// </summary>             
         private async Task<bool> CreateLog(string Remark, LogType logType)
         {
             FoundationLogs entity = new FoundationLogs()
