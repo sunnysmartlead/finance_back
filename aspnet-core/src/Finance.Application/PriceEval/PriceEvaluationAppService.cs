@@ -109,7 +109,7 @@ namespace Finance.PriceEval
            IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
-                  qualityCostRatioRepository, qualityCostRatioYearRepository)
+                  qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;

@@ -120,6 +120,9 @@ namespace Finance.PriceEval
         private readonly IRepository<QualityCostRatio, long> _qualityCostRatioRepository;
         private readonly IRepository<QualityCostRatioYear, long> _qualityCostRatioYearRepository;
 
+        private readonly IRepository<CustomerTargetPrice, long> _customerTargetPriceRepository;
+
+
         private string errMessage = string.Empty;
 
 
@@ -129,7 +132,8 @@ namespace Finance.PriceEval
         public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
           IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
      IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
-            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
+            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
+            IRepository<CustomerTargetPrice, long> customerTargetPriceRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -171,6 +175,8 @@ namespace Finance.PriceEval
             _logisticscostRepository = logisticscostRepository;
             _qualityCostRatioRepository = qualityCostRatioRepository;
             _qualityCostRatioYearRepository = qualityCostRatioYearRepository;
+
+            _customerTargetPriceRepository = customerTargetPriceRepository;
         }
 
 
@@ -912,7 +918,7 @@ namespace Finance.PriceEval
                 new OtherCostItem2List
                 {
                     ItemName = SpecializedEquipmentCost,
-                    Total = data.ProductionEquipmentCostTotal,
+                    Total = decimal.Zero,//data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
                     IsShare = priceEvaluation.AllocationOfEquipmentCost
                 },
@@ -944,7 +950,7 @@ namespace Finance.PriceEval
                     Note = string.Empty,
                     IsShare = priceEvaluation.TravelCost
                 },
-                
+
                 new OtherCostItem2List
                 {
                     ItemName =SluggishCost,
@@ -962,7 +968,7 @@ namespace Finance.PriceEval
                  new OtherCostItem2List
                 {
                     ItemName = LineCost,
-                    Total = decimal.Zero,
+                    Total = data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
                     IsShare = false,
                 },
@@ -1046,6 +1052,10 @@ namespace Finance.PriceEval
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
+
+            var customerTargetPrice = await _customerTargetPriceRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+
             var sopYear = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId).MinAsync(p => p.Year);
             var data = await GetAllData(input);
 
@@ -1235,6 +1245,7 @@ namespace Finance.PriceEval
                                         SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
                                         CurrencyText = se.Currency,
                                         ExchangeRateValue = er.ExchangeRateValue,
+                                        ExchangeRateId = er.Id,
                                         LossRate = lriy.Rate,//损耗率
                                         Moq = se.MOQ,
                                         //AvailableInventory = se.AvailableStock,
@@ -1254,7 +1265,7 @@ namespace Finance.PriceEval
                     {
                         item.Year = year;
                         item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
-                        item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
+                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.Id == item.ExchangeRateId ? customerTargetPrice.ExchangeRate : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
                         item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
                         item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
