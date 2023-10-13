@@ -1795,7 +1795,7 @@ namespace Finance.NerPricing
                     modify.ClientName = priceEvaluation.CustomerName;
                 }
                 //线体数量和共线分摊率的 乘积
-                decimal UphAndValuesd = 0M;
+                decimal UphAndValuesd = 1M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 List<UphAndValue> result = (from a in processHoursEnterLines
