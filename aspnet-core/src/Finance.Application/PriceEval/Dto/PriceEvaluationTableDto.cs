@@ -643,6 +643,11 @@ namespace Finance.PriceEval.Dto
         internal virtual string ExchangeRateValue { get; set; }
 
         /// <summary>
+        /// 汇率表Id
+        /// </summary>
+        internal virtual long ExchangeRateId { get; set; }
+
+        /// <summary>
         /// 本位币(存json)
         /// </summary>
         internal virtual string StandardMoney { get; set; }

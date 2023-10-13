@@ -258,8 +258,6 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
-
-
             await SubmitNodeInterfece(input);
         }
 
@@ -311,6 +309,7 @@ namespace Finance.WorkFlows
             //将信息写入节点中
             var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
+            changeNode.Comment = input.Comment;
 
             //给业务节点增加历史记录
             await _instanceHistoryRepository.InsertAsync(new InstanceHistory
@@ -388,6 +387,9 @@ namespace Finance.WorkFlows
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
                     item.FinanceDictionaryDetailId = string.Empty;
 
+                    //退回状态复位
+                    item.IsBack = false;
+
                     //多路退回
                     if (targetBusiness2NodeLines.Select(p => p.FinanceDictionaryDetailIds).Any(p => !p.IsNullOrWhiteSpace()))
                     {
@@ -403,6 +405,9 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
+                            //设置退回状态
+                            item.IsBack = true;
+
                             var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
                             if (route.Any())
                             {
@@ -497,6 +502,8 @@ namespace Finance.WorkFlows
                 p.n.NodeType,
                 p.n.OperatedUserIds,
                 p.n.ProcessIdentifier,
+                p.n.IsBack,
+                p.n.Comment,
             });
 
 
@@ -543,7 +550,9 @@ namespace Finance.WorkFlows
                 TaskUser = string.Join(",", p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Name)).Distinct()),
                 WorkflowState = p.WorkflowState,
                 WorkFlowInstanceId = p.WorkFlowInstanceId,
-                ProcessIdentifier = p.ProcessIdentifier
+                ProcessIdentifier = p.ProcessIdentifier,
+                IsBack = p.IsBack,
+                Comment = p.Comment,
             }).ToList();
             return new PagedResultDto<UserTask>(result.Count, result);
         }
