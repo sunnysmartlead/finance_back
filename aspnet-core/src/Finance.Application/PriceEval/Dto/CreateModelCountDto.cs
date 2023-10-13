@@ -42,6 +42,11 @@ namespace Finance.PriceEval.Dto
         public virtual string ProductType { get; set; }
 
         /// <summary>
+        /// 产品大类名（ProductType这个键对应的值）——应杨工要求：公式工序界面需要用到而添加
+        /// </summary>
+        public virtual string ProductTypeName { get; set; }
+
+        /// <summary>
         /// 像素
         /// </summary>
         [Required]

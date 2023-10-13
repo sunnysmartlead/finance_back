@@ -258,6 +258,17 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
+
+
+            await SubmitNodeInterfece(input);
+        }
+
+        /// <summary>
+        /// 流程节点提交（结束当前节点，开启下个节点）
+        /// </summary>
+        /// <returns></returns>
+        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
+        {
             //退回意见必填校验
             var fd = new List<string> {
                 FinanceConsts.YesOrNo,
@@ -276,25 +287,20 @@ namespace Finance.WorkFlows
                 FinanceConsts.BomEvalSelect_Yes,
                 FinanceConsts.MybhgSelect_No,
                 FinanceConsts.HjkbSelect_Yes,
-                FinanceConsts.ElectronicBomEvalSelect_Yes, };
+                FinanceConsts.ElectronicBomEvalSelect_Yes,FinanceConsts.Save,FinanceConsts.Save,FinanceConsts.YesOrNo_Save };
             foreach (var item in yes)
             {
-                list.Remove(item);
+                if (list.Contains(item))
+                {
+                    list.Remove(item);
+                }
             }
-            if (list.Contains(input.FinanceDictionaryDetailId))
+            if (list.Contains(input.FinanceDictionaryDetailId) && input.Comment.IsNullOrWhiteSpace())
             {
+
                 throw new FriendlyException($"必须填写退回原因！");
             }
 
-            await SubmitNodeInterfece(input);
-        }
-
-        /// <summary>
-        /// 流程节点提交（结束当前节点，开启下个节点）
-        /// </summary>
-        /// <returns></returns>
-        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
-        {
             //try
             //{
             //获取全部的线和节点
