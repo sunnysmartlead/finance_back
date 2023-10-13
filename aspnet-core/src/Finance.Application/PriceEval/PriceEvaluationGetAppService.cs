@@ -859,6 +859,11 @@ namespace Finance.PriceEval
         public const string SluggishCost = "呆滞物料分摊";
         public const string RetentionCost = "质保金分摊";
         public const string LineCost = "线体成本分摊";
+
+        public const string NreCost = "NRE费用分摊";
+        public const string AfterSalesPartsCost = "售后件费用分摊";
+
+
         public const string OtherCost = "其他成本";
 
 
@@ -939,7 +944,8 @@ namespace Finance.PriceEval
                     Note = string.Empty,
                     IsShare = priceEvaluation.TravelCost
                 },
-                   new OtherCostItem2List
+                
+                new OtherCostItem2List
                 {
                     ItemName =SluggishCost,
                     Total = decimal.Zero,
@@ -960,6 +966,7 @@ namespace Finance.PriceEval
                     Note = string.Empty,
                     IsShare = false,
                 },
+
             };
             otherCostItem2List.ForEach(item =>
             {
@@ -1250,7 +1257,7 @@ namespace Finance.PriceEval
                         item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
                         item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
-                        item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
+                        item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
                         item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
                         item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq))) : item.Moq);
@@ -1278,7 +1285,7 @@ namespace Finance.PriceEval
             var data = await GetBomCost(input);
             var dto = new BomCost();
             dto.Material = data;
-            dto.TotalMoneyCynCount = dto.Material.Sum(p => p.TotalMoneyCyn);
+            dto.TotalMoneyCynCount = dto.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
             dto.ElectronicCount = dto.Material.Where(p => p.SuperType == FinanceConsts.ElectronicName).Sum(p => p.TotalMoneyCyn);
             return dto;
         }
