@@ -286,6 +286,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
+                        //重新计算装配数量  SAP相同的料号装配数量需要相加
+                        BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p=>p.AssemblyQuantity);
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
                         electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
@@ -489,7 +491,9 @@ namespace Finance.PropertyDepartment.Entering.Method
                 //循环查询到的 电子料BOM表单
                 foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                 {
-                    ElectronicDto electronicDto = new();
+                    //重新计算装配数量  SAP相同的料号装配数量需要相加
+                    BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                    ElectronicDto electronicDto = new ElectronicDto();
                     //将电子料BOM映射到ElectronicDto
                     electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
                     //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
@@ -570,6 +574,8 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                     foreach (ConstructionModel construction in constructionModels)
                     {
+                        //重新计算装配数量  SAP相同的料号装配数量需要相加
+                        construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p=>p.AssemblyQuantity);
                         //查询共用物料库
                         List<SharedMaterialWarehouse> sharedMaterialWarehouses = await _sharedMaterialWarehouse.GetAllListAsync(p => p.MaterialCode.Equals(construction.SapItemNum));
                         int count = structureBOMIdDeleted.Where(p => p.Equals(construction.StructureId)).Count();//如果改id删除了就跳过
@@ -747,6 +753,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<ConstructionModel> RemoveconstructionModels = new List<ConstructionModel>();
                     foreach (ConstructionModel construction in constructionModels)
                     {
+                        //重新计算装配数量  SAP相同的料号装配数量需要相加
+                        construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p => p.AssemblyQuantity);
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                         StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId) && p.IsSubmit);
                         if (structureElectronic != null)

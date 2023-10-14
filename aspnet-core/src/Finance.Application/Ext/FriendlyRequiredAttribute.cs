@@ -101,7 +101,7 @@ namespace Finance.Ext
                 return base.IsValid(value, validationContext);
             }
             var parameterValue = GetParameterValue(Opinion, validationContext.ObjectInstance);
-            if (parameterValue != null && (parameterValue.ToString() == FinanceConsts.Save || parameterValue.ToString() == FinanceConsts.YesOrNo_Save))
+            if (parameterValue != null &&parameterValue.ToString() != FinanceConsts.Done )
             {
                 _httpContextAccessor.HttpContext.Items["Skip"] = true;
                 // 不需要验证
