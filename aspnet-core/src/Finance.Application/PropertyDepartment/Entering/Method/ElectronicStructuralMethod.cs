@@ -286,6 +286,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
+                        //重新计算装配数量  SAP相同的料号装配数量需要相加
+                        BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p=>p.AssemblyQuantity);
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
                         electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
@@ -570,6 +572,8 @@ namespace Finance.PropertyDepartment.Entering.Method
 
                     foreach (ConstructionModel construction in constructionModels)
                     {
+                        //重新计算装配数量  SAP相同的料号装配数量需要相加
+                        construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p=>p.AssemblyQuantity);
                         //查询共用物料库
                         List<SharedMaterialWarehouse> sharedMaterialWarehouses = await _sharedMaterialWarehouse.GetAllListAsync(p => p.MaterialCode.Equals(construction.SapItemNum));
                         int count = structureBOMIdDeleted.Where(p => p.Equals(construction.StructureId)).Count();//如果改id删除了就跳过
