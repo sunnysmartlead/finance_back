@@ -258,6 +258,15 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
+            await SubmitNodeInterfece(input);
+        }
+
+        /// <summary>
+        /// 流程节点提交（结束当前节点，开启下个节点）
+        /// </summary>
+        /// <returns></returns>
+        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
+        {
             //退回意见必填校验
             var fd = new List<string> {
                 FinanceConsts.YesOrNo,
@@ -276,25 +285,20 @@ namespace Finance.WorkFlows
                 FinanceConsts.BomEvalSelect_Yes,
                 FinanceConsts.MybhgSelect_No,
                 FinanceConsts.HjkbSelect_Yes,
-                FinanceConsts.ElectronicBomEvalSelect_Yes, };
+                FinanceConsts.ElectronicBomEvalSelect_Yes,FinanceConsts.Save,FinanceConsts.Save,FinanceConsts.YesOrNo_Save };
             foreach (var item in yes)
             {
-                list.Remove(item);
+                if (list.Contains(item))
+                {
+                    list.Remove(item);
+                }
             }
-            if (list.Contains(input.FinanceDictionaryDetailId))
+            if (list.Contains(input.FinanceDictionaryDetailId) && input.Comment.IsNullOrWhiteSpace())
             {
+
                 throw new FriendlyException($"必须填写退回原因！");
             }
 
-            await SubmitNodeInterfece(input);
-        }
-
-        /// <summary>
-        /// 流程节点提交（结束当前节点，开启下个节点）
-        /// </summary>
-        /// <returns></returns>
-        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
-        {
             //try
             //{
             //获取全部的线和节点
@@ -305,6 +309,7 @@ namespace Finance.WorkFlows
             //将信息写入节点中
             var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
+            changeNode.Comment = input.Comment;
 
             //给业务节点增加历史记录
             await _instanceHistoryRepository.InsertAsync(new InstanceHistory
@@ -382,6 +387,9 @@ namespace Finance.WorkFlows
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
                     item.FinanceDictionaryDetailId = string.Empty;
 
+                    //退回状态复位
+                    item.IsBack = false;
+
                     //多路退回
                     if (targetBusiness2NodeLines.Select(p => p.FinanceDictionaryDetailIds).Any(p => !p.IsNullOrWhiteSpace()))
                     {
@@ -397,6 +405,9 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
+                            //设置退回状态
+                            item.IsBack = true;
+
                             var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
                             if (route.Any())
                             {
@@ -491,6 +502,8 @@ namespace Finance.WorkFlows
                 p.n.NodeType,
                 p.n.OperatedUserIds,
                 p.n.ProcessIdentifier,
+                p.n.IsBack,
+                p.n.Comment,
             });
 
 
@@ -537,7 +550,9 @@ namespace Finance.WorkFlows
                 TaskUser = string.Join(",", p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Name)).Distinct()),
                 WorkflowState = p.WorkflowState,
                 WorkFlowInstanceId = p.WorkFlowInstanceId,
-                ProcessIdentifier = p.ProcessIdentifier
+                ProcessIdentifier = p.ProcessIdentifier,
+                IsBack = p.IsBack,
+                Comment = p.Comment,
             }).ToList();
             return new PagedResultDto<UserTask>(result.Count, result);
         }

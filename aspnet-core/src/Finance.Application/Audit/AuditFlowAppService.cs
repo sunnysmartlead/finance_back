@@ -255,7 +255,9 @@ namespace Finance.Audit
                     Id = o.Id,
                     ProcessName = o.NodeName,
                     Right = RIGHTTYPE.Edit,
-                    ProcessIdentifier = o.ProcessIdentifier
+                    ProcessIdentifier = o.ProcessIdentifier,
+                    IsRetype = o.IsBack,
+                    JumpDescription = o.Comment
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());

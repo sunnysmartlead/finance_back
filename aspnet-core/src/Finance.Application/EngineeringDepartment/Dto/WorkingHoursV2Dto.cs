@@ -38,6 +38,10 @@ namespace Finance.EngineeringDepartment.Dto
     }
     public class EditWorkingHoursV2Dto : EntityDto<long>
     {
+        /// <summary>
+        /// 数据库ID
+        /// </summary>
+        public long DbId { get; set; }
 
         /// <summary>
         /// 年份

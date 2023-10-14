@@ -200,89 +200,13 @@ namespace Finance.NerPricing
         /// 环境实验费录入 服务
         /// </summary>
         private readonly FoundationreliableAppService _foundationreliableAppService;
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="resourceModelCount"></param>
-        /// <param name="resourceElectronicStructuralMethod"></param>
-        /// <param name="resourceHandPieceCost"></param>
-        /// <param name="resourceRestsCost"></param>
-        /// <param name="resourceTravelExpense"></param>
-        /// <param name="resourceMouldInventory"></param>
-        /// <param name="resourceLaboratoryFee"></param>
-        /// <param name="resourceNrePricingMethod"></param>
-        /// <param name="resourceQADepartmentTest"></param>
-        /// <param name="resourceQADepartmentQC"></param>
-        /// <param name="resourceInitialResourcesManagement"></param>
-        /// <param name="resourceEquipmentInfo"></param>
-        /// <param name="resourceTraceInfo"></param>
-        /// <param name="resourceWorkingHoursInfo"></param>
-        /// <param name="financeDictionaryDetailRepository"></param>
-        /// <param name="resourcePriceEvaluation"></param>
-        /// <param name="flowAppService"></param>
-        /// <param name="resourceNreIsSubmit"></param>
-        /// <param name="resourceModelCountYear"></param>
-        /// <param name="structBomDifferent"></param>
-        /// <param name="user"></param>
-        /// <param name="processHoursEnter"></param>
-        /// <param name="handPieceCostModify"></param>
-        /// <param name="mouldInventoryModify"></param>
-        /// <param name="toolingCostsModify"></param>
-        /// <param name="fixtureCostsModify"></param>
-        /// <param name="inspectionToolCostModify"></param>
-        /// <param name="productionEquipmentCostsModify"></param>
-        /// <param name="experimentalExpensesModify"></param>
-        /// <param name="testingSoftwareCostsModify"></param>
-        /// <param name="travelExpenseModify"></param>
-        /// <param name="restsCostModify"></param>
-        /// <param name="processHoursEnterFixture"></param>
-        /// <param name="processHoursEnterDevice"></param>
-        /// <param name="processHoursEnterFrock"></param>
-        /// <param name="exchangeRate"></param>
-        /// <param name="processHoursEnterLine"></param>
-        /// <param name="workflowInstanceAppService"></param>
-        /// <param name="foundationreliable"></param>
-        /// <param name="foundationreliableAppService"></param>
-        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount,
-            ElectronicStructuralMethod resourceElectronicStructuralMethod,
-            IRepository<HandPieceCost, long> resourceHandPieceCost,
-            IRepository<RestsCost, long> resourceRestsCost,
-            IRepository<TravelExpense, long> resourceTravelExpense,
-            IRepository<MouldInventory, long> resourceMouldInventory,
-            IRepository<LaboratoryFee, long> resourceLaboratoryFee,
-            NrePricingMethod resourceNrePricingMethod,
-            IRepository<EnvironmentalExperimentFee, long> resourceQADepartmentTest,
-            IRepository<QADepartmentQC, long> resourceQADepartmentQC,
-            IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement,
-            IRepository<EquipmentInfo, long> resourceEquipmentInfo,
-            IRepository<TraceInfo, long> resourceTraceInfo,
-            IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo,
-            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-            IRepository<PriceEvaluation, long> resourcePriceEvaluation, //AuditFlowAppService flowAppService,
-            IRepository<NreIsSubmit, long> resourceNreIsSubmit,
-            IRepository<ModelCountYear, long> resourceModelCountYear,
-            IRepository<StructBomDifferent, long> structBomDifferent,
-            IRepository<User, long> user,
-            IRepository<ProcessHoursEnter, long> processHoursEnter,
-            IRepository<HandPieceCostModify, long> handPieceCostModify,
-            IRepository<MouldInventoryModify, long> mouldInventoryModify,
-            IRepository<ToolingCostsModify, long> toolingCostsModify,
-            IRepository<FixtureCostsModify, long> fixtureCostsModify,
-            IRepository<InspectionToolCostModify, long> inspectionToolCostModify,
-            IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify,
-            IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify,
-            IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify,
-            IRepository<TravelExpenseModify, long> travelExpenseModify,
-            IRepository<RestsCostModify, long> restsCostModify,
-            IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture,
-            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice,
-            IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock,
-            IRepository<ExchangeRate, long> exchangeRate,
-            IRepository<ProcessHoursEnterLine, long> processHoursEnterLine,
-            WorkflowInstanceAppService workflowInstanceAppService,
-            IRepository<Foundationreliable, long> foundationreliable,
-            FoundationreliableAppService foundationreliableAppService)
 
+        /// <summary>
+        /// EMC实验费录入 服务
+        /// </summary>
+        private readonly FoundationEmcAppService _foundationEmcAppService;
+
+        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -292,7 +216,7 @@ namespace Finance.NerPricing
             _resourceMouldInventory = resourceMouldInventory;
             _resourceLaboratoryFee = resourceLaboratoryFee;
             _resourceNrePricingMethod = resourceNrePricingMethod;
-            _resourceEnvironmentalExperimentFee = resourceQADepartmentTest;
+            _resourceEnvironmentalExperimentFee = resourceEnvironmentalExperimentFee;
             _resourceQADepartmentQC = resourceQADepartmentQC;
             _resourceInitialResourcesManagement = resourceInitialResourcesManagement;
             _resourceEquipmentInfo = resourceEquipmentInfo;
@@ -300,12 +224,17 @@ namespace Finance.NerPricing
             _resourceWorkingHoursInfo = resourceWorkingHoursInfo;
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _resourcePriceEvaluation = resourcePriceEvaluation;
-            //_flowAppService = flowAppService;
             _resourceNreIsSubmit = resourceNreIsSubmit;
             _resourceModelCountYear = resourceModelCountYear;
-            _configStructBomDifferent = structBomDifferent;
-            _userRepository = user;
+            _configExchangeRate = configExchangeRate;
+            _configStructBomDifferent = configStructBomDifferent;
+            _userRepository = userRepository;
             _processHoursEnter = processHoursEnter;
+            _processHoursEnterFixture = processHoursEnterFixture;
+            _processHoursEnterDevice = processHoursEnterDevice;
+            _processHoursEnterLine = processHoursEnterLine;
+            _processHoursEnterFrock = processHoursEnterFrock;
+            _foundationreliable = foundationreliable;
             _handPieceCostModify = handPieceCostModify;
             _mouldInventoryModify = mouldInventoryModify;
             _toolingCostsModify = toolingCostsModify;
@@ -316,15 +245,12 @@ namespace Finance.NerPricing
             _testingSoftwareCostsModify = testingSoftwareCostsModify;
             _travelExpenseModify = travelExpenseModify;
             _restsCostModify = restsCostModify;
-            _processHoursEnterFixture = processHoursEnterFixture;
-            _processHoursEnterDevice = processHoursEnterDevice;
-            _processHoursEnterFrock = processHoursEnterFrock;
-            _configExchangeRate = exchangeRate;
-            _processHoursEnterLine = processHoursEnterLine;
             _workflowInstanceAppService = workflowInstanceAppService;
-            _foundationreliable = foundationreliable;
             _foundationreliableAppService = foundationreliableAppService;
+            _foundationEmcAppService = foundationEmcAppService;
         }
+
+
 
         /// <summary>
         /// 获取 方案
@@ -894,19 +820,63 @@ namespace Finance.NerPricing
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public IActionResult PostProductDepartmentDownloadExcel(string FileName = "NRE产品部EMC电性能实验费模版下载")
+        public async Task<IActionResult> PostProductDepartmentDownloadExcel(string FileName = "NRE产品部EMC电性能实验费模版下载")
         {
+            //try
+            //{
+            //    string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE产品部EMC电性能实验费模版.xlsx";
+            //    return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            //    {
+            //        FileDownloadName = $"{FileName}.xlsx"
+            //    };
+            //}
+            //catch (Exception e)
+            //{
+            //    throw new UserFriendlyException(e.Message);
+            //}
             try
             {
+                List<FoundationEmcDto> foundationEmcliables = await _foundationEmcAppService.GetListAllAsync(new GetFoundationEmcsInput() { MaxResultCount = 9999 });
+
                 string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE产品部EMC电性能实验费模版.xlsx";
-                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                //创建Excel工作簿
+                var workbook = new XSSFWorkbook(templatePath);
+                ISheet sheet = workbook.GetSheetAt(0);
+                //列数据约束
+                workbook.SetConstraint(sheet, 0, 2, foundationEmcliables.Select(p => p.Name).ToArray());
+                ISheet sheet2 = workbook.CreateSheet("EMC实验库");
+                // 添加表头
+                IRow headerRow = sheet2.CreateRow(0);
+                headerRow.CreateCell(0).SetCellValue("实验分类");
+                headerRow.CreateCell(1).SetCellValue("实验名称");
+                headerRow.CreateCell(2).SetCellValue("单价");
+                headerRow.CreateCell(3).SetCellValue("计价单位");
+                headerRow.CreateCell(4).SetCellValue("工序维护人");
+                headerRow.CreateCell(5).SetCellValue("工序维护时间");
+                int index = 1;
+                foreach (FoundationEmcDto item in foundationEmcliables)
+                {   // 添加数据
+                    IRow dataRow = sheet2.CreateRow(index++);
+                    dataRow.CreateCell(0).SetCellValue(item.Classification);
+                    dataRow.CreateCell(1).SetCellValue(item.Name);
+                    dataRow.CreateCell(2).SetCellValue(item.Price.ToString());
+                    dataRow.CreateCell(3).SetCellValue(item.Unit);
+                    dataRow.CreateCell(4).SetCellValue(item.LastModifierUserName);
+                    dataRow.CreateCell(5).SetCellValue(item.CreationTime);
+                }
+                // 保存工作簿
+                using (MemoryStream fileStream = new MemoryStream())
                 {
-                    FileDownloadName = $"{FileName}.xlsx"
-                };
+                    workbook.Write(fileStream);
+                    return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    {
+                        FileDownloadName = $"{FileName}.xlsx"
+                    };
+                }
             }
             catch (Exception e)
             {
-                throw new UserFriendlyException(e.Message);
+                throw new FriendlyException(e.Message);
             }
         }
 
@@ -921,14 +891,25 @@ namespace Finance.NerPricing
         {
             try
             {
-
                 if (System.IO.Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
                 using (var memoryStream = new MemoryStream())
                 {
                     await filename.CopyToAsync(memoryStream);
                     List<LaboratoryFeeExcelModel> rowExcls = memoryStream.Query<LaboratoryFeeExcelModel>(startCell: "A2").ToList();
                     if (rowExcls.Count is 0) throw new FriendlyException("模板数据为空/未使用标准模板");
+                    List<FoundationEmcDto> foundationEmcliables = await _foundationEmcAppService.GetListAllAsync(new GetFoundationEmcsInput() { MaxResultCount = 9999 });
                     List<LaboratoryFeeModel> rows = ObjectMapper.Map<List<LaboratoryFeeModel>>(rowExcls);
+                    rows.RemoveAll(p => p.ProjectName == "" || p.ProjectName == null);
+                    int index = 3;
+                    rows.ForEach((row) =>
+                    {
+                        FoundationEmcDto foundationreliableDto = foundationEmcliables.FirstOrDefault(p => p.Name == row.ProjectName);
+                        if (foundationreliableDto is null) throw new FriendlyException($"{index}行,您填写的值为{row.ProjectName},实验项目为请根据下拉选择填写!");
+                        row.UnitPrice = (decimal)foundationreliableDto.Price;
+                        row.Unit = foundationreliableDto.Unit;
+                        row.AdjustmentCoefficient = 1;//调整系数默认为1
+                        index++;
+                    });
                     return rows;
                 }
             }
