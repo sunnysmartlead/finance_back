@@ -2,6 +2,7 @@
 using Abp.Domain.Entities.Auditing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -498,6 +499,11 @@ namespace Finance.PriceEval.Dto
     public class OtherCostItem2List
     {
         /// <summary>
+        /// 费用大类
+        /// </summary>
+        public virtual string CostType { get; set; }
+
+        /// <summary>
         /// 成本项目
         /// </summary>
         public virtual string ItemName { get; set; }
@@ -526,6 +532,11 @@ namespace Finance.PriceEval.Dto
         /// 是否分摊
         /// </summary>
         public virtual bool IsShare { get; set; }
+
+        /// <summary>
+        /// 分摊年数
+        /// </summary>
+        public virtual int YearCount { get; set; }
     }
 
 
@@ -685,7 +696,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 投入量
         /// </summary>
-        public virtual int InputCount { get; set; }
+        public virtual decimal InputCount { get; set; }
 
         /// <summary>
         /// 采购量

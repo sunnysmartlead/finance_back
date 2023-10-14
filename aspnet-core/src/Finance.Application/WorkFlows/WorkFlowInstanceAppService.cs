@@ -309,7 +309,6 @@ namespace Finance.WorkFlows
             //将信息写入节点中
             var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
-            changeNode.Comment = input.Comment;
 
             //给业务节点增加历史记录
             await _instanceHistoryRepository.InsertAsync(new InstanceHistory
@@ -382,10 +381,10 @@ namespace Finance.WorkFlows
                     //把当前节点设置为已经过
                     changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
 
-
                     //状态改为当前，填充数据变为空
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
                     item.FinanceDictionaryDetailId = string.Empty;
+                    item.Comment = input.Comment;
 
                     //退回状态复位
                     item.IsBack = false;
@@ -405,8 +404,7 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
-                            //设置退回状态
-                            item.IsBack = true;
+
 
                             var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
                             if (route.Any())
@@ -414,6 +412,13 @@ namespace Finance.WorkFlows
                                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
                                 lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
                             }
+                        }
+
+
+                        if (line.LineType == LineType.Reset || line.FinanceDictionaryDetailId == FinanceConsts.YesOrNo_No)
+                        {
+                            //设置退回状态
+                            item.IsBack = true;
                         }
                     }
 

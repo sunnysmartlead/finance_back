@@ -133,7 +133,7 @@ namespace Finance.ProductDevelopment
             {
                 NodeInstanceId = bomCheck.NodeInstanceId,
                 FinanceDictionaryDetailId = bomCheck.Opinion,
-                Comment = bomCheck.Comment,
+                Comment = bomCheck.OpinionDescription,// bomCheck.Comment,
             });
 
             //returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
