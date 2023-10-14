@@ -74,11 +74,11 @@ namespace Finance.EngineeringDepartment
         /// <summary>
         /// 删除根线切线
         /// </summary>
-        /// <param name="DbId"></param>
+        /// <param name="Id"></param>
         /// <returns></returns>
-        public virtual async Task DeleteFollowLineTangent(long DbId)
+        public virtual async Task DeleteFollowLineTangent(long Id)
         {
-            await _followLineTangentRepository.DeleteAsync(DbId);
+            await _followLineTangentRepository.DeleteAsync(Id);
             await CreateLog("删除了跟线切线参数库1条", LogType.FollowLineTangent);
         }
 
