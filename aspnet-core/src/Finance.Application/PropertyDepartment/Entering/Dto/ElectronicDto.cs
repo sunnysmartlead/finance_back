@@ -117,4 +117,22 @@ namespace Finance.PropertyDepartment.Entering.Dto
 
         public List<ElectronicDto> ElectronicDtos { get; set; }
     }
+    /// <summary>
+    /// 电子BOM表单复制项 交互类
+    /// </summary>
+    public class ElectronicDtoCopy: ElectronicDto
+    {
+        /// <summary>
+        /// 修改人id
+        /// </summary>
+        public long ModifierId { get; set; }
+        /// <summary>
+        /// 修改人姓名
+        /// </summary>
+        public string ModifierName { get; set; }
+        /// <summary>
+        /// 修改意见
+        /// </summary>
+        public string ModificationComments { get; set; }
+    }
 }

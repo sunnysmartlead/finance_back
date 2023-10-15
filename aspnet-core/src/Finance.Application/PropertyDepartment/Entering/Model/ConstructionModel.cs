@@ -133,4 +133,22 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary> 
         public virtual string MaterialControlStatus { get; set; }
     }
+    /// <summary>
+    /// 结构BOM表单复制项 模型
+    /// </summary>
+    public class ConstructionModelCopy: ConstructionModel
+    {
+        /// <summary>
+        /// 修改人id
+        /// </summary>
+        public long ModifierId { get; set; }
+        /// <summary>
+        /// 修改人名称
+        /// </summary>
+        public string ModifierName { get; set; }
+        /// <summary>
+        /// 修改意见
+        /// </summary>
+        public string ModificationComments { get; set; }
+    }
 }

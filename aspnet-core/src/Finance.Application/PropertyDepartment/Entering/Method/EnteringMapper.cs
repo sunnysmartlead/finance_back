@@ -28,7 +28,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             configuration.CreateMap<ElectronicDto, EnteringElectronic>()
                  .ForMember(u => u.MaterialsUseCount, p => p.MapFrom(input => ListToJson(input.MaterialsUseCount)))
                  .ForMember(u => u.SystemiginalCurrency, p => p.MapFrom(input => ListToJson(input.SystemiginalCurrency)))
-                 .ForMember(u => u.InTheRate, p => p.MapFrom(input => ListToJson(input.InTheRate)))                
+                 .ForMember(u => u.InTheRate, p => p.MapFrom(input => ListToJson(input.InTheRate)))
                  .ForMember(u => u.StandardMoney, p => p.MapFrom(input => ListToJson(input.StandardMoney)))
                  .ForMember(u => u.RebateMoney, p => p.MapFrom(input => ListToJson(input.RebateMoney)));
             configuration.CreateMap<StructuralMaterialModel, StructureElectronic>()
@@ -46,12 +46,28 @@ namespace Finance.PropertyDepartment.Entering.Method
             configuration.CreateMap<EnteringElectronic, ElectronicDto>()
                  .ForMember(u => u.MaterialsUseCount, p => p.MapFrom(input => JsonToListKV(input.MaterialsUseCount)))
                  .ForMember(u => u.SystemiginalCurrency, p => p.MapFrom(input => JsonToListKV(input.SystemiginalCurrency)))
-                 .ForMember(u => u.InTheRate, p => p.MapFrom(input => JsonToListKV(input.InTheRate)))               
+                 .ForMember(u => u.InTheRate, p => p.MapFrom(input => JsonToListKV(input.InTheRate)))
                  .ForMember(u => u.StandardMoney, p => p.MapFrom(input => JsonToListKV(input.StandardMoney)))
                  .ForMember(u => u.RebateMoney, p => p.MapFrom(input => JsonToKvMode(input.RebateMoney)));
 
 
             configuration.CreateMap<ElectronicBomInfoBak, ElectronicBomInfo>();
+
+
+            configuration.CreateMap<EnteringElectronic, EnteringElectronicCopy>();
+            configuration.CreateMap<StructureElectronic, StructureElectronicCopy>();
+
+            configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>()
+                 .ForMember(u => u.MaterialsUseCount, p => p.MapFrom(input => JsonToListKV(input.MaterialsUseCount)))
+                 .ForMember(u => u.SystemiginalCurrency, p => p.MapFrom(input => JsonToListKV(input.SystemiginalCurrency)))
+                 .ForMember(u => u.InTheRate, p => p.MapFrom(input => JsonToListKV(input.InTheRate)))
+                 .ForMember(u => u.StandardMoney, p => p.MapFrom(input => JsonToListKV(input.StandardMoney)))
+                 .ForMember(u => u.RebateMoney, p => p.MapFrom(input => JsonToKvMode(input.RebateMoney)));
+
+            configuration.CreateMap<StructureBomInfo, ConstructionModelCopy>();
+            configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>();
+
+            configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>();
         }
         /// <summary>
         /// 将json 转成   List YearOrValueMode>
