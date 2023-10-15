@@ -546,6 +546,16 @@ namespace Finance.PriceEval.Dto
     public class LossCost : EntityDto<int>
     {
         /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
+        /// 修改备注
+        /// </summary>
+        public virtual string EditNotes { get; set; }
+
+        /// <summary>
         /// 成本项目名称（损耗率、电子料等等）
         /// </summary>
         public virtual string Name { get; set; }
@@ -729,6 +739,16 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCost : EntityDto<int>
     {
+        /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
+        /// 修改备注
+        /// </summary>
+        public virtual string EditNotes { get; set; }
+
         /// <summary>
         /// 成本类型
         /// </summary>
