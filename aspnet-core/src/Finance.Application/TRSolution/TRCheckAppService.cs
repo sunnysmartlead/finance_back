@@ -52,19 +52,28 @@ namespace Finance.TRSolution
             TRMainSolutionCheckDto tRMainSolutionCheckDto = new();
             try
             {
+
                 var priceInfo = await _priceEvaluationRepository.SingleAsync(p => p.AuditFlowId == flowId);
-                var userInputInfo = await _userInputInfoRepository.SingleAsync(p => p.AuditFlowId == flowId);
+                //var userInputInfo = await _userInputInfoRepository.SingleAsync(p => p.AuditFlowId == flowId);
                 string createTime = priceInfo.CreationTime.ToString("yyyy年MM⽉dd⽇ HH:mm:ss");
                 string department = priceInfo.DraftingDepartment;
                 string customerName = priceInfo.CustomerName;
                 string projectName = priceInfo.ProjectName;
 
+                
+
                 tRMainSolutionCheckDto.AuditFlowId = flowId;
                 tRMainSolutionCheckDto.Title = priceInfo.Title;
-                tRMainSolutionCheckDto.SolutionFileIdentifier = userInputInfo.FileId;//JsonConvert.DeserializeObject<List<long>>(priceInfo.SorFile).FirstOrDefault();
+
+                if (!priceInfo.TrProgramme.HasValue)
+                {
+                    throw new FriendlyException("TR方案未上传！");
+                }
+
+                tRMainSolutionCheckDto.SolutionFileIdentifier = priceInfo.TrProgramme.Value;//userInputInfo.FileId;//JsonConvert.DeserializeObject<List<long>>(priceInfo.SorFile).FirstOrDefault();
                 tRMainSolutionCheckDto.IsSuccess = true;
 
-                var fileName = await _fileManagementRepository.GetAllListAsync(p => p.Id == userInputInfo.FileId);
+                var fileName = await _fileManagementRepository.GetAllListAsync(p => p.Id == priceInfo.TrProgramme.Value);//userInputInfo.FileId);
                 if (fileName.Count > 0)
                 {
                     tRMainSolutionCheckDto.SolutionFileName = fileName.FirstOrDefault().Name;
