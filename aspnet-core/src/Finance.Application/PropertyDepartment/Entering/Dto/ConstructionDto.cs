@@ -21,7 +21,20 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// </summary>
         public List<ConstructionModel> StructureMaterial { get; set; }       
     }
-
+    // /// <summary>
+    /// 结构BOM表单复制项 交互类
+    /// </summary>
+    public class ConstructionDtoCopy
+    {
+        /// <summary>
+        /// 超级大种类  结构料 胶水等辅材 SMT外协 包材
+        /// </summary> 
+        public string SuperTypeName { get; set; }
+        /// <summary>
+        /// 结构料
+        /// </summary>
+        public List<ConstructionModelCopy> StructureMaterial { get; set; }
+    }
     public class IsALLConstructionDto
     {
         /// <summary>

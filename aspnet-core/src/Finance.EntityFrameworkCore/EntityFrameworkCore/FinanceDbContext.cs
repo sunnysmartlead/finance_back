@@ -90,8 +90,12 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GrossMarginForm> GrossMarginForm { set; get; }
         // 资源部电子物料录入
         public virtual DbSet<EnteringElectronic> EnteringElectronic { set; get; }
+        // 资源部电子物料录入复制项
+        public virtual DbSet<EnteringElectronicCopy> EnteringElectronicCopy { set; get; }
         // 资源部结构物料录入
         public virtual DbSet<StructureElectronic> StructureElectronic { set; get; }
+        // 资源部结构物料录入复制项
+        public virtual DbSet<StructureElectronicCopy> StructureElectronicCopy { set; get; }
         //汇率
         public virtual DbSet<ExchangeRate> ExchangeRate { set; get; }
         // Nre 项目管理部 手板件实体类

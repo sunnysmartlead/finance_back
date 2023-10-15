@@ -1,6 +1,9 @@
-﻿using Abp.Authorization;
+﻿using Abp.Application.Services.Dto;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Session;
 using Finance.Audit;
+using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
 using Finance.Entering.Model;
 using Finance.Ext;
@@ -14,6 +17,7 @@ using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +32,10 @@ namespace Finance.Entering
     [AbpAuthorize]
     public class ResourceEnteringAppService : FinanceAppServiceBase
     {
+        /// <summary>
+        /// 是否涉及选项
+        /// </summary>
+        private static string IsInvolveItem = "是";
         internal readonly IRepository<ModelCount, long> _resourceModelCount;
         internal readonly IRepository<ModelCountYear, long> _resourceModelCountYear;
         internal readonly IRepository<FinanceDictionaryDetail, string> _resourceFinanceDictionaryDetail;
@@ -35,6 +43,11 @@ namespace Finance.Entering
         /// 产品开发部电子BOM输入信息
         /// </summary>
         internal readonly IRepository<ElectronicBomInfo, long> _resourceElectronicBomInfo;
+
+        /// <summary>
+        /// 产品开发部结构BOM输入信息
+        /// </summary>
+        private static IRepository<StructureBomInfo, long> _resourceStructureBomInfo;
         internal readonly ElectronicStructuralMethod _resourceElectronicStructuralMethod;
         /// <summary>
         /// 资源部电子物料录入
@@ -44,6 +57,14 @@ namespace Finance.Entering
         /// 资源部结构物料录入
         /// </summary>
         internal static IRepository<StructureElectronic, long> _configStructureElectronic;
+        /// <summary>
+        /// 资源部电子物料录入复制项
+        /// </summary>
+        internal static IRepository<EnteringElectronicCopy, long> _configEnteringElectronicCopy;
+        /// <summary>
+        /// 资源部结构物料录入复制项
+        /// </summary>
+        internal static IRepository<StructureElectronicCopy, long> _configStructureElectronicCopy;
         /// <summary>
         /// 电子BOM两次上传差异化表
         /// </summary>
@@ -56,10 +77,8 @@ namespace Finance.Entering
         /// 流程流转服务
         /// </summary>
         internal readonly AuditFlowAppService _flowAppService;
-
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
-
+        private readonly IRepository<User, long> _userRepository;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -68,23 +87,32 @@ namespace Finance.Entering
             IRepository<FinanceDictionaryDetail, string> financeDictionaryDetail,
             ElectronicStructuralMethod electronicStructuralMethod,
             IRepository<ElectronicBomInfo, long> electronicBomInfo,
+            IRepository<StructureBomInfo, long> structureBomInfo,
             AuditFlowAppService flowAppService,
             IRepository<EnteringElectronic, long> enteringElectronic,
             IRepository<StructureElectronic, long> structureElectronic,
+             IRepository<EnteringElectronicCopy, long> enteringElectronicCopy,
+            IRepository<StructureElectronicCopy, long> structureElectronicCopy,
             IRepository<ElecBomDifferent, long> elecBomDifferent,
-            IRepository<StructBomDifferent, long> structBomDifferent, WorkflowInstanceAppService workflowInstanceAppService)
+            IRepository<StructBomDifferent, long> structBomDifferent,
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<User, long> user)
         {
             _resourceModelCount = modelCount;
             _resourceModelCountYear = modelCountYear;
             _resourceFinanceDictionaryDetail = financeDictionaryDetail;
             _resourceElectronicStructuralMethod = electronicStructuralMethod;
             _resourceElectronicBomInfo = electronicBomInfo;
+            _resourceStructureBomInfo = structureBomInfo;
             _flowAppService = flowAppService;
             _configEnteringElectronic = enteringElectronic;
             _configStructureElectronic = structureElectronic;
+            _configEnteringElectronicCopy = enteringElectronicCopy;
+            _configStructureElectronicCopy = structureElectronicCopy;
             _configElecBomDifferent = elecBomDifferent;
             _configStructBomDifferent = structBomDifferent;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _userRepository = user;
         }
 
         /// <summary>
@@ -126,7 +154,7 @@ namespace Finance.Entering
                             //索引
                             if (electronicDto is not null)
                             {
-                                int index = initialElectronicDto.ElectronicBomList.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));                               
+                                int index = initialElectronicDto.ElectronicBomList.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
                                 initialElectronicDto.ElectronicBomList[index] = electronicDto;
                             }
                         }
@@ -175,7 +203,7 @@ namespace Finance.Entering
                                 if (electronicDto is not null)
                                 {
                                     int index = electronicDtos.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
-                                    electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId,item.ProductId, auditFlowId, elecBom.ElectronicId);
+                                    electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId, item.ProductId, auditFlowId, elecBom.ElectronicId);
                                     electronicDtos[index] = electronicDto;
                                 }
                             }
@@ -308,7 +336,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        internal async Task<int> InitialValueOfLoadingStructuralMaterials([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
+        internal async Task<int> InitialValueOfLoadingStructuralMaterials([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId)
         {
             //总共的零件
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId);
@@ -396,7 +424,7 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<IsALLConstructionDto> GetBOMStructuralSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
+        public async Task<IsALLConstructionDto> GetBOMStructuralSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             IsALLConstructionDto isALLConstructionDto = new();
             isALLConstructionDto.isAll = await GetStructuralIsAllEntering(auditFlowId);
@@ -529,15 +557,15 @@ namespace Finance.Entering
         {
             List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
-                                                            where a != null
-                                                            select new RebateAmountKvModeElectronic
-                                                            {
-                                                                AuditFlowId = a.AuditFlowId,
-                                                                SolutionId = a.SolutionId,
-                                                                ElectronicId = a.ElectronicId,
-                                                                ElectronicUnitPriceId=a.Id,
-                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
-                                                            }).ToList();
+                                                                      where a != null
+                                                                      select new RebateAmountKvModeElectronic
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          ElectronicId = a.ElectronicId,
+                                                                          ElectronicUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
             return rebateAmountKvModes;
         }
         /// <summary>
@@ -550,15 +578,15 @@ namespace Finance.Entering
         {
             List<EnteringElectronic> prop = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<RebateAmountKvModeElectronic> rebateAmountKvModes = (from a in prop
-                                                            where filter(a) && a != null
-                                                            select new RebateAmountKvModeElectronic
-                                                            {
-                                                                AuditFlowId = a.AuditFlowId,
-                                                                SolutionId = a.SolutionId,
-                                                                ElectronicId = a.ElectronicId,
-                                                                ElectronicUnitPriceId = a.Id,
-                                                                KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
-                                                            }).ToList();
+                                                                      where filter(a) && a != null
+                                                                      select new RebateAmountKvModeElectronic
+                                                                      {
+                                                                          AuditFlowId = a.AuditFlowId,
+                                                                          SolutionId = a.SolutionId,
+                                                                          ElectronicId = a.ElectronicId,
+                                                                          ElectronicUnitPriceId = a.Id,
+                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                      }).ToList();
             return rebateAmountKvModes;
         }
         /// <summary>
@@ -570,15 +598,15 @@ namespace Finance.Entering
         {
             List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
-                                                                      where a != null
-                                                                      select new RebateAmountKvModeElectronicStructure
-                                                                      {
-                                                                          AuditFlowId = a.AuditFlowId,
-                                                                          SolutionId = a.SolutionId,
-                                                                          StructureId = a.StructureId,
-                                                                          StructuralUnitPriceId = a.Id,
-                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
-                                                                      }).ToList();
+                                                                               where a != null
+                                                                               select new RebateAmountKvModeElectronicStructure
+                                                                               {
+                                                                                   AuditFlowId = a.AuditFlowId,
+                                                                                   SolutionId = a.SolutionId,
+                                                                                   StructureId = a.StructureId,
+                                                                                   StructuralUnitPriceId = a.Id,
+                                                                                   KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                               }).ToList();
             return rebateAmountKvModes;
         }
         /// <summary>
@@ -591,15 +619,15 @@ namespace Finance.Entering
         {
             List<StructureElectronic> prop = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<RebateAmountKvModeElectronicStructure> rebateAmountKvModes = (from a in prop
-                                                                      where filter(a) && a != null
-                                                                      select new RebateAmountKvModeElectronicStructure
-                                                                      {
-                                                                          AuditFlowId = a.AuditFlowId,
-                                                                          SolutionId = a.SolutionId,
-                                                                          StructureId = a.StructureId,
-                                                                          StructuralUnitPriceId = a.Id,
-                                                                          KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
-                                                                      }).ToList();
+                                                                               where filter(a) && a != null
+                                                                               select new RebateAmountKvModeElectronicStructure
+                                                                               {
+                                                                                   AuditFlowId = a.AuditFlowId,
+                                                                                   SolutionId = a.SolutionId,
+                                                                                   StructureId = a.StructureId,
+                                                                                   StructuralUnitPriceId = a.Id,
+                                                                                   KvModes = EnteringMapper.JsonToKvMode(a.RebateMoney),
+                                                                               }).ToList();
             return rebateAmountKvModes;
         }
         /// <summary>
@@ -635,6 +663,227 @@ namespace Finance.Entering
                 FinanceDictionaryDetailId = toExamineDto.Opinion,
                 Comment = toExamineDto.Comment,
             });
+        }
+        /// <summary>
+        /// 电子单价复制
+        /// </summary>
+        /// <param name="auditFlowId">流程号</param>
+        /// <returns></returns>
+        internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
+        {
+            await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
+            List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
+            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy);
+        }
+        /// <summary>
+        /// 结构单价复制
+        /// </summary>
+        /// <param name="auditFlowId">流程号</param>
+        /// <returns></returns>
+        internal async Task StructureBOMUnitPriceCopying(long auditFlowId)
+        {
+            await _configStructureElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<StructureElectronic> structures = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            List<StructureElectronicCopy> structuresCopy = ObjectMapper.Map<List<StructureElectronicCopy>>(structures);
+            await _configStructureElectronicCopy.BulkInsertAsync(structuresCopy);
+        }
+        /// <summary>
+        /// 电子单价复制清除
+        /// </summary>
+        /// <param name="auditFlowId">流程号</param>
+        /// <returns></returns>
+        internal async Task ElectronicBOMUnitPriceEliminate(long auditFlowId)
+        {
+            await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
+        }
+        /// <summary>
+        /// 结构单价复制清除
+        /// </summary>
+        /// <param name="auditFlowId">流程号</param>
+        /// <returns></returns>
+        internal async Task StructureBOMUnitPriceEliminate(long auditFlowId)
+        {
+            await _configStructureElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
+        }
+        /// <summary>
+        ///  电子单价复制信息获取接口
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="solutionId"></param>
+        /// <returns></returns>
+        public async Task<List<ElectronicDtoCopy>> ElectronicUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
+        {
+            try
+            {
+                List<EnteringElectronicCopy> enteringElectronicCopies = await _configEnteringElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                List<ElectronicDtoCopy> electronicDtoCopies = new();
+                electronicDtoCopies = ObjectMapper.Map<List<ElectronicDtoCopy>>(enteringElectronicCopies);
+                foreach (ElectronicDtoCopy item in electronicDtoCopies)
+                {
+                    ElectronicBomInfo BomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(item.ElectronicId));
+                    item.CategoryName = BomInfo.CategoryName;//物料大类
+                    item.TypeName = BomInfo.TypeName;//物料种类
+                    item.SapItemNum = BomInfo.SapItemNum;//物料编号
+                    item.SapItemName = BomInfo.SapItemName;//材料名称
+                    item.AssemblyQuantity = BomInfo.AssemblyQuantity;//装配数量
+                    //获取某个ID的人员信息
+                    User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
+                    if (user is not null) item.PeopleName = user.Name;//提交人名称
+                    user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.ModifierId);
+                    if (user is not null) item.ModifierName = user.Name;//修改人名称
+                }
+
+                return electronicDtoCopies;
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
+        /// 电子料单价复制信息录入确认/提交  
+        /// </summary>
+        /// <param name="electronicDto"></param>
+        /// <returns></returns>
+        public async Task PostElectronicMaterialEnteringCopy(SubmitElectronicDtoCopy electronicDto)
+        {
+            //循环 资源部 填写的 电子BOM 表达那实体类
+            foreach (ElectronicDto electronic in electronicDto.ElectronicDtoList)
+            {
+                EnteringElectronicCopy enteringElectronic = await _configEnteringElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(electronic.SolutionId) && p.AuditFlowId.Equals(electronicDto.AuditFlowId) && p.ElectronicId.Equals(electronic.ElectronicId));
+                enteringElectronic.MOQ = electronic.MOQ;//MOQ
+                enteringElectronic.ElectronicId = electronic.ElectronicId;//电子BOM表单的Id
+                enteringElectronic.SolutionId = electronic.SolutionId; //零件的id
+                enteringElectronic.AuditFlowId = electronicDto.AuditFlowId;//流程的id
+                enteringElectronic.RebateMoney = JsonConvert.SerializeObject(electronic.RebateMoney);//物料可返利金额
+                enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id                       
+                if (electronicDto.IsSubmit)
+                {
+                    enteringElectronic.IsSubmit = electronicDto.IsSubmit;//确认提交 
+                }
+                else
+                {
+                    enteringElectronic.IsEntering = electronicDto.IsSubmit;//确认提交 
+                }
+                enteringElectronic.Currency = electronic.Currency;//币种
+                enteringElectronic.MaterialControlStatus = electronic.MaterialControlStatus;//物料管制状态
+                enteringElectronic.Remark = electronic.Remark;//备注
+                enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(electronic.MaterialsUseCount);//物料使用量
+                enteringElectronic.InTheRate = JsonConvert.SerializeObject(electronic.InTheRate);//年将率         
+                enteringElectronic.StandardMoney = JsonConvert.SerializeObject(electronic.StandardMoney);//本位币
+                await _configEnteringElectronicCopy.UpdateAsync(enteringElectronic);
+            }
+        }
+        /// <summary>
+        ///  结构单价复制信息获取接口
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="solutionId"></param>
+        /// <returns></returns>
+        public async Task<List<ConstructionDtoCopy>> StructureUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
+        {
+            List<ConstructionDtoCopy> constructionDtos = new List<ConstructionDtoCopy>();
+            List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+            List<StructureElectronicCopy> structureElectronicCopies = await _configStructureElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+
+            List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
+            // 按照结构料、胶水、包材顺序排序
+            structureBomInfosGr = structureBomInfosGr.OrderBy(m =>
+            {
+
+                if (m.Contains("结构料"))
+                {
+                    return 1;
+                }
+                else if (m.Contains("胶水"))
+                {
+                    return 2;
+                }
+                else if (m.Contains("包材"))
+                {
+                    return 3;
+                }
+
+                return 4;
+            }).ToList();
+            foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
+            {
+                List<StructureBomInfo> StructureMaterialnfp = structureBomInfos.Where(p => p.SuperTypeName.Equals(SuperTypeName)).ToList(); //查找属于这一超级大类的
+                List<ConstructionModelCopy> constructionModels = ObjectMapper.Map<List<ConstructionModelCopy>>(StructureMaterialnfp);// 结构BOM表单 模型
+                // //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
+                List<StructureElectronicCopy> structureElectronicCopy = await _configStructureElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                foreach (ConstructionModelCopy construction in constructionModels)
+                {
+                    //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
+                    StructureElectronicCopy structureElectronic = structureElectronicCopy.FirstOrDefault(p => p.StructureId.Equals(construction.StructureId));
+                    construction.Id = structureElectronic.Id;
+                    construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
+                    construction.Currency = structureElectronic.Currency;//币种                       
+                    construction.SolutionId = solutionId;//方案ID
+                    construction.StandardMoney = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.StandardMoney);//本位币                           
+                    construction.RebateMoney = JsonConvert.DeserializeObject<List<KvMode>>(structureElectronic.RebateMoney);//物料可返回金额
+                    construction.InTheRate = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.InTheRate);//年降
+                    construction.SystemiginalCurrency = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.SystemiginalCurrency);//原币
+                    construction.PeopleId = structureElectronic.PeopleId;//确认人
+                    construction.IsSubmit = structureElectronic.IsSubmit;//是否提交
+                    construction.IsEntering = structureElectronic.IsEntering;//是否录入
+                    construction.MOQ = structureElectronic.MOQ;//MOQ
+                    construction.Remark = structureElectronic.Remark;//备注
+                    var user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.PeopleId);
+                    if (user is not null) construction.PeopleName = user.Name;
+                    user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.ModifierId);
+                    if (user is not null) construction.ModifierName = user.Name;//修改人名称
+                }
+                ConstructionDtoCopy constructionDtoCopy = new ConstructionDtoCopy()
+                {
+                    SuperTypeName = SuperTypeName,
+                    StructureMaterial = constructionModels,
+                };
+                constructionDtos.Add(constructionDtoCopy);
+            }
+            return constructionDtos;
+        }
+
+        /// <summary>
+        /// 结构件单价复制信息录入确认/提交 
+        /// </summary>
+        /// <param name="structuralMemberEnteringModel"></param>
+        /// <returns></returns>        
+        public async Task PostStructuralMemberEnteringCopy(StructuralMemberEnteringModelCopy structuralMemberEnteringModel)
+        {
+            try
+            {
+                foreach (ConstructionModelCopy item in structuralMemberEnteringModel.StructuralMaterialEntering)
+                {
+                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));
+
+                    structureElectronic.RebateMoney = JsonConvert.SerializeObject(item.RebateMoney);//物料返利金额
+                    structureElectronic.MOQ = item.MOQ;//MOQ
+                    structureElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
+                    structureElectronic.Currency = item.Currency;//币种              
+                    if (structuralMemberEnteringModel.IsSubmit)
+                    {
+                        structureElectronic.IsSubmit = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                    }
+                    else
+                    {
+                        structureElectronic.IsEntering = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                    }
+                    structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
+                    structureElectronic.Remark = item.Remark; //备注                  
+                    structureElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
+                    structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
+                    structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
+                    structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                    await _configStructureElectronicCopy.UpdateAsync(structureElectronic);
+
+                }
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
         }
     }
 
