@@ -4,7 +4,9 @@ using Abp.Domain.Repositories;
 using Abp.ObjectMapping;
 using Finance.BaseLibrary;
 using Finance.FinanceDepartment.Dto;
+using Finance.FinanceMaintain;
 using Finance.FinanceParameter;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -52,14 +54,11 @@ namespace Finance.FinanceDepartment
         /// 获取作业价格录入
         /// </summary>
         /// <returns></returns>
-        public async Task<RateEntryDto> GetRateEntry()
+        public async Task<List<RateEntryInfo>> GetRateEntry()
         {
             List<RateEntryInfo> result = await _rateEntryInfoRepository.GetAll().ToListAsync();
-
-            RateEntryDto dto = new RateEntryDto();
-            dto.rateEntryInfos = result;
-
-            return dto;
+            result = result.OrderBy(p=>p.Year).ToList();
+            return result;
         }
 
         /// <summary>
@@ -67,18 +66,41 @@ namespace Finance.FinanceDepartment
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        public async Task SaveRateEntryInput(RateEntryDto dto)
-        {
-
-            List<RateEntryInfo> rateEntryInfos = dto.rateEntryInfos;
-            await _rateEntryInfoRepository.HardDeleteAsync(s => s.Id>0);
-            rateEntryInfos.ForEach(async info =>
-            {
-               await _rateEntryInfoRepository.InsertOrUpdateAsync(info);
-            });
-            await CreateLog($"保存作业价格 {rateEntryInfos.Count} 条", JobPriceType);
+        public async Task SaveRateEntryInput(RateEntryInfo dto)
+        {             
+            await _rateEntryInfoRepository.InsertAsync(dto);        
+            await CreateLog($"保存作业价格{dto.Year}年的数据", JobPriceType);
         }
-
+        /// <summary>
+        /// 修改作业价格
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task ModifyRateEntryInput(RateEntryInfo dto)
+        {
+            await _rateEntryInfoRepository.UpdateAsync(dto);
+            await CreateLog($"修改作业价格{dto.Year}年的数据", JobPriceType);
+        }
+        /// <summary>
+        /// 删除作业价格
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelRateEntryInput(long Id)
+        {
+            List<RateEntryInfo> props = await _rateEntryInfoRepository.GetAllListAsync();
+            RateEntryInfo prop= props.FirstOrDefault(p=>p.Id.Equals(Id));
+            if (props.Max(p => p.Year) == prop.Year || props.Min(p => p.Year) == prop.Year)
+            {               
+                await _rateEntryInfoRepository.HardDeleteAsync(s => s.Id.Equals(Id));
+                await CreateLog($"删除了作业价格{prop.Year}年的数据", JobPriceType);
+            }else
+            {
+                throw new FriendlyException("只能删除第一年或者最后一年");
+            }
+           
+        }
         /// <summary>
         /// 获取质量成本比例录入
         /// </summary>
@@ -144,39 +166,56 @@ namespace Finance.FinanceDepartment
             }
         }
 
-
-
-
         /// <summary>
         /// 获取制造成本里计算字段参数维护
         /// </summary>
         /// <returns></returns>
-        public async Task<ManufacturingCostDto> GetManufacturingCost()
+        public async Task<List<ManufacturingCostInfo>> GetManufacturingCost()
         {
             List<ManufacturingCostInfo> result = await _manufacturingCostInfoRepository.GetAll().ToListAsync();
-
-            ManufacturingCostDto dto = new ManufacturingCostDto();
-            dto.ManufacturingCosts = result;
-
-            return dto;
+            result = result.OrderBy(p=>p.Year).ToList();
+            return result;
         }
-
         /// <summary>
         /// 保存制造成本里计算字段参数维护
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        public async Task SaveManufacturingCost(ManufacturingCostDto dto)
-        {
-            List<ManufacturingCostInfo> result = dto.ManufacturingCosts;
-            await _manufacturingCostInfoRepository.HardDeleteAsync(s => s.Id>0);
-            result.ForEach(async manufacturingCost =>
-            {
-                await _manufacturingCostInfoRepository.InsertOrUpdateAsync(manufacturingCost);
-            });
-            await CreateLog($"保存制造成本里计算 {result.Count} 条", ManufacturingCostCalculationParametersType);
+        public async Task SaveManufacturingCost(ManufacturingCostInfo dto)
+        {           
+           await _manufacturingCostInfoRepository.InsertAsync(dto);      
+           await CreateLog($"保存制造成本{dto.Year}年的数据", ManufacturingCostCalculationParametersType);
         }
-
+        /// <summary>
+        /// 修改制造成本里计算字段参数维护
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task ModifyManufacturingCost(ManufacturingCostInfo dto)
+        {
+            await _manufacturingCostInfoRepository.UpdateAsync(dto);
+            await CreateLog($"修改制造成本{dto.Year}年的数据", ManufacturingCostCalculationParametersType);
+        }        
+        /// <summary>
+        /// 删除制造成本里计算字段参数维护
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelManufacturingCost(long Id)
+        {          
+            List<ManufacturingCostInfo> props = await _manufacturingCostInfoRepository.GetAllListAsync();
+            ManufacturingCostInfo prop = props.FirstOrDefault(p => p.Id.Equals(Id));
+            if (props.Max(p=>p.Year)==prop.Year || props.Min(p => p.Year) == prop.Year)
+            {
+                await _manufacturingCostInfoRepository.HardDeleteAsync(p => p.Id.Equals(Id));
+                await CreateLog($"删除制造成本{prop.Year}年数据", ManufacturingCostCalculationParametersType);               
+            }else
+            {
+                throw new FriendlyException("只能删除第一年或者最后一年");
+            }           
+        }
+        
         /// <summary>
         /// 添加日志
         /// </summary>       
