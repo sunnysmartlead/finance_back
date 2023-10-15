@@ -56,7 +56,7 @@ namespace Finance.FinanceDepartment
         /// <returns></returns>
         public async Task<List<RateEntryInfo>> GetRateEntry()
         {
-            List<RateEntryInfo> result = await _rateEntryInfoRepository.GetAll().ToListAsync();
+            List<RateEntryInfo>  result = await _rateEntryInfoRepository.GetAll().ToListAsync();
             result = result.OrderBy(p=>p.Year).ToList();
             return result;
         }
