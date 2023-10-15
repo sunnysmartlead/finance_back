@@ -22,6 +22,6 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 分摊年数（年的数量）
         /// </summary>
-        public virtual int Year { get; set; }
+        public virtual decimal Year { get; set; }
     }
 }

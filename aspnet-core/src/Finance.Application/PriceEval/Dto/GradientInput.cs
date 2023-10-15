@@ -21,5 +21,10 @@ namespace Finance.PriceEval.Dto
         /// 梯度(K/Y)
         /// </summary>
         public virtual decimal GradientValue { get; set; }
+
+        /// <summary>
+        /// 系统取梯度
+        /// </summary>
+        public virtual decimal SystermGradientValue { get; set; }
     }
 }
