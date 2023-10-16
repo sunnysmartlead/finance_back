@@ -834,6 +834,7 @@ namespace Finance.Entering
                     construction.IsEntering = structureElectronic.IsEntering;//是否录入
                     construction.MOQ = structureElectronic.MOQ;//MOQ
                     construction.Remark = structureElectronic.Remark;//备注
+                    construction.IsSystemiginal = structureElectronic.IsSystemiginal;//系统单价是否从单价库中带出
                     var user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.PeopleId);
                     if (user is not null) construction.PeopleName = user.Name;
                     user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.ModifierId);
