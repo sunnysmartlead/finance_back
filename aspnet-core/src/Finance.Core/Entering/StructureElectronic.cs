@@ -73,6 +73,10 @@ namespace Finance.Entering
         /// </summary>
         public bool IsEntering { get; set; }
         /// <summary>
+        /// 系统单价是否从单价库中带出
+        /// </summary>
+        public bool IsSystemiginal { get; set; }
+        /// <summary>
         /// 物料管制状态
         /// </summary>     
         public virtual string MaterialControlStatus { get; set; }

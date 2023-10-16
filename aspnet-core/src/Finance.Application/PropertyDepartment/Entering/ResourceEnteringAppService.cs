@@ -310,6 +310,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetElectronicConfigurationState(long auditFlowId)
         {
+            if (auditFlowId == 0) throw new FriendlyException("电子单价录入退回重置状态流程id不能为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             foreach (EnteringElectronic item in enteringElectronics)
             {
@@ -324,13 +325,14 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetElectronicConfigurationStateCertain(List<long> ElectronicId)
         {
+            if (ElectronicId is null || ElectronicId.Count==0) throw new FriendlyException("电子料单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => ElectronicId.Contains(p.Id));
             foreach (EnteringElectronic item in enteringElectronics)
             {
                 item.IsSubmit = false;
                 await _configEnteringElectronic.UpdateAsync(item);
             }
-        }
+        }     
         /// <summary>
         /// 资源部输入时,加载结构料初始值数量
         /// </summary>
@@ -509,6 +511,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetStructuralConfigurationState(long auditFlowId)
         {
+            if (auditFlowId == 0) throw new FriendlyException("结构件单价录入退回重置状态流程id不能为0");
             List<StructureElectronic> enteringElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             foreach (StructureElectronic item in enteringElectronics)
             {
@@ -523,6 +526,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetStructuralConfigurationStateCertain(List<long> StructuralId)
         {
+            if (StructuralId is null || StructuralId.Count == 0) throw new FriendlyException("结构件单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
             List<StructureElectronic> enteringElectronics = await _configStructureElectronic.GetAllListAsync(p => StructuralId.Contains(p.Id));
             foreach (StructureElectronic item in enteringElectronics)
             {
@@ -669,7 +673,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
+        public async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
         {
             await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -693,7 +697,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        internal async Task ElectronicBOMUnitPriceEliminate(long auditFlowId)
+        public async Task ElectronicBOMUnitPriceEliminate(long auditFlowId)
         {
             await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
         }
