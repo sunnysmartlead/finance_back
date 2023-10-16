@@ -17,6 +17,8 @@ using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
@@ -25,6 +27,7 @@ using NPOI.SS.Util;
 using NPOI.XSSF.Streaming.Values;
 using NPOI.XSSF.UserModel;
 using Spire.Pdf.Exporting.XPS.Schema;
+using Spire.Xls;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1516,7 +1519,7 @@ namespace Finance.Processes
             var yearCountList = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
 
             IWorkbook wk = new XSSFWorkbook();
-            ISheet sheet = wk.CreateSheet("Sheet1");
+            ISheet sheet = wk.CreateSheet("工时工序模版");
             sheet.DefaultRowHeight = 25 * 20;
             // 表头设置
             IRow herdRow = sheet.CreateRow(0);
@@ -1560,11 +1563,25 @@ namespace Finance.Processes
                     break;
                 }
             }
-
+            
             CreateCell(herdRow2, 1, string.Empty, wk);
             CreateCell(herdRow2, 2, string.Empty, wk);
             new ExcelCellDropdownParame(1, 1, query.ToArray()).SetCellDropdownList(sheet);
             new ExcelCellDropdownParame(2, 2, list.ToArray()).SetCellDropdownList(sheet);
+
+            ISheet sheet1 = wk.CreateSheet("工序库");
+
+            //创建头部
+            IRow row001 = sheet1.CreateRow(0);
+            row001.CreateCell(0).SetCellValue("工序编号");
+            sheet1.SetColumnWidth(0, 10 * 500);
+            row001.CreateCell(1).SetCellValue("工序名称");
+            sheet1.SetColumnWidth(1, 10 * 500);
+            row001.CreateCell(2).SetCellValue("工序维护人");
+            sheet1.SetColumnWidth(2, 10 * 500);
+            row001.CreateCell(3).SetCellValue("维护时间");
+            sheet1.SetColumnWidth(3, 10 * 500);
+
             var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
 
             List<string> listDeviceItem = new List<string>();
@@ -1594,6 +1611,43 @@ namespace Finance.Processes
             CreateCell(herdRow2, 13, "设备3数量", wk);
             CreateCell(herdRow2, 14, "设备3单价", wk);
             CreateCell(herdRow2, 15, "设备总价", wk);
+
+
+            ISheet sheet2 = wk.CreateSheet("设备库");
+            //创建头部
+            IRow row002 = sheet2.CreateRow(0);
+            row002.CreateCell(0).SetCellValue("工序编号");
+            sheet2.SetColumnWidth(0, 10 * 500);
+            row002.CreateCell(1).SetCellValue("工序名称");
+            sheet2.SetColumnWidth(1, 10 * 500);
+            row002.CreateCell(2).SetCellValue("设备1名称");
+            sheet2.SetColumnWidth(2, 10 * 500);;
+            row002.CreateCell(3).SetCellValue("设备1状态");
+            sheet2.SetColumnWidth(3, 10 * 500);
+            row002.CreateCell(4).SetCellValue("设备1单价");
+            sheet2.SetColumnWidth(4, 10 * 500);
+            row002.CreateCell(5).SetCellValue("设备1供应商");
+            sheet2.SetColumnWidth(5, 10 * 500);
+            row002.CreateCell(6).SetCellValue("设备2名称");
+            sheet2.SetColumnWidth(6, 10 * 500); ;
+            row002.CreateCell(7).SetCellValue("设备2状态");
+            sheet2.SetColumnWidth(7, 10 * 500);
+            row002.CreateCell(8).SetCellValue("设备2单价");
+            sheet2.SetColumnWidth(8, 10 * 500);
+            row002.CreateCell(9).SetCellValue("设备2供应商");
+            sheet2.SetColumnWidth(9, 10 * 500);
+            row002.CreateCell(10).SetCellValue("设备3名称");
+            sheet2.SetColumnWidth(10, 10 * 500); ;
+            row002.CreateCell(11).SetCellValue("设备3状态");
+            sheet2.SetColumnWidth(11, 10 * 500);
+            row002.CreateCell(12).SetCellValue("设备3单价");
+            sheet2.SetColumnWidth(12, 10 * 500);
+            row002.CreateCell(13).SetCellValue("设备3供应商");
+            sheet2.SetColumnWidth(13, 10 * 500);
+            row002.CreateCell(14).SetCellValue("维护时间");
+            sheet2.SetColumnWidth(14, 10 * 500);
+            row002.CreateCell(15).SetCellValue("维护人");
+            sheet2.SetColumnWidth(15, 10 * 500);
             var HardwareName = (from a in _foundationHardwareItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.HardwareName).Distinct()select a).ToList();
 
             List<string> HardwareItem = new List<string>();
@@ -1616,6 +1670,47 @@ namespace Finance.Processes
             CreateCell(herdRow2, 20, "数量", wk);
             CreateCell(herdRow2, 21, "单价设备2", wk);
             CreateCell(herdRow2, 22, "硬件总价", wk);
+            ISheet sheet3 = wk.CreateSheet("硬件软件库");
+            //创建头部
+            IRow row003 = sheet3.CreateRow(0);
+            row003.CreateCell(0).SetCellValue("工序编号");
+            sheet3.SetColumnWidth(0, 10 * 500);
+            row003.CreateCell(1).SetCellValue("工序名称");
+            sheet3.SetColumnWidth(1, 10 * 500);
+            row003.CreateCell(2).SetCellValue("硬件1名称");
+            sheet3.SetColumnWidth(2, 10 * 500);
+            row003.CreateCell(3).SetCellValue("硬件1状态");
+            sheet3.SetColumnWidth(3, 10 * 500);
+            row003.CreateCell(4).SetCellValue("硬件1单价");
+            sheet3.SetColumnWidth(4, 10 * 500);
+            row003.CreateCell(5).SetCellValue("硬件1供应商");
+            sheet3.SetColumnWidth(5, 10 * 500);
+            row003.CreateCell(6).SetCellValue("硬件2名称");
+            sheet3.SetColumnWidth(6, 10 * 500);
+            row003.CreateCell(7).SetCellValue("硬件2状态");
+            sheet3.SetColumnWidth(7, 10 * 500);
+            row003.CreateCell(8).SetCellValue("硬件2单价");
+            sheet3.SetColumnWidth(8, 10 * 500);
+            row003.CreateCell(9).SetCellValue("硬件2供应商");
+            sheet3.SetColumnWidth(10, 10 * 500);
+            row003.CreateCell(11).SetCellValue("追溯软件");
+            sheet3.SetColumnWidth(11, 10 * 500);
+            row003.CreateCell(12).SetCellValue("追溯软件费用");
+            sheet3.SetColumnWidth(12, 10 * 500);
+            row003.CreateCell(13).SetCellValue("软件名称");
+            sheet3.SetColumnWidth(13, 10 * 500);
+            row003.CreateCell(14).SetCellValue("软件状态");
+            sheet3.SetColumnWidth(14, 10 * 500);
+            row003.CreateCell(15).SetCellValue("软件单价");
+            sheet3.SetColumnWidth(15, 10 * 500);
+            row003.CreateCell(16).SetCellValue("软件供应商");
+            sheet3.SetColumnWidth(16, 10 * 500);
+            row003.CreateCell(17).SetCellValue("维护时间");
+            sheet3.SetColumnWidth(17, 10 * 500);
+            row003.CreateCell(18).SetCellValue("维护人");
+            sheet3.SetColumnWidth(18, 10 * 500);
+
+
             CreateCell(herdRow2, 23, "追溯软件", wk);
             CreateCell(herdRow2, 24, "开发费(追溯)", wk);
             CreateCell(herdRow2, 25, "开图软件", wk);
@@ -1635,6 +1730,44 @@ namespace Finance.Processes
                 }
             }
             new ExcelCellDropdownParame(28, 28, FixtureItemList.ToArray()).SetCellDropdownList(sheet);
+
+            ISheet sheet4 = wk.CreateSheet("治具检具");
+            //创建头部
+            IRow row004 = sheet4.CreateRow(0);
+            row004.CreateCell(0).SetCellValue("工序编号");
+            sheet4.SetColumnWidth(0, 10 * 500);
+            row004.CreateCell(1).SetCellValue("工序名称");
+            sheet4.SetColumnWidth(1, 10 * 500);
+            row004.CreateCell(2).SetCellValue("治具1名称");
+            sheet4.SetColumnWidth(2, 10 * 500);
+            row004.CreateCell(3).SetCellValue("治具1状态");
+            sheet4.SetColumnWidth(3, 10 * 500);
+            row004.CreateCell(4).SetCellValue("治具1单价");
+            sheet4.SetColumnWidth(4, 10 * 500);
+            row004.CreateCell(5).SetCellValue("治具1供应商");
+            sheet4.SetColumnWidth(5, 10 * 500);
+            row004.CreateCell(2).SetCellValue("治具2名称");
+            sheet4.SetColumnWidth(2, 10 * 500);
+            row004.CreateCell(3).SetCellValue("治具2状态");
+            sheet4.SetColumnWidth(3, 10 * 500);
+            row004.CreateCell(4).SetCellValue("治具2单价");
+            sheet4.SetColumnWidth(4, 10 * 500);
+            row004.CreateCell(5).SetCellValue("治具2供应商");
+            sheet4.SetColumnWidth(5, 10 * 500);
+            row004.CreateCell(11).SetCellValue("检具名称");
+            sheet4.SetColumnWidth(11, 10 * 500);
+            row004.CreateCell(12).SetCellValue("检具状态");
+            sheet4.SetColumnWidth(12, 10 * 500);
+            row004.CreateCell(13).SetCellValue("检具单价");
+            sheet4.SetColumnWidth(13, 10 * 500);
+            row004.CreateCell(14).SetCellValue("检具单价供应商");
+            sheet4.SetColumnWidth(14, 10 * 500);
+            row004.CreateCell(16).SetCellValue("检具维护人");
+            sheet4.SetColumnWidth(16, 10 * 500);
+            row004.CreateCell(17).SetCellValue("维护时间");
+            sheet4.SetColumnWidth(17, 10 * 500);
+
+
             CreateCell(herdRow2, 29, "数量", wk);
             CreateCell(herdRow2, 30, "治具单价", wk);
             CreateCell(herdRow2, 31, "治具2名称", wk);
@@ -1692,6 +1825,65 @@ namespace Finance.Processes
             CreateCell(herdRow2, 41, "数量", wk);
             CreateCell(herdRow2, 42, "线束单价", wk);
             CreateCell(herdRow2, 43, "工装治具检具总价", wk);
+
+            ISheet sheet5 = wk.CreateSheet("工装库");
+            //创建头部
+            IRow row005 = sheet5.CreateRow(0);
+            row005.CreateCell(0).SetCellValue("工序编号");
+            sheet5.SetColumnWidth(0, 10 * 500);
+            row005.CreateCell(1).SetCellValue("工序名称");
+            sheet5.SetColumnWidth(1, 10 * 500);
+            row005.CreateCell(2).SetCellValue("工装名称");
+            sheet5.SetColumnWidth(2, 10 * 500);
+            row005.CreateCell(3).SetCellValue("工装单价");
+            sheet5.SetColumnWidth(3, 10 * 500);
+            row005.CreateCell(4).SetCellValue("工装供应商");
+            sheet5.SetColumnWidth(4, 10 * 500);
+            row005.CreateCell(5).SetCellValue("测试线名称");
+            sheet5.SetColumnWidth(5, 10 * 500);
+            row005.CreateCell(2).SetCellValue("测试线单价");
+            sheet5.SetColumnWidth(2, 10 * 500);
+            row005.CreateCell(16).SetCellValue("工装维护人");
+            sheet5.SetColumnWidth(16, 10 * 500);
+            row005.CreateCell(17).SetCellValue("维护时间");
+            sheet5.SetColumnWidth(17, 10 * 500);
+
+
+            ISheet sheet6 = wk.CreateSheet("工时库");
+            //创建头部
+            IRow row006 = sheet6.CreateRow(0);
+            row006.CreateCell(0).SetCellValue("工序编号");
+            sheet6.SetColumnWidth(0, 10 * 500);
+            row006.CreateCell(1).SetCellValue("工序名称");
+            sheet6.SetColumnWidth(1, 10 * 500);
+            int y = 2;
+            for (int i = 0; i < yearCountList.Count; i++)
+            {
+                string year = "";
+                if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                {
+                    year = yearCountList[i].Year + "上半年";
+
+                }
+                if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
+                {
+                    year = yearCountList[i].Year + "下半年";
+
+                }
+                if (yearCountList[i].UpDown.Equals(YearType.Year))
+                {
+                    year = yearCountList[i].Year + "";
+
+                }
+                y += i;
+                row006.CreateCell(y).SetCellValue(year);
+                sheet6.SetColumnWidth(y, 10 * 500);
+            }
+            row006.CreateCell(y).SetCellValue("工时维护人");
+            sheet6.SetColumnWidth(16, 10 * 500);
+            row006.CreateCell(y + 1).SetCellValue("维护时间");
+            sheet6.SetColumnWidth(17, 10 * 500);
+
 
             int c = 43;
             int d = 6;
