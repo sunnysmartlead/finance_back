@@ -68,12 +68,16 @@ namespace Finance.TradeCompliance
         /// </summary>
         /// <param name="processId"></param>
         /// <returns></returns>
-        private async Task<int> GetFristSopYear(long auditFlowId)
+        private async Task<(int, YearType)> GetFristSopYear(long auditFlowId)
         {
-            List<ModelCountYear> modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
-            List<int> yearList = modelCountYears.Select(p => p.Year).Distinct().ToList();
-            int sopYear = yearList.Min();
-            return sopYear;
+            //List<ModelCountYear> modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            //List<int> yearList = modelCountYears.Select(p => p.Year).Distinct().ToList();
+            //int sopYear = yearList.Min();
+            //return sopYear;
+
+            var list = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            var sopYear = list.MinBy(p => p.Year);
+            return sopYear.UpDown == YearType.Year ? (sopYear.Year, YearType.Year) : (sopYear.Year, YearType.FirstHalf);
         }
 
         /// <summary>
@@ -94,7 +98,7 @@ namespace Finance.TradeCompliance
         /// </summary>
         public virtual async Task<TradeComplianceCheckDto> GetTradeComplianceCheckByCalc(TradeComplianceInputDto input)
         {
-            TradeComplianceCheckDto tradeComplianceCheckDto = new ();
+            TradeComplianceCheckDto tradeComplianceCheckDto = new();
 
             //var productInfos = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == input.ProductId);
             var solutionInfos = await _solutionTableRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == input.SolutionId);
@@ -119,11 +123,11 @@ namespace Finance.TradeCompliance
 
                 //取最终出口地国家
                 var countryList = (from a in await _priceEvalRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
-                 join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
-                 select b.Country).ToList();
-          
-                tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.Count > 0 ? countryList.FirstOrDefault(): null;
-         
+                                   join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
+                                   select b.Country).ToList();
+
+                tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.Count > 0 ? countryList.FirstOrDefault() : null;
+
 
 
                 //存入部分合规信息生成ID
@@ -131,19 +135,20 @@ namespace Finance.TradeCompliance
 
                 decimal sumEccns = 0m;
                 decimal sumPending = 0m;
+                var sopYear = await GetFristSopYear(input.AuditFlowId);
                 GetPriceEvaluationTableInput priceTableByPart = new()
                 {
                     AuditFlowId = input.AuditFlowId,
                     SolutionId = input.SolutionId,
                     InputCount = 0,
-                    Year = await GetFristSopYear(input.AuditFlowId),
-                    GradientId=await GetMinGradient(input.AuditFlowId),
-
+                    Year = sopYear.Item1,
+                    GradientId = await GetMinGradient(input.AuditFlowId),
+                    UpDown = sopYear.Item2
                 };
                 var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
                 tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;
 
-              
+
                 var countries = await _countryLibraryRepository.GetAllListAsync(p => p.Id.Equals(tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId));
                 decimal rate = 0;//取国家库的比例
 
@@ -180,7 +185,7 @@ namespace Finance.TradeCompliance
                     tradeComplianceCheckDto.ProductMaterialInfos.Add(materialinfo);
 
                     string MaterialIdPrefix = materialinfo.MaterialIdInBom[..1];
-                    if(MaterialIdPrefix.Equals(PriceEvaluationGetAppService.ElectronicBomName))
+                    if (MaterialIdPrefix.Equals(PriceEvaluationGetAppService.ElectronicBomName))
                     {
                         long elecId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
                         //查询是否涉及
@@ -196,7 +201,7 @@ namespace Finance.TradeCompliance
 
 
 
-                    if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Eccn || (rate==(decimal)0.1 && materialinfo.ControlStateType == FinanceConsts.EccnCode_Ear99))
+                    if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Eccn || (rate == (decimal)0.1 && materialinfo.ControlStateType == FinanceConsts.EccnCode_Ear99))
                     {
                         sumEccns += materialinfo.Amount;
                     }
@@ -254,7 +259,7 @@ namespace Finance.TradeCompliance
         public virtual async Task<TradeComplianceCheckDto> GetTradeComplianceCheckFromDateBase(TradeComplianceInputDto input)
         {
             var tradeComplianceCheckList = await _tradeComplianceCheckRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
-            if(tradeComplianceCheckList.Count > 0)
+            if (tradeComplianceCheckList.Count > 0)
             {
                 TradeComplianceCheckDto tradeComplianceCheckDto = new();
                 tradeComplianceCheckDto.TradeComplianceCheck = tradeComplianceCheckList.FirstOrDefault();
@@ -269,7 +274,7 @@ namespace Finance.TradeCompliance
             else
             {
                 throw new FriendlyException("贸易合规数据未正式进库，请检查信息！");
-                
+
             }
         }
 
@@ -282,7 +287,7 @@ namespace Finance.TradeCompliance
             var tradeComplianceCheckList = await _tradeComplianceCheckRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
             foreach (var tradeComplianceCheck in tradeComplianceCheckList)
             {
-                if(tradeComplianceCheck.AnalysisConclusion.Equals(GeneralDefinition.TRADE_COMPLIANCE_NOT_OK))
+                if (tradeComplianceCheck.AnalysisConclusion.Equals(GeneralDefinition.TRADE_COMPLIANCE_NOT_OK))
                 {
                     return false;
                 }

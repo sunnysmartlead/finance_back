@@ -84,8 +84,8 @@ namespace Finance.PriceEval
         protected readonly IRepository<ElectronicBomInfo, long> _electronicBomInfoRepository;
         protected readonly IRepository<StructureBomInfo, long> _structureBomInfoRepository;
 
-        protected readonly IRepository<EnteringElectronic, long> _enteringElectronicRepository;
-        protected readonly IRepository<StructureElectronic, long> _structureElectronicRepository;
+        protected readonly IRepository<EnteringElectronicCopy, long> _enteringElectronicRepository;
+        protected readonly IRepository<StructureElectronicCopy, long> _structureElectronicRepository;
 
         protected readonly IRepository<LossRateInfo, long> _lossRateInfoRepository;
         protected readonly IRepository<LossRateYearInfo, long> _lossRateYearInfoRepository;
@@ -132,7 +132,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 构造函数
         /// </summary>
-        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronicCopy, long> enteringElectronicRepository, IRepository<StructureElectronicCopy, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
           IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
      IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
             IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
@@ -1003,7 +1003,7 @@ namespace Finance.PriceEval
             {
                 item.Count = shareCount is null ? 0 : shareCount.Count * 1000;
                 item.Cost = item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
-                item.YearCount = shareCount.Year;
+                item.YearCount = shareCount is null ? 0 : shareCount.Year;
             });
             otherCostItem2List.Add(new OtherCostItem2List
             {
@@ -1767,8 +1767,17 @@ namespace Finance.PriceEval
                                    }).FirstOrDefaultAsync();
 
 
-                data.Add(cob);
-                data.Add(other);
+                if (cob is not null)
+                {
+                    data.Add(cob);
+
+                }
+                if (other is not null)
+                {
+                    data.Add(other);
+
+                }
+
             }
 
             data.ForEach(p =>

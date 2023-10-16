@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Finance.ProductDevelopment;
+using Finance.Entering;
 
 namespace Finance.WorkFlows
 {
@@ -26,6 +27,7 @@ namespace Finance.WorkFlows
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly ElectronicBomAppService _electronicBomAppService;
         private readonly StructionBomAppService _structionBomAppService;
+        private readonly ResourceEnteringAppService _resourceEnteringAppService;
 
         /// <summary>
         /// 构造函数
@@ -33,14 +35,20 @@ namespace Finance.WorkFlows
         /// <param name="tradeComplianceAppService"></param>
         /// <param name="workflowInstanceAppService"></param>
         /// <param name="unitOfWorkManager"></param>
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService)
+        /// <param name="electronicBomAppService"></param>
+        /// <param name="structionBomAppService"></param>
+        /// <param name="resourceEnteringAppService"></param>
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
             _unitOfWorkManager = unitOfWorkManager;
             _electronicBomAppService = electronicBomAppService;
             _structionBomAppService = structionBomAppService;
+            _resourceEnteringAppService = resourceEnteringAppService;
         }
+
+
 
         /// <summary>
         /// 贸易合规等节点被激活时触发
@@ -118,6 +126,25 @@ namespace Finance.WorkFlows
                         await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
                     }
 
+
+                    //如果是流转到主流程_电子BOM匹配修改
+                    if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
+                    {
+                        await _resourceEnteringAppService.ElectronicBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+                    }
+
+                    //如果是流转到主流程_结构BOM匹配修改
+                    if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
+                    {
+                        await _resourceEnteringAppService.StructureBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+                    }
+
+                    //如果是流转到主流程_核价看板
+                    if (eventData.Entity.NodeId == "主流程_核价看板")
+                    {
+                        await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                        await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                    }
                 }
 
                 uow.Complete();
