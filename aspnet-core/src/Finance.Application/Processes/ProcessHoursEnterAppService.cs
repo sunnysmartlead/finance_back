@@ -74,6 +74,7 @@ namespace Finance.Processes
         private readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
         private readonly IRepository<FoundationDeviceItem, long> _foundationDeviceItemRepository;
         private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
+        private readonly IRepository<User, long> _userRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -92,7 +93,7 @@ namespace Finance.Processes
                       IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
                       IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
                       IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
-                      WorkflowInstanceAppService workflowInstanceAppService)
+                      WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
             _foundationProcedureRepository = foundationProcedureRepository;
@@ -119,6 +120,7 @@ namespace Finance.Processes
             _foundationDeviceItemRepository = foundationDeviceItemRepository;
             _foundationHardwareItemRepository = foundationHardwareItemRepository;
             _foundationHardwareItemRepository = foundationHardwareItemRepository;
+            _userRepository = userRepository;
         }
 
         /// <summary>
@@ -1581,6 +1583,31 @@ namespace Finance.Processes
             sheet1.SetColumnWidth(2, 10 * 500);
             row001.CreateCell(3).SetCellValue("维护时间");
             sheet1.SetColumnWidth(3, 10 * 500);
+            var fProcessesQuery = _fProcessesRepository.GetAllList(p => p.IsDeleted == false).ToList();
+
+            int row = 0;
+            foreach (var item in fProcessesQuery)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                row = row + 1;
+                IRow herdRow3 = sheet1.CreateRow(row);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(herdRow3, 0, item.ProcessNumber, wk);
+                CreateCell(herdRow3, 1, item.ProcessName, wk);
+                if (null != user)
+                {
+
+                    CreateCell(herdRow3, 2, user.Name, wk);
+                }
+                else {
+
+                    CreateCell(herdRow3, 2, "", wk);
+                }
+                CreateCell(herdRow3, 3, item.LastModificationTime.Value.ToString(), wk);
+            
+
+            }
+
 
             var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
 
@@ -1648,6 +1675,51 @@ namespace Finance.Processes
             sheet2.SetColumnWidth(14, 10 * 500);
             row002.CreateCell(15).SetCellValue("维护人");
             sheet2.SetColumnWidth(15, 10 * 500);
+
+             /*设备*/
+            var foundationDeviceQuery = _foundationDeviceRepository.GetAllList(p => p.IsDeleted == false).ToList();
+
+            int rowFoundationDevice = 0;
+            foreach (var item in foundationDeviceQuery)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                rowFoundationDevice = rowFoundationDevice + 1;
+                IRow row3 = sheet2.CreateRow(rowFoundationDevice);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(row3, 0, item.ProcessNumber, wk);
+                CreateCell(row3, 1, item.ProcessName, wk);
+                var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == item.Id).ToList();
+                if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count==3)
+                {
+                    CreateCell(row3, 2, FoundationDeviceItemlist[0].DeviceName, wk);
+                    CreateCell(row3, 3, FoundationDeviceItemlist[0].DeviceStatus, wk);
+                    CreateCell(row3, 4, FoundationDeviceItemlist[0].DevicePrice, wk);
+                    CreateCell(row3, 5, FoundationDeviceItemlist[0].DeviceProvider, wk);
+                    CreateCell(row3, 6, FoundationDeviceItemlist[1].DeviceName, wk);
+                    CreateCell(row3, 7, FoundationDeviceItemlist[1].DeviceStatus, wk);
+                    CreateCell(row3, 8, FoundationDeviceItemlist[1].DevicePrice, wk);
+                    CreateCell(row3, 9, FoundationDeviceItemlist[1].DeviceProvider, wk);
+                    CreateCell(row3, 10, FoundationDeviceItemlist[2].DeviceName, wk);
+                    CreateCell(row3, 11, FoundationDeviceItemlist[2].DeviceStatus, wk);
+                    CreateCell(row3, 12, FoundationDeviceItemlist[2].DevicePrice, wk);
+                    CreateCell(row3, 13, FoundationDeviceItemlist[2].DeviceProvider, wk);
+                }
+
+                if (null != user)
+                {
+
+                    CreateCell(row3, 14, user.Name, wk);
+                }
+                else
+                {
+
+                    CreateCell(row3, 14, "", wk);
+                }
+                CreateCell(row3, 15, item.LastModificationTime.Value.ToString(), wk);
+
+
+            }
+
             var HardwareName = (from a in _foundationHardwareItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.HardwareName).Distinct()select a).ToList();
 
             List<string> HardwareItem = new List<string>();
@@ -1670,6 +1742,9 @@ namespace Finance.Processes
             CreateCell(herdRow2, 20, "数量", wk);
             CreateCell(herdRow2, 21, "单价设备2", wk);
             CreateCell(herdRow2, 22, "硬件总价", wk);
+
+
+
             ISheet sheet3 = wk.CreateSheet("硬件软件库");
             //创建头部
             IRow row003 = sheet3.CreateRow(0);
@@ -1693,22 +1768,88 @@ namespace Finance.Processes
             sheet3.SetColumnWidth(8, 10 * 500);
             row003.CreateCell(9).SetCellValue("硬件2供应商");
             sheet3.SetColumnWidth(10, 10 * 500);
-            row003.CreateCell(11).SetCellValue("追溯软件");
+            row003.CreateCell(10).SetCellValue("追溯软件");
             sheet3.SetColumnWidth(11, 10 * 500);
-            row003.CreateCell(12).SetCellValue("追溯软件费用");
+            row003.CreateCell(11).SetCellValue("追溯软件费用");
             sheet3.SetColumnWidth(12, 10 * 500);
-            row003.CreateCell(13).SetCellValue("软件名称");
+            row003.CreateCell(12).SetCellValue("软件名称");
             sheet3.SetColumnWidth(13, 10 * 500);
-            row003.CreateCell(14).SetCellValue("软件状态");
+            row003.CreateCell(13).SetCellValue("软件状态");
             sheet3.SetColumnWidth(14, 10 * 500);
-            row003.CreateCell(15).SetCellValue("软件单价");
+            row003.CreateCell(14).SetCellValue("软件单价");
             sheet3.SetColumnWidth(15, 10 * 500);
-            row003.CreateCell(16).SetCellValue("软件供应商");
+            row003.CreateCell(15).SetCellValue("软件供应商");
             sheet3.SetColumnWidth(16, 10 * 500);
-            row003.CreateCell(17).SetCellValue("维护时间");
+            row003.CreateCell(16).SetCellValue("维护时间");
             sheet3.SetColumnWidth(17, 10 * 500);
-            row003.CreateCell(18).SetCellValue("维护人");
+            row003.CreateCell(17).SetCellValue("维护人");
             sheet3.SetColumnWidth(18, 10 * 500);
+            /*硬件软件库*/
+            var foundationHardwareQuery = _foundationHardwareRepository.GetAllList(p => p.IsDeleted == false).ToList();
+
+            int rowfoundationHardware = 0;
+            foreach (var item in foundationHardwareQuery)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                rowfoundationHardware = rowfoundationHardware + 1;
+                IRow row3 = sheet3.CreateRow(rowfoundationHardware);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(row3, 0, item.ProcessNumber, wk);
+                CreateCell(row3, 1, item.ProcessName, wk);
+                var FoundationDeviceItemlist = this._foundationFoundationHardwareItemRepository.GetAll().Where(f => f.FoundationHardwareId == item.Id).ToList();
+                if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count == 2)
+                {
+                    CreateCell(row3, 2, FoundationDeviceItemlist[0].HardwareName, wk);
+                    CreateCell(row3, 3, FoundationDeviceItemlist[0].HardwareState, wk);
+                    CreateCell(row3, 4, FoundationDeviceItemlist[0].HardwarePrice.ToString(), wk);
+                    CreateCell(row3, 5, FoundationDeviceItemlist[0].HardwareBusiness, wk);
+                    CreateCell(row3, 6, FoundationDeviceItemlist[1].HardwareName, wk);
+                    CreateCell(row3, 7, FoundationDeviceItemlist[1].HardwareState, wk);
+                    CreateCell(row3, 8, FoundationDeviceItemlist[1].HardwarePrice.ToString(), wk);
+                    CreateCell(row3, 9, FoundationDeviceItemlist[1].HardwareBusiness, wk);
+                }
+                if (null != item.TraceabilitySoftware)
+                {
+                    CreateCell(row3, 10, item.TraceabilitySoftware, wk);
+                }
+                else
+                {
+                    CreateCell(row3, 10, null, wk);
+                }
+
+                if (null != item.TraceabilitySoftwareCost)
+                {
+                    CreateCell(row3, 11, item.TraceabilitySoftwareCost.ToString(), wk);
+                }
+                else {
+                    CreateCell(row3, 11, null, wk);
+                }
+                CreateCell(row3, 12, item.SoftwareName, wk);
+                CreateCell(row3, 13, item.SoftwareState, wk);
+                CreateCell(row3, 14, item.SoftwarePrice.ToString(), wk);
+                if (null != item.SoftwareName)
+                {
+                    CreateCell(row3, 15, item.SoftwareName, wk);
+                }
+                else
+                {
+                    CreateCell(row3, 15, null, wk);
+                }
+                if (null != user)
+                {
+
+                    CreateCell(row3, 16, user.Name, wk);
+                }
+                else
+                {
+
+                    CreateCell(row3, 16, "", wk);
+                }
+                CreateCell(row3, 17, item.LastModificationTime.Value.ToString(), wk);
+
+
+            }
+
 
 
             CreateCell(herdRow2, 23, "追溯软件", wk);
@@ -1746,26 +1887,80 @@ namespace Finance.Processes
             sheet4.SetColumnWidth(4, 10 * 500);
             row004.CreateCell(5).SetCellValue("治具1供应商");
             sheet4.SetColumnWidth(5, 10 * 500);
-            row004.CreateCell(2).SetCellValue("治具2名称");
-            sheet4.SetColumnWidth(2, 10 * 500);
-            row004.CreateCell(3).SetCellValue("治具2状态");
-            sheet4.SetColumnWidth(3, 10 * 500);
-            row004.CreateCell(4).SetCellValue("治具2单价");
-            sheet4.SetColumnWidth(4, 10 * 500);
-            row004.CreateCell(5).SetCellValue("治具2供应商");
-            sheet4.SetColumnWidth(5, 10 * 500);
-            row004.CreateCell(11).SetCellValue("检具名称");
+            row004.CreateCell(6).SetCellValue("治具2名称");
+            sheet4.SetColumnWidth(6, 10 * 500);
+            row004.CreateCell(7).SetCellValue("治具2状态");
+            sheet4.SetColumnWidth(7, 10 * 500);
+            row004.CreateCell(8).SetCellValue("治具2单价");
+            sheet4.SetColumnWidth(8, 10 * 500);
+            row004.CreateCell(9).SetCellValue("治具2供应商");
+            sheet4.SetColumnWidth(9, 10 * 500);
+            row004.CreateCell(10).SetCellValue("检具名称");
+            sheet4.SetColumnWidth(10, 10 * 500);
+            row004.CreateCell(11).SetCellValue("检具状态");
             sheet4.SetColumnWidth(11, 10 * 500);
-            row004.CreateCell(12).SetCellValue("检具状态");
+            row004.CreateCell(12).SetCellValue("检具单价");
             sheet4.SetColumnWidth(12, 10 * 500);
-            row004.CreateCell(13).SetCellValue("检具单价");
+            row004.CreateCell(13).SetCellValue("检具单价供应商");
             sheet4.SetColumnWidth(13, 10 * 500);
-            row004.CreateCell(14).SetCellValue("检具单价供应商");
+            row004.CreateCell(14).SetCellValue("检具维护人");
             sheet4.SetColumnWidth(14, 10 * 500);
-            row004.CreateCell(16).SetCellValue("检具维护人");
-            sheet4.SetColumnWidth(16, 10 * 500);
-            row004.CreateCell(17).SetCellValue("维护时间");
-            sheet4.SetColumnWidth(17, 10 * 500);
+            row004.CreateCell(15).SetCellValue("维护时间");
+            sheet4.SetColumnWidth(15, 10 * 500);
+
+
+            /*检具库*/
+            var foundationFixtureQuery = _foundationFixtureRepository.GetAllList(p => p.IsDeleted == false).ToList();
+
+            int rowfoundationFixture = 0;
+            foreach (var item in foundationFixtureQuery)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                rowfoundationFixture = rowfoundationFixture + 1;
+                IRow row3 = sheet4.CreateRow(rowfoundationFixture);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(row3, 0, item.ProcessNumber, wk);
+                CreateCell(row3, 1, item.ProcessName, wk);
+                var FoundationDeviceItemlist = this._foundationFoundationFixtureItemRepository.GetAll().Where(f => f.FoundationFixtureId == item.Id).ToList();
+                if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count == 2)
+                {
+                    CreateCell(row3, 2, FoundationDeviceItemlist[0].FixtureName, wk);
+                    CreateCell(row3, 3, FoundationDeviceItemlist[0].FixtureState, wk);
+                    CreateCell(row3, 4, FoundationDeviceItemlist[0].FixturePrice.ToString(), wk);
+                    CreateCell(row3, 5, FoundationDeviceItemlist[0].FixtureProvider, wk);
+                    CreateCell(row3, 6, FoundationDeviceItemlist[1].FixtureName, wk);
+                    CreateCell(row3, 7, FoundationDeviceItemlist[1].FixtureState, wk);
+                    CreateCell(row3, 8, FoundationDeviceItemlist[1].FixturePrice.ToString(), wk);
+                    CreateCell(row3, 9, FoundationDeviceItemlist[1].FixtureProvider, wk);
+                }
+                CreateCell(row3, 10, item.FixtureGaugeName, wk);
+                CreateCell(row3, 11, item.FixtureGaugeState, wk);
+                CreateCell(row3, 13, item.FixtureGaugeBusiness, wk);
+
+                if (null != item.FixtureGaugePrice)
+                {
+                    CreateCell(row3, 12, item.FixtureGaugePrice.ToString(), wk);
+                }
+                else
+                {
+                    CreateCell(row3, 12, null, wk);
+                }
+          
+                if (null != user)
+                {
+
+                    CreateCell(row3, 14, user.Name, wk);
+                }
+                else
+                {
+
+                    CreateCell(row3, 14, "", wk);
+                }
+                CreateCell(row3, 15, item.LastModificationTime.Value.ToString(), wk);
+
+
+            }
+
 
 
             CreateCell(herdRow2, 29, "数量", wk);
@@ -1841,49 +2036,134 @@ namespace Finance.Processes
             sheet5.SetColumnWidth(4, 10 * 500);
             row005.CreateCell(5).SetCellValue("测试线名称");
             sheet5.SetColumnWidth(5, 10 * 500);
-            row005.CreateCell(2).SetCellValue("测试线单价");
+            row005.CreateCell(6).SetCellValue("测试线单价");
             sheet5.SetColumnWidth(2, 10 * 500);
-            row005.CreateCell(16).SetCellValue("工装维护人");
+            row005.CreateCell(7).SetCellValue("工装维护人");
             sheet5.SetColumnWidth(16, 10 * 500);
-            row005.CreateCell(17).SetCellValue("维护时间");
+            row005.CreateCell(8).SetCellValue("维护时间");
             sheet5.SetColumnWidth(17, 10 * 500);
+
+            /*工装库*/
+            var foundationProcedureQuery = _foundationProcedureRepository.GetAllList(p => p.IsDeleted == false).ToList();
+
+            int rowfoundationProcedure = 0;
+            foreach (var item in foundationProcedureQuery)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                rowfoundationProcedure = rowfoundationProcedure + 1;
+                IRow row3 = sheet5.CreateRow(rowfoundationProcedure);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(row3, 0, item.ProcessNumber, wk);
+                CreateCell(row3, 1, item.ProcessName, wk);
+                CreateCell(row3, 2, item.InstallationName, wk);
+                CreateCell(row3, 3, item.InstallationPrice.ToString(), wk);
+                CreateCell(row3, 4, item.InstallationSupplier, wk);
+                CreateCell(row3, 5, item.TestName, wk);
+                CreateCell(row3, 6, item.TestPrice.ToString(), wk);
+                
+                if (null != user)
+                {
+
+                    CreateCell(row3, 7, user.Name, wk);
+                }
+                else
+                {
+
+                    CreateCell(row3, 7, "", wk);
+                }
+                CreateCell(row3, 8, item.LastModificationTime.Value.ToString(), wk);
+
+
+            }
+
 
 
             ISheet sheet6 = wk.CreateSheet("工时库");
             //创建头部
             IRow row006 = sheet6.CreateRow(0);
+            IRow row007 = sheet6.CreateRow(1);
             row006.CreateCell(0).SetCellValue("工序编号");
-            sheet6.SetColumnWidth(0, 10 * 500);
+            sheet6.SetColumnWidth(2, 10 * 500);
             row006.CreateCell(1).SetCellValue("工序名称");
             sheet6.SetColumnWidth(1, 10 * 500);
-            int y = 2;
-            for (int i = 0; i < yearCountList.Count; i++)
+
+            int colIndexRow =2;
+            if (null != yearCountList && yearCountList.Count > 0)
             {
-                string year = "";
-                if (yearCountList[i].UpDown.Equals(YearType.FirstHalf))
+                for (int i = 0; i < yearCountList.Count(); i++)
                 {
-                    year = yearCountList[i].Year + "上半年";
+                    if (i == 0)
+                    {
+                        string yaer = yearCountList[i].Year.ToString();
+                        row006.CreateCell(colIndexRow).SetCellValue(yaer);
+                        MergedRegion(sheet6, 0, 0, colIndexRow, colIndexRow + 2);
+                        colIndexRow =  3 + colIndexRow;
+                        row007.CreateCell(2).SetCellValue("标准人工工时");
+                        row007.CreateCell(3).SetCellValue("标准机器工时");
+                        row007.CreateCell(4).SetCellValue("人员数量");
 
-                }
-                if (yearCountList[i].UpDown.Equals(YearType.SecondHalf))
-                {
-                    year = yearCountList[i].Year + "下半年";
+                    }
+                    else {
+                        string yaer = yearCountList[i].Year.ToString();
+                        row006.CreateCell(colIndexRow).SetCellValue(yaer);
+                        MergedRegion(sheet6, 0, 0, colIndexRow, colIndexRow + 2);
+                        row007.CreateCell(colIndexRow).SetCellValue("标准人工工时");
+                        row007.CreateCell(colIndexRow + 1).SetCellValue("标准机器工时");
+                        row007.CreateCell(colIndexRow + 2).SetCellValue("人员数量");
+                        colIndexRow = 3 + colIndexRow;
 
-                }
-                if (yearCountList[i].UpDown.Equals(YearType.Year))
-                {
-                    year = yearCountList[i].Year + "";
 
+              
+                    }
+                  
+                   
                 }
-                y += i;
-                row006.CreateCell(y).SetCellValue(year);
-                sheet6.SetColumnWidth(y, 10 * 500);
             }
-            row006.CreateCell(y).SetCellValue("工时维护人");
-            sheet6.SetColumnWidth(16, 10 * 500);
-            row006.CreateCell(y + 1).SetCellValue("维护时间");
-            sheet6.SetColumnWidth(17, 10 * 500);
+        
+            MergedRegion(sheet6, 0, 1, 0, 0);
+            MergedRegion(sheet6, 0, 1, 1, 1);
+            row006.CreateCell(colIndexRow).SetCellValue("工时维护人");
+            sheet6.SetColumnWidth(colIndexRow, 10 * 500);
+            MergedRegion(sheet6, 0, 1, colIndexRow, colIndexRow);
+            row006.CreateCell(colIndexRow +1).SetCellValue("维护时间");
+            sheet6.SetColumnWidth(colIndexRow+1, 10 * 500);
+            MergedRegion(sheet6, 0, 1, colIndexRow+1, colIndexRow+1);
 
+            var queryYear = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false).ToList();
+
+            int rowfoundationYear = 1;
+            foreach (var item in queryYear)
+            {
+                var user = _userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                rowfoundationYear = rowfoundationYear + 1;
+                IRow row3 = sheet6.CreateRow(rowfoundationYear);
+                ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
+                CreateCell(row3, 0, item.ProcessNumber, wk);
+                CreateCell(row3, 1, item.ProcessName, wk);
+                var FoundationDeviceItemlist = this._foundationFoundationWorkingHourItemRepository.GetAll().Where(f => f.FoundationWorkingHourId == item.Id).ToList();
+                int WorkingHour = 1;
+                foreach (var itemWorkingHour in FoundationDeviceItemlist)
+                {
+                    CreateCell(row3, WorkingHour + 1, itemWorkingHour.LaborHour, wk);
+                    CreateCell(row3, WorkingHour + 2, itemWorkingHour.MachineHour, wk);
+                    CreateCell(row3, WorkingHour + 3, itemWorkingHour.NumberPersonnel, wk);
+                    WorkingHour += 3;
+                }
+
+                if (null != user)
+                {
+
+                    CreateCell(row3, WorkingHour + 1, user.Name, wk);
+                }
+                else
+                {
+
+                    CreateCell(row3, WorkingHour + 1, "", wk);
+                }
+                CreateCell(row3, WorkingHour + 2, item.LastModificationTime.Value.ToString(), wk);
+
+
+            }
 
             int c = 43;
             int d = 6;

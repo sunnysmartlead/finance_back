@@ -54,16 +54,16 @@ namespace Finance.BaseLibrary
         public string TraceabilitySoftware { get; set; }
 
 
-        /// <summary>
-        /// 软件供应商
-        /// </summary>
-        /// 
-        [Column("software_business")]
-        public string SoftwareBusiness { get; set; }
-        /// <summary>
-        /// 追溯软件费用
-        /// </summary>
-        [Column("traceability_software_cost")]
+		/// <summary>
+		/// 软件供应商
+		/// </summary>
+		/// 
+		[Column("software_business")]
+		public string SoftwareBusiness { get; set; }
+		/// <summary>
+		/// 追溯软件费用
+		/// </summary>
+		[Column("traceability_software_cost")]
         public decimal TraceabilitySoftwareCost { get; set; }
 
 
