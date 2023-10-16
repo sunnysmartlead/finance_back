@@ -35,6 +35,11 @@ namespace Finance.PriceEval
         /// 梯度(K/Y)
         /// </summary>
         public virtual decimal GradientValue { get; set; }
+
+        /// <summary>
+        /// 系统取梯度（这里单词存在拼写错误）
+        /// </summary>
+        public virtual decimal SystermGradientValue { get; set; }
     }
 
     /// <summary>

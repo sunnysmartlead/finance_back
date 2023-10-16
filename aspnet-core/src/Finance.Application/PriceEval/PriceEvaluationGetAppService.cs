@@ -19,6 +19,8 @@ using Finance.NerPricing;
 using Finance.NrePricing;
 using Finance.PriceEval.Dto;
 using Finance.PriceEval.Dto.AllManufacturingCost;
+using Finance.PriceEval.Dto.MoqFormulas;
+using Finance.PriceEval.Dto.ProjectSelf;
 using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductionControl;
@@ -35,6 +37,7 @@ using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
+using Spire.Pdf.Exporting.XPS.Schema;
 using Spire.Xls.Core;
 using System;
 using System.Collections.Generic;
@@ -120,6 +123,9 @@ namespace Finance.PriceEval
         private readonly IRepository<QualityCostRatio, long> _qualityCostRatioRepository;
         private readonly IRepository<QualityCostRatioYear, long> _qualityCostRatioYearRepository;
 
+        private readonly IRepository<CustomerTargetPrice, long> _customerTargetPriceRepository;
+
+
         private string errMessage = string.Empty;
 
 
@@ -129,7 +135,8 @@ namespace Finance.PriceEval
         public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
           IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
      IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
-            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
+            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
+            IRepository<CustomerTargetPrice, long> customerTargetPriceRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -171,6 +178,8 @@ namespace Finance.PriceEval
             _logisticscostRepository = logisticscostRepository;
             _qualityCostRatioRepository = qualityCostRatioRepository;
             _qualityCostRatioYearRepository = qualityCostRatioYearRepository;
+
+            _customerTargetPriceRepository = customerTargetPriceRepository;
         }
 
 
@@ -512,7 +521,14 @@ namespace Finance.PriceEval
                 var moudelCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId).Where(p => p.Year == year).SumAsync(p => p.Quantity);
 
                 //计算-成本项目
-                var costItem = this.GetLossCostByMaterial(year, electronicAndStructureList);
+                var costItem = await this.GetLossCostByMaterial(year, electronicAndStructureList, new GetCostItemInput
+                {
+                    AuditFlowId = input.AuditFlowId,
+                    GradientId = input.GradientId,
+                    SolutionId = input.SolutionId,
+                    UpDown = upDown,
+                    Year = year,
+                });
 
                 #region 其他成本项目
 
@@ -859,8 +875,16 @@ namespace Finance.PriceEval
         public const string SluggishCost = "呆滞物料分摊";
         public const string RetentionCost = "质保金分摊";
         public const string LineCost = "线体成本分摊";
+
+        public const string NreCost = "NRE费用分摊";
+        public const string AfterSalesPartsCost = "售后件费用分摊";
+
+
         public const string OtherCost = "其他成本";
 
+        public const string NreFy = "NRE费用";
+
+        public const string Shjfy = "售后件费用";
 
         /// <summary>
         /// 其他成本项目2（核价看板用）
@@ -878,6 +902,7 @@ namespace Finance.PriceEval
             {
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = MoldCosts,
                     Total = data.MouldInventoryTotal,
                     Note = string.Empty,
@@ -885,6 +910,7 @@ namespace Finance.PriceEval
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = FixtureCost,
                     Total = data.FixtureCostTotal,
                     Note = string.Empty,
@@ -892,6 +918,7 @@ namespace Finance.PriceEval
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = ToolCost,
                     Total = data.ToolingCostTotal,
                     Note = string.Empty,
@@ -899,6 +926,7 @@ namespace Finance.PriceEval
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = InspectionCost,
                     Total = data.QAQCDepartmentsTotal,
                     Note = string.Empty,
@@ -906,13 +934,15 @@ namespace Finance.PriceEval
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = SpecializedEquipmentCost,
-                    Total = data.ProductionEquipmentCostTotal,
+                    Total = data.ProductionEquipmentCost.Where(p=>p.DeviceStatusName=="专用").Sum(p=>p.Cost),//data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
                     IsShare = priceEvaluation.AllocationOfEquipmentCost
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = ExperimentCost,
                     Total = data.LaboratoryFeeModelsTotal,
                     Note = string.Empty,
@@ -920,6 +950,7 @@ namespace Finance.PriceEval
                 },
                 new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = TestSoftwareCost,
                     Total = data.SoftwareTestingCostTotal,
                     Note = string.Empty,
@@ -927,6 +958,7 @@ namespace Finance.PriceEval
                 },
                  new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName =OtherExpensesCost,
                     Total = data.RestsCostTotal,
                     Note = string.Empty,
@@ -934,13 +966,16 @@ namespace Finance.PriceEval
                 },
                   new OtherCostItem2List
                 {
+                    CostType = NreFy,
                     ItemName = TravelCost,
                     Total = data.TravelExpenseTotal,
                     Note = string.Empty,
                     IsShare = priceEvaluation.TravelCost
                 },
-                   new OtherCostItem2List
+
+                new OtherCostItem2List
                 {
+                    CostType = Shjfy,
                     ItemName =SluggishCost,
                     Total = decimal.Zero,
                     Note = string.Empty,
@@ -948,6 +983,7 @@ namespace Finance.PriceEval
                 },
                  new OtherCostItem2List
                 {
+                    CostType = Shjfy,
                     ItemName = RetentionCost,
                     Total = decimal.Zero,
                     Note = string.Empty,
@@ -955,19 +991,23 @@ namespace Finance.PriceEval
                 },
                  new OtherCostItem2List
                 {
+                    CostType = Shjfy,
                     ItemName = LineCost,
-                    Total = decimal.Zero,
+                    Total =decimal.Zero,// data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
                     IsShare = false,
                 },
+
             };
             otherCostItem2List.ForEach(item =>
             {
                 item.Count = shareCount is null ? 0 : shareCount.Count * 1000;
                 item.Cost = item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
+                item.YearCount = shareCount.Year;
             });
             otherCostItem2List.Add(new OtherCostItem2List
             {
+                CostType = "其他费用",
                 ItemName = OtherCost,
                 Total = decimal.Zero,
                 Count = 0,
@@ -991,7 +1031,7 @@ namespace Finance.PriceEval
         {
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-            return this.GetLossCostByMaterial(input.Year, electronicAndStructureList);
+            return await this.GetLossCostByMaterial(input.Year, electronicAndStructureList, input);
         }
 
         /// <summary>
@@ -999,12 +1039,33 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="year"></param>
         /// <param name="electronicAndStructureList"></param>
+        /// <param name="input"></param>
         /// <returns></returns>
-        private List<LossCost> GetLossCostByMaterial(int year, List<Material> electronicAndStructureList)
+        private async Task<List<LossCost>> GetLossCostByMaterial(int year, List<Material> electronicAndStructureList, GetCostItemInput input)
         {
             //计算-成本项目
             var costItem = electronicAndStructureList.GroupBy(x => x.SuperType)
-                .Select(p => new LossCost { Id = year, Name = p.Key, WastageCost = p.Sum(o => o.Loss), MoqShareCount = p.Sum(o => o.MoqShareCount) }).ToList();//只有损耗，还要增加分摊
+                .Select(p => new LossCost { EditId = p.Key, Id = year, Name = p.Key, WastageCost = p.Sum(o => o.Loss), MoqShareCount = p.Sum(o => o.MoqShareCount) }).ToList();//只有损耗，还要增加分摊
+
+
+            //取得修改项
+            var updateItem = await _updateItemRepository
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.LossCost && p.GradientId == input.GradientId
+                && p.SolutionId == input.SolutionId
+                && p.Year == input.Year && p.UpDown == input.UpDown);
+
+            var lossCost = ObjectMapper.Map<SetUpdateItemInput<List<LossCost>>>(updateItem);
+            if (lossCost is not null)
+            {
+                var dataIds = lossCost.UpdateItem.Select(p => p.EditId);
+
+                foreach (var item in costItem.Where(p => dataIds.Contains(p.EditId)))
+                {
+                    ObjectMapper.Map(lossCost.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                }
+            }
+
             return costItem;
         }
 
@@ -1039,6 +1100,10 @@ namespace Finance.PriceEval
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
+
+            var customerTargetPrice = await _customerTargetPriceRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+
             var sopYear = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId).MinAsync(p => p.Year);
             var data = await GetAllData(input);
 
@@ -1067,6 +1132,9 @@ namespace Finance.PriceEval
             {
                 var gradient = await _gradientRepository.GetAsync(input.GradientId);
                 var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.ProductId == productId);
+
+
+
                 //全生命周期处理
                 if (input.Year == PriceEvalConsts.AllYear)
                 {
@@ -1136,6 +1204,11 @@ namespace Finance.PriceEval
 
                 async Task<List<Material>> GetData(int year, YearType upDown)
                 {
+                    var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                                   join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                                   where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == productId && gmy.Year == year && gmy.UpDown == upDown
+                                                   select gmy).FirstOrDefaultAsync();
+
                     var lossYear = year - sopYear;
 
                     //产品大类名
@@ -1228,6 +1301,7 @@ namespace Finance.PriceEval
                                         SystemiginalCurrency = se.SystemiginalCurrency,//se.Sop,
                                         CurrencyText = se.Currency,
                                         ExchangeRateValue = er.ExchangeRateValue,
+                                        ExchangeRateId = er.Id,
                                         LossRate = lriy.Rate,//损耗率
                                         Moq = se.MOQ,
                                         //AvailableInventory = se.AvailableStock,
@@ -1243,23 +1317,43 @@ namespace Finance.PriceEval
                     var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
                     var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
 
+
+                    var moqFormulas = MiniExcel.Query<MoqFormulaDto>("wwwroot/Excel/MoqFormula.xlsx").ToList();
+
+
                     electronicAndStructureList.ForEach(item =>
                     {
                         item.Year = year;
                         item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
-                        item.ExchangeRate = GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
+                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.Id == item.ExchangeRateId ? customerTargetPrice.ExchangeRate : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
                         item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
-                        item.Loss = item.LossRate * item.TotalMoneyCyn;//等于合计金额*损耗率
+                        item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
                         item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
-                        item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
-                        item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq))) : item.Moq);
+                        //item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
+                        item.InputCount = (electronicAndStructureList.Count(p => p.Sap == item.Sap) * gradientModelYear.Count * 1000) / (1 - (item.LossRate / 100));
+
+                        item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
 
                         item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
                         item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
+
+
                     });
 
+                    decimal Formula(Material item)
+                    {
+                        var row = moqFormulas.FirstOrDefault(p => (p.TypeName == MoqFormulaDto.Pcb && p.CategoryName == item.CategoryName) || (p.TypeName == item.TypeName && p.CategoryName == item.CategoryName));
+                        if (row is null || row.Formula == MoqFormulaDto.Formula1)
+                        {
+                            return (item.Moq * Math.Ceiling((item.InputCount - item.AvailableInventory) / item.Moq));
+                        }
+                        else
+                        {
+                            return item.InputCount;
+                        }
+                    }
 
                     return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
                         .SelectMany(p => p).ToList();
@@ -1278,7 +1372,7 @@ namespace Finance.PriceEval
             var data = await GetBomCost(input);
             var dto = new BomCost();
             dto.Material = data;
-            dto.TotalMoneyCynCount = dto.Material.Sum(p => p.TotalMoneyCyn);
+            dto.TotalMoneyCynCount = dto.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
             dto.ElectronicCount = dto.Material.Where(p => p.SuperType == FinanceConsts.ElectronicName).Sum(p => p.TotalMoneyCyn);
             return dto;
         }
@@ -1368,31 +1462,53 @@ namespace Finance.PriceEval
                 entity.Add(dto);
 
                 //SMT 暂时为0，待需求确定后补充
-                entity.Add(new ManufacturingCost
+                ManufacturingCost allYearSmt = new();
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == input.Year);
+
+                var smtManufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+                if (smtManufacturingCostEdit is not null)
                 {
-                    Id = input.Year,
-                    CostType = CostType.SMT,
-                    GradientKy = 0,
-                    MonthlyDemand = 0,
-                    ManufacturingCostDirect = new ManufacturingCostDirect
+                    var smtEdit = smtManufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.SMT.ToString());
+                    if (smtEdit is not null)
                     {
-                        Id = input.Year,
-                        DirectLabor = 0,
-                        EquipmentDepreciation = 0,
-                        LineChangeCost = 0,
-                        ManufacturingExpenses = 0,
-                        Subtotal = 0,
-                    },
-                    ManufacturingCostIndirect = new ManufacturingCostIndirect
+                        entity.Add(smtEdit);
+                    }
+                    else
                     {
-                        Id = input.Year,
-                        DirectLabor = 0,
-                        EquipmentDepreciation = 0,
-                        ManufacturingExpenses = 0,
-                        Subtotal = 0
-                    },
-                    Subtotal = 0
-                });
+                        allYearSmt = new ManufacturingCost
+                        {
+                            Id = input.Year,
+                            CostType = CostType.SMT,
+                            GradientKy = 0,
+                            MonthlyDemand = 0,
+                            ManufacturingCostDirect = new ManufacturingCostDirect
+                            {
+                                Id = input.Year,
+                                DirectLabor = 0,
+                                EquipmentDepreciation = 0,
+                                LineChangeCost = 0,
+                                ManufacturingExpenses = 0,
+                                Subtotal = 0,
+                            },
+                            ManufacturingCostIndirect = new ManufacturingCostIndirect
+                            {
+                                Id = input.Year,
+                                DirectLabor = 0,
+                                EquipmentDepreciation = 0,
+                                ManufacturingExpenses = 0,
+                                Subtotal = 0
+                            },
+                            Subtotal = 0
+                        };
+                        entity.Add(allYearSmt);
+                    }
+                }
+
 
                 //entity.Insert(2, dto);
                 #endregion
@@ -1405,6 +1521,7 @@ namespace Finance.PriceEval
 
                 entity.ForEach(p =>
                 {
+                    p.EditId = p.CostType.ToString();
                     p.CostItem = p.CostType switch
                     {
                         CostType.GroupTest => PriceEvalConsts.GroupTest,
@@ -1425,6 +1542,7 @@ namespace Finance.PriceEval
 
                 entity.ForEach(p =>
                 {
+                    p.EditId = p.CostType.ToString();
                     p.CostItem = p.CostType switch
                     {
                         CostType.GroupTest => PriceEvalConsts.GroupTest,
@@ -1463,6 +1581,7 @@ namespace Finance.PriceEval
             //SMT 暂时为0，待需求确定后补充
             entity.Add(new ManufacturingCost
             {
+                EditId = CostType.SMT.ToString(),
                 Id = input.Year,
                 CostType = CostType.SMT,
                 GradientKy = 0,
@@ -1501,12 +1620,13 @@ namespace Finance.PriceEval
 
         async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput inputDto)
         {
-            //try
-            //{
             var data = new List<ManufacturingCost>();
 
             if (inputDto.Year == PriceEvalConsts.AllYear)
             {
+
+
+
                 var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == inputDto.GradientId);
                 var gradientValue = gradient.GradientValue.ToString();
 
@@ -1651,35 +1771,9 @@ namespace Finance.PriceEval
                 data.Add(other);
             }
 
-            //var data = await _allManufacturingCostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == productId
-            //                             && t.Year == input.Year && costType.Contains(t.CostType))
-            //                    .Select(t => new ManufacturingCost
-            //                    {
-            //                        Id = input.Year,
-            //                        CostType = t.CostType,
-            //                        GradientKy = 0,
-            //                        MonthlyDemand = 0,
-            //                        ManufacturingCostDirect = t.CostType == CostType.Other ? null : new ManufacturingCostDirect
-            //                        {
-            //                            Id = input.Year,
-            //                            DirectLabor = t.DirectLabor1.Value,
-            //                            EquipmentDepreciation = t.EquipmentDepreciation1.Value,
-            //                            LineChangeCost = t.LineChangeCost1.Value,
-            //                            ManufacturingExpenses = t.ManufacturingExpenses1.Value,
-            //                            Subtotal = t.Subtotal1.Value,
-            //                        },
-            //                        ManufacturingCostIndirect = t.CostType == CostType.Other ? null : new ManufacturingCostIndirect
-            //                        {
-            //                            Id = input.Year,
-            //                            DirectLabor = t.DirectLabor2.Value,
-            //                            EquipmentDepreciation = t.EquipmentDepreciation2.Value,
-            //                            ManufacturingExpenses = t.ManufacturingExpenses2.Value,
-            //                            Subtotal = t.Subtotal2.Value
-            //                        },
-            //                        Subtotal = t.Subtotal,
-            //                    }).ToListAsync();
             data.ForEach(p =>
             {
+                p.EditId = p.CostType.ToString();
                 p.CostItem = p.CostType switch
                 {
                     CostType.GroupTest => PriceEvalConsts.GroupTest,
@@ -1690,13 +1784,28 @@ namespace Finance.PriceEval
                     _ => throw new FriendlyException($"CostType输入参数不正确。参数为：{p.CostType}"),
                 };
             });
-            return data;
-            //}
-            //catch (Exception e)
-            //{
-            //    throw new FriendlyException($"COB制造成本取值失败！{e.Message}");
-            //}
 
+
+            //取得修改项
+            var updateItem = await _updateItemRepository
+                .FirstOrDefaultAsync(p => p.AuditFlowId == inputDto.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == inputDto.GradientId
+                && p.SolutionId == inputDto.SolutionId
+                && p.Year == inputDto.Year);
+
+            var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+            if (manufacturingCostEdit is not null)
+            {
+                var dataIds = manufacturingCostEdit.UpdateItem.Select(p => p.EditId);
+
+                foreach (var item in data.Where(p => dataIds.Contains(p.EditId)))
+                {
+                    ObjectMapper.Map(manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                }
+            }
+
+
+            return data;
         }
         #endregion
 
@@ -1706,6 +1815,24 @@ namespace Finance.PriceEval
         {
             try
             {
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+                if (manufacturingCostEdit is not null)
+                {
+                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
+
+                    if (zf is not null)
+                    {
+                        return zf;
+                    }
+                }
+
                 //工序工时年份
                 var yearInfo = await _yearInfoRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.WorkingHour);
 
@@ -1840,6 +1967,7 @@ namespace Finance.PriceEval
 
                 var dto = new ManufacturingCost
                 {
+                    EditId = PriceEvalConsts.Zc,
                     Id = year,
                     CostType = CostType.GroupTest,
                     CostItem = PriceEvalConsts.GroupTest,
@@ -1852,7 +1980,7 @@ namespace Finance.PriceEval
                 };
                 return dto;
             }
-            catch (Exception E)
+            catch (Exception e)
             {
                 return null;
             }
@@ -1920,40 +2048,104 @@ namespace Finance.PriceEval
             var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == input.GradientId);
             var gradientValue = gradient.GradientValue.ToString();
 
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
+
 
 
             if (input.Year == PriceEvalConsts.AllYear)
             {
-                var queryItem = await _logisticscostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == gradientValue)
-                    .Select(l => new ProductionControlInfoListDto
-                    {
-                        Year = input.Year.ToString(),
-                        Freight = l.FreightPrice.GetValueOrDefault(),
-                        MonthEndDemand = l.MonthlyDemandPrice.GetValueOrDefault(),
-                        PerFreight = l.SinglyDemandPrice.GetValueOrDefault(),
-                        PerPackagingPrice = l.PackagingPrice.GetValueOrDefault(),
-                        PerTotalLogisticsCost = l.TransportPrice.GetValueOrDefault(),
-                        StorageExpenses = l.StoragePrice.GetValueOrDefault(),
-                    })
-                .ToListAsync();
-                return queryItem;
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == solution.Productld
+                                               select gmy).ToListAsync();
+                //不同的总年数量
+                var sumYearCount = gradientModelYear.DistinctBy(p => p.Year).Count();
+                var valueSum = gradientModelYear.Sum(p => p.Count);
+                var monthEndDemand = valueSum * 1000 / sumYearCount / 12;
+
+
+                var allYear = await year.SelectAsync(async p => await GetData(new GetLogisticsCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = p.Year, UpDown = p.UpDown }, solution, gradientValue));
+
+                var data = allYear.SelectMany(p => p);
+
+                var cs = year.First().UpDown == YearType.Year ? 12 : 6;
+                var yearCount = year.DistinctBy(p => p.Year).Count();
+
+                var dto = new ProductionControlInfoListDto
+                {
+                    EditId = "0",
+                    Year = "全生命周期",
+                    Freight = data.Sum(p => p.Freight * cs) / (yearCount * 12),
+                    MonthEndDemand = monthEndDemand,
+                    StorageExpenses = data.Sum(p => p.StorageExpenses * cs) / (yearCount * 12),
+                    PerPackagingPrice = data.Sum(p => p.PerPackagingPrice * year.Count) / year.Sum(p => p.Quantity),
+                    PerFreight = data.Sum(p => p.PerFreight * year.Count) / year.Sum(p => p.Quantity),
+                    PerTotalLogisticsCost = data.Sum(p => p.PerTotalLogisticsCost * year.Count) / year.Sum(p => p.Quantity),
+                };
+                return new List<ProductionControlInfoListDto> { dto };
+
+                //var queryItem = await _logisticscostRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId && t.Classification == gradientValue)
+                //    .Select(l => new ProductionControlInfoListDto
+                //    {
+                //        Year = l.Year,//input.Year.ToString(),
+                //        Freight = l.FreightPrice.GetValueOrDefault(),
+                //        MonthEndDemand = monthEndDemand,//l.MonthlyDemandPrice.GetValueOrDefault(),
+                //        PerFreight = l.SinglyDemandPrice.GetValueOrDefault(),
+                //        PerPackagingPrice = l.PackagingPrice.GetValueOrDefault(),
+                //        PerTotalLogisticsCost = l.TransportPrice.GetValueOrDefault(),
+                //        StorageExpenses = l.StoragePrice.GetValueOrDefault(),
+                //    })
+                //.ToListAsync();
+                //return queryItem;
             }
             else
             {
+                return await GetData(input, solution, gradientValue);
+            }
+
+            async Task<List<ProductionControlInfoListDto>> GetData(GetLogisticsCostInput input, Solution solution, string gradientValue)
+            {
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == solution.Productld && gmy.Year == input.Year && gmy.UpDown == input.UpDown
+                                               select gmy).FirstOrDefaultAsync();
+                var monthEndDemand = gradientModelYear.Count * 1000 / (input.UpDown == YearType.Year ? 12 : 6);
+
                 var data = await (from l in _logisticscostRepository.GetAll()
                                   join y in _modelCountYearRepository.GetAll() on l.ModelCountYearId equals y.Id
                                   where l.AuditFlowId == input.AuditFlowId && l.SolutionId == input.SolutionId && l.Classification == gradientValue
                                   && y.UpDown == input.UpDown && y.Year == input.Year
                                   select new ProductionControlInfoListDto
                                   {
+                                      EditId = l.Id.ToString(),
                                       Year = input.Year.ToString(),
                                       Freight = l.FreightPrice.GetValueOrDefault(),
-                                      MonthEndDemand = l.MonthlyDemandPrice.GetValueOrDefault(),
+                                      MonthEndDemand = monthEndDemand, //l.MonthlyDemandPrice.GetValueOrDefault(),
                                       PerFreight = l.SinglyDemandPrice.GetValueOrDefault(),
                                       PerPackagingPrice = l.PackagingPrice.GetValueOrDefault(),
                                       PerTotalLogisticsCost = l.TransportPrice.GetValueOrDefault(),
                                       StorageExpenses = l.StoragePrice.GetValueOrDefault(),
                                   }).ToListAsync();
+
+
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.LogisticsCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                var logisticsCost = ObjectMapper.Map<SetUpdateItemInput<List<ProductionControlInfoListDto>>>(updateItem);
+                if (logisticsCost is not null)
+                {
+                    var dataIds = logisticsCost.UpdateItem.Select(p => p.EditId);
+
+                    foreach (var item in data.Where(p => dataIds.Contains(p.EditId)))
+                    {
+                        ObjectMapper.Map(logisticsCost.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                    }
+                }
+
                 return data;
             }
 
@@ -2102,7 +2294,7 @@ namespace Finance.PriceEval
             //var totalMaterialCost = (electronicAndStructureList.Sum(p => p.MaterialCost) + electronicAndStructureList.Sum(p => p.MoqShareCount)
             //    + logisticsFee + manufacturingCostSubtotal) / grossProfitMargin * costProportion;
 
-            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) * costProportion;
+            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) * costProportion / 100;
 
 
             //产品小类名称

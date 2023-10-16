@@ -27,11 +27,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -542,7 +544,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         [AbpAuthorize]
-        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
+        public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
@@ -1235,6 +1237,11 @@ namespace Finance.NerPricing
                 headerRow.CreateCell(4).SetCellValue("工序维护人");
                 headerRow.CreateCell(5).SetCellValue("工序维护时间");
                 int index = 1;
+                ICellStyle dateStyle = workbook.CreateCellStyle();
+                IDataFormat dateFormat = workbook.CreateDataFormat();
+                dateStyle.DataFormat = dateFormat.GetFormat("yyyy-MM-dd");
+                // 设置第一列宽度为 20
+                sheet2.SetColumnWidth(5, 20 * 256);
                 foreach (FoundationreliableDto item in foundationreliables)
                 {   // 添加数据
                     IRow dataRow = sheet2.CreateRow(index++);
@@ -1243,7 +1250,9 @@ namespace Finance.NerPricing
                     dataRow.CreateCell(2).SetCellValue(item.Price.ToString());
                     dataRow.CreateCell(3).SetCellValue(item.Unit);
                     dataRow.CreateCell(4).SetCellValue(item.LastModifierUserName);
-                    dataRow.CreateCell(5).SetCellValue(item.CreationTime);
+                    ICell cell = dataRow.CreateCell(5);
+                    cell.CellStyle = dateStyle;
+                    cell.SetCellValue(item.CreationTime);
                 }
                 // 保存工作簿
                 using (MemoryStream fileStream = new MemoryStream())
@@ -1276,12 +1285,12 @@ namespace Finance.NerPricing
                     if (rowExcls.Count is 0) throw new FriendlyException("模板数据为空/未使用标准模板");
                     List<FoundationreliableDto> foundationreliables = await _foundationreliableAppService.GetListAllAsync(new GetFoundationreliablesInput() { MaxResultCount = 9999 });
                     List<EnvironmentalExperimentFeeModel> rows = ObjectMapper.Map<List<EnvironmentalExperimentFeeModel>>(rowExcls);
-                    rows.RemoveAll(p=>p.ProjectName==""||p.ProjectName==null);
+                    rows.RemoveAll(p => p.ProjectName == "" || p.ProjectName == null);
                     int index = 3;
                     rows.ForEach((row) =>
                     {
                         FoundationreliableDto foundationreliableDto = foundationreliables.FirstOrDefault(p => p.Name == row.ProjectName);
-                        if (foundationreliableDto is null) throw new FriendlyException( $"{index}行,您填写的值为{row.ProjectName},实验项目为请根据下拉选择填写!");
+                        if (foundationreliableDto is null) throw new FriendlyException($"{index}行,您填写的值为{row.ProjectName},实验项目为请根据下拉选择填写!");
                         row.UnitPrice = (decimal)foundationreliableDto.Price;
                         row.Unit = foundationreliableDto.Unit;
                         row.AdjustmentCoefficient = 1;//调整系数默认为1
@@ -1383,7 +1392,7 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="auditFlowId">流程表Id</param>
         /// <returns></returns>
-        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)]long auditFlowId)
+        public async Task<List<ReturnSalesDepartmentDto>> GetInitialSalesDepartment([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId)
         {
 
             List<ReturnSalesDepartmentDto> initialSalesDepartmentDtos = new();
@@ -1601,6 +1610,20 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                //手板件新增项
+                List<HandPieceCostModify> handPieceCostModifiesprop = handPieceCostModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (HandPieceCostModify modify in handPieceCostModifiesprop)
+                {
+                    pricingFormDto.HandPieceCost.Add(new HandPieceCostModel()
+                    {
+                        PartName = modify.PartName,
+                        PartNumber = modify.PartNumber,
+                        UnitPrice = modify.UnitPrice,
+                        Quantity = modify.Quantity,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
+                }
                 //模具费用
                 List<MouldInventoryModify> mouldInventoryModifies = _mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (MouldInventoryModel item in pricingFormDto.MouldInventory)
@@ -1620,6 +1643,22 @@ namespace Finance.NerPricing
 
                     }
                 }
+                //模具费用新增项
+                List<MouldInventoryModify> mouldInventoryModifiesprop = mouldInventoryModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (MouldInventoryModify modify in mouldInventoryModifiesprop)
+                {
+                    pricingFormDto.MouldInventory.Add(new()
+                    {
+                        StructuralId = modify.StructuralId,
+                        ModelName = modify.ModelName,
+                        UnitPrice = modify.UnitPrice,
+                        MoldCavityCount = modify.MoldCavityCount,
+                        ModelNumber = modify.ModelNumber,
+                        Count = modify.Count,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
+                }
                 //工装费用
                 List<ToolingCostsModify> toolingCostsModifies = _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ToolingCostModel item in pricingFormDto.ToolingCost)
@@ -1633,6 +1672,19 @@ namespace Finance.NerPricing
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
                     }
+                }
+                //工装费用新增项
+                List<ToolingCostsModify> toolingCostsModifiesprop = toolingCostsModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (ToolingCostsModify modify in toolingCostsModifiesprop)
+                {
+                    pricingFormDto.ToolingCost.Add(new()
+                    {
+                        WorkName = modify.WorkName,
+                        UnitPriceOfTooling = modify.UnitPriceOfTooling,
+                        ToolingCount = modify.ToolingCount,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
                 }
                 //治具费用
                 List<FixtureCostsModify> fixtureCostsModifies = _fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
@@ -1648,6 +1700,19 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                //治具费用新增项
+                List<FixtureCostsModify> fixtureCostsModifiesprop = fixtureCostsModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (FixtureCostsModify modify in fixtureCostsModifiesprop)
+                {
+                    pricingFormDto.FixtureCost.Add(new()
+                    {
+                        ToolingName = modify.ToolingName,
+                        UnitPrice = modify.UnitPrice,
+                        Number = modify.Number,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
+                }
                 //检具费用
                 List<InspectionToolCostModify> inspectionToolCostModifies = _inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (QADepartmentQCModel item in pricingFormDto.QAQCDepartments)
@@ -1662,6 +1727,19 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                //检具费用新增项
+                List<InspectionToolCostModify> inspectionToolCostModifiesprop = inspectionToolCostModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (InspectionToolCostModify modify in inspectionToolCostModifiesprop)
+                {
+                    pricingFormDto.QAQCDepartments.Add(new()
+                    {
+                        Qc = modify.Qc,
+                        UnitPrice = modify.UnitPrice,
+                        Count = modify.Count,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
+                }
                 //生产设备费用
                 List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = _productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ProductionEquipmentCostModel item in pricingFormDto.ProductionEquipmentCost)
@@ -1675,8 +1753,23 @@ namespace Finance.NerPricing
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
                         item.DeviceStatus = modify.DeviceStatus;
-                        item.DeviceStatusName =await GetDisplayName(modify.DeviceStatus);
+                        item.DeviceStatusName = await GetDisplayName(modify.DeviceStatus);
                     }
+                }
+                //生产设备费用新增项
+                List<ProductionEquipmentCostsModify> productionEquipmentCostsModifiesprop = productionEquipmentCostsModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (var modify in productionEquipmentCostsModifiesprop)
+                {
+                    pricingFormDto.ProductionEquipmentCost.Add(new()
+                    {
+                        EquipmentName = modify.EquipmentName,
+                        Number = modify.Number,
+                        UnitPrice = modify.UnitPrice,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                        DeviceStatus = modify.DeviceStatus,
+                        DeviceStatusName = await GetDisplayName(modify.DeviceStatus),
+                    });
                 }
                 //实验费用
                 List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
@@ -1697,6 +1790,24 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                //实验费用新增项
+                List<ExperimentalExpensesModify> experimentalExpensesModifiesprop = experimentalExpensesModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (ExperimentalExpensesModify modify in experimentalExpensesModifiesprop)
+                {
+                    pricingFormDto.LaboratoryFeeModels.Add(new()
+                    {
+                        ProjectName = modify.ProjectName,
+                        IsThirdParty = modify.IsThirdParty,
+                        UnitPrice = modify.UnitPrice,
+                        AdjustmentCoefficient = modify.AdjustmentCoefficient,
+                        Unit = modify.Unit,
+                        CountBottomingOut = modify.CountBottomingOut,
+                        CountDV = modify.CountDV,
+                        CountPV = modify.CountPV,
+                        AllCost = modify.AllCost,
+                        Remark = modify.Remark,
+                    });
+                }
                 //测试软件费用
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = _testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (SoftwareTestingCotsModel item in pricingFormDto.SoftwareTestingCost)
@@ -1711,6 +1822,19 @@ namespace Finance.NerPricing
                         item.Remark = modify.Remark;
                     }
                 }
+                //测试软件费用新增项
+                List<TestingSoftwareCostsModify> testingSoftwareCostsModifiesprop = testingSoftwareCostsModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (TestingSoftwareCostsModify modify in testingSoftwareCostsModifiesprop)
+                {
+                    pricingFormDto.SoftwareTestingCost.Add(new()
+                    {
+                        SoftwareProject = modify.SoftwareProject,
+                        CostH = modify.CostH,
+                        Hour = modify.Hour,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
+                }
                 // 差旅费用
                 List<TravelExpenseModify> travelExpenseModifies = _travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (TravelExpenseModel item in pricingFormDto.TravelExpense)
@@ -1719,13 +1843,28 @@ namespace Finance.NerPricing
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
-                        item.ReasonsName =await GetDisplayName(modify.ReasonsId);
+                        item.ReasonsName = await GetDisplayName(modify.ReasonsId);
                         item.PeopleCount = modify.PeopleCount;
                         item.CostSky = modify.CostSky;
                         item.SkyCount = modify.SkyCount;
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
                     }
+                }
+                //差旅费用新增项
+                List<TravelExpenseModify> travelExpenseModifiesprop = travelExpenseModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (TravelExpenseModify modify in travelExpenseModifiesprop)
+                {
+                    pricingFormDto.TravelExpense.Add(new()
+                    {
+                        ReasonsId = modify.ReasonsId,
+                        ReasonsName = await GetDisplayName(modify.ReasonsId),
+                        PeopleCount = modify.PeopleCount,
+                        CostSky = modify.CostSky,
+                        SkyCount = modify.SkyCount,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
                 }
                 // 其他费用
                 List<RestsCostModify> restsCostModifies = _restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
@@ -1738,6 +1877,17 @@ namespace Finance.NerPricing
                         item.Cost = modify.Cost;
                         item.Remark = modify.Remark;
                     }
+                }
+                //其他费用新增项
+                List<RestsCostModify> restsCostModifiesprop = restsCostModifies.Where(p => p.ModifyId == 0).ToList();
+                foreach (RestsCostModify modify in restsCostModifiesprop)
+                {
+                    pricingFormDto.RestsCost.Add(new()
+                    {
+                        ConstName = modify.ConstName,
+                        Cost = modify.Cost,
+                        Remark = modify.Remark,
+                    });
                 }
                 pricingFormDto.HandPieceCostTotal = pricingFormDto.HandPieceCost.Sum(p => p.Cost);
                 pricingFormDto.MouldInventoryTotal = pricingFormDto.MouldInventory.Sum(p => p.Cost);
@@ -1776,19 +1926,19 @@ namespace Finance.NerPricing
                     modify.ClientName = priceEvaluation.CustomerName;
                 }
                 //线体数量和共线分摊率的 乘积
-                decimal UphAndValuesd = 0M;
+                decimal UphAndValuesd = 1M;
                 //线体数量和共线分摊率的值
                 List<ProcessHoursEnterLine> processHoursEnterLines = await _processHoursEnterLine.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 List<UphAndValue> result = (from a in processHoursEnterLines
-                           join b in modelCountYears on a.ModelCountYearId equals b.Id
-                           select new UphAndValue
-                           {
-                            
-                               Uph=a.Uph,
-                               Value= (decimal)a.Value,
-                               Year= (int)b.Year,
-                               Description=a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
-                           }).ToList();
+                                            join b in modelCountYears on a.ModelCountYearId equals b.Id
+                                            select new UphAndValue
+                                            {
+
+                                                Uph = a.Uph,
+                                                Value = (decimal)a.Value,
+                                                Year = (int)b.Year,
+                                                Description = a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
+                                            }).ToList();
                 if (result.Count is not 0)
                 {
                     //先判断线体数量是否一致 如果一致 则继续判断共线分摊率
@@ -1859,7 +2009,7 @@ namespace Finance.NerPricing
                 //工装费用=>测试线费用               
                 List<ToolingCostModel> workingHoursInfosCSX = processHours.Where(p => p.TestLineName is not null).GroupBy(m => new { m.TestLineName, m.TestLinePrice }).Select(a => new ToolingCostModel
                 {
-                    Id = processHours.Where(p => p.TestLineName == a.Key.TestLineName && p.TestLinePrice == a.Key.TestLinePrice).Select(p => p.Id).FirstOrDefault()+1,
+                    Id = processHours.Where(p => p.TestLineName == a.Key.TestLineName && p.TestLinePrice == a.Key.TestLinePrice).Select(p => p.Id).FirstOrDefault() + 1,
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
@@ -1930,7 +2080,7 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
+                        Cost = a.Key.DeviceStatus == Status.zy.ToString() ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
@@ -1970,10 +2120,10 @@ namespace Finance.NerPricing
                                                                             HardwareDevicePrice = b.HardwareDevicePrice,
                                                                             ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                         }).ToList();
-                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() {Id= processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = (decimal)processHoursEnterFrocks.Sum(p => p.HardwareDevicePrice) } } };
+                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = (decimal)processHoursEnterFrocks.Sum(p => p.HardwareDevicePrice) } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
                 //测试软件费用=>追溯软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel {Id= processHours.FirstOrDefault().Id+1, SoftwareProject = "追溯软件费用", Cost = processHours.Sum(p => p.TraceabilitySoftwareCost) });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = processHours.Sum(p => p.TraceabilitySoftwareCost) });
                 //测试软件费用=>开图软件费用
                 modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = processHours.Sum(p => p.SoftwarePrice) });
                 modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p => p.Cost);
@@ -2058,7 +2208,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         internal async Task<string> GetDisplayName(string Id)
         {
-            FinanceDictionaryDetail prop=await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id.Equals(Id));
+            FinanceDictionaryDetail prop = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id.Equals(Id));
             return prop?.DisplayName;
         }
         /// <summary>
@@ -2071,6 +2221,15 @@ namespace Finance.NerPricing
             await _handPieceCostModify.BulkInsertOrUpdateAsync(handPieceCostModify);
         }
         /// <summary>
+        /// 手板件费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelitionOfCostModificationItemsForHandBoards(long Id)
+        {                         
+            await _handPieceCostModify.HardDeleteAsync(p=>p.Id.Equals(Id));
+        }
+        /// <summary>
         /// 模具费用修改项添加
         /// </summary>
         /// <returns></returns>
@@ -2078,6 +2237,15 @@ namespace Finance.NerPricing
         {
             MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
             await _mouldInventoryModify.BulkInsertOrUpdateAsync(mouldInventoryModify);
+        }
+        /// <summary>
+        /// 模具费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelMoldCostModificationItem(long Id)
+        {            
+            await _mouldInventoryModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// 工装费用修改项添加
@@ -2089,6 +2257,15 @@ namespace Finance.NerPricing
             await _toolingCostsModify.BulkInsertOrUpdateAsync(toolingCostsModify);
         }
         /// <summary>
+        /// 工装费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelToolingCostModificationItem(long Id)
+        {          
+            await _toolingCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
+        }
+        /// <summary>
         /// 治具费用修改项添加
         /// </summary>
         /// <returns></returns>
@@ -2096,6 +2273,15 @@ namespace Finance.NerPricing
         {
             FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
             await _fixtureCostsModify.BulkInsertOrUpdateAsync(fixtureCostsModify);
+        }
+        /// <summary>
+        /// 治具费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelitionOfFixtureCostModificationItem(long Id)
+        {         
+            await _fixtureCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// 检具费用修改项添加
@@ -2107,6 +2293,15 @@ namespace Finance.NerPricing
             await _inspectionToolCostModify.BulkInsertOrUpdateAsync(inspectionToolCostModify);
         }
         /// <summary>
+        /// 检具费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelInspectionToolCostModificationItem(long Id)
+        {           
+            await _inspectionToolCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
+        }
+        /// <summary>
         /// 生产设备费用修改项添加
         /// </summary>
         /// <returns></returns>
@@ -2114,6 +2309,15 @@ namespace Finance.NerPricing
         {
             ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
             await _productionEquipmentCostsModify.BulkInsertOrUpdateAsync(productionEquipmentCostsModify);
+        }
+        /// <summary>
+        /// 生产设备费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelProductionEquipmentCostModificationItem(long Id)
+        {         
+            await _productionEquipmentCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// 实验费用修改项添加
@@ -2125,6 +2329,15 @@ namespace Finance.NerPricing
             await _experimentalExpensesModify.BulkInsertOrUpdateAsync(experimentalExpensesModify);
         }
         /// <summary>
+        /// 实验费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelExperimentalFeeModificationItem(long Id)
+        {            
+            await _experimentalExpensesModify.HardDeleteAsync(p => p.Id.Equals(Id));
+        }
+        /// <summary>
         /// 测试软件费用修改项添加
         /// </summary>
         /// <returns></returns>
@@ -2132,6 +2345,15 @@ namespace Finance.NerPricing
         {
             TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
             await _testingSoftwareCostsModify.BulkInsertOrUpdateAsync(testingSoftwareCostsModify);
+        }
+        /// <summary>
+        /// 测试软件费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelingModificationItemsForTestingSoftwareCosts(long Id)
+        {         
+            await _testingSoftwareCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// 差旅费用修改项添加
@@ -2143,6 +2365,15 @@ namespace Finance.NerPricing
             await _travelExpenseModify.BulkInsertOrUpdateAsync(travelExpenseModify);
         }
         /// <summary>
+        /// 差旅费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task DelTravelExpenseModificationItem(long Id)
+        {            
+            await _travelExpenseModify.HardDeleteAsync(p => p.Id.Equals(Id));
+        }
+        /// <summary>
         /// 其他费用修改项添加
         /// </summary>
         /// <returns></returns>
@@ -2150,6 +2381,14 @@ namespace Finance.NerPricing
         {
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
             await _restsCostModify.BulkInsertOrUpdateAsync(restsCostModify);
+        }
+        /// <summary>
+        /// 其他费用修改项删除
+        /// </summary>
+        /// <returns></returns>
+        public async Task DelOtherExpenseModificationItemsAdded(long Id)
+        {            
+            await _restsCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// NRE审核接口

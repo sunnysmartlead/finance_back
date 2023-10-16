@@ -60,54 +60,67 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// <summary>
         /// sensor
         /// </summary>        
+        [FriendlyRequired("设计方案-sensor")]
         public string Sensor { get; set; }
         /// <summary>
         /// serial
         /// </summary>      
+        [FriendlyRequired("设计方案-serial")]
         public string Serial { get; set; }
         /// <summary>
         /// lens
-        /// </summary>        
+        /// </summary>       
+        [FriendlyRequired("设计方案-lens")]
         public string Lens { get; set; }
         /// <summary>
         /// lsp
-        /// </summary>        
+        /// </summary>       
+        [FriendlyRequired("设计方案-lsp")]
         public string ISP { get; set; }
         /// <summary>
         /// vcsel
-        /// </summary>        
+        /// </summary>    
+        [FriendlyRequired("设计方案-vcsel")]
         public string Vcsel { get; set; }
         /// <summary>
         /// MCU
-        /// </summary>      
+        /// </summary>    
+        [FriendlyRequired("设计方案-MCU")]
         public string MCU { get; set; }
         /// <summary>
         /// 连接器
         /// </summary>
+        [FriendlyRequired("设计方案-连接器")]
         public string Connector { get; set; }
         /// <summary>
         /// 线束
         /// </summary>        
+        [FriendlyRequired("设计方案-线束")]
         public string Harness { get; set; }
         /// <summary>
         /// 支架
         /// </summary>        
+        [FriendlyRequired("设计方案-支架")]
         public string Stand { get; set; }
         /// <summary>
         /// 传动结构
-        /// </summary>       
+        /// </summary>     
+        [FriendlyRequired("设计方案-传动结构")]
         public string TransmissionStructure { get; set; }
         /// <summary>
         /// 产品类型
-        /// </summary>     
+        /// </summary>    
+        [FriendlyRequired("设计方案-产品类型")]
         public string ProductType { get; set; }
         /// <summary>
         /// 工艺方案
-        /// </summary>       
+        /// </summary>   
+        [FriendlyRequired("设计方案-工艺方案")]
         public string ProcessProgram { get; set; }
         /// <summary>
         /// 其他
         /// </summary>        
+        [FriendlyRequired("设计方案-其他")]
         public string Rests { get; set; }
         /// <summary>
         /// 3D爆炸图ID

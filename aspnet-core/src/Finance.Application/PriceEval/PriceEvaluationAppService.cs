@@ -109,7 +109,7 @@ namespace Finance.PriceEval
            IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
-                  qualityCostRatioRepository, qualityCostRatioYearRepository)
+                  qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
@@ -611,7 +611,7 @@ namespace Finance.PriceEval
 
             foreach (var item in modelCountDto)
             {
-                var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p=>p.Id == item.ProductType);
+                var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == item.ProductType);
                 item.ProductTypeName = dictionaryDetail.DisplayName;
             }
 
@@ -731,6 +731,14 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemManufacturingCost(SetUpdateItemInput<List<ManufacturingCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.CostType == CostType.Total))
+            {
+                throw new FriendlyException($"制造成本合计不允许修改！");
+            }
+            if (input.Year == PriceEvalConsts.AllYear && input.UpdateItem.Any(p => p.CostType == CostType.GroupTest))
+            {
+                throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -783,6 +791,10 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLogisticsCost(SetUpdateItemInput<List<ProductionControlInfoListDto>> input)
         {
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LogisticsCost
@@ -939,7 +951,7 @@ namespace Finance.PriceEval
             //其他成本
             var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
 
-            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost+ other;
+            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
 
             var list = new List<ProportionOfProductCostListDto>
             {
@@ -1013,7 +1025,7 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
-            var memoryStream =await NreTableDownloadStream(input);
+            var memoryStream = await NreTableDownloadStream(input);
 
 
             //var memoryStream = new MemoryStream();

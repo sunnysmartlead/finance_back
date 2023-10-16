@@ -31,5 +31,24 @@ namespace Finance.Entering.Model
         /// </summary>
         public List<StructuralMaterialModel> StructuralMaterialEntering { get; set; }
     }
-   
+    /// <summary>
+    /// 结构件单价复制信息录入 模型
+    /// </summary>
+    public class StructuralMemberEnteringModelCopy : ToExamineDto
+    {
+        /// <summary>
+        /// 流程Id
+        /// </summary>
+        [FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification, true)]
+        public long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 确认还是提交  确认 0/false  提交 1/true
+        /// </summary>
+        public bool IsSubmit { get; set; }
+        /// <summary>
+        ///  结构料单价录入界面
+        /// </summary>
+        public List<ConstructionModelCopy> StructuralMaterialEntering { get; set; }
+    }
 }

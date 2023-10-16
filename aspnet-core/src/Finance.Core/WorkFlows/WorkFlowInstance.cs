@@ -127,6 +127,16 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual string ProcessIdentifier { get; set; }
 
+        /// <summary>
+        /// 是否退回
+        /// </summary>
+        public virtual bool IsBack { get; set; }
+
+        /// <summary>
+        /// 审批评论
+        /// </summary>
+        public virtual string Comment { get; set; }
+
     }
 
     /// <summary>

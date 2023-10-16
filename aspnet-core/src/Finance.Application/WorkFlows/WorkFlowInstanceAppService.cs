@@ -258,8 +258,6 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task SubmitNode(SubmitNodeInput input)
         {
-
-
             await SubmitNodeInterfece(input);
         }
 
@@ -383,10 +381,13 @@ namespace Finance.WorkFlows
                     //把当前节点设置为已经过
                     changeNode.NodeInstanceStatus = NodeInstanceStatus.Passed;
 
-
                     //状态改为当前，填充数据变为空
                     item.NodeInstanceStatus = NodeInstanceStatus.Current;
                     item.FinanceDictionaryDetailId = string.Empty;
+                    item.Comment = input.Comment;
+
+                    //退回状态复位
+                    item.IsBack = false;
 
                     //多路退回
                     if (targetBusiness2NodeLines.Select(p => p.FinanceDictionaryDetailIds).Any(p => !p.IsNullOrWhiteSpace()))
@@ -403,12 +404,21 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
+
+
                             var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
                             if (route.Any())
                             {
                                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
                                 lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
                             }
+                        }
+
+
+                        if (line.LineType == LineType.Reset || line.FinanceDictionaryDetailId == FinanceConsts.YesOrNo_No)
+                        {
+                            //设置退回状态
+                            item.IsBack = true;
                         }
                     }
 
@@ -497,6 +507,8 @@ namespace Finance.WorkFlows
                 p.n.NodeType,
                 p.n.OperatedUserIds,
                 p.n.ProcessIdentifier,
+                p.n.IsBack,
+                p.n.Comment,
             });
 
 
@@ -543,7 +555,9 @@ namespace Finance.WorkFlows
                 TaskUser = string.Join(",", p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Name)).Distinct()),
                 WorkflowState = p.WorkflowState,
                 WorkFlowInstanceId = p.WorkFlowInstanceId,
-                ProcessIdentifier = p.ProcessIdentifier
+                ProcessIdentifier = p.ProcessIdentifier,
+                IsBack = p.IsBack,
+                Comment = p.Comment,
             }).ToList();
             return new PagedResultDto<UserTask>(result.Count, result);
         }

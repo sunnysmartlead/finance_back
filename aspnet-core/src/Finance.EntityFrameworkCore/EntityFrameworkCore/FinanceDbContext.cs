@@ -90,8 +90,12 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<GrossMarginForm> GrossMarginForm { set; get; }
         // 资源部电子物料录入
         public virtual DbSet<EnteringElectronic> EnteringElectronic { set; get; }
+        // 资源部电子物料录入复制项
+        public virtual DbSet<EnteringElectronicCopy> EnteringElectronicCopy { set; get; }
         // 资源部结构物料录入
         public virtual DbSet<StructureElectronic> StructureElectronic { set; get; }
+        // 资源部结构物料录入复制项
+        public virtual DbSet<StructureElectronicCopy> StructureElectronicCopy { set; get; }
         //汇率
         public virtual DbSet<ExchangeRate> ExchangeRate { set; get; }
         // Nre 项目管理部 手板件实体类
@@ -113,7 +117,7 @@ namespace Finance.EntityFrameworkCore
         // 报价分析看板中的 动态单价表 实体类
         public virtual DbSet<DynamicUnitPriceOffers> DynamicUnitPriceOffers { set; get; }
         // 报价分析看板中的 阶梯数量表 实体类
-        //public virtual DbSet<ActualUnitPriceOffer> ActualUnitPriceOffers { set; get; }
+        public virtual DbSet<ActualUnitPriceOffer> ActualUnitPriceOffers { set; get; }
         // 报价分析看板中的 汇总分析表  实体类
         public virtual DbSet<PooledAnalysisOffers> PooledAnalysisOffers { set; get; }
         //报价 项目看板实体类 实体类

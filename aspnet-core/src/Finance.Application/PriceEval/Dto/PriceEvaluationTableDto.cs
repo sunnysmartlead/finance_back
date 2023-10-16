@@ -2,6 +2,7 @@
 using Abp.Domain.Entities.Auditing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -498,6 +499,11 @@ namespace Finance.PriceEval.Dto
     public class OtherCostItem2List
     {
         /// <summary>
+        /// 费用大类
+        /// </summary>
+        public virtual string CostType { get; set; }
+
+        /// <summary>
         /// 成本项目
         /// </summary>
         public virtual string ItemName { get; set; }
@@ -526,6 +532,11 @@ namespace Finance.PriceEval.Dto
         /// 是否分摊
         /// </summary>
         public virtual bool IsShare { get; set; }
+
+        /// <summary>
+        /// 分摊年数
+        /// </summary>
+        public virtual decimal YearCount { get; set; }
     }
 
 
@@ -534,6 +545,16 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class LossCost : EntityDto<int>
     {
+        /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
+        /// 修改备注
+        /// </summary>
+        public virtual string EditNotes { get; set; }
+
         /// <summary>
         /// 成本项目名称（损耗率、电子料等等）
         /// </summary>
@@ -643,6 +664,11 @@ namespace Finance.PriceEval.Dto
         internal virtual string ExchangeRateValue { get; set; }
 
         /// <summary>
+        /// 汇率表Id
+        /// </summary>
+        internal virtual long ExchangeRateId { get; set; }
+
+        /// <summary>
         /// 本位币(存json)
         /// </summary>
         internal virtual string StandardMoney { get; set; }
@@ -680,7 +706,7 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 投入量
         /// </summary>
-        public virtual int InputCount { get; set; }
+        public virtual decimal InputCount { get; set; }
 
         /// <summary>
         /// 采购量
@@ -713,6 +739,16 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCost : EntityDto<int>
     {
+        /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
+        /// 修改备注
+        /// </summary>
+        public virtual string EditNotes { get; set; }
+
         /// <summary>
         /// 成本类型
         /// </summary>
