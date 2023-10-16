@@ -15,5 +15,10 @@ namespace Finance.BaseLibrary
         /// 分类
         /// </summary>
         public string Classification { get; set; }
+
+        /// <summary>
+        /// type
+        /// </summary>
+        public int Type { get; set; }
     }
 }
