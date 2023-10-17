@@ -72,6 +72,8 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// 是否录入 true/1 录入  false/0 未录入
         /// </summary>
         public bool IsEntering { get; set; }
+        //系统单价是否从单价库中带出
+        public bool IsSystemiginal { get; set; }
         /// <summary>
         /// 物料管制状态
         /// </summary> 

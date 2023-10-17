@@ -67,7 +67,8 @@ namespace Finance.FinanceDepartment
         /// <param name="dto"></param>
         /// <returns></returns>
         public async Task SaveRateEntryInput(RateEntryInfo dto)
-        {             
+        {
+            dto.Id = 0;
             await _rateEntryInfoRepository.InsertAsync(dto);        
             await CreateLog($"保存作业价格{dto.Year}年的数据", JobPriceType);
         }
@@ -182,7 +183,8 @@ namespace Finance.FinanceDepartment
         /// <param name="dto"></param>
         /// <returns></returns>
         public async Task SaveManufacturingCost(ManufacturingCostInfo dto)
-        {           
+        {
+           dto.Id = 0;
            await _manufacturingCostInfoRepository.InsertAsync(dto);      
            await CreateLog($"保存制造成本{dto.Year}年的数据", ManufacturingCostCalculationParametersType);
         }
