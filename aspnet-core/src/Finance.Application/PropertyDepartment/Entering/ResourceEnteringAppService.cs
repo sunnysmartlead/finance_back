@@ -716,6 +716,7 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<List<ElectronicDtoCopy>> ElectronicUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
@@ -785,6 +786,7 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<List<ConstructionDtoCopy>> StructureUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<ConstructionDtoCopy> constructionDtos = new List<ConstructionDtoCopy>();
