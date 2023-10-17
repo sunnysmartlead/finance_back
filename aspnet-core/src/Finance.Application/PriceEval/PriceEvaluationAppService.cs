@@ -98,7 +98,21 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
-        public PriceEvaluationAppService(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronicCopy, long> enteringElectronicRepository, IRepository<StructureElectronicCopy, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+        public PriceEvaluationAppService(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
+            IRepository<EnteringElectronicCopy, long> enteringElectronicRepository, 
+            IRepository<StructureElectronicCopy, long> structureElectronicRepository,
+            IRepository<LossRateInfo, long> lossRateInfoRepository, 
+            IRepository<LossRateYearInfo, long> lossRateYearInfoRepository,
+            IRepository<ExchangeRate, long> exchangeRateRepository,
+            IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, 
+            IRepository<ProcessHoursEnteritem, long> yearInfoRepository,
+            IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, 
+            IRepository<RateEntryInfo, long> rateEntryInfoRepository,
+            IRepository<ProductionControlInfo, long> productionControlInfoRepository,
+            IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository,
+            IRepository<UserInputInfo, long> userInputInfoRepository, 
+            IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, 
+            IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
             IRepository<ProductInformation, long> productInformationRepository, IRepository<Department, long> departmentRepository, NrePricingAppService nrePricingAppService, IRepository<AuditFlow, long> auditFlowRepository, IRepository<FileManagement, long> fileManagementRepository, AuditFlowAppService flowAppService, IRepository<NreIsSubmit, long> productIsSubmit,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
             IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
@@ -106,10 +120,13 @@ namespace Finance.PriceEval
            IRepository<CarModelCount, long> carModelCountRepository, IRepository<CarModelCountYear, long> carModelCountYearRepository,
            WorkflowInstanceAppService workflowInstanceAppService, IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository,
            IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, IRepository<Logisticscost, long> logisticscostRepository,
-           IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository)
+           IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository, IRepository<FollowLineTangent, long> followLineTangentRepository,
+           IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
+           IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
-                  qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository)
+                  qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
+                  processHoursEnterDeviceRepository, processHoursEnterRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
@@ -732,6 +749,15 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemManufacturingCost(SetUpdateItemInput<List<ManufacturingCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.CostType == CostType.Total))
+            {
+                throw new FriendlyException($"制造成本合计不允许修改！");
+            }
+            if (input.Year == PriceEvalConsts.AllYear && input.UpdateItem.Any(p => p.CostType == CostType.GroupTest))
+            {
+                throw new FriendlyException($"组测成本的全生命周期数据不允许修改！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -784,6 +810,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLogisticsCost(SetUpdateItemInput<List<ProductionControlInfoListDto>> input)
         {
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LogisticsCost
@@ -834,6 +865,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemQualityCost(SetUpdateItemInput<List<QualityCostListDto>> input)
         {
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                throw new FriendlyException($"质量成本的全生命周期数据不允许修改！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.QualityCost
@@ -885,6 +921,10 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemOtherCost(SetUpdateItemInput<List<OtherCostItem2List>> input)
         {
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
+            }
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.OtherCostItem2List
