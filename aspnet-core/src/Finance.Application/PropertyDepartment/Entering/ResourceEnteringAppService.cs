@@ -673,7 +673,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        public async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
+        internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
         {
             await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -697,7 +697,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        public async Task ElectronicBOMUnitPriceEliminate(long auditFlowId)
+        internal async Task ElectronicBOMUnitPriceEliminate(long auditFlowId)
         {
             await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
         }
