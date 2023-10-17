@@ -838,8 +838,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                                                      select carModelCountYear).ToList();
         List<int> YearList = yearDtos.Select(e => e.Year).Distinct().ToList();
         var yearmap = yearDtos.GroupBy(e => e.Year).ToDictionary(e => e.Key, e => e.Sum(v => v.Quantity));
-
+        // 拿到产品信息
         List<CreateColumnFormatProductInformationDto> productList = priceEvaluationStartInputResult.ProductInformation;
+        
         //年份
         List<SopSecondModel> Sop = new List<SopSecondModel>();
         foreach (var year in YearList)
@@ -891,7 +892,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             PartsSecondModel ISP = new();
             ISP.PartsName = "ISP";
-            var ips = eles.Where(e => e.TypeName.Equals("芯片IC—ISP")).FirstOrDefault();
+            // var ips = eles.Where(e => e.TypeName.Equals("芯片IC—ISP")).FirstOrDefault();
+            var ips = eles.Where(e => e.TypeName.Equals("芯片IC——ISP")).FirstOrDefault();
             ISP.Model = ips.SapItemName; //
             ISP.Remark = ips.EncapsulationSize;
             ISP.Type = product.IspTypeSelect;
