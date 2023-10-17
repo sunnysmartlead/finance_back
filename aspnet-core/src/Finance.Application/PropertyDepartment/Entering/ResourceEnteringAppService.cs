@@ -823,6 +823,7 @@ namespace Finance.Entering
                 {
                     //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                     StructureElectronicCopy structureElectronic = structureElectronicCopy.FirstOrDefault(p => p.StructureId.Equals(construction.StructureId));
+                    if(structureElectronic is null) { throw new FriendlyException("结构单价数据拷贝可能出现问题,请检查"); }
                     construction.Id = structureElectronic.Id;
                     construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                     construction.Currency = structureElectronic.Currency;//币种                       
