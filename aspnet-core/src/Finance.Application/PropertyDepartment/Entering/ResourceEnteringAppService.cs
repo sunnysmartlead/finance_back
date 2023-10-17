@@ -673,7 +673,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
+        public async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
         {
             await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -685,7 +685,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId">流程号</param>
         /// <returns></returns>
-        internal async Task StructureBOMUnitPriceCopying(long auditFlowId)
+        public async Task StructureBOMUnitPriceCopying(long auditFlowId)
         {
             await _configStructureElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<StructureElectronic> structures = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -757,6 +757,7 @@ namespace Finance.Entering
             foreach (ElectronicDto electronic in electronicDto.ElectronicDtoList)
             {
                 EnteringElectronicCopy enteringElectronic = await _configEnteringElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(electronic.SolutionId) && p.AuditFlowId.Equals(electronicDto.AuditFlowId) && p.ElectronicId.Equals(electronic.ElectronicId));
+                if (enteringElectronic is null) { throw new FriendlyException("电子单价数据拷贝可能出现问题,请检查"); }
                 enteringElectronic.MOQ = electronic.MOQ;//MOQ
                 enteringElectronic.ElectronicId = electronic.ElectronicId;//电子BOM表单的Id
                 enteringElectronic.SolutionId = electronic.SolutionId; //零件的id
@@ -765,11 +766,11 @@ namespace Finance.Entering
                 enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id                       
                 if (electronicDto.IsSubmit)
                 {
-                    enteringElectronic.IsSubmit = electronicDto.IsSubmit;//确认提交 
+                    enteringElectronic.IsSubmit = true;//确认提交 
                 }
                 else
                 {
-                    enteringElectronic.IsEntering = electronicDto.IsSubmit;//确认提交 
+                    enteringElectronic.IsEntering = true;//确认提交 
                 }
                 enteringElectronic.Currency = electronic.Currency;//币种
                 enteringElectronic.MaterialControlStatus = electronic.MaterialControlStatus;//物料管制状态
@@ -872,11 +873,11 @@ namespace Finance.Entering
                     structureElectronic.Currency = item.Currency;//币种              
                     if (structuralMemberEnteringModel.IsSubmit)
                     {
-                        structureElectronic.IsSubmit = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                        structureElectronic.IsSubmit =true;//确认提交 
                     }
                     else
                     {
-                        structureElectronic.IsEntering = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                        structureElectronic.IsEntering = true;//确认提交 
                     }
                     structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
                     structureElectronic.Remark = item.Remark; //备注                  

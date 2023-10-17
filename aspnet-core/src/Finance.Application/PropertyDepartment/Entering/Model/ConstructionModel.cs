@@ -153,6 +153,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 修改意见
         /// </summary>
+        [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
 }

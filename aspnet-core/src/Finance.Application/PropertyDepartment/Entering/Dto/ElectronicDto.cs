@@ -137,6 +137,7 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// <summary>
         /// 修改意见
         /// </summary>
+        [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
 }
