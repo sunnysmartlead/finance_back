@@ -40,5 +40,11 @@ namespace Finance.PriceEval
         /// 其他制造成本合计（元）
         /// </summary>
         public const string Other = "其他制造成本（元）";
+
+
+        /// <summary>
+        /// 组测
+        /// </summary>
+        public const string Zc = "组测（元）";
     }
 }

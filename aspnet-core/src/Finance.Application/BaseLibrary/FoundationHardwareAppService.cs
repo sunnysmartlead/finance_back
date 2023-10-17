@@ -369,6 +369,8 @@ namespace Finance.BaseLibrary
                             entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
                         entity.SoftwareState = initRow.GetCell(5 + deviceCountt * 4).ToString();
                         entity.SoftwarePrice = decimal.Parse(initRow.GetCell(6 + deviceCountt * 4).ToString());
+                        entity.SoftwareBusiness = initRow.GetCell(7 + deviceCountt * 4).ToString();
+
                         list.Add(entity);
                     }
 
@@ -483,6 +485,7 @@ namespace Finance.BaseLibrary
             cols.Add(new DynamicExcelColumn("FixtureGaugeName") { Index = a+2, Name = "软件名称", Width = 30 });
             cols.Add(new DynamicExcelColumn("FixtureGaugeState") { Index = a + 3, Name = "软件状态", Width = 30 });
             cols.Add(new DynamicExcelColumn("FixtureGaugePrice") { Index = a + 4, Name = "软件单价", Width = 30 });
+            cols.Add(new DynamicExcelColumn("SoftwareBusiness") { Index = a + 5, Name = "软件供应商", Width = 30 });
             var config = new OpenXmlConfiguration
             {
                 DynamicColumns = cols.ToArray()
@@ -503,6 +506,7 @@ namespace Finance.BaseLibrary
                     ["FixtureGaugeState"] = foundationHardwareDto.SoftwareState,
                     ["TraceabilitySoftware"] = foundationHardwareDto.TraceabilitySoftware,
                     ["TraceabilitySoftwareCost"] = foundationHardwareDto.TraceabilitySoftwareCost,
+                    ["SoftwareBusiness"] = foundationHardwareDto.SoftwareBusiness,
                 };
                 for (int j = 0; j < foundationHardwareDto.ListHardware.Count; j++)
                 {

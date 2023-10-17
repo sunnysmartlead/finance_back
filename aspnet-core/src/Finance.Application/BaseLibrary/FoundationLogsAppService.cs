@@ -82,6 +82,7 @@ namespace Finance.BaseLibrary
                 {
                     item.LastModifierUserName = user.Name;
                 }
+                item.LastModificationTime = item.CreationTime;
             }
             // 数据返回
             return dtos;
@@ -125,6 +126,7 @@ namespace Finance.BaseLibrary
                     FoundationLogs entity = await _foundationLogsRepository.GetAsync(item.Id);
                     entity.Id= item.Id;
                     entity.Remark= item.Remark;
+                    entity.LastModificationTime = item.LastModificationTime;
                     if (AbpSession.UserId != null)
                     {
                         entity.LastModifierUserId = AbpSession.UserId.Value;

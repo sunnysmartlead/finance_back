@@ -85,7 +85,11 @@ namespace Finance.BaseLibrary
         {
             // 设置查询条件
             var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false);
-            if (!string.IsNullOrEmpty(input.Name))
+            if (!string.IsNullOrEmpty(input.Name) && null != input.Type)
+            {
+                query = query.Where(t => t.Name.Contains(input.Name));
+            }
+            if (!string.IsNullOrEmpty(input.Name) && 1 == input.Type)
             {
                 query = query.Where(t => t.Name.Contains(input.Name));
             }
