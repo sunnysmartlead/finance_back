@@ -1017,7 +1017,34 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         qt.Costs = qts;
         nres.Add(qt);
 
+              //成本信息表新
+        // List<Gradient> gradients =
+        //     await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == analyseBoardSecondInputDto.auditFlowId);
+        // var soptime = priceEvaluationStartInputResult.SopTime;
+        // foreach (var Solution in Solutions)
+        // {
+           
+        //     ExcelPriceEvaluationTableDto ex = new ExcelPriceEvaluationTableDto();
+        //      foreach (var gradient in gradients)
+        //     {
+        //              try
+        //     {
+        //         ex = await _priceEvaluationAppService.GetPricingPanelProfit(new GetPricingPanelProfitInput
+        //         {
+        //             AuditFlowId = auditFlowId,
+        //             GradientId = gradient.Id,
+        //             SolutionId = Solution.Id,
+        //             Year = soptime,
+        //             UpDown = sopTimeType
+        //         });
+        //     }
+        //     catch (Exception e)
+        //     {
 
+        //         throw new UserFriendlyException("核价数据问题");
+
+        //     }
+        //     }
         //成本单价信息
         List<PricingSecondModel> pricingModels = new List<PricingSecondModel>();
 
