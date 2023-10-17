@@ -498,9 +498,9 @@ namespace Finance.BaseLibrary
                     FoundationReliableProcessHours foundationReliableProcessHours = new FoundationReliableProcessHours();
                     foundationReliableProcessHours.ProcessName = deviceItem.ProcessName;
                     foundationReliableProcessHours.ProcessNumber = deviceItem.ProcessNumber;
-                    foundationReliableProcessHours.SoftwarePrice = deviceItem.DeviceInfo.DeviceTotalPrice;
+                    foundationReliableProcessHours.DeviceTotalPrice = deviceItem.DeviceInfo.DeviceTotalPrice;
                     //设备保存
-                    foundationReliableProcessHours.TotalHardwarePrice = deviceItem.DevelopCostInfo.SoftwareHardPrice;
+                    foundationReliableProcessHours.SoftwareHardPrice = deviceItem.DevelopCostInfo.SoftwareHardPrice;
                     foundationReliableProcessHours.PictureDevelopment = deviceItem.DevelopCostInfo.PictureDevelopment;
                     foundationReliableProcessHours.DrawingSoftware = deviceItem.DevelopCostInfo.DrawingSoftware;
                     foundationReliableProcessHours.Development = deviceItem.DevelopCostInfo.Development;
@@ -509,7 +509,7 @@ namespace Finance.BaseLibrary
 
 
                     //工装治具
-                    foundationReliableProcessHours.DevelopTotalPrice = deviceItem.toolInfo.HardwareDeviceTotalPrice;
+                    foundationReliableProcessHours.HardwareDeviceTotalPrice = deviceItem.toolInfo.HardwareDeviceTotalPrice;
                     foundationReliableProcessHours.TestLineName = deviceItem.toolInfo.TestLineName;
                     foundationReliableProcessHours.TestLineNumber = deviceItem.toolInfo.TestLineNumber;
                     foundationReliableProcessHours.TestLinePrice = deviceItem.toolInfo.TestLinePrice;
@@ -677,9 +677,9 @@ namespace Finance.BaseLibrary
                     FoundationReliableProcessHours foundationReliableProcessHours = new FoundationReliableProcessHours();
                     foundationReliableProcessHours.ProcessName = deviceItem.ProcessName;
                     foundationReliableProcessHours.ProcessNumber = deviceItem.ProcessNumber;
-                    foundationReliableProcessHours.SoftwarePrice = deviceItem.DeviceInfo.DeviceTotalPrice;
+                    foundationReliableProcessHours.DeviceTotalPrice = deviceItem.DeviceInfo.DeviceTotalPrice;
                     //设备保存
-                    foundationReliableProcessHours.TotalHardwarePrice = deviceItem.DevelopCostInfo.SoftwareHardPrice;
+                    foundationReliableProcessHours.SoftwareHardPrice = deviceItem.DevelopCostInfo.SoftwareHardPrice;
                     foundationReliableProcessHours.PictureDevelopment = deviceItem.DevelopCostInfo.PictureDevelopment;
                     foundationReliableProcessHours.DrawingSoftware = deviceItem.DevelopCostInfo.DrawingSoftware;
                     foundationReliableProcessHours.Development = deviceItem.DevelopCostInfo.Development;
@@ -688,17 +688,17 @@ namespace Finance.BaseLibrary
 
 
                     //工装治具
-                    foundationReliableProcessHours.DevelopTotalPrice = deviceItem.toolInfo.HardwareDeviceTotalPrice;
+                    foundationReliableProcessHours.HardwareDeviceTotalPrice = deviceItem.toolInfo.HardwareDeviceTotalPrice;
                     foundationReliableProcessHours.TestLineName = deviceItem.toolInfo.TestLineName;
                     foundationReliableProcessHours.TestLineNumber = deviceItem.toolInfo.TestLineNumber;
                     foundationReliableProcessHours.TestLinePrice = deviceItem.toolInfo.TestLinePrice;
                     //缺少字段
-                    //foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
+                    foundationReliableProcessHours.FrockPrice = deviceItem.toolInfo.FrockPrice;
                     foundationReliableProcessHours.FrockName = deviceItem.toolInfo.FrockName;
                     foundationReliableProcessHours.FrockNumber = deviceItem.toolInfo.FrockNumber;
-                    //foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
-                    //foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
-                    //foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
+                    foundationReliableProcessHours.FixturePrice = deviceItem.toolInfo.FixturePrice;
+                    foundationReliableProcessHours.FixtureNumber = deviceItem.toolInfo.FixtureNumber;
+                    foundationReliableProcessHours.FixtureName = deviceItem.toolInfo.FixtureName;
 
 
                     //工时
@@ -1026,9 +1026,10 @@ namespace Finance.BaseLibrary
                         if (null != row[keys[fromNumIndex]])
                         {
                             // 硬件总价
-                            rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.TotalHardwarePrice = decimal.Parse(row[keys[fromNumIndex]].ToString());
+
                         }
-                
+
                         // 追溯软件
                         if (null != row[keys[fromNumIndex + 1]])
                         {
