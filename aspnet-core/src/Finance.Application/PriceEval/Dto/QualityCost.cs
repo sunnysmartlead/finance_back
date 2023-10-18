@@ -12,6 +12,16 @@ namespace Finance.PriceEval.Dto
     public class QualityCostListDto
     {
         /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
+        /// 修改备注
+        /// </summary>
+        public virtual string EditNotes { get; set; }
+
+        /// <summary>
         /// 年份
         /// </summary>
         internal virtual int Year { get; set; }
