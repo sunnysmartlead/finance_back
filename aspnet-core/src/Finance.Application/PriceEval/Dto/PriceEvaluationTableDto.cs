@@ -537,6 +537,16 @@ namespace Finance.PriceEval.Dto
         /// 分摊年数
         /// </summary>
         public virtual decimal YearCount { get; set; }
+
+        /// <summary>
+        /// 年份
+        /// </summary>
+        internal virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        internal virtual YearType UpDown { get; set; }
     }
 
 

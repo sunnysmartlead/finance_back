@@ -46,6 +46,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.PriceEval
 {
@@ -84,8 +85,8 @@ namespace Finance.PriceEval
         protected readonly IRepository<ElectronicBomInfo, long> _electronicBomInfoRepository;
         protected readonly IRepository<StructureBomInfo, long> _structureBomInfoRepository;
 
-        protected readonly IRepository<EnteringElectronic, long> _enteringElectronicRepository;
-        protected readonly IRepository<StructureElectronic, long> _structureElectronicRepository;
+        protected readonly IRepository<EnteringElectronicCopy, long> _enteringElectronicRepository;
+        protected readonly IRepository<StructureElectronicCopy, long> _structureElectronicRepository;
 
         protected readonly IRepository<LossRateInfo, long> _lossRateInfoRepository;
         protected readonly IRepository<LossRateYearInfo, long> _lossRateYearInfoRepository;
@@ -93,7 +94,7 @@ namespace Finance.PriceEval
         protected readonly IRepository<ExchangeRate, long> _exchangeRateRepository;
 
         protected readonly IRepository<ManufacturingCostInfo, long> _manufacturingCostInfoRepository;
-        protected readonly IRepository<YearInfo, long> _yearInfoRepository;
+        protected readonly IRepository<ProcessHoursEnteritem, long> _yearInfoRepository;
         protected readonly IRepository<WorkingHoursInfo, long> _workingHoursInfoRepository;
         protected readonly IRepository<RateEntryInfo, long> _rateEntryInfoRepository;
         protected readonly IRepository<ProductionControlInfo, long> _productionControlInfoRepository;
@@ -124,6 +125,10 @@ namespace Finance.PriceEval
         private readonly IRepository<QualityCostRatioYear, long> _qualityCostRatioYearRepository;
 
         private readonly IRepository<CustomerTargetPrice, long> _customerTargetPriceRepository;
+        private readonly IRepository<FollowLineTangent, long> _followLineTangentRepository;
+        private readonly IRepository<ProcessHoursEnterUph, long> _processHoursEnterUphRepository;
+        private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDeviceRepository;
+        private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
 
 
         private string errMessage = string.Empty;
@@ -132,11 +137,37 @@ namespace Finance.PriceEval
         /// <summary>
         /// 构造函数
         /// </summary>
-        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<EnteringElectronic, long> enteringElectronicRepository, IRepository<StructureElectronic, long> structureElectronicRepository, IRepository<LossRateInfo, long> lossRateInfoRepository, IRepository<LossRateYearInfo, long> lossRateYearInfoRepository, IRepository<ExchangeRate, long> exchangeRateRepository, IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, IRepository<YearInfo, long> yearInfoRepository, IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, IRepository<RateEntryInfo, long> rateEntryInfoRepository, IRepository<ProductionControlInfo, long> productionControlInfoRepository, IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
-          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
-     IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository, IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, NrePricingAppService nrePricingAppService,
-            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository, IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
-            IRepository<CustomerTargetPrice, long> customerTargetPriceRepository)
+        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository,
+            IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository,
+            IRepository<StructureBomInfo, long> structureBomInfoRepository,
+            IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
+            IRepository<StructureElectronicCopy, long> structureElectronicRepository,
+            IRepository<LossRateInfo, long> lossRateInfoRepository,
+            IRepository<LossRateYearInfo, long> lossRateYearInfoRepository,
+            IRepository<ExchangeRate, long> exchangeRateRepository,
+            IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository,
+            IRepository<ProcessHoursEnteritem, long> yearInfoRepository,
+            IRepository<WorkingHoursInfo, long> workingHoursInfoRepository,
+            IRepository<RateEntryInfo, long> rateEntryInfoRepository,
+            IRepository<ProductionControlInfo, long> productionControlInfoRepository,
+            IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository,
+            IRepository<UserInputInfo, long> userInputInfoRepository,
+            IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository,
+            IRepository<UPHInfo, long> uphInfoRepository,
+            IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
+          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
+          IRepository<GradientModelYear, long> gradientModelYearRepository,
+     IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository,
+     IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository,
+     NrePricingAppService nrePricingAppService,
+            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository,
+            IRepository<QualityCostRatio, long> qualityCostRatioRepository,
+            IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
+            IRepository<CustomerTargetPrice, long> customerTargetPriceRepository,
+            IRepository<FollowLineTangent, long> followLineTangentRepository,
+            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
+            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
+            IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -180,6 +211,10 @@ namespace Finance.PriceEval
             _qualityCostRatioYearRepository = qualityCostRatioYearRepository;
 
             _customerTargetPriceRepository = customerTargetPriceRepository;
+            _followLineTangentRepository = followLineTangentRepository;
+            _processHoursEnterUphRepository = processHoursEnterUphRepository;
+            _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
+            _processHoursEnterRepository = processHoursEnterRepository;
         }
 
 
@@ -884,7 +919,45 @@ namespace Finance.PriceEval
 
         public const string NreFy = "NRE费用";
 
+
         public const string Shjfy = "售后件费用";
+
+        /// <summary>
+        /// 当年年份是否用其他成本
+        /// </summary>
+        /// <param name="year"></param>
+        /// <param name="upDown"></param>
+        /// <param name="sop"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public virtual bool IsHasCostFunc(long year, YearType upDown, int sop, decimal count)
+        {
+            //截止年份，年份大于等于此立刻截至
+            var jrnf = sop + count;
+
+            if (upDown == YearType.Year)
+            {
+                return year < jrnf;
+            }
+            else
+            {
+                //距离截至剩余的年数
+                var syqx = jrnf - year;
+                if (syqx >= 1)
+                {
+                    return true;
+                }
+                else if (syqx < 1 && syqx > 0)
+                {
+                    return upDown == YearType.FirstHalf;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+
 
         /// <summary>
         /// 其他成本项目2（核价看板用）
@@ -897,6 +970,17 @@ namespace Finance.PriceEval
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var shareCount = await _shareCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
             var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
+
+            var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+            var sopYear = modelCountYears.MinBy(p => p.Year);
+
+            //分摊年数
+            var yearCount = shareCount is null ? 0 : shareCount.Year;
+
+            //(sopYear + yearCount)表示分摊截止年份，input.Year减去它，如果不为负数，表示当前年份可分摊
+            var isHasCost = IsHasCostFunc(input.Year, input.UpDown, sopYear.Year, yearCount);//input.Year - (sopYear.Year + yearCount) < 0;
+
+
 
             var otherCostItem2List = new List<OtherCostItem2List>
             {
@@ -999,12 +1083,43 @@ namespace Finance.PriceEval
                 },
 
             };
-            otherCostItem2List.ForEach(item =>
+
+            if (input.Year == PriceEvalConsts.AllYear)
             {
-                item.Count = shareCount is null ? 0 : shareCount.Count * 1000;
-                item.Cost = item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
-                item.YearCount = shareCount.Year;
-            });
+                var dto = await modelCountYears.SelectAsync(async p => await GetOtherCostItem2List(new GetOtherCostItem2ListInput
+                {
+                    AuditFlowId = input.AuditFlowId,
+                    GradientId = input.GradientId,
+                    SolutionId = input.SolutionId,
+                    Year = p.Year,
+                    UpDown = p.UpDown
+                }));
+
+                var ff = dto.SelectMany(p => p).GroupBy(p => p.ItemName).Select(item => new OtherCostItem2List
+                {
+                    Cost = item.Sum(p => p.Cost * modelCountYears.First(o => o.Year == p.Year).Quantity),
+                });
+
+                otherCostItem2List.ForEach(item =>
+                {
+                    item.Count = shareCount is null ? 0 : shareCount.Count * 1000;
+                    item.Cost = ff.First(p => p.ItemName == item.ItemName).Cost; //item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
+                    item.YearCount = yearCount;
+                });
+            }
+            else
+            {
+                otherCostItem2List.ForEach(item =>
+                {
+                    item.Count = !isHasCost ? 0 : shareCount is null ? 0 : shareCount.Count * 1000;
+                    item.Cost = !isHasCost ? 0 : item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
+                    item.YearCount = yearCount;
+                    item.Year = input.Year;
+                    item.UpDown = input.UpDown;
+                });
+            }
+
+
             otherCostItem2List.Add(new OtherCostItem2List
             {
                 CostType = "其他费用",
@@ -1014,6 +1129,8 @@ namespace Finance.PriceEval
                 Cost = 0,
                 Note = string.Empty,
                 IsShare = false,
+                Year = input.Year,
+                UpDown = input.UpDown
             });
             return otherCostItem2List;
         }
@@ -1398,15 +1515,15 @@ namespace Finance.PriceEval
                 #region 组测
 
                 //获取总年数
-                var yearCount = await _modelCountYearRepository.GetAll()
-                    .Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld).Select(p => p.Year).ToListAsync();
+                var yearCount = await _modelCountYearRepository
+                    .GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
 
                 //获取数据
                 //var dtoList = await yearCount.SelectAsync(async p => await GetGroupTest(p,input,gradient, solution.Productld));
                 var dtoList = new List<ManufacturingCost>();
                 yearCount.ForEach(p =>
                 {
-                    var dto = GetGroupTest(p, input, gradient, solution.Productld).Result;
+                    var dto = GetGroupTest(p.Year, p.UpDown, input, gradient, solution.Productld).Result;
                     if (dto != null)
                         dtoList.Add(dto);
                 });
@@ -1564,7 +1681,7 @@ namespace Finance.PriceEval
         {
             #region 获取组测
 
-            var dto = await GetGroupTest(input.Year, input, gradient, sProductld);
+            var dto = await GetGroupTest(input.Year, input.UpDown, input, gradient, sProductld);
 
             #endregion
 
@@ -1767,8 +1884,17 @@ namespace Finance.PriceEval
                                    }).FirstOrDefaultAsync();
 
 
-                data.Add(cob);
-                data.Add(other);
+                if (cob is not null)
+                {
+                    data.Add(cob);
+
+                }
+                if (other is not null)
+                {
+                    data.Add(other);
+
+                }
+
             }
 
             data.ForEach(p =>
@@ -1811,7 +1937,7 @@ namespace Finance.PriceEval
 
         #region 组测
 
-        async Task<ManufacturingCost> GetGroupTest(int year, GetManufacturingCostInput input, Gradient gradient, long sProductld)
+        async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld)
         {
             try
             {
@@ -1820,7 +1946,7 @@ namespace Finance.PriceEval
                     .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                     && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
                     && p.SolutionId == input.SolutionId
-                    && p.Year == input.Year && p.UpDown == input.UpDown);
+                    && p.Year == input.Year && p.UpDown == upDown);
 
                 var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
                 if (manufacturingCostEdit is not null)
@@ -1834,7 +1960,18 @@ namespace Finance.PriceEval
                 }
 
                 //工序工时年份
-                var yearInfo = await _yearInfoRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.WorkingHour);
+                //var yearInfo = await _yearInfoRepository.GetAllListAsync(p =>
+                //p.AuditFlowId == input.AuditFlowId
+                //&& p.ProductId == sProductld
+                //&& p.Year == year
+                //&& p.Part == YearPart.WorkingHour);
+                var yearInfo = await (from yi in _yearInfoRepository.GetAll()
+                                      join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
+                                      where y.AuditFlowId == input.AuditFlowId
+                                      && y.ProductId == sProductld
+                                      && y.Year == input.Year && y.UpDown == upDown
+                                      select yi).ToListAsync();
+
 
 
                 //获取制造成本参数
@@ -1849,7 +1986,8 @@ namespace Finance.PriceEval
                     errMessage = "梯度模式数据未找到";
                 //模组数量
                 //var modelCountYear = await _modelCountYearRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.Year == year);
-                var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == gradientModel.Id && p.ProductId == sProductld && p.Year == year);
+                var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.GradientModelId == gradientModel.Id && p.ProductId == sProductld && p.Year == year && p.UpDown == upDown);
 
                 //计算连续乘积的委托
                 Func<List<decimal>, decimal> product = p =>
@@ -1868,40 +2006,62 @@ namespace Finance.PriceEval
                 //年需求量(gradientModelYear的数量)
 
                 //月需求量
-                var monthlyDemand = Math.Ceiling(gradientModelYear.Sum(p => p.Count) * 1000 / 12M).To<int>();
+                var monthlyDemand = Math.Ceiling(gradientModelYear.Sum(p => p.Count) * 1000 / (upDown == YearType.Year ? 12M : 6M)).To<int>();
 
                 //UPH值（工序工时界面暂无，暂定120）
-                var uph = 120;//(await _uphInfoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld)).UPH;
+                //var uph = (await _processHoursEnterUphRepository.FirstOrDefaultAsync(p =>
+                //p.AuditFlowId == input.AuditFlowId
+                //&& p.SolutionId == input.SolutionId
+                //&& p.Year)).Value;
+                //(await _uphInfoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld)).UPH;
+                var uph = (await (from p in _processHoursEnterUphRepository.GetAll()
+                                  join m in _modelCountYearRepository.GetAll() on p.ModelCountYearId equals m.Id
+                                  where p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId
+                                  && m.Year == year && m.UpDown == upDown && p.Uph == "zcuph"
+                                  select p).FirstOrDefaultAsync()).Value;
+
+
 
                 //每班日产能
                 var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
 
                 //工时工序静态字段表
-                var workingHoursInfo = await _workingHoursInfoRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld).ToListAsync();
+                //var workingHoursInfo =await (from p in _processHoursEnterDeviceRepository.GetAll()
+                //                       join e in _processHoursEnterRepository.GetAll() on p.ProcessHoursEnterId equals e.Id
+                //                       where e.AuditFlowId == input.AuditFlowId && e.SolutionId == input.SolutionId
+                //                       select p).ToListAsync();
+
+                //await _workingHoursInfoRepository.GetAll()
+                //.Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld).ToListAsync();
+
+                var workingHoursInfo = await _processHoursEnterRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
 
 
                 //设备金额
-                var equipmentMoney = workingHoursInfo.Sum(p => p.EquipmentTotalPrice);
+                var equipmentMoney = workingHoursInfo.Sum(p => p.DeviceTotalPrice);
 
                 //产线数量
-                var lineCount = Math.Ceiling(monthlyDemand / (dailyCapacityPerShift * (decimal)manufacturingCostInfo.MonthlyWorkingDays * (decimal)manufacturingCostInfo.DailyShift));
+                var lineCount = Math.Ceiling(monthlyDemand / (dailyCapacityPerShift.Value * (decimal)manufacturingCostInfo.MonthlyWorkingDays * (decimal)manufacturingCostInfo.DailyShift));
 
                 //产线设备月折旧（删除稼动率）
                 //var monthlyDepreciation = (equipmentMoney - 0) * lineCount * manufacturingCostInfo.RateOfMobilization / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
-                var monthlyDepreciation = (equipmentMoney - 0) * lineCount / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
+                var monthlyDepreciation = (equipmentMoney - 0) * lineCount * 0.95M / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
 
 
                 //月产能
                 var monthlyCapacity = dailyCapacityPerShift * 26 * 2;
 
                 //产能利用率
-                var capacityUtilization = monthlyDemand == 0 ? 0 : monthlyDemand / (monthlyCapacity * lineCount);
+                var capacityUtilization = monthlyDemand == 0 ? 0 : monthlyDemand / (monthlyCapacity * lineCount) / manufacturingCostInfo.CapacityUtilizationRate;
+                capacityUtilization = capacityUtilization > 1 ? 1 : capacityUtilization;
+
 
                 //分摊后折旧
                 var allocatedDepreciation = monthlyDepreciation * capacityUtilization;
 
                 //制造工时
-                var manufacturingHours = (yearInfo.Sum(p => p.StandardLaborHours) + yearInfo.Sum(p => p.StandardMachineHours)).To<decimal>();
+                //var manufacturingHours = (yearInfo.Sum(p => p.StandardLaborHours) + yearInfo.Sum(p => p.StandardMachineHours)).To<decimal>();
+                var manufacturingHours = (yearInfo.Sum(p => p.LaborHour) + yearInfo.Sum(p => p.MachineHour)).To<decimal>();
 
                 //人员单价
                 var personPrice = manufacturingCostInfo.AverageWage / oneCumulativeDecline;
@@ -1914,24 +2074,30 @@ namespace Finance.PriceEval
                 }
 
                 //工时工序
-                var workingHoursInputInfo = await _yearInfoRepository
-                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.SwitchLine);
+                //var workingHoursInputInfo = await _yearInfoRepository
+                //.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.SwitchLine);
+
+                //切线工时
+                var workingHoursInputInfo = await _followLineTangentRepository
+                .FirstOrDefaultAsync(p => p.Year == year);
+
+
 
                 //跟线工价
                 var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
 
-                //跟线成本（工序工时界面暂无，
-                var lineCost = 0;//linePrice * workingHoursInputInfo.StandardLaborHours.To<decimal>();
+                //跟线成本
+                var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
 
-                //切线成本（工序工时界面暂无，
-                var switchLineCost = 0;// workingHoursInputInfo.StandardMachineHours.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
+                //切线成本
+                var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
 
                 //换线成本
                 var lineChangeCost = lineCost + switchLineCost;
 
                 //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）
-                var directLaborNo = personPrice * (yearInfo.Sum(p => p.PersonCount).To<decimal>() + 1)
-                    * Math.Ceiling(monthlyDemand / dailyCapacityPerShift) / (decimal)manufacturingCostInfo.MonthlyWorkingDays
+                var directLaborNo = personPrice * (yearInfo.Sum(p => p.PersonnelNumber).To<decimal>() + 1)
+                    * Math.Ceiling(monthlyDemand / dailyCapacityPerShift.Value) / (decimal)manufacturingCostInfo.MonthlyWorkingDays
                     / oneCumulativeDecline;
 
                 //直接制造成本
@@ -1942,9 +2108,9 @@ namespace Finance.PriceEval
                     //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）/月需求量（新增：除以月需求量）
                     DirectLabor = monthlyDemand == 0 ? 0 : directLaborNo / monthlyDemand,
                     DirectLaborNo = directLaborNo,
-                    EquipmentDepreciation = monthlyDemand == 0 ? 0 : allocatedDepreciation / monthlyDemand,
-                    EquipmentDepreciationNo = allocatedDepreciation,
-                    LineChangeCost = lineChangeCost,
+                    EquipmentDepreciation = monthlyDemand == 0 ? 0 : allocatedDepreciation.Value / monthlyDemand,
+                    EquipmentDepreciationNo = allocatedDepreciation.Value,
+                    LineChangeCost = lineChangeCost.Value,
                     ManufacturingExpenses = (rateEntryInfo.DirectManufacturingRate * manufacturingHours) / 3600,
                 };
                 manufacturingCost.Subtotal = manufacturingCost.DirectLabor + manufacturingCost.EquipmentDepreciation + manufacturingCost.LineChangeCost + manufacturingCost.ManufacturingExpenses;
@@ -1954,9 +2120,9 @@ namespace Finance.PriceEval
                 {
                     MonthlyDemand = monthlyDemand,
                     Id = year,
-                    DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.StandardLaborHours).To<decimal>()) / 3600,
-                    EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.StandardMachineHours).To<decimal>()) / 3600,
-                    ManufacturingExpenses = (rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600,
+                    DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
+                    EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
+                    ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
                 };
                 manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -2211,11 +2377,31 @@ namespace Finance.PriceEval
             }
             else
             {
+
+
                 //物料成本
                 var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-                return await this.GetQualityCostPrivate(input, electronicAndStructureList, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal);
-            }
+                var dto = await this.GetQualityCostPrivate(input, electronicAndStructureList, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal);
 
+
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
+                if (qualityCostListDto is not null)
+                {
+                    var q = qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == dto.EditId);
+                    if (q is not null)
+                    {
+                        return q;
+                    }
+                }
+                return dto;
+            }
         }
 
         /// <summary>
@@ -2305,6 +2491,7 @@ namespace Finance.PriceEval
 
             return new QualityCostListDto
             {
+                EditId = UpdateItemType.QualityCost.ToString(),
                 Year = input.Year,
                 ProductCategory = productTypeName,
                 CostProportion = costProportion,
