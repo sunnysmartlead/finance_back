@@ -836,6 +836,7 @@ namespace Finance.Entering
                     construction.RebateMoney = JsonConvert.DeserializeObject<List<KvMode>>(structureElectronic.RebateMoney);//物料可返回金额
                     construction.InTheRate = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.InTheRate);//年降
                     construction.SystemiginalCurrency = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.SystemiginalCurrency);//原币
+                    construction.MaterialsUseCount = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.MaterialsUseCount);//项目物料的使用量
                     construction.PeopleId = structureElectronic.PeopleId;//确认人
                     construction.IsSubmit = structureElectronic.IsSubmit;//是否提交
                     construction.IsEntering = structureElectronic.IsEntering;//是否录入
@@ -870,9 +871,7 @@ namespace Finance.Entering
             {
                 foreach (ConstructionModelCopy item in structuralMemberEnteringModel.StructuralMaterialEntering)
                 {
-                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));
-
-                    structureElectronic.RebateMoney = JsonConvert.SerializeObject(item.RebateMoney);//物料返利金额
+                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));                                      
                     structureElectronic.MOQ = item.MOQ;//MOQ
                     //structureElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                     structureElectronic.Currency = item.Currency;//币种              
@@ -886,6 +885,7 @@ namespace Finance.Entering
                     }
                     structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
                     structureElectronic.Remark = item.Remark; //备注                  
+                    structureElectronic.RebateMoney = JsonConvert.SerializeObject(item.RebateMoney);//物料返利金额
                     structureElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
                     structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                     structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
