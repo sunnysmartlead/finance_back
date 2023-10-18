@@ -325,14 +325,14 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetElectronicConfigurationStateCertain(List<long> ElectronicId)
         {
-            if (ElectronicId is null || ElectronicId.Count==0) throw new FriendlyException("电子料单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
+            if (ElectronicId is null || ElectronicId.Count == 0) throw new FriendlyException("电子料单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => ElectronicId.Contains(p.Id));
             foreach (EnteringElectronic item in enteringElectronics)
             {
                 item.IsSubmit = false;
                 await _configEnteringElectronic.UpdateAsync(item);
             }
-        }     
+        }
         /// <summary>
         /// 资源部输入时,加载结构料初始值数量
         /// </summary>
@@ -675,7 +675,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
         {
-            await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
+            await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
             await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy);
@@ -780,6 +780,7 @@ namespace Finance.Entering
                 enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(electronic.MaterialsUseCount);//物料使用量
                 enteringElectronic.InTheRate = JsonConvert.SerializeObject(electronic.InTheRate);//年将率         
                 enteringElectronic.StandardMoney = JsonConvert.SerializeObject(electronic.StandardMoney);//本位币
+                enteringElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(electronic.SystemiginalCurrency);//系统单价(原币)
                 await _configEnteringElectronicCopy.UpdateAsync(enteringElectronic);
             }
         }
@@ -826,7 +827,7 @@ namespace Finance.Entering
                 {
                     //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                     StructureElectronicCopy structureElectronic = structureElectronicCopy.FirstOrDefault(p => p.StructureId.Equals(construction.StructureId));
-                    if(structureElectronic is null) { throw new FriendlyException("结构单价数据拷贝可能出现问题,请检查"); }
+                    if (structureElectronic is null) { throw new FriendlyException("结构单价数据拷贝可能出现问题,请检查"); }
                     construction.Id = structureElectronic.Id;
                     construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                     construction.Currency = structureElectronic.Currency;//币种                       
@@ -877,7 +878,7 @@ namespace Finance.Entering
                     structureElectronic.Currency = item.Currency;//币种              
                     if (structuralMemberEnteringModel.IsSubmit)
                     {
-                        structureElectronic.IsSubmit =true;//确认提交 
+                        structureElectronic.IsSubmit = true;//确认提交 
                     }
                     else
                     {

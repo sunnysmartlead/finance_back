@@ -1495,6 +1495,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(electronic.MaterialsUseCount);//物料使用量
                         enteringElectronic.InTheRate = JsonConvert.SerializeObject(electronic.InTheRate);//年将率         
                         enteringElectronic.StandardMoney = JsonConvert.SerializeObject(electronic.StandardMoney);//本位币
+                        enteringElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(electronic.SystemiginalCurrency);//系统单价(原币)
                         await _configEnteringElectronic.UpdateAsync(enteringElectronic);
                     }
                 }
