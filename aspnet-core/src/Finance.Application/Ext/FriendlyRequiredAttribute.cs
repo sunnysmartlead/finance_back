@@ -108,7 +108,7 @@ namespace Finance.Ext
                 FinanceConsts.BomEvalSelect_Yes,
                 FinanceConsts.MybhgSelect_No,
                 FinanceConsts.HjkbSelect_Yes,
-                FinanceConsts.ElectronicBomEvalSelect_Yes };
+                FinanceConsts.ElectronicBomEvalSelect_Yes,FinanceConsts.Done};
             if (parameterValue != null &&!yes.Contains(parameterValue.ToString()))
             {
                 _httpContextAccessor.HttpContext.Items["Skip"] = true;
