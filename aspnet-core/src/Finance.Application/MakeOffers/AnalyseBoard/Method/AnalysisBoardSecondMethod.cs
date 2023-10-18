@@ -29,6 +29,7 @@ using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 using NPOI.SS.Formula.Functions;
 using test;
 
@@ -814,7 +815,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <summary>
     /// 下载成本信息表二开
     /// </summary>
-    /// <param name="auditFlowId"></param>
+    /// <param name="analyseBoardSecondInputDto"></param>
     /// <param name="fileName"></param>
     /// <returns></returns>
     public async Task<IActionResult> DownloadMessageSecond(AnalyseBoardSecondInputDto analyseBoardSecondInputDto,
@@ -840,7 +841,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var yearmap = yearDtos.GroupBy(e => e.Year).ToDictionary(e => e.Key, e => e.Sum(v => v.Quantity));
         // 拿到产品信息
         List<CreateColumnFormatProductInformationDto> productList = priceEvaluationStartInputResult.ProductInformation;
-        
+
         //年份
         List<SopSecondModel> Sop = new List<SopSecondModel>();
         foreach (var year in YearList)
@@ -999,52 +1000,32 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         tit.Costs = title;
         nres.Add(tit);
         shouban.Costs = shoubans;
+        shouban.Cost = shoubans.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(shouban);
         muju.Costs = mujus;
+        muju.Cost = mujus.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(muju);
         scsb.Costs = scsbs;
+        scsb.Cost = scsbs.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(scsb);
         gz.Costs = gzs;
+        gz.Cost = gzs.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(gz);
         yj.Costs = yjs;
+        yj.Cost = yjs.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(yj);
         sy.Costs = sys;
+        sy.Cost = sys.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(sy);
         cs.Costs = css;
+        cs.Cost = css.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(cs);
         cl.Costs = cls;
+        cl.Cost = cls.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(cl);
         qt.Costs = qts;
+        qt.Cost = qts.Sum(p => System.Convert.ToDecimal(p));
         nres.Add(qt);
-
-              //成本信息表新
-        // List<Gradient> gradients =
-        //     await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == analyseBoardSecondInputDto.auditFlowId);
-        // var soptime = priceEvaluationStartInputResult.SopTime;
-        // foreach (var Solution in Solutions)
-        // {
-           
-        //     ExcelPriceEvaluationTableDto ex = new ExcelPriceEvaluationTableDto();
-        //      foreach (var gradient in gradients)
-        //     {
-        //              try
-        //     {
-        //         ex = await _priceEvaluationAppService.GetPricingPanelProfit(new GetPricingPanelProfitInput
-        //         {
-        //             AuditFlowId = auditFlowId,
-        //             GradientId = gradient.Id,
-        //             SolutionId = Solution.Id,
-        //             Year = soptime,
-        //             UpDown = sopTimeType
-        //         });
-        //     }
-        //     catch (Exception e)
-        //     {
-
-        //         throw new UserFriendlyException("核价数据问题");
-
-        //     }
-        //     }
         //成本单价信息
         List<PricingSecondModel> pricingModels = new List<PricingSecondModel>();
 
@@ -1200,36 +1181,69 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-        var value = new
-        {
-            Date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
-            RecordNumber = priceEvaluationStartInputResult.Number, //记录编号           
-            Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
-            DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
-            TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            OfferForm = priceEvaluationStartInputResult.PriceEvalType, //报价形式
-            SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
-            ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
-            ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
-            modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
-            PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
-            //ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率???
-            Sop = Sop,
-            ProjectName = priceEvaluationStartInputResult.ProjectName, //项目名称
-            Parts = partsModels,
-            NRE = nres,
-            Cost = pricingModels,
-        };
-        var memoryStream = new MemoryStream();
-        await memoryStream.SaveAsByTemplateAsync(templatePath, value);
-        memoryStream.Seek(0, SeekOrigin.Begin);
-        return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        {
-            FileDownloadName = $"{fileName}.xlsx"
-        };
+        // var value = new
+        // {
+        //     Date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
+        //     RecordNumber = priceEvaluationStartInputResult.Number, //记录编号           
+        //     Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+        //     DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
+        //     TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
+        //     OfferForm = priceEvaluationStartInputResult.PriceEvalType, //报价形式
+        //     SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
+        //     ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
+        //     ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
+        //     modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
+        //     PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
+        //     //ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率???
+        //     Sop = Sop,
+        //     ProjectName = priceEvaluationStartInputResult.ProjectName, //项目名称
+        //     Parts = partsModels,
+        //     NRE = nres,
+        //     Cost = pricingModels,
+        // };
+        //用MiniExcel读取数据
 
+        try
+        {
+        
+            Dictionary<string, object> keyValuePairs = new Dictionary<string, object>
+            {
+                { "日期" ,DateTime.Now.ToString("yyyy-MM-dd") },
+                { "记录编号", priceEvaluationStartInputResult.Number },
+                { "版本", priceEvaluationStartInputResult.QuoteVersion },
+                { "直接客户名称", priceEvaluationStartInputResult.CustomerName },
+                { "终端客户名称", priceEvaluationStartInputResult.TerminalName },
+                { "报价形式", priceEvaluationStartInputResult.PriceEvalType },
+                { "SOP时间", priceEvaluationStartInputResult.SopTime },
+                { "项目生命周期", priceEvaluationStartInputResult.ProjectCycle },
+                { "销售类型", priceEvaluationStartInputResult.SalesType },
+                { "贸易方式", priceEvaluationStartInputResult.TradeMode },
+                { "付款方式", priceEvaluationStartInputResult.PaymentMethod },
+                { "项目名称", priceEvaluationStartInputResult.ProjectName },
+            };
+            var values = new List<Dictionary<string, object>>();
+            var sheets = new Dictionary<string, object>
+            {
+                ["Sop"] = Sop,
+                ["Parts"] = partsModels,
+                ["NRE"] = nres,
+                ["Cost"] = pricingModels,
+            };
+            // values.Add(keyValuePairs);
+            values.Add(sheets);
+            MemoryStream memoryStream = new MemoryStream();
+            // return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            await MiniExcel.SaveAsAsync(memoryStream, sheets);
+            return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = $"{fileName}.xlsx"
+            };
+        }
+        catch (Exception e)
+        {
+            throw new FriendlyException(e.Message);
+        }
 
-        return null;
     }
 
     public async Task<QuotationListDto> QuotationList(long processId)
@@ -3244,7 +3258,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         spreadSheetCalculateDtos.Add(JsonConvert.DeserializeObject<SpreadSheetCalculateDto>(JsonConvert.SerializeObject(spreadSheetCalculateDto)));
         return spreadSheetCalculateDtos;
     }
-    
+
     #region Base Method
 
     /// <summary>
