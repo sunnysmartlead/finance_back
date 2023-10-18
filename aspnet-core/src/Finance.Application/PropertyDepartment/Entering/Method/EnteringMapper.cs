@@ -54,8 +54,12 @@ namespace Finance.PropertyDepartment.Entering.Method
             configuration.CreateMap<ElectronicBomInfoBak, ElectronicBomInfo>();
 
 
-            configuration.CreateMap<EnteringElectronic, EnteringElectronicCopy>();
-            configuration.CreateMap<StructureElectronic, StructureElectronicCopy>();
+            configuration.CreateMap<EnteringElectronic, EnteringElectronicCopy>()
+                  .ForMember(u => u.IsEntering, p => p.MapFrom(input => false))
+                  .ForMember(u => u.IsSubmit, p => p.MapFrom(input => false));
+            configuration.CreateMap<StructureElectronic, StructureElectronicCopy>()
+                  .ForMember(u => u.IsEntering, p => p.MapFrom(input => false))
+                  .ForMember(u => u.IsSubmit, p => p.MapFrom(input => false));
 
             configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>()
                  .ForMember(u => u.MaterialsUseCount, p => p.MapFrom(input => JsonToListKV(input.MaterialsUseCount)))
@@ -64,10 +68,9 @@ namespace Finance.PropertyDepartment.Entering.Method
                  .ForMember(u => u.StandardMoney, p => p.MapFrom(input => JsonToListKV(input.StandardMoney)))
                  .ForMember(u => u.RebateMoney, p => p.MapFrom(input => JsonToKvMode(input.RebateMoney)));
 
-            configuration.CreateMap<StructureBomInfo, ConstructionModelCopy>();
-            configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>();
-
-            configuration.CreateMap<EnteringElectronicCopy, ElectronicDtoCopy>();
+            configuration.CreateMap<StructureBomInfo, ConstructionModelCopy>()
+                 .ForMember(u => u.StructureId, p => p.MapFrom(input => input.Id))
+                 .ForMember(u => u.Id, options => options.Ignore());
         }
         /// <summary>
         /// 将json 转成   List YearOrValueMode>
