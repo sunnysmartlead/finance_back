@@ -1985,8 +1985,8 @@ namespace Finance.NerPricing
                 modify.HandPieceCost = ObjectMapper.Map<List<HandPieceCostModel>>(handPieceCosts);
                 modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p => p.Cost);
                 //模具费用
-                List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                modify.MouldInventory = ObjectMapper.Map<List<MouldInventoryModel>>(mouldInventories);
+                //List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                modify.MouldInventory =(await GetInitialResourcesManagementSingle(auditFlowId, solutionId)).MouldInventoryModels;
                 foreach (MouldInventoryModel item in modify.MouldInventory)
                 {
                     User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
