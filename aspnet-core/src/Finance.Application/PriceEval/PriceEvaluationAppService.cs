@@ -99,19 +99,19 @@ namespace Finance.PriceEval
         private readonly AuditFlowAppService _flowAppService;
 
         public PriceEvaluationAppService(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
-            IRepository<EnteringElectronicCopy, long> enteringElectronicRepository, 
+            IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
-            IRepository<LossRateInfo, long> lossRateInfoRepository, 
+            IRepository<LossRateInfo, long> lossRateInfoRepository,
             IRepository<LossRateYearInfo, long> lossRateYearInfoRepository,
             IRepository<ExchangeRate, long> exchangeRateRepository,
-            IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository, 
+            IRepository<ManufacturingCostInfo, long> manufacturingCostInfoRepository,
             IRepository<ProcessHoursEnteritem, long> yearInfoRepository,
-            IRepository<WorkingHoursInfo, long> workingHoursInfoRepository, 
+            IRepository<WorkingHoursInfo, long> workingHoursInfoRepository,
             IRepository<RateEntryInfo, long> rateEntryInfoRepository,
             IRepository<ProductionControlInfo, long> productionControlInfoRepository,
             IRepository<QualityRatioEntryInfo, long> qualityCostProportionEntryInfoRepository,
-            IRepository<UserInputInfo, long> userInputInfoRepository, 
-            IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository, 
+            IRepository<UserInputInfo, long> userInputInfoRepository,
+            IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository,
             IRepository<UPHInfo, long> uphInfoRepository, IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
             IRepository<ProductInformation, long> productInformationRepository, IRepository<Department, long> departmentRepository, NrePricingAppService nrePricingAppService, IRepository<AuditFlow, long> auditFlowRepository, IRepository<FileManagement, long> fileManagementRepository, AuditFlowAppService flowAppService, IRepository<NreIsSubmit, long> productIsSubmit,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository, IRepository<Sample, long> sampleRepository,
@@ -231,6 +231,7 @@ namespace Finance.PriceEval
             }
             else
             {
+                #region 参数校验
                 //var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
                 //if (priceEvaluationStartData is not null)
                 //{
@@ -323,6 +324,9 @@ namespace Finance.PriceEval
                 //    throw new FriendlyException($"模组数量和梯度模组没有正确对应！");
                 //}
 
+                #endregion
+
+
 
                 //PriceEvaluation
                 var priceEvaluation = ObjectMapper.Map<PriceEvaluation>(input);
@@ -355,6 +359,9 @@ namespace Finance.PriceEval
                 }
                 else
                 {
+
+
+
                     var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == input.NodeInstanceId);
                     auditFlowId = nodeInstance.WorkFlowInstanceId;
 
@@ -364,6 +371,100 @@ namespace Finance.PriceEval
                         Comment = input.Comment,
                         NodeInstanceId = input.NodeInstanceId,
                     });
+
+
+                    #region 清空数据
+
+                    var priceEvaluationEntity = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in priceEvaluationEntity)
+                    {
+                        await _priceEvaluationRepository.DeleteAsync(item);
+                    }
+
+                    var sampleEntity =await _sampleRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in sampleEntity)
+                    {
+                        await _sampleRepository.DeleteAsync(item);
+                    }
+
+                    var pcsEntity = await _pcsRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in pcsEntity)
+                    {
+                        await _pcsRepository.DeleteAsync(item);
+                    }
+
+                    var pcsYearEntity = await _pcsYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in pcsYearEntity)
+                    {
+                        await _pcsYearRepository.DeleteAsync(item);
+                    }
+
+                    var carModelCountEntity = await _carModelCountRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in carModelCountEntity)
+                    {
+                        await _carModelCountRepository.DeleteAsync(item);
+                    }
+
+                    var carModelCountYearEntity = await _carModelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in carModelCountYearEntity)
+                    {
+                        await _carModelCountYearRepository.DeleteAsync(item);
+                    }
+
+                    var modelCountEntity = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in modelCountEntity)
+                    {
+                        await _modelCountRepository.DeleteAsync(item);
+                    }
+
+                    var modelCountYearEntity = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in modelCountYearEntity)
+                    {
+                        await _modelCountYearRepository.DeleteAsync(item);
+                    }
+
+                    var requirementEntity = await _requirementRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in requirementEntity)
+                    {
+                        await _requirementRepository.DeleteAsync(item);
+                    }
+
+                    var productInformationEntity = await _productInformationRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in productInformationEntity)
+                    {
+                        await _productInformationRepository.DeleteAsync(item);
+                    }
+
+                    var customerTargetPriceEntity = await _customerTargetPriceRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in customerTargetPriceEntity)
+                    {
+                        await _customerTargetPriceRepository.DeleteAsync(item);
+                    }
+
+                    var gradientEntity = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in gradientEntity)
+                    {
+                        await _gradientRepository.DeleteAsync(item);
+                    }
+
+                    var gradientModelEntity = await _gradientModelRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in gradientModelEntity)
+                    {
+                        await _gradientModelRepository.DeleteAsync(item);
+                    }
+
+                    var gradientModelYearEntity = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in gradientModelYearEntity)
+                    {
+                        await _gradientModelYearRepository.DeleteAsync(item);
+                    }
+
+                    var shareCountEntity = await _shareCountRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    foreach (var item in shareCountEntity)
+                    {
+                        await _shareCountRepository.DeleteAsync(item);
+                    }
+                    #endregion
                 }
 
 

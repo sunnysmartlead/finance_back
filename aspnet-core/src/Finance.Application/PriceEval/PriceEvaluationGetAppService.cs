@@ -1097,6 +1097,7 @@ namespace Finance.PriceEval
 
                 var ff = dto.SelectMany(p => p).GroupBy(p => p.ItemName).Select(item => new OtherCostItem2List
                 {
+                    ItemName = item.Key,
                     Cost = item.Sum(p => p.Cost * modelCountYears.First(o => o.Year == p.Year).Quantity),
                 });
 
