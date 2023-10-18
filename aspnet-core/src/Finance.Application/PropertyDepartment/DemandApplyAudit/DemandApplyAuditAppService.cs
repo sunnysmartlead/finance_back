@@ -98,7 +98,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         {
             try
             {
-                if(auditEntering.Opinion == FinanceConsts.Done)
+                if(auditEntering.Opinion != FinanceConsts.YesOrNo_No)
                 {
                     //判断项目设计方案和方案是否一对一 如果不 则全段传值错误
                     bool exists = auditEntering.SolutionTableList.All(a => auditEntering.DesignSolutionList.Any(b => b.SolutionName == a.Product));
