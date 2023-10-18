@@ -1303,7 +1303,7 @@ namespace Finance.PriceEval
                             AvailableInventory = p.Key.AvailableInventory,
                             Remarks = p.Key.Remarks,
                             MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity), //* p.Key.AssemblyCount.To<decimal>(),
-
+                            ModificationComments = p.FirstOrDefault()?.ModificationComments
                         }).ToList();
                     foreach (var item in dto)
                     {
@@ -1377,7 +1377,8 @@ namespace Finance.PriceEval
                                          Moq = ec.MOQ,
                                          //AvailableInventory = ec.AvailableStock,
                                          StandardMoney = ec.StandardMoney,
-                                         Remarks = ec.Remark
+                                         Remarks = ec.Remark,
+                                         ModificationComments = ec.ModificationComments,
                                      };
                     var electronicList = await electronic.ToListAsync();
 
@@ -1424,7 +1425,8 @@ namespace Finance.PriceEval
                                         Moq = se.MOQ,
                                         //AvailableInventory = se.AvailableStock,
                                         StandardMoney = se.StandardMoney,
-                                        Remarks = se.Remark
+                                        Remarks = se.Remark,
+                                        ModificationComments = se.ModificationComments,
                                     };
                     var structureList = await structure.ToListAsync();
 
@@ -1940,217 +1942,218 @@ namespace Finance.PriceEval
 
         async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld)
         {
-            try
+
+            //取得修改项
+            var updateItem = await _updateItemRepository
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
+                && p.SolutionId == input.SolutionId
+                && p.Year == input.Year && p.UpDown == upDown);
+
+            var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+            if (manufacturingCostEdit is not null)
             {
-                //取得修改项
-                var updateItem = await _updateItemRepository
-                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                    && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
-                    && p.SolutionId == input.SolutionId
-                    && p.Year == input.Year && p.UpDown == upDown);
+                var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
 
-                var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
-                if (manufacturingCostEdit is not null)
+                if (zf is not null)
                 {
-                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
-
-                    if (zf is not null)
-                    {
-                        return zf;
-                    }
+                    return zf;
                 }
-
-                //工序工时年份
-                //var yearInfo = await _yearInfoRepository.GetAllListAsync(p =>
-                //p.AuditFlowId == input.AuditFlowId
-                //&& p.ProductId == sProductld
-                //&& p.Year == year
-                //&& p.Part == YearPart.WorkingHour);
-                var yearInfo = await (from yi in _yearInfoRepository.GetAll()
-                                      join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
-                                      where y.AuditFlowId == input.AuditFlowId
-                                      && y.ProductId == sProductld
-                                      && y.Year == input.Year && y.UpDown == upDown
-                                      select yi).ToListAsync();
-
-
-
-                //获取制造成本参数
-                var manufacturingCostInfo = await _manufacturingCostInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
-                if (manufacturingCostInfo is null)
-                {
-                    manufacturingCostInfo = await _manufacturingCostInfoRepository.GetAll().OrderByDescending(p => p.Year).FirstOrDefaultAsync();
-                }
-
-                var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.GradientId == input.GradientId && p.ProductId == sProductld);
-                if (gradientModel == null)
-                    errMessage = "梯度模式数据未找到";
-                //模组数量
-                //var modelCountYear = await _modelCountYearRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.Year == year);
-                var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
-                && p.GradientModelId == gradientModel.Id && p.ProductId == sProductld && p.Year == year && p.UpDown == upDown);
-
-                //计算连续乘积的委托
-                Func<List<decimal>, decimal> product = p =>
-                {
-                    var init = 1M;
-                    p.ForEach(o => init *= o);
-                    return init;
-                };
-
-                //要求
-                var requirement = await _requirementRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId).ToListAsync();
-
-                //（1-累计降幅）
-                var oneCumulativeDecline = product.Invoke(requirement.Select(p => 1 - (p.AnnualDeclineRate * 0.01M)).ToList());
-
-                //年需求量(gradientModelYear的数量)
-
-                //月需求量
-                var monthlyDemand = Math.Ceiling(gradientModelYear.Sum(p => p.Count) * 1000 / (upDown == YearType.Year ? 12M : 6M)).To<int>();
-
-                //UPH值（工序工时界面暂无，暂定120）
-                //var uph = (await _processHoursEnterUphRepository.FirstOrDefaultAsync(p =>
-                //p.AuditFlowId == input.AuditFlowId
-                //&& p.SolutionId == input.SolutionId
-                //&& p.Year)).Value;
-                //(await _uphInfoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld)).UPH;
-                var uph = (await (from p in _processHoursEnterUphRepository.GetAll()
-                                  join m in _modelCountYearRepository.GetAll() on p.ModelCountYearId equals m.Id
-                                  where p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId
-                                  && m.Year == year && m.UpDown == upDown && p.Uph == "zcuph"
-                                  select p).FirstOrDefaultAsync()).Value;
-
-
-
-                //每班日产能
-                var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
-
-                //工时工序静态字段表
-                //var workingHoursInfo =await (from p in _processHoursEnterDeviceRepository.GetAll()
-                //                       join e in _processHoursEnterRepository.GetAll() on p.ProcessHoursEnterId equals e.Id
-                //                       where e.AuditFlowId == input.AuditFlowId && e.SolutionId == input.SolutionId
-                //                       select p).ToListAsync();
-
-                //await _workingHoursInfoRepository.GetAll()
-                //.Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld).ToListAsync();
-
-                var workingHoursInfo = await _processHoursEnterRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
-
-
-                //设备金额
-                var equipmentMoney = workingHoursInfo.Sum(p => p.DeviceTotalPrice);
-
-                //产线数量
-                var lineCount = Math.Ceiling(monthlyDemand / (dailyCapacityPerShift.Value * (decimal)manufacturingCostInfo.MonthlyWorkingDays * (decimal)manufacturingCostInfo.DailyShift));
-
-                //产线设备月折旧（删除稼动率）
-                //var monthlyDepreciation = (equipmentMoney - 0) * lineCount * manufacturingCostInfo.RateOfMobilization / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
-                var monthlyDepreciation = (equipmentMoney - 0) * lineCount * 0.95M / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
-
-
-                //月产能
-                var monthlyCapacity = dailyCapacityPerShift * 26 * 2;
-
-                //产能利用率
-                var capacityUtilization = monthlyDemand == 0 ? 0 : monthlyDemand / (monthlyCapacity * lineCount) / manufacturingCostInfo.CapacityUtilizationRate;
-                capacityUtilization = capacityUtilization > 1 ? 1 : capacityUtilization;
-
-
-                //分摊后折旧
-                var allocatedDepreciation = monthlyDepreciation * capacityUtilization;
-
-                //制造工时
-                //var manufacturingHours = (yearInfo.Sum(p => p.StandardLaborHours) + yearInfo.Sum(p => p.StandardMachineHours)).To<decimal>();
-                var manufacturingHours = (yearInfo.Sum(p => p.LaborHour) + yearInfo.Sum(p => p.MachineHour)).To<decimal>();
-
-                //人员单价
-                var personPrice = manufacturingCostInfo.AverageWage / oneCumulativeDecline;
-
-                //财务费率
-                var rateEntryInfo = await _rateEntryInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
-                if (rateEntryInfo is null)
-                {
-                    rateEntryInfo = await _rateEntryInfoRepository.GetAll().OrderByDescending(p => p.Year).FirstOrDefaultAsync();
-                }
-
-                //工时工序
-                //var workingHoursInputInfo = await _yearInfoRepository
-                //.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.SwitchLine);
-
-                //切线工时
-                var workingHoursInputInfo = await _followLineTangentRepository
-                .FirstOrDefaultAsync(p => p.Year == year);
-
-
-
-                //跟线工价
-                var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
-
-                //跟线成本
-                var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
-
-                //切线成本
-                var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
-
-                //换线成本
-                var lineChangeCost = lineCost + switchLineCost;
-
-                //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）
-                var directLaborNo = personPrice * (yearInfo.Sum(p => p.PersonnelNumber).To<decimal>() + 1)
-                    * Math.Ceiling(monthlyDemand / dailyCapacityPerShift.Value) / (decimal)manufacturingCostInfo.MonthlyWorkingDays
-                    / oneCumulativeDecline;
-
-                //直接制造成本
-                var manufacturingCost = new ManufacturingCostDirect
-                {
-                    MonthlyDemand = monthlyDemand,
-                    Id = year,
-                    //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）/月需求量（新增：除以月需求量）
-                    DirectLabor = monthlyDemand == 0 ? 0 : directLaborNo / monthlyDemand,
-                    DirectLaborNo = directLaborNo,
-                    EquipmentDepreciation = monthlyDemand == 0 ? 0 : allocatedDepreciation.Value / monthlyDemand,
-                    EquipmentDepreciationNo = allocatedDepreciation.Value,
-                    LineChangeCost = lineChangeCost.Value,
-                    ManufacturingExpenses = (rateEntryInfo.DirectManufacturingRate * manufacturingHours) / 3600,
-                };
-                manufacturingCost.Subtotal = manufacturingCost.DirectLabor + manufacturingCost.EquipmentDepreciation + manufacturingCost.LineChangeCost + manufacturingCost.ManufacturingExpenses;
-
-                //间接制造成本
-                var manufacturingCostIndirect = new ManufacturingCostIndirect
-                {
-                    MonthlyDemand = monthlyDemand,
-                    Id = year,
-                    DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
-                    EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
-                    ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
-                };
-                manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
-
-
-
-                //manufacturingCost.Round2();//保留两位小数
-                //manufacturingCostIndirect.Round2();//保留两位小数
-
-                var dto = new ManufacturingCost
-                {
-                    EditId = PriceEvalConsts.Zc,
-                    Id = year,
-                    CostType = CostType.GroupTest,
-                    CostItem = PriceEvalConsts.GroupTest,
-                    //GradientKy = gradientModelYear.Quantity,
-                    GradientKy = gradient.GradientValue,
-                    MonthlyDemand = monthlyDemand,
-                    ManufacturingCostDirect = manufacturingCost,
-                    ManufacturingCostIndirect = manufacturingCostIndirect,
-                    Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
-                };
-                return dto;
             }
-            catch (Exception e)
+
+            //工序工时年份
+            //var yearInfo = await _yearInfoRepository.GetAllListAsync(p =>
+            //p.AuditFlowId == input.AuditFlowId
+            //&& p.ProductId == sProductld
+            //&& p.Year == year
+            //&& p.Part == YearPart.WorkingHour);
+            var yearInfo = await (from yi in _yearInfoRepository.GetAll()
+                                  join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
+                                  where y.AuditFlowId == input.AuditFlowId
+                                  && y.ProductId == sProductld
+                                  && y.Year == input.Year && y.UpDown == upDown
+                                  select yi).ToListAsync();
+
+
+
+            //获取制造成本参数
+            var manufacturingCostInfo = await _manufacturingCostInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
+            if (manufacturingCostInfo is null)
             {
-                return null;
+                manufacturingCostInfo = await _manufacturingCostInfoRepository.GetAll().OrderByDescending(p => p.Year).FirstOrDefaultAsync();
             }
+
+            var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.GradientId == input.GradientId && p.ProductId == sProductld);
+            if (gradientModel == null)
+                errMessage = "梯度模式数据未找到";
+            //模组数量
+            //var modelCountYear = await _modelCountYearRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == input.ProductId && p.Year == year);
+            var gradientModelYear = await _gradientModelYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientModelId == gradientModel.Id && p.ProductId == sProductld && p.Year == year && p.UpDown == upDown);
+
+            //计算连续乘积的委托
+            Func<List<decimal>, decimal> product = p =>
+            {
+                var init = 1M;
+                p.ForEach(o => init *= o);
+                return init;
+            };
+
+            //要求
+            var requirement = await _requirementRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId).ToListAsync();
+
+            //（1-累计降幅）
+            var oneCumulativeDecline = product.Invoke(requirement.Select(p => 1 - (p.AnnualDeclineRate * 0.01M)).ToList());
+
+            //年需求量(gradientModelYear的数量)
+
+            //月需求量
+            var monthlyDemand = Math.Ceiling(gradientModelYear.Sum(p => p.Count) * 1000 / (upDown == YearType.Year ? 12M : 6M)).To<int>();
+
+            //UPH值（工序工时界面暂无，暂定120）
+            //var uph = (await _processHoursEnterUphRepository.FirstOrDefaultAsync(p =>
+            //p.AuditFlowId == input.AuditFlowId
+            //&& p.SolutionId == input.SolutionId
+            //&& p.Year)).Value;
+            //(await _uphInfoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld)).UPH;
+            var uph = (await (from p in _processHoursEnterUphRepository.GetAll()
+                              join m in _modelCountYearRepository.GetAll() on p.ModelCountYearId equals m.Id
+                              where p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId
+                              && m.Year == year && m.UpDown == upDown && p.Uph == "zcuph"
+                              select p).FirstOrDefaultAsync()).Value;
+
+
+
+            //每班日产能
+            var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
+
+            //工时工序静态字段表
+            //var workingHoursInfo =await (from p in _processHoursEnterDeviceRepository.GetAll()
+            //                       join e in _processHoursEnterRepository.GetAll() on p.ProcessHoursEnterId equals e.Id
+            //                       where e.AuditFlowId == input.AuditFlowId && e.SolutionId == input.SolutionId
+            //                       select p).ToListAsync();
+
+            //await _workingHoursInfoRepository.GetAll()
+            //.Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld).ToListAsync();
+
+            var workingHoursInfo = await _processHoursEnterRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
+
+
+            //设备金额
+            var equipmentMoney = workingHoursInfo.Sum(p => p.DeviceTotalPrice);
+
+            //每班日产能 * 月工作天数 * 每日班次
+            var ycn = (dailyCapacityPerShift.Value * (decimal)manufacturingCostInfo.MonthlyWorkingDays * (decimal)manufacturingCostInfo.DailyShift);
+
+            //产线数量
+            var lineCount = ycn == 0 ? 0 : Math.Ceiling(monthlyDemand / ycn);
+
+            //产线设备月折旧（删除稼动率）
+            //var monthlyDepreciation = (equipmentMoney - 0) * lineCount * manufacturingCostInfo.RateOfMobilization / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
+            var monthlyDepreciation = (equipmentMoney - 0) * lineCount * 0.95M / ((decimal)manufacturingCostInfo.UsefulLifeOfFixedAssets * 12) / oneCumulativeDecline;
+
+
+            //月产能
+            var monthlyCapacity = dailyCapacityPerShift * 26 * 2;
+
+            //月产能 * 产线数量
+            var monthlyCapacityAndlineCount = monthlyCapacity * lineCount;
+
+            //产能利用率
+            var capacityUtilization = (monthlyDemand == 0 || monthlyCapacityAndlineCount == 0) ? 0 : monthlyDemand / monthlyCapacityAndlineCount / manufacturingCostInfo.CapacityUtilizationRate;
+            capacityUtilization = capacityUtilization > 1 ? 1 : capacityUtilization;
+
+
+            //分摊后折旧
+            var allocatedDepreciation = monthlyDepreciation * capacityUtilization;
+
+            //制造工时
+            //var manufacturingHours = (yearInfo.Sum(p => p.StandardLaborHours) + yearInfo.Sum(p => p.StandardMachineHours)).To<decimal>();
+            var manufacturingHours = (yearInfo.Sum(p => p.LaborHour) + yearInfo.Sum(p => p.MachineHour)).To<decimal>();
+
+            //人员单价
+            var personPrice = manufacturingCostInfo.AverageWage / oneCumulativeDecline;
+
+            //财务费率
+            var rateEntryInfo = await _rateEntryInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
+            if (rateEntryInfo is null)
+            {
+                rateEntryInfo = await _rateEntryInfoRepository.GetAll().OrderByDescending(p => p.Year).FirstOrDefaultAsync();
+            }
+
+            //工时工序
+            //var workingHoursInputInfo = await _yearInfoRepository
+            //.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == sProductld && p.Year == year && p.Part == YearPart.SwitchLine);
+
+            //切线工时
+            var workingHoursInputInfo = await _followLineTangentRepository
+            .FirstOrDefaultAsync(p => p.Year == year);
+
+
+
+            //跟线工价
+            var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
+
+            //跟线成本
+            var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
+
+            //切线成本
+            var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
+
+            //换线成本
+            var lineChangeCost = lineCost + switchLineCost;
+
+            //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）
+            var directLaborNo = dailyCapacityPerShift.Value == 0 ? 0 : personPrice * (yearInfo.Sum(p => p.PersonnelNumber).To<decimal>() + 1)
+                * Math.Ceiling(monthlyDemand / dailyCapacityPerShift.Value) / (decimal)manufacturingCostInfo.MonthlyWorkingDays
+                / oneCumulativeDecline;
+
+            //直接制造成本
+            var manufacturingCost = new ManufacturingCostDirect
+            {
+                MonthlyDemand = monthlyDemand,
+                Id = year,
+                //直接人工=人员单价*人员数量*(月需求量/每班日产能)/月工作天数/(1-累积降幅）/月需求量（新增：除以月需求量）
+                DirectLabor = monthlyDemand == 0 ? 0 : directLaborNo / monthlyDemand,
+                DirectLaborNo = directLaborNo,
+                EquipmentDepreciation = monthlyDemand == 0 ? 0 : allocatedDepreciation.Value / monthlyDemand,
+                EquipmentDepreciationNo = allocatedDepreciation.Value,
+                LineChangeCost = lineChangeCost.Value,
+                ManufacturingExpenses = (rateEntryInfo.DirectManufacturingRate * manufacturingHours) / 3600,
+            };
+            manufacturingCost.Subtotal = manufacturingCost.DirectLabor + manufacturingCost.EquipmentDepreciation + manufacturingCost.LineChangeCost + manufacturingCost.ManufacturingExpenses;
+
+            //间接制造成本
+            var manufacturingCostIndirect = new ManufacturingCostIndirect
+            {
+                MonthlyDemand = monthlyDemand,
+                Id = year,
+                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
+                EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
+                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
+            };
+            manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
+
+
+
+            //manufacturingCost.Round2();//保留两位小数
+            //manufacturingCostIndirect.Round2();//保留两位小数
+
+            var dto = new ManufacturingCost
+            {
+                EditId = PriceEvalConsts.Zc,
+                Id = year,
+                CostType = CostType.GroupTest,
+                CostItem = PriceEvalConsts.GroupTest,
+                //GradientKy = gradientModelYear.Quantity,
+                GradientKy = gradient.GradientValue,
+                MonthlyDemand = monthlyDemand,
+                ManufacturingCostDirect = manufacturingCost,
+                ManufacturingCostIndirect = manufacturingCostIndirect,
+                Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
+            };
+            return dto;
+
             //dto.Round2();//保留两位小数
         }
 
@@ -2160,8 +2163,10 @@ namespace Finance.PriceEval
         #region 合计
         static ManufacturingCost GetTotal(int year, List<ManufacturingCost> entity)
         {
-            var manufacturingCostDirectTotal = entity.Select(p => p.ManufacturingCostDirect).Where(p => p is not null);
-            var manufacturingCostIndirectTotal = entity.Select(p => p.ManufacturingCostIndirect).Where(p => p is not null);
+            var manufacturingCostDirectTotal = entity.Select(p => p.ManufacturingCostDirect).Where(p => p != null);
+            var manufacturingCostIndirectTotal = entity.Select(p => p.ManufacturingCostIndirect).Where(p => p != null);
+
+            var ddfg = manufacturingCostDirectTotal.Count();
 
             var manufacturingCostDirectTotalDto = new ManufacturingCostDirect
             {
@@ -3071,6 +3076,23 @@ namespace Finance.PriceEval
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// 方案成本对比表下载
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<FileResult> GetSolutionContrastDonwload(GetSolutionContrastInput input)
+        {
+            var data = await GetSolutionContrast(input);
+
+            var memoryStream = new MemoryStream();
+
+            await MiniExcel.SaveAsAsync(memoryStream, data);
+
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
         }
 
         #endregion
