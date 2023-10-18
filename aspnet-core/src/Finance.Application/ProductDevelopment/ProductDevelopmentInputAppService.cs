@@ -79,7 +79,8 @@ namespace Finance.ProductDevelopment
             }
             entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
             entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
-            entity.FOV = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
+            entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
+            entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
             entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
             entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
             entity.SingleProductWeight = input.SingleProductWeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.SingleProductWeight);

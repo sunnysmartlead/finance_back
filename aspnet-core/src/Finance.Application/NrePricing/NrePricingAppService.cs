@@ -854,6 +854,11 @@ namespace Finance.NerPricing
                 headerRow.CreateCell(4).SetCellValue("工序维护人");
                 headerRow.CreateCell(5).SetCellValue("工序维护时间");
                 int index = 1;
+                ICellStyle dateStyle = workbook.CreateCellStyle();
+                IDataFormat dateFormat = workbook.CreateDataFormat();
+                dateStyle.DataFormat = dateFormat.GetFormat("yyyy-MM-dd");
+                // 设置第一列宽度为 20
+                sheet2.SetColumnWidth(5, 20 * 256);
                 foreach (FoundationEmcDto item in foundationEmcliables)
                 {   // 添加数据
                     IRow dataRow = sheet2.CreateRow(index++);
@@ -863,6 +868,9 @@ namespace Finance.NerPricing
                     dataRow.CreateCell(3).SetCellValue(item.Unit);
                     dataRow.CreateCell(4).SetCellValue(item.LastModifierUserName);
                     dataRow.CreateCell(5).SetCellValue(item.CreationTime);
+                    ICell cell = dataRow.CreateCell(5);
+                    cell.CellStyle = dateStyle;
+                    cell.SetCellValue(item.CreationTime);
                 }
                 // 保存工作簿
                 using (MemoryStream fileStream = new MemoryStream())
