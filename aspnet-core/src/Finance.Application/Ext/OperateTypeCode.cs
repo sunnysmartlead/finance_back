@@ -13,10 +13,10 @@ namespace test
     public enum OperateTypeCode
     {
 
-        [Description("线体数量(pcs)")]
+        [Description("线体数量")]
         xtsl,
 
-        [Description("共线分摊率")]
+        [Description("共线分摊率(%)")]
         gxftl,
 
     }

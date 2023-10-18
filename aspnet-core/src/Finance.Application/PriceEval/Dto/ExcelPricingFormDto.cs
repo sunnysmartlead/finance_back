@@ -129,6 +129,10 @@ namespace Finance.PriceEval.Dto
         /// (不含税美金) NRE 总费用
         /// </summary>
         public decimal USDAllCost { get; set; }
+        /// <summary>
+        /// 线体数量和共线分摊率的值
+        /// </summary>
+        public List<UphAndValue> UphAndValues { get; set; }
     }
 
     public class ExcelHandPieceCostModel : HandPieceCostModel
