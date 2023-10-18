@@ -6,6 +6,7 @@ using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
@@ -101,7 +102,14 @@ namespace Finance.Ext
                 return base.IsValid(value, validationContext);
             }
             var parameterValue = GetParameterValue(Opinion, validationContext.ObjectInstance);
-            if (parameterValue != null &&parameterValue.ToString() != FinanceConsts.Done )
+            var yes = new List<string> { FinanceConsts.YesOrNo_Yes,
+                FinanceConsts.EvalFeedback_Js,
+                FinanceConsts.StructBomEvalSelect_Yes,
+                FinanceConsts.BomEvalSelect_Yes,
+                FinanceConsts.MybhgSelect_No,
+                FinanceConsts.HjkbSelect_Yes,
+                FinanceConsts.ElectronicBomEvalSelect_Yes,FinanceConsts.Done};
+            if (parameterValue != null &&!yes.Contains(parameterValue.ToString()))
             {
                 _httpContextAccessor.HttpContext.Items["Skip"] = true;
                 // 不需要验证

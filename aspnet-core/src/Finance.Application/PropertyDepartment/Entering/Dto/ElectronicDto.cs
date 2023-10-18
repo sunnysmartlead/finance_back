@@ -103,6 +103,10 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// </summary>
         public bool IsEntering { get; set; }
         /// <summary>
+        /// 系统单价是否从单价库中带出
+        /// </summary>
+        public bool IsSystemiginal { get; set; }
+        /// <summary>
         /// 物料管制状态
         /// </summary> 
         [FriendlyRequired("物料管制状态不能为空",skip: true)]
@@ -133,6 +137,7 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// <summary>
         /// 修改意见
         /// </summary>
+        [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
 }

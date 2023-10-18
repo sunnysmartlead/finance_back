@@ -871,7 +871,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "不合规是否退回",
                     TargetNodeId = "归档",
                     Index = 0,
-                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                    FinanceDictionaryDetailId = FinanceConsts.MybhgSelect_No,
                 },
 
                 #region 随机退回的线定义 

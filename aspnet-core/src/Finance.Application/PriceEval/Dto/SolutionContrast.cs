@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MiniExcelLibs.Attributes;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -51,46 +52,55 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 项目名
         /// </summary>
+        [ExcelColumn(Name = "项目名", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string ItemName { get; set; }
 
         /// <summary>
         /// 方案1：单价
         /// </summary>
+        [ExcelColumn(Name = "方案1：单价", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Price_1 { get; set; }
 
         /// <summary>
         /// 方案1：数量
         /// </summary>
+        [ExcelColumn(Name = "方案1：数量", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Count_1 { get; set; }
 
         /// <summary>
         /// 方案1：汇率
         /// </summary>
+        [ExcelColumn(Name = "方案1：汇率", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Rate_1 { get; set; }
 
         /// <summary>
         /// 方案2：合计
         /// </summary>
+        [ExcelColumn(Name = "方案2：合计", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Sum_1 { get; set; }
 
         /// <summary>
         /// 方案2：单价
         /// </summary>
+        [ExcelColumn(Name = "方案2：单价", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Price_2 { get; set; }
 
         /// <summary>
         /// 方案2：数量
         /// </summary>
+        [ExcelColumn(Name = "方案2：数量", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Count_2 { get; set; }
 
         /// <summary>
         /// 方案2：汇率
         /// </summary>
+        [ExcelColumn(Name = "方案2：汇率", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Rate_2 { get; set; }
 
         /// <summary>
         /// 方案2：合计
         /// </summary>
+        [ExcelColumn(Name = "方案2：合计", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Sum_2 { get; set; }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Abp.Application.Services;
+using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.EntityFrameworkCore.Repositories;
 using Abp.ObjectMapping;
+using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
@@ -571,8 +573,10 @@ namespace Finance.ProductDevelopment
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
+         [AbpAuthorize]
         public async Task<List<ElectronicBomInfo>> FindElectronicBomByProcess(ProductDevelopmentInputDto dto)
         {
+            long a = AbpSession.GetUserId();//获取登录人ID
             long AuditFlowId = dto.AuditFlowId;
             long SolutionId = dto.SolutionId;
             var dataBak = _electronicBomInfoBakRepository.GetAll()

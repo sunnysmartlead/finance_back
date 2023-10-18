@@ -310,6 +310,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetElectronicConfigurationState(long auditFlowId)
         {
+            if (auditFlowId == 0) throw new FriendlyException("电子单价录入退回重置状态流程id不能为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             foreach (EnteringElectronic item in enteringElectronics)
             {
@@ -324,6 +325,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetElectronicConfigurationStateCertain(List<long> ElectronicId)
         {
+            if (ElectronicId is null || ElectronicId.Count == 0) throw new FriendlyException("电子料单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => ElectronicId.Contains(p.Id));
             foreach (EnteringElectronic item in enteringElectronics)
             {
@@ -509,6 +511,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetStructuralConfigurationState(long auditFlowId)
         {
+            if (auditFlowId == 0) throw new FriendlyException("结构件单价录入退回重置状态流程id不能为0");
             List<StructureElectronic> enteringElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             foreach (StructureElectronic item in enteringElectronics)
             {
@@ -523,6 +526,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task GetStructuralConfigurationStateCertain(List<long> StructuralId)
         {
+            if (StructuralId is null || StructuralId.Count == 0) throw new FriendlyException("结构件单价录入  退回重置状态 根据电子单价录入表id进行重置,传值不能为空或者数量为0");
             List<StructureElectronic> enteringElectronics = await _configStructureElectronic.GetAllListAsync(p => StructuralId.Contains(p.Id));
             foreach (StructureElectronic item in enteringElectronics)
             {
@@ -671,7 +675,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task ElectronicBOMUnitPriceCopying(long auditFlowId)
         {
-            await _configEnteringElectronicCopy.HardDeleteAsync(p=>p.AuditFlowId.Equals(auditFlowId));
+            await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
             await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy);
@@ -712,6 +716,7 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<List<ElectronicDtoCopy>> ElectronicUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
@@ -749,29 +754,33 @@ namespace Finance.Entering
         public async Task PostElectronicMaterialEnteringCopy(SubmitElectronicDtoCopy electronicDto)
         {
             //循环 资源部 填写的 电子BOM 表达那实体类
-            foreach (ElectronicDto electronic in electronicDto.ElectronicDtoList)
+            foreach (ElectronicDtoCopy electronic in electronicDto.ElectronicDtoList)
             {
                 EnteringElectronicCopy enteringElectronic = await _configEnteringElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(electronic.SolutionId) && p.AuditFlowId.Equals(electronicDto.AuditFlowId) && p.ElectronicId.Equals(electronic.ElectronicId));
+                if (enteringElectronic is null) { throw new FriendlyException("电子单价数据拷贝可能出现问题,请检查"); }
                 enteringElectronic.MOQ = electronic.MOQ;//MOQ
                 enteringElectronic.ElectronicId = electronic.ElectronicId;//电子BOM表单的Id
                 enteringElectronic.SolutionId = electronic.SolutionId; //零件的id
                 enteringElectronic.AuditFlowId = electronicDto.AuditFlowId;//流程的id
                 enteringElectronic.RebateMoney = JsonConvert.SerializeObject(electronic.RebateMoney);//物料可返利金额
-                enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id                       
+                //enteringElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id                       
                 if (electronicDto.IsSubmit)
                 {
-                    enteringElectronic.IsSubmit = electronicDto.IsSubmit;//确认提交 
+                    enteringElectronic.IsSubmit = true;//确认提交 
                 }
                 else
                 {
-                    enteringElectronic.IsEntering = electronicDto.IsSubmit;//确认提交 
+                    enteringElectronic.IsEntering = true;//确认提交 
                 }
                 enteringElectronic.Currency = electronic.Currency;//币种
                 enteringElectronic.MaterialControlStatus = electronic.MaterialControlStatus;//物料管制状态
                 enteringElectronic.Remark = electronic.Remark;//备注
+                enteringElectronic.ModifierId = AbpSession.GetUserId(); //修改人 Id
+                enteringElectronic.ModificationComments = electronic.ModificationComments; //修改意见
                 enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(electronic.MaterialsUseCount);//物料使用量
                 enteringElectronic.InTheRate = JsonConvert.SerializeObject(electronic.InTheRate);//年将率         
                 enteringElectronic.StandardMoney = JsonConvert.SerializeObject(electronic.StandardMoney);//本位币
+                enteringElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(electronic.SystemiginalCurrency);//系统单价(原币)
                 await _configEnteringElectronicCopy.UpdateAsync(enteringElectronic);
             }
         }
@@ -781,6 +790,7 @@ namespace Finance.Entering
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<List<ConstructionDtoCopy>> StructureUnitPriceCopyingInformationAcquisition([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             List<ConstructionDtoCopy> constructionDtos = new List<ConstructionDtoCopy>();
@@ -817,6 +827,7 @@ namespace Finance.Entering
                 {
                     //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                     StructureElectronicCopy structureElectronic = structureElectronicCopy.FirstOrDefault(p => p.StructureId.Equals(construction.StructureId));
+                    if (structureElectronic is null) { throw new FriendlyException("结构单价数据拷贝可能出现问题,请检查"); }
                     construction.Id = structureElectronic.Id;
                     construction.MaterialControlStatus = structureElectronic.MaterialControlStatus;//物料管制状态
                     construction.Currency = structureElectronic.Currency;//币种                       
@@ -825,15 +836,19 @@ namespace Finance.Entering
                     construction.RebateMoney = JsonConvert.DeserializeObject<List<KvMode>>(structureElectronic.RebateMoney);//物料可返回金额
                     construction.InTheRate = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.InTheRate);//年降
                     construction.SystemiginalCurrency = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.SystemiginalCurrency);//原币
+                    construction.MaterialsUseCount = JsonConvert.DeserializeObject<List<YearOrValueKvMode>>(structureElectronic.MaterialsUseCount);//项目物料的使用量
                     construction.PeopleId = structureElectronic.PeopleId;//确认人
                     construction.IsSubmit = structureElectronic.IsSubmit;//是否提交
                     construction.IsEntering = structureElectronic.IsEntering;//是否录入
                     construction.MOQ = structureElectronic.MOQ;//MOQ
                     construction.Remark = structureElectronic.Remark;//备注
+                    construction.IsSystemiginal = structureElectronic.IsSystemiginal;//系统单价是否从单价库中带出
                     var user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.PeopleId);
                     if (user is not null) construction.PeopleName = user.Name;
                     user = await _userRepository.FirstOrDefaultAsync(p => p.Id == structureElectronic.ModifierId);
                     if (user is not null) construction.ModifierName = user.Name;//修改人名称
+                    construction.ModifierId = structureElectronic.ModifierId; //修改人 Id
+                    construction.ModificationComments = structureElectronic.ModificationComments; //修改意见
                 }
                 ConstructionDtoCopy constructionDtoCopy = new ConstructionDtoCopy()
                 {
@@ -856,26 +871,27 @@ namespace Finance.Entering
             {
                 foreach (ConstructionModelCopy item in structuralMemberEnteringModel.StructuralMaterialEntering)
                 {
-                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));
-
-                    structureElectronic.RebateMoney = JsonConvert.SerializeObject(item.RebateMoney);//物料返利金额
+                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));                                      
                     structureElectronic.MOQ = item.MOQ;//MOQ
-                    structureElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
+                    //structureElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                     structureElectronic.Currency = item.Currency;//币种              
                     if (structuralMemberEnteringModel.IsSubmit)
                     {
-                        structureElectronic.IsSubmit = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                        structureElectronic.IsSubmit = true;//确认提交 
                     }
                     else
                     {
-                        structureElectronic.IsEntering = structuralMemberEnteringModel.IsSubmit;//确认提交 
+                        structureElectronic.IsEntering = true;//确认提交 
                     }
                     structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
                     structureElectronic.Remark = item.Remark; //备注                  
+                    structureElectronic.RebateMoney = JsonConvert.SerializeObject(item.RebateMoney);//物料返利金额
                     structureElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
                     structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                     structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
                     structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                    structureElectronic.ModifierId = AbpSession.GetUserId(); //修改人 Id
+                    structureElectronic.ModificationComments = item.ModificationComments; //修改意见
                     await _configStructureElectronicCopy.UpdateAsync(structureElectronic);
 
                 }

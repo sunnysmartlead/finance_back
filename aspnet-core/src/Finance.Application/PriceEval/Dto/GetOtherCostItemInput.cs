@@ -89,12 +89,25 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 梯度Id
         /// </summary>
+        [Required]
         public virtual long GradientId { get; set; }
 
         /// <summary>
         /// 方案表ID
         /// </summary>
-        public long SolutionId { get; set; }
+        [Required]
+        public virtual long SolutionId { get; set; }
 
+        /// <summary>
+        /// 年份
+        /// </summary>
+        [Required]
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        [Required]
+        public virtual YearType UpDown { get; set; }
     }
 }

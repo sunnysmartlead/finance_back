@@ -129,6 +129,10 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary>
         public bool IsEntering { get; set; }
         /// <summary>
+        /// 系统单价是否从单价库中带出
+        /// </summary>
+        public bool IsSystemiginal { get; set; }
+        /// <summary>
         /// 物料管制状态
         /// </summary> 
         public virtual string MaterialControlStatus { get; set; }
@@ -149,6 +153,7 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// <summary>
         /// 修改意见
         /// </summary>
+        [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
 }

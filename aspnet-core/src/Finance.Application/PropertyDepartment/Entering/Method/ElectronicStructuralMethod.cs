@@ -352,6 +352,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         //判断本位币是否值全部为空如果为空  则可以直接提交                  
                         //true 全部不会空                      
                         electronicDto.IsEntering = IsAllNullOrZero(electronicDto.StandardMoney.SelectMany(p => p.YearOrValueModes).ToList(), p => p.Value);
+                        electronicDto.IsSystemiginal = electronicDto.IsEntering;
                         electronicBomList.Add(electronicDto);
                     }
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
@@ -653,6 +654,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.IsEntering = structureElectronic.IsEntering;//是否录入
                             construction.MOQ = structureElectronic.MOQ;//MOQ
                             construction.Remark = structureElectronic.Remark;//备注
+                            construction.IsSystemiginal= structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出
                             var user = GetAsync(new Abp.Application.Services.Dto.EntityDto<long> { Id = structureElectronic.PeopleId });
                             if (user.Result is not null) construction.PeopleName = user.Result.Name;
                             int countUp = structureBOMIdModify.Where(p => p.Equals(construction.StructureId)).Count();//如果修改了,重置参数
@@ -667,6 +669,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 construction.MaterialControlStatus = MaterialControlStatus;//物料管制状态     
                                 construction.IsEntering = false;//确认重置
                                 construction.IsSubmit = false;//提交重置
+                                construction.IsSystemiginal= IsAllNullOrZero(construction.StandardMoney.SelectMany(p => p.YearOrValueModes).ToList(), p => p.Value);
                                 continue;//直接进行下一个循环
                             }
                             continue;//直接进行下一个循环
@@ -683,6 +686,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         construction.RebateMoney = rebateMoney;//物料可返利金额
                         construction.MOQ = Moq;//MOQ
                         construction.SolutionId = item.SolutionId;//方案ID
+                        construction.IsSystemiginal = construction.IsEntering;
                     }
                     
 
@@ -806,6 +810,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.PeopleId = structureElectronic.PeopleId;//确认人
                             construction.Remark = structureElectronic.Remark;//备注
                             construction.SolutionId = item.SolutionId;//方案ID
+                            construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出
                             var user = GetAsync(new Abp.Application.Services.Dto.EntityDto<long> { Id = structureElectronic.PeopleId });
                             if (user.Result is not null) construction.PeopleName = user.Result.Name;
                             continue;//直接进行下一个循环
@@ -1436,6 +1441,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.Currency = item.Currency;//币种
                         enteringElectronic.MaterialControlStatus = item.MaterialControlStatus;//物料管制状态
                         enteringElectronic.Remark = item.Remark;//备注
+                        enteringElectronic.IsSystemiginal = item.IsSystemiginal;//系统单价是否从单价库中带出
                         enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//物料使用量
                         enteringElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//年将率         
                         enteringElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
@@ -1485,9 +1491,11 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.Currency = electronic.Currency;//币种
                         enteringElectronic.MaterialControlStatus = electronic.MaterialControlStatus;//物料管制状态
                         enteringElectronic.Remark = electronic.Remark;//备注
+                        enteringElectronic.IsSystemiginal = electronic.IsSystemiginal;//系统单价是否从单价库中带出
                         enteringElectronic.MaterialsUseCount = JsonConvert.SerializeObject(electronic.MaterialsUseCount);//物料使用量
                         enteringElectronic.InTheRate = JsonConvert.SerializeObject(electronic.InTheRate);//年将率         
                         enteringElectronic.StandardMoney = JsonConvert.SerializeObject(electronic.StandardMoney);//本位币
+                        enteringElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(electronic.SystemiginalCurrency);//系统单价(原币)
                         await _configEnteringElectronic.UpdateAsync(enteringElectronic);
                     }
                 }
@@ -1610,6 +1618,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.IsEntering = true; //确认录入
                         structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
                         structureElectronic.Remark = item.Remark; //备注                  
+                        structureElectronic.IsSystemiginal = item.IsSystemiginal;// 系统单价是否从单价库中带出
                         structureElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
@@ -1655,6 +1664,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.IsSubmit = true; //确认提交
                         structureElectronic.MaterialControlStatus = item.MaterialControlStatus;//ECCN
                         structureElectronic.Remark = item.Remark; //备注                  
+                        structureElectronic.IsSystemiginal = item.IsSystemiginal;// 系统单价是否从单价库中带出
                         structureElectronic.StandardMoney = JsonConvert.SerializeObject(item.StandardMoney);//本位币
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
