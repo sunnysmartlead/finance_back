@@ -742,6 +742,11 @@ namespace Finance.PriceEval.Dto
         /// 备注
         /// </summary>
         public virtual string Remarks { get; set; }
+
+        /// <summary>
+        /// 修改意见
+        /// </summary>
+        public string ModificationComments { get; set; }
     }
 
     /// <summary>

@@ -17,6 +17,7 @@ using System.ComponentModel.DataAnnotations;
 using MiniExcelLibs;
 using System.IO;
 using System.Linq.Dynamic.Core;
+using Abp.Domain.Entities;
 
 namespace Finance.PriceEval
 {
@@ -161,18 +162,20 @@ namespace Finance.PriceEval
             var stream = excle.OpenReadStream();
             var rows = MiniExcel.Query<CreateProjectSelfInput>(stream).ToList();
 
-
-
-            var entitys = ObjectMapper.Map<List<ProjectSelf>>(rows);
-
-
-            foreach (var entity in entitys)
+            foreach (var row in rows)
             {
-                var id = await Repository.GetAll().Where(p => p.Code == entity.Code).Select(p => p.Id).FirstOrDefaultAsync();
-                entity.Id = id;
-            }
+                var entity = await Repository.FirstOrDefaultAsync(p => p.Code == row.Code);
 
-            await Repository.BulkInsertOrUpdateAsync(entitys);
+                if (entity is null)
+                {
+                    await Repository.InsertAsync(ObjectMapper.Map<ProjectSelf>(row));
+                }
+                else
+                {
+                    ObjectMapper.Map(row, entity);
+                    await Repository.UpdateAsync(entity);
+                }
+            }
 
             await _baseStoreLogRepository.InsertAsync(new BaseStoreLog
             {
