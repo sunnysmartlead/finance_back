@@ -146,6 +146,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     ////删除 用户在前端删除的 数据项目
                     //await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
                     #endregion
+                }else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                {
+                    //方案表
+                    await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    //设计方案
+                    await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 }
                 #region 工作流
                 //嵌入工作流
