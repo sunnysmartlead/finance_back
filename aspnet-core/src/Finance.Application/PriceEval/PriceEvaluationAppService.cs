@@ -20,6 +20,7 @@ using Finance.Hr;
 using Finance.Infrastructure;
 using Finance.NerPricing;
 using Finance.Nre;
+using Finance.NrePricing.Dto;
 using Finance.PriceEval.Dto;
 using Finance.PriceEval.Dto.AllManufacturingCost;
 using Finance.Processes;
@@ -1109,10 +1110,10 @@ namespace Finance.PriceEval
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
 
-            var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
+            PricingFormDto data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
 
 
-            var dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
+            ExcelPricingFormDto dto = ObjectMapper.Map<ExcelPricingFormDto>(data);
 
             //模组名
             var modelCountName = await _modelCountRepository.GetAll().Where(p => p.Id == input.SolutionId).Select(p => p.Product).FirstOrDefaultAsync();

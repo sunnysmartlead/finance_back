@@ -1984,6 +1984,7 @@ namespace Finance.NerPricing
                 modify.UphAndValues = result;
                 foreach (UphAndValue item in modify.UphAndValues)
                 {
+                    //if (item.Uph.Equals(OperateTypeCode.gxftl.ToString())) item.Value=item.Value / 100;
                     UphAndValuesd *= item.Value;
                 }
                 //获取产能需求
@@ -1993,8 +1994,8 @@ namespace Finance.NerPricing
                 modify.HandPieceCost = ObjectMapper.Map<List<HandPieceCostModel>>(handPieceCosts);
                 modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p => p.Cost);
                 //模具费用
-                List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                modify.MouldInventory = ObjectMapper.Map<List<MouldInventoryModel>>(mouldInventories);
+                //List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                modify.MouldInventory =(await GetInitialResourcesManagementSingle(auditFlowId, solutionId)).MouldInventoryModels;
                 foreach (MouldInventoryModel item in modify.MouldInventory)
                 {
                     User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
@@ -2065,7 +2066,7 @@ namespace Finance.NerPricing
                          Qc = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Count = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd
+                         Cost = ((decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd) / 100
                      }).ToList();
                 modify.QAQCDepartmentsTotal = modify.QAQCDepartments.Sum(p => p.Cost);
                 //生产设备费用 
@@ -2101,7 +2102,7 @@ namespace Finance.NerPricing
                                                                                                   DeviceStatus = t.DeviceStatus,
                                                                                                   UnitPrice = t.UnitPrice,
                                                                                                   Number = t.Number,
-                                                                                                  Cost = t.Cost,
+                                                                                                  Cost = t.Cost / 100,
                                                                                                   DeviceStatusName = p != null ? p.DisplayName : ""
                                                                                               }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
