@@ -167,8 +167,10 @@ namespace Finance
             configuration.CreateMap<GradientModelYear, GradientModelYearInput>();
             configuration.CreateMap<GradientModelYearInput, GradientModelYear>();
 
-            configuration.CreateMap<ShareCount, ShareCountInput>();
-            configuration.CreateMap<ShareCountInput, ShareCount>();
+            configuration.CreateMap<ShareCount, ShareCountInput>()
+                .ForMember(p => p.YearCount, p => p.MapFrom(o => o.Year));
+            configuration.CreateMap<ShareCountInput, ShareCount>()
+                .ForMember(p => p.Year, p => p.MapFrom(o => o.YearCount)); ;
 
             configuration.CreateMap<CreateCarModelCountDto, CarModelCount>();
             configuration.CreateMap<CreateCarModelCountYearDto, CarModelCountYear>();
