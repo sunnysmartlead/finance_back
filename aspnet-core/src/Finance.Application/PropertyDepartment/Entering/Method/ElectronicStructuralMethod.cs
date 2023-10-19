@@ -226,7 +226,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                        select new GradientValueModel
                                                        {
                                                            AuditFlowId = gradient.AuditFlowId,
-                                                           Kv = gradient.GradientValue
+                                                           Kv = gradient.SystermGradientValue
                                                        }).ToList();
             return gradientModels;
         }
@@ -238,7 +238,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <returns></returns>
         internal async Task<List<GradientModelYear>> NumberOfModules(long auditFlowId, decimal kv)
         {
-            List<Gradient> gradients = await _gradient.GetAllListAsync(g => g.AuditFlowId == auditFlowId && g.GradientValue.Equals(kv));
+            List<Gradient> gradients = await _gradient.GetAllListAsync(g => g.AuditFlowId == auditFlowId && g.SystermGradientValue.Equals(kv));
             List<GradientModel> gradientModels = await _gradientModel.GetAllListAsync(gm => gm.AuditFlowId == auditFlowId);
             List<GradientModelYear> gradientModelYears = await _gradientModelYear.GetAllListAsync(gmy => gmy.AuditFlowId == auditFlowId);
             List<GradientModelYear> gradientModelsAll = (from gradient in gradients
@@ -356,12 +356,12 @@ namespace Finance.PropertyDepartment.Entering.Method
                         electronicBomList.Add(electronicDto);
                     }
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
-                    List<ElectronicDto> electroniprop = electronicBomList;
+                    List<ElectronicDto> electroniprop = electronicBomList.DeepClone();
                     foreach (ElectronicDto electronic in electronicBomList)
                     {
                         List<ElectronicDto> electronicDtos = electroniprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
                         List<YearOrValueKvMode> m = new();
-                        electronicDtos.ForEach(p=> m.AddRange(p.MaterialsUseCount));
+                        electronicDtos.ForEach(p => m.AddRange(p.MaterialsUseCount));
                         foreach (var MaterialsUse in electronic.MaterialsUseCount)
                         {
                             foreach (YearOrValueMode YearOrValueMode in MaterialsUse.YearOrValueModes)
@@ -369,7 +369,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 YearOrValueMode.Value = (m.Where(o => o.Kv.Equals(MaterialsUse.Kv)).SelectMany(o => o.YearOrValueModes)).Where(m => m.Year
                                 .Equals(YearOrValueMode.Year) && m.UpDown.Equals(YearOrValueMode.UpDown)).Sum(o => o.Value);
                             }
-                        }                     
+                        }
                     }
                 }     
                 return electronicBomList;
@@ -691,7 +691,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     
 
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
-                    List<ConstructionModel> constructionprop = constructionModels;
+                    List<ConstructionModel> constructionprop = constructionModels.DeepClone();
                     foreach (ConstructionModel electronic in constructionModels)
                     {
                         List<ConstructionModel> electronicDtos = constructionprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
