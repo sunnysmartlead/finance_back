@@ -213,7 +213,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                //List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<Solution> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
                 //if (solutionTables.Count is not 0)
@@ -265,13 +265,13 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 //else
                 //{
 
-                //    auditEntering.SolutionTableList = new();
-                //    foreach (ModelCount modelCount in modelCounts)
-                //    {
-                //        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
-                //    }
+                    auditEntering.SolutionTableList = new();
+                    foreach (ModelCount modelCount in modelCounts)
+                    {
+                        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
+                    }
                 //}
-                auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(solutionTables);
+                //auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(solutionTables);
                 return auditEntering;
             }
             catch (Exception ex)
