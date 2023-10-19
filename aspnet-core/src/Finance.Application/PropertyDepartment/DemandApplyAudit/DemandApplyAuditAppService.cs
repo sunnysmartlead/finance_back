@@ -213,7 +213,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                //List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<Solution> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
                 //if (solutionTables.Count is not 0)
