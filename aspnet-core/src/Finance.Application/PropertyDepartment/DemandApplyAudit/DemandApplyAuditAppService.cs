@@ -213,64 +213,64 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                //List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<Solution> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
-                //if (solutionTables.Count is not 0)
-                //{
-                //    //跟modelCount联查,modelCount中删除的也会在联查中过滤
-                //    List<Solution> result = (from modelCount in modelCounts
-                //                             join solutionTable in solutionTables
-                //                             on modelCount.Id equals solutionTable.Productld into temp
-                //                             from solutionTable in temp.DefaultIfEmpty()
-                //                             where solutionTable != null
-                //                             select new Solution
-                //                             {
-                //                                 Id = solutionTable.Id,
-                //                                 AuditFlowId = solutionTable.AuditFlowId,
-                //                                 Productld = solutionTable.Productld,
-                //                                 ModuleName = modelCount.Product,
-                //                                 SolutionName = solutionTable.SolutionName,
-                //                                 Product = solutionTable.Product,
-                //                                 IsCOB = solutionTable.IsCOB,
-                //                                 ElecEngineerId = solutionTable.ElecEngineerId,
-                //                                 StructEngineerId = solutionTable.StructEngineerId,
-                //                                 IsFirst = solutionTable.IsFirst,
-                //                             }
-                //                                   ).ToList();
-                //    //退回的时候 如果 录入页面新增数据 此linq会获取
-                //    List<Solution> addresult = (from modelCount in modelCounts
-                //                                join solutionTable in solutionTables
-                //                                on modelCount.Id equals solutionTable.Productld into temp
-                //                                from solutionTable in temp.DefaultIfEmpty()
-                //                                where solutionTable == null
-                //                                select new Solution
-                //                                {
-                //                                    Id = 0,
-                //                                    AuditFlowId = 0,
-                //                                    Productld = modelCount.Id,
-                //                                    ModuleName = modelCount.Product,
-                //                                    SolutionName = "",
-                //                                    Product = "",
-                //                                    IsCOB = false,
-                //                                    ElecEngineerId = 0,
-                //                                    StructEngineerId = 0,
-                //                                    IsFirst = false,
-                //                                }
-                //                                   ).ToList();
+                if (solutionTables.Count is not 0)
+                {
+                    //跟modelCount联查,modelCount中删除的也会在联查中过滤
+                    //List<Solution> result = (from modelCount in modelCounts
+                    //                         join solutionTable in solutionTables
+                    //                         on modelCount.Id equals solutionTable.Productld into temp
+                    //                         from solutionTable in temp.DefaultIfEmpty()
+                    //                         where solutionTable != null
+                    //                         select new Solution
+                    //                         {
+                    //                             Id = solutionTable.Id,
+                    //                             AuditFlowId = solutionTable.AuditFlowId,
+                    //                             Productld = solutionTable.Productld,
+                    //                             ModuleName = modelCount.Product,
+                    //                             SolutionName = solutionTable.SolutionName,
+                    //                             Product = solutionTable.Product,
+                    //                             IsCOB = solutionTable.IsCOB,
+                    //                             ElecEngineerId = solutionTable.ElecEngineerId,
+                    //                             StructEngineerId = solutionTable.StructEngineerId,
+                    //                             IsFirst = solutionTable.IsFirst,
+                    //                         }
+                    //                               ).ToList();
+                    ////退回的时候 如果 录入页面新增数据 此linq会获取
+                    //List<Solution> addresult = (from modelCount in modelCounts
+                    //                            join solutionTable in solutionTables
+                    //                            on modelCount.Id equals solutionTable.Productld into temp
+                    //                            from solutionTable in temp.DefaultIfEmpty()
+                    //                            where solutionTable == null
+                    //                            select new Solution
+                    //                            {
+                    //                                Id = 0,
+                    //                                AuditFlowId = 0,
+                    //                                Productld = modelCount.Id,
+                    //                                ModuleName = modelCount.Product,
+                    //                                SolutionName = "",
+                    //                                Product = "",
+                    //                                IsCOB = false,
+                    //                                ElecEngineerId = 0,
+                    //                                StructEngineerId = 0,
+                    //                                IsFirst = false,
+                    //                            }
+                    //                               ).ToList();
 
-                //    result.AddRange(addresult);
-                //    auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(result);
-                //}
-                //else
-                //{
+                    //result.AddRange(addresult);
+                    auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(solutionTables);
+                }
+                else
+                {
 
                     auditEntering.SolutionTableList = new();
                     foreach (ModelCount modelCount in modelCounts)
                     {
                         auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
                     }
-                //}
+                }
                 //auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(solutionTables);
                 return auditEntering;
             }
