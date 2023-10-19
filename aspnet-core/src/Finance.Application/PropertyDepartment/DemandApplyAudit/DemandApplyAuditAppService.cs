@@ -106,6 +106,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     {
                         throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
                     }
+                    //方案表
+                    await _resourceSchemeTable.HardDeleteAsync(p =>p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    //设计方案
+                    await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                     // 核价团队  其中包含(核价人员以及对应完成时间)
                     PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
                     pricingTeam.AuditFlowId = auditEntering.AuditFlowId;
@@ -115,12 +119,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
                     schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
                     schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
-                    //现在数据库里有的数据项
-                    List<Solution> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
-                    //用户传入的数据项和数据库现有数据项的差异的ID
-                    List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
-                    //删除 用户在前端删除的 数据项目
-                    await _resourceSchemeTable.DeleteAsync(p => SolutionTablDiffId.Contains(p.Id));
+                    ////现在数据库里有的数据项
+                    //List<Solution> SolutionTableNow = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    ////用户传入的数据项和数据库现有数据项的差异的ID
+                    //List<long> SolutionTablDiffId = SolutionTableNow.Where(p => !schemeTables.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
+                    ////删除 用户在前端删除的 数据项目
+                    //await _resourceSchemeTable.DeleteAsync(p => SolutionTablDiffId.Contains(p.Id));
                     #endregion
                     #region 设计方案
                     foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
@@ -135,13 +139,19 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
                     designSchemes.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
                     designSchemes = await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
-                    //现在数据库里有的数据项
-                    List<DesignSolution> DesignSchemeNow = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
-                    //用户传入的数据项和数据库现有数据项的差异的ID
-                    List<long> DesignSchemeDiffId = DesignSchemeNow.Where(p => !designSchemes.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
-                    //删除 用户在前端删除的 数据项目
-                    await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
+                    ////现在数据库里有的数据项
+                    //List<DesignSolution> DesignSchemeNow = await _resourceDesignScheme.GetAllListAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    ////用户传入的数据项和数据库现有数据项的差异的ID
+                    //List<long> DesignSchemeDiffId = DesignSchemeNow.Where(p => !designSchemes.Any(p2 => p2.Id == p.Id)).Select(p => p.Id).ToList();
+                    ////删除 用户在前端删除的 数据项目
+                    //await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
                     #endregion
+                }else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                {
+                    //方案表
+                    await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    //设计方案
+                    await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 }
                 #region 工作流
                 //嵌入工作流
@@ -203,64 +213,65 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 }
                 // 营销部审核 方案表
                 //1.是否保存或者是退回过
-                List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+                //List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
                 List<Solution> solutionTables = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId));
 
-                if (solutionTables.Count is not 0)
-                {
-                    //跟modelCount联查,modelCount中删除的也会在联查中过滤
-                    List<Solution> result = (from modelCount in modelCounts
-                                                  join solutionTable in solutionTables
-                                                  on modelCount.Id equals solutionTable.Productld into temp
-                                                  from solutionTable in temp.DefaultIfEmpty()
-                                                  where solutionTable != null
-                                                  select new Solution
-                                                  {
-                                                      Id = solutionTable.Id,
-                                                      AuditFlowId = solutionTable.AuditFlowId,
-                                                      Productld = solutionTable.Productld,
-                                                      ModuleName = modelCount.Product,
-                                                      SolutionName = solutionTable.SolutionName,
-                                                      Product = solutionTable.Product,
-                                                      IsCOB = solutionTable.IsCOB,
-                                                      ElecEngineerId = solutionTable.ElecEngineerId,
-                                                      StructEngineerId = solutionTable.StructEngineerId,
-                                                      IsFirst = solutionTable.IsFirst,
-                                                  }
-                                                   ).ToList();
-                    //退回的时候 如果 录入页面新增数据 此linq会获取
-                    List<Solution> addresult = (from modelCount in modelCounts
-                                                     join solutionTable in solutionTables
-                                                     on modelCount.Id equals solutionTable.Productld into temp
-                                                     from solutionTable in temp.DefaultIfEmpty()
-                                                     where solutionTable == null
-                                                     select new Solution
-                                                     {
-                                                         Id = 0,
-                                                         AuditFlowId = 0,
-                                                         Productld = modelCount.Id,
-                                                         ModuleName = modelCount.Product,
-                                                         SolutionName = "",
-                                                         Product = "",
-                                                         IsCOB = false,
-                                                         ElecEngineerId = 0,
-                                                         StructEngineerId = 0,
-                                                         IsFirst = false,
-                                                     }
-                                                   ).ToList();
+                //if (solutionTables.Count is not 0)
+                //{
+                //    //跟modelCount联查,modelCount中删除的也会在联查中过滤
+                //    List<Solution> result = (from modelCount in modelCounts
+                //                             join solutionTable in solutionTables
+                //                             on modelCount.Id equals solutionTable.Productld into temp
+                //                             from solutionTable in temp.DefaultIfEmpty()
+                //                             where solutionTable != null
+                //                             select new Solution
+                //                             {
+                //                                 Id = solutionTable.Id,
+                //                                 AuditFlowId = solutionTable.AuditFlowId,
+                //                                 Productld = solutionTable.Productld,
+                //                                 ModuleName = modelCount.Product,
+                //                                 SolutionName = solutionTable.SolutionName,
+                //                                 Product = solutionTable.Product,
+                //                                 IsCOB = solutionTable.IsCOB,
+                //                                 ElecEngineerId = solutionTable.ElecEngineerId,
+                //                                 StructEngineerId = solutionTable.StructEngineerId,
+                //                                 IsFirst = solutionTable.IsFirst,
+                //                             }
+                //                                   ).ToList();
+                //    //退回的时候 如果 录入页面新增数据 此linq会获取
+                //    List<Solution> addresult = (from modelCount in modelCounts
+                //                                join solutionTable in solutionTables
+                //                                on modelCount.Id equals solutionTable.Productld into temp
+                //                                from solutionTable in temp.DefaultIfEmpty()
+                //                                where solutionTable == null
+                //                                select new Solution
+                //                                {
+                //                                    Id = 0,
+                //                                    AuditFlowId = 0,
+                //                                    Productld = modelCount.Id,
+                //                                    ModuleName = modelCount.Product,
+                //                                    SolutionName = "",
+                //                                    Product = "",
+                //                                    IsCOB = false,
+                //                                    ElecEngineerId = 0,
+                //                                    StructEngineerId = 0,
+                //                                    IsFirst = false,
+                //                                }
+                //                                   ).ToList();
 
-                    result.AddRange(addresult);
-                    auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(result);
-                }
-                else
-                {
+                //    result.AddRange(addresult);
+                //    auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(result);
+                //}
+                //else
+                //{
 
-                    auditEntering.SolutionTableList = new();
-                    foreach (ModelCount modelCount in modelCounts)
-                    {
-                        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
-                    }
-                }
+                //    auditEntering.SolutionTableList = new();
+                //    foreach (ModelCount modelCount in modelCounts)
+                //    {
+                //        auditEntering.SolutionTableList.Add(new SolutionTableDto { Productld = modelCount.Id, ModuleName = modelCount.Product });
+                //    }
+                //}
+                auditEntering.SolutionTableList = ObjectMapper.Map<List<SolutionTableDto>>(solutionTables);
                 return auditEntering;
             }
             catch (Exception ex)
