@@ -577,7 +577,7 @@ namespace Finance.PriceEval
                     gradient.AuditFlowId = auditFlowId;
                     var id = await _gradientRepository.InsertAndGetIdAsync(gradient);
                     //gradientIds.Add((id, gradient.GradientValue));
-                    gradientIds.Add((id, gradient.SystermGradientValue));
+                    gradientIds.Add((id, gradient.GradientValue));
                 }
 
                 //梯度模组
