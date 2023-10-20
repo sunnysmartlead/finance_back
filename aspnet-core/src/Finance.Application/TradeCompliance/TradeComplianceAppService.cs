@@ -12,8 +12,14 @@ using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.TradeCompliance.Dto;
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -294,6 +300,115 @@ namespace Finance.TradeCompliance
             }
             return true;
         }
+
+        /// <summary>
+        ///  贸易合规EXCLE下载
+        /// </summary>
+        /// <param name="laboratoryFeeModels"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        public async Task<FileResult> PostExportOfTradeForm(TradeComplianceInputDto input)
+        {
+     
+            var TradeTable = await GetTradeComplianceCheckByCalc(input);
+
+            //创建Workbook
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            //创建一个sheet
+            workbook.CreateSheet("sheet1");
+
+
+            ISheet sheet = workbook.GetSheetAt(0);//获取sheet
+
+            //创建头部
+            IRow row000 = sheet.CreateRow(0);
+            row000.CreateCell(0).SetCellValue("");
+            row000.CreateCell(1).SetCellValue("");
+            row000.CreateCell(2).SetCellValue("");
+            row000.CreateCell(3).SetCellValue("");
+            row000.CreateCell(4).SetCellValue("");
+            row000.CreateCell(5).SetCellValue("");
+            row000.CreateCell(6).SetCellValue("");
+            row000.CreateCell(7).SetCellValue("表单编号：");
+            row000.CreateCell(8).SetCellValue("没有");
+
+            IRow row001 = sheet.CreateRow(1);
+            row001.CreateCell(0).SetCellValue("产品识别分析表（由系统自动生成）");
+
+            IRow row002 = sheet.CreateRow(2);
+            row002.CreateCell(0).SetCellValue("产品名称：");
+            row002.CreateCell(2).SetCellValue(TradeTable.TradeComplianceCheck.ProductName);
+            row002.CreateCell(6).SetCellValue("最终出口地国家：");
+            row002.CreateCell(7).SetCellValue(TradeTable.TradeComplianceCheck.Country);
+
+            IRow row003 = sheet.CreateRow(3);
+            row003.CreateCell(0).SetCellValue("产品小类：");
+            row003.CreateCell(2).SetCellValue(TradeTable.TradeComplianceCheck.ProductType);
+            row003.CreateCell(6).SetCellValue("产品公允售价 ：");
+            row003.CreateCell(7).SetCellValue(TradeTable.TradeComplianceCheck.ProductFairValue.ToString());
+
+            IRow row004 = sheet.CreateRow(4);
+            row004.CreateCell(0).SetCellValue("产品组成物料");
+
+            sheet.AddMergedRegion(new CellRangeAddress( 4, 4+ TradeTable.ProductMaterialInfos.Count+3, 0, 0));
+
+            row004.CreateCell(1).SetCellValue("序号");
+            row004.CreateCell(2).SetCellValue("物料编码");
+            row004.CreateCell(3).SetCellValue("物料种类");
+            row004.CreateCell(4).SetCellValue("材料名称");
+            row004.CreateCell(5).SetCellValue("装配数量");
+            row004.CreateCell(6).SetCellValue("单价");
+            row004.CreateCell(7).SetCellValue("金额");
+            row004.CreateCell(8).SetCellValue("物料管制状态分类");
+
+
+            for (int n = 0; n < TradeTable.ProductMaterialInfos.Count; n++)
+            {
+                IRow row00n = sheet.CreateRow(4+1+n);
+
+                row00n.CreateCell(1).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialIdInBom);
+                row00n.CreateCell(2).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialCode);
+                row00n.CreateCell(3).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialName);
+                row00n.CreateCell(4).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialDetailName);
+                row00n.CreateCell(5).SetCellValue(TradeTable.ProductMaterialInfos[n].Count);
+                row00n.CreateCell(6).SetCellValue(TradeTable.ProductMaterialInfos[n].UnitPrice.ToString());
+                row00n.CreateCell(7).SetCellValue(TradeTable.ProductMaterialInfos[n].Amount.ToString());
+                row00n.CreateCell(8).SetCellValue(TradeTable.ProductMaterialInfos[n].ControlStateType);
+
+            }
+
+            IRow rowAfterN1= sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);
+            rowAfterN1.CreateCell(1).SetCellValue("ECCN成分价值占比");
+
+            IRow rowAfterN2 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 2);
+            rowAfterN2.CreateCell(1).SetCellValue("待定成分价值占比");
+
+            IRow rowAfterN3 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 3);
+            rowAfterN3.CreateCell(1).SetCellValue("合计价值占比");
+
+            IRow rowAfterN4 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 4);
+            rowAfterN4.CreateCell(0).SetCellValue("分析结论");
+
+            IRow rowAfterN5 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 5);
+            rowAfterN5.CreateCell(0).SetCellValue("做成/日期");
+
+
+           
+
+
+
+            MemoryStream ms = new MemoryStream();
+            workbook.Write(ms);
+            //ms.Seek(0, SeekOrigin.Begin);
+
+            Byte[] btye2 = ms.ToArray();
+            FileContentResult fileContent = new FileContentResult(btye2, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") { FileDownloadName = "aaa.xlsx" };
+
+            return fileContent;
+
+
+        }
+
     }
 
 }
