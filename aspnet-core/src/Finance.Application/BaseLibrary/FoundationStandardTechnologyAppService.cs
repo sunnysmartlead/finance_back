@@ -198,7 +198,7 @@ namespace Finance.BaseLibrary
                         }
 
                     }
-                    foundationReliableProcess.DevelopCostInfo.TotalHardwarePrice = foundationReliableProcessHours.SoftwareHardPrice;
+                    foundationReliableProcess.DevelopCostInfo.SoftwareHardPrice = foundationReliableProcessHours.SoftwareHardPrice;
                     foundationReliableProcess.DevelopCostInfo.PictureDevelopment = foundationReliableProcessHours.PictureDevelopment;
                     foundationReliableProcess.DevelopCostInfo.DrawingSoftware = foundationReliableProcessHours.DrawingSoftware;
                     foundationReliableProcess.DevelopCostInfo.Development = foundationReliableProcessHours.Development;
@@ -228,7 +228,7 @@ namespace Finance.BaseLibrary
                     foundationReliableProcess.toolInfo.TestLinePrice = foundationReliableProcessHours.TestLinePrice;
                     foundationReliableProcess.toolInfo.FrockName = foundationReliableProcessHours.FrockName;
                     foundationReliableProcess.toolInfo.FrockNumber = foundationReliableProcessHours.FrockNumber;
-                    foundationReliableProcess.toolInfo.FrockPrice = 0;
+                    foundationReliableProcess.toolInfo.FrockPrice = foundationReliableProcessHours.FrockPrice;
                     foundationReliableProcess.toolInfo.HardwareDeviceTotalPrice = foundationReliableProcessHours.HardwareDeviceTotalPrice;
                     foundationReliableProcess.toolInfo.SoftwarePrice = foundationReliableProcessHours.SoftwarePrice;
                     foundationReliableProcess.toolInfo.FixtureName = foundationReliableProcessHours.FrockName;
