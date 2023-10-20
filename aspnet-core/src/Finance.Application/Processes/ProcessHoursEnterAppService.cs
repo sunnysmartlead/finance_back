@@ -10,6 +10,7 @@ using Finance.Ext;
 using Finance.FinanceParameter;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.Processes.ProcessHoursEnterDtos;
 using Finance.ProductDevelopment;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
@@ -2966,6 +2967,32 @@ namespace Finance.Processes
             MyCell.CellStyle = cellStyle;//赋给单元格
         }
 
+        /// <summary>
+        /// 根据流程和方案获取硬件总价 、开发费追溯、开发费开图
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<ProcessHoursEnterTotalDto> GetProcessHoursEnterTotal(GetProcessHoursEntersInput input)
+        {
+            ProcessHoursEnterTotalDto process = new ProcessHoursEnterTotalDto();
+         
+        // 设置查询条件
+            var query = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId ).ToList();
+            decimal HardwareTotalPrice = 0;
+            decimal SoftwarePrice = 0;
+            decimal TraceabilitySoftware = 0;
+            foreach ( var item in query )
+            {
+                HardwareTotalPrice += item.HardwareTotalPrice;
+                SoftwarePrice += item.SoftwarePrice;
+                TraceabilitySoftware += item.TraceabilitySoftwareCost;
+
+            }
+            process.HardwareTotalPrice = HardwareTotalPrice;
+            process.SoftwarePrice = SoftwarePrice;
+            process.TraceabilitySoftware = TraceabilitySoftware;
+            return process;
+        }
         /// <summary>
         /// 合并单元格
         /// </summary>
