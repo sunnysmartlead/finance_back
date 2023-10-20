@@ -324,7 +324,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
                                     .Where(p => p.Year.Equals(modelCountYear.Year))
-                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
+                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType .Year? (yearOrValueModeCanNull.Value ?? 0)/2: yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)BomInfo.AssemblyQuantity;
                                 List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
@@ -614,7 +614,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
                                     .Where(p => p.Year.Equals(modelCountYear.Year))
-                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
+                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType.Year ? (yearOrValueModeCanNull.Value ?? 0) / 2 : yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)construction.AssemblyQuantity;
                                 List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
