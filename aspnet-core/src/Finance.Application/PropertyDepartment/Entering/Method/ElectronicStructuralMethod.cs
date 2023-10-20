@@ -287,7 +287,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
                         //重新计算装配数量  SAP相同的料号装配数量需要相加
-                        //BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                        BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
                         electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
@@ -324,7 +324,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
                                     .Where(p => p.Year.Equals(modelCountYear.Year))
-                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
+                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType .Year? (yearOrValueModeCanNull.Value ?? 0)/2: yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)BomInfo.AssemblyQuantity;
                                 List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
@@ -356,21 +356,21 @@ namespace Finance.PropertyDepartment.Entering.Method
                         electronicBomList.Add(electronicDto);
                     }
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
-                    List<ElectronicDto> electroniprop = electronicBomList.DeepClone();
-                    foreach (ElectronicDto electronic in electronicBomList)
-                    {
-                        List<ElectronicDto> electronicDtos = electroniprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
-                        List<YearOrValueKvMode> m = new();
-                        electronicDtos.ForEach(p => m.AddRange(p.MaterialsUseCount));
-                        foreach (var MaterialsUse in electronic.MaterialsUseCount)
-                        {
-                            foreach (YearOrValueMode YearOrValueMode in MaterialsUse.YearOrValueModes)
-                            {
-                                YearOrValueMode.Value = (m.Where(o => o.Kv.Equals(MaterialsUse.Kv)).SelectMany(o => o.YearOrValueModes)).Where(m => m.Year
-                                .Equals(YearOrValueMode.Year) && m.UpDown.Equals(YearOrValueMode.UpDown)).Sum(o => o.Value);
-                            }
-                        }
-                    }
+                    //List<ElectronicDto> electroniprop = electronicBomList.DeepClone();
+                    //foreach (ElectronicDto electronic in electronicBomList)
+                    //{
+                    //    List<ElectronicDto> electronicDtos = electroniprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
+                    //    List<YearOrValueKvMode> m = new();
+                    //    electronicDtos.ForEach(p => m.AddRange(p.MaterialsUseCount));
+                    //    foreach (var MaterialsUse in electronic.MaterialsUseCount)
+                    //    {
+                    //        foreach (YearOrValueMode YearOrValueMode in MaterialsUse.YearOrValueModes)
+                    //        {
+                    //            YearOrValueMode.Value = (m.Where(o => o.Kv.Equals(MaterialsUse.Kv)).SelectMany(o => o.YearOrValueModes)).Where(m => m.Year
+                    //            .Equals(YearOrValueMode.Year) && m.UpDown.Equals(YearOrValueMode.UpDown)).Sum(o => o.Value);
+                    //        }
+                    //    }
+                    //}
                 }     
                 return electronicBomList;
             }
@@ -509,7 +509,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                 foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                 {
                     //重新计算装配数量  SAP相同的料号装配数量需要相加
-                    //BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                    BomInfo.AssemblyQuantity = electronicBomInfo.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
                     ElectronicDto electronicDto = new ElectronicDto();
                     //将电子料BOM映射到ElectronicDto
                     electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
@@ -592,7 +592,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     foreach (ConstructionModel construction in constructionModels)
                     {
                         //重新计算装配数量  SAP相同的料号装配数量需要相加
-                        //construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                        construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p => p.AssemblyQuantity);
                         //查询共用物料库
                         List<SharedMaterialWarehouse> sharedMaterialWarehouses = await _sharedMaterialWarehouse.GetAllListAsync(p => p.MaterialCode.Equals(construction.SapItemNum));
                         int count = structureBOMIdDeleted.Where(p => p.Equals(construction.StructureId)).Count();//如果改id删除了就跳过
@@ -614,7 +614,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
                                     .Where(p => p.Year.Equals(modelCountYear.Year))
-                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (yearOrValueModeCanNull.Value ?? 0)))
+                                     .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType.Year ? (yearOrValueModeCanNull.Value ?? 0) / 2 : yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)construction.AssemblyQuantity;
                                 List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
@@ -691,21 +691,21 @@ namespace Finance.PropertyDepartment.Entering.Method
                     
 
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
-                    List<ConstructionModel> constructionprop = constructionModels.DeepClone();
-                    foreach (ConstructionModel electronic in constructionModels)
-                    {
-                        List<ConstructionModel> electronicDtos = constructionprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
-                        List<YearOrValueKvMode> m = new();
-                        electronicDtos.ForEach(p => m.AddRange(p.MaterialsUseCount));
-                        foreach (var MaterialsUse in electronic.MaterialsUseCount)
-                        {
-                            foreach (YearOrValueMode YearOrValueMode in MaterialsUse.YearOrValueModes)
-                            {
-                                YearOrValueMode.Value = (m.Where(o => o.Kv.Equals(MaterialsUse.Kv)).SelectMany(o => o.YearOrValueModes)).Where(m => m.Year
-                                .Equals(YearOrValueMode.Year) && m.UpDown.Equals(YearOrValueMode.UpDown)).Sum(o => o.Value);
-                            }
-                        }
-                    }
+                    //List<ConstructionModel> constructionprop = constructionModels.DeepClone();
+                    //foreach (ConstructionModel electronic in constructionModels)
+                    //{
+                    //    List<ConstructionModel> electronicDtos = constructionprop.Where(p => p.SapItemNum.Equals(electronic.SapItemNum)).ToList();
+                    //    List<YearOrValueKvMode> m = new();
+                    //    electronicDtos.ForEach(p => m.AddRange(p.MaterialsUseCount));
+                    //    foreach (var MaterialsUse in electronic.MaterialsUseCount)
+                    //    {
+                    //        foreach (YearOrValueMode YearOrValueMode in MaterialsUse.YearOrValueModes)
+                    //        {
+                    //            YearOrValueMode.Value = (m.Where(o => o.Kv.Equals(MaterialsUse.Kv)).SelectMany(o => o.YearOrValueModes)).Where(m => m.Year
+                    //            .Equals(YearOrValueMode.Year) && m.UpDown.Equals(YearOrValueMode.UpDown)).Sum(o => o.Value);
+                    //        }
+                    //    }
+                    //}
 
                     ConstructionDto constructionDto = new ConstructionDto()
                     {
@@ -793,7 +793,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     foreach (ConstructionModel construction in constructionModels)
                     {
                         //重新计算装配数量  SAP相同的料号装配数量需要相加
-                        //construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                        construction.AssemblyQuantity = constructionModels.Where(p => p.SapItemNum.Equals(construction.SapItemNum)).Sum(p => p.AssemblyQuantity);
                         //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
                         StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(construction.StructureId) && p.IsSubmit);
                         if (structureElectronic != null)
