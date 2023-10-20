@@ -1907,6 +1907,33 @@ namespace Finance.NerPricing
                 pricingFormDto.SoftwareTestingCostTotal = pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost);
                 pricingFormDto.TravelExpenseTotal = pricingFormDto.TravelExpense.Sum(p => p.Cost);
                 pricingFormDto.RestsCostTotal = pricingFormDto.RestsCost.Sum(p => p.Cost);
+                //(不含税人民币) NRE 总费用
+                pricingFormDto.RMBAllCost = pricingFormDto.HandPieceCost.Sum(p => p.Cost)//手板件总费用
+                                         + pricingFormDto.MouldInventory.Sum(p => p.Cost)//模具清单总费用
+                                         + pricingFormDto.ToolingCost.Sum(p => p.Cost)//工装费用总费用
+                                         + pricingFormDto.FixtureCost.Sum(p => p.Cost)//治具费用总费用
+                                         + pricingFormDto.QAQCDepartments.Sum(p => p.Cost)//检具费用总费用
+                                         + pricingFormDto.ProductionEquipmentCost.Sum(p => p.Cost)//生产设备总费用
+                                         + pricingFormDto.LaboratoryFeeModels.Sum(p => p.AllCost)//实验费用总费用
+                                         + pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost)//测试软件总费用
+                                         + pricingFormDto.TravelExpense.Sum(p => p.Cost)//差旅费总费用
+                                         + pricingFormDto.RestsCost.Sum(p => p.Cost);//其他费用总费用
+                int year = await GetYear(auditFlowId);
+                //获取汇率
+                ExchangeRate exchangeRate = await _configExchangeRate.FirstOrDefaultAsync(p => p.ExchangeRateKind.Equals("USD"));
+                List<YearOrValueMode> yearOrValueModes = JsonExchangeRateValue(exchangeRate.ExchangeRateValue);
+                YearOrValueMode exchangeRateModel = new();
+                if (yearOrValueModes.Count is not 0) exchangeRateModel = yearOrValueModes.FirstOrDefault(p => p.Year.Equals(year));
+                //(不含税美金) NRE 总费用
+                pricingFormDto.USDAllCost = 0.0M;
+                if (exchangeRateModel is not null)
+                {
+                    pricingFormDto.USDAllCost = pricingFormDto.RMBAllCost / exchangeRateModel.Value;
+                }
+                else
+                {
+                    pricingFormDto.USDAllCost = pricingFormDto.RMBAllCost;
+                }
                 return pricingFormDto;
             }
             catch (Exception e)
