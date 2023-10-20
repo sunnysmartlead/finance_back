@@ -1479,7 +1479,7 @@ namespace Finance.Processes
                         }
                         if (xtftl < 1)
                         {
-                            xtftl = xtftl * 100;
+                            xtftl = xtftl * 10;
                         }
 
                         XtslVale = Xtsl;
