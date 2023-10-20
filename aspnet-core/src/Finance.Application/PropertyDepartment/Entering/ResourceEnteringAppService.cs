@@ -656,9 +656,9 @@ namespace Finance.Entering
             if (toExamineDto.BomCheckType == BOMCHECKTYPE.BomPriceCheck && toExamineDto.Opinion != FinanceConsts.BomEvalSelect_Yes)
             {
                 //重置状态
-                await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
+                if(toExamineDto.Opinion == FinanceConsts.BomEvalSelect_Dzbomppxg)await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
                 //重置状态
-                await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
+                if (toExamineDto.Opinion == FinanceConsts.BomEvalSelect_Jgbomppxg) await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
             }
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
