@@ -17,5 +17,10 @@ public class NRESecondModel
     /// 费用
     /// </summary>
     public List<string> Costs { get; set; }
-   
+
+    /// <summary>
+    /// 总费用
+    /// </summary>
+    public decimal? Cost { get; set; }
+
 }
