@@ -23,7 +23,12 @@ namespace Finance.PriceEval.Dto
         public virtual decimal GradientValue { get; set; }
 
         /// <summary>
-        /// 系统取梯度
+        /// 显示用梯度
+        /// </summary>
+        public virtual decimal DisplayGradientValue { get; set; }
+
+        /// <summary>
+        /// 系统取梯度（废弃）
         /// </summary>
         public virtual decimal SystermGradientValue { get; set; }
     }
