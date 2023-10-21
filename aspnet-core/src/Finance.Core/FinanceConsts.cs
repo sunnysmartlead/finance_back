@@ -967,5 +967,26 @@ namespace Finance
         /// </summary>
         public const string QualityCostType_Wsxx = "QualityCostType_Wsxx";
 
+
+        /// <summary>
+        /// 审批报价策略与核价表选项
+        /// </summary>
+        public const string Spbjclyhjb = "Spbjclyhjb";
+
+        /// <summary>
+        /// 审批报价策略与核价表选项-【同意】
+        /// </summary>
+        public const string Spbjclyhjb_Yes = "Spbjclyhjb_Yes";
+
+        /// <summary>
+        /// 审批报价策略与核价表选项-【退回到核价看板】
+        /// </summary>
+        public const string Spbjclyhjb_Hjkb = "Spbjclyhjb_Hjkb";
+
+        /// <summary>
+        /// 审批报价策略与核价表选项-【退回到报价分析看板界面】
+        /// </summary>
+        public const string Spbjclyhjb_Bjfxkb = "Spbjclyhjb_Bjfxkb";
+
     }
 }

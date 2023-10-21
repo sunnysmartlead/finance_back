@@ -1967,14 +1967,19 @@ namespace Finance.PriceEval
             //&& p.ProductId == sProductld
             //&& p.Year == year
             //&& p.Part == YearPart.WorkingHour);
+            //var yearInfo = await (from yi in _yearInfoRepository.GetAll()
+            //                      join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
+            //                      where y.AuditFlowId == input.AuditFlowId
+            //                      && y.ProductId == sProductld
+            //                      && y.Year == input.Year && y.UpDown == upDown
+            //                      select yi).ToListAsync();
             var yearInfo = await (from yi in _yearInfoRepository.GetAll()
+                                  join e in _processHoursEnterRepository.GetAll() on yi.ProcessHoursEnterId equals e.Id
                                   join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
                                   where y.AuditFlowId == input.AuditFlowId
-                                  && y.ProductId == sProductld
+                                  && e.SolutionId == input.SolutionId
                                   && y.Year == input.Year && y.UpDown == upDown
                                   select yi).ToListAsync();
-
-
 
             //获取制造成本参数
             var manufacturingCostInfo = await _manufacturingCostInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
