@@ -296,7 +296,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId);
     }
-
+    /// <summary>
+    /// 根据流程号获取报价目录
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <returns></returns>
+    public async Task<List<SolutionQuotation>> GeCatalogue(long auditFlowId)
+    {
+        return await _analysisBoardSecondMethod.GeCatalogue(auditFlowId);
+    }
 
     /// <summary>
     /// 根据流程号获取方案

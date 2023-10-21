@@ -2443,7 +2443,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
         }
     }
+    /// <summary>
+    /// 获取报价目录
+    /// </summary>
+    /// <param name="departmentDtos"></param>
+    /// <returns></returns>
+    public async Task<List<SolutionQuotation>> GeCatalogue(long auditFlowId)
+    {
+        List<SolutionQuotation> sol =
+            await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.status == 0);
 
+        return sol;
+    }
     /// <summary>
     /// Ner  样品阶段
     /// </summary>
