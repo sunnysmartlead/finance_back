@@ -26,6 +26,7 @@ namespace Finance.Processes
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
+        private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;   
         /// <summary>
         /// .ctor
         /// </summary>
@@ -33,11 +34,13 @@ namespace Finance.Processes
         public ProcessHoursEnterUphAppService(
             DataInputAppService dataInputAppService,
             IRepository<Solution, long> resourceSchemeTable,
-            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository)
+            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
+            IRepository<ModelCountYear, long> modelCountYearRepository)
         {
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
-            _dataInputAppService= dataInputAppService;
+            _dataInputAppService = dataInputAppService;
             _resourceSchemeTable = resourceSchemeTable;
+            _modelCountYearRepository = modelCountYearRepository;
         }
 
         /// <summary>
@@ -85,22 +88,41 @@ namespace Finance.Processes
             // 设置查询条件
             List<GradientModelYearListDto> data = await _dataInputAppService.GetGradientModelYearByProductId((long)entity.Productld);
             List<ProcessHoursEnterUphBomItemDto> processHoursEnterUphBomItemDtoList = new List<ProcessHoursEnterUphBomItemDto>();
-            foreach (var dtosItem in data)
+            
+            var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
+            foreach (ModelCountYear row in query)
             {
-                var query = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Year == dtosItem.Year.ToString() && t.Uph == "cobuph").ToList();
-                if (null != query && query.Count>0) {
-                    ProcessHoursEnterUphBomItemDto processHoursEnterUphBomItemDto = new ProcessHoursEnterUphBomItemDto();
-                    processHoursEnterUphBomItemDto.ComPuh = query[0].Value;
-                    processHoursEnterUphBomItemDto.Year = dtosItem.Year.ToString();
-                    processHoursEnterUphBomItemDtoList.Add(processHoursEnterUphBomItemDto);
+
+                ProcessHoursEnterUphBomItemDto processHoursEnterUphListDto = new ProcessHoursEnterUphBomItemDto();
+                if (row.UpDown == YearType.FirstHalf)
+                {
+
+                    processHoursEnterUphListDto.Year = row.Year + "上半年";
                 }
-                else {
-                    ProcessHoursEnterUphBomItemDto processHoursEnterUphBomItemDto = new ProcessHoursEnterUphBomItemDto();
-                    processHoursEnterUphBomItemDto.ComPuh = 0;
+                else if (row.UpDown == YearType.SecondHalf)
+                {
+                    processHoursEnterUphListDto.Year = row.Year + "下半年";
                 }
-       
+                else
+                {
+                    processHoursEnterUphListDto.Year = row.Year.ToString();
+                }
+
+                var CobuphList = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId && t.Uph == "cobuph" && t.ModelCountYearId == row.Id).ToList();
+                if (null != CobuphList && CobuphList.Count > 0)
+                {
+                    processHoursEnterUphListDto.ComPuh = CobuphList[0].Value;
+                }
+                else
+                {
+                    processHoursEnterUphListDto.ComPuh = 0;
+                }
+                processHoursEnterUphBomItemDtoList.Add(processHoursEnterUphListDto);
+
 
             }
+
+           
             processHoursEnterUphBomDto.IsCOB = entity.IsCOB;
             processHoursEnterUphBomDto.ProcessHoursEnterUphBomItemsList = processHoursEnterUphBomItemDtoList;
             return processHoursEnterUphBomDto;
