@@ -2424,6 +2424,7 @@ namespace Finance.NerPricing
         /// 其他费用修改项删除
         /// </summary>
         /// <returns></returns>
+        [HttpGet]
         public async Task DelOtherExpenseModificationItemsAdded(long Id)
         {            
             await _restsCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
