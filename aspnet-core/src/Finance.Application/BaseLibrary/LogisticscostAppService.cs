@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using Finance.Ext;
 using Finance.ProjectManagement;
 using static Finance.Ext.FriendlyRequiredAttribute;
+using Finance.Authorization.Users;
 
 namespace Finance.BaseLibrary
 {
@@ -42,6 +43,7 @@ namespace Finance.BaseLibrary
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<PriceEvaluation ,long> _priceEvaluationRepository;
+
         /// <summary>
         /// 文件管理接口
         /// </summary>
@@ -134,16 +136,10 @@ namespace Finance.BaseLibrary
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
                 foreach (var dtosItem1 in dtosItem)
                 {
-
+                   
                     ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)dtosItem1.ModelCountYearId);
-                    List<GradientModelYear> gradientModelYears = _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == entity.Productld && p.Year == entitySolution.Year && p.UpDown == entitySolution.UpDown).ToList();
-                    if (gradientModelYears.Count > 0)
-                    {
-                        dtosItem1.YearMountCount = gradientModelYears[0].Count;
-                    }
-                    else {
-                        dtosItem1.YearMountCount = 0;
-                    }
+              
+
                     dtosItem1.ModelCountYearId = entitySolution.Id;
                     if (entitySolution.UpDown == YearType.FirstHalf)
                     {
@@ -161,7 +157,21 @@ namespace Finance.BaseLibrary
                         dtosItem1.Year = entitySolution.Year.ToString();
                         dtosItem1.Moon = 12;
                     }
-
+                    List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
+                                           join b in await _gradientModelRepository.GetAllListAsync(u => u.ProductId == entity.Productld) on a.Id equals b.GradientId
+                                           join c in await _gradientModelYearRepository.GetAllListAsync(h => h.Year == entitySolution.Year && h.UpDown == entitySolution.UpDown) on b.Id equals c.GradientModelId
+                                           select new GradientModelYear
+                                           {
+                                               Count = c.Count
+                                           }).ToList();
+                    if (GradientModelYearList.Count > 0)
+                    {
+                        dtosItem1.YearMountCount = GradientModelYearList[0].Count;
+                    }
+                    else
+                    {
+                        dtosItem1.YearMountCount = 0;
+                    }
                 }
 
                 logisticscostResponse.LogisticscostList = dtosItem;
@@ -200,9 +210,18 @@ namespace Finance.BaseLibrary
                         ModelCountYear entitySolution = await _modelCountYearRepository.GetAsync((long)item1.Id);
 
                         List<GradientModelYear> gradientModelYears = _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == entity.Productld && p.Year == entitySolution.Year && p.UpDown == entitySolution.UpDown).ToList();
-                        if (gradientModelYears.Count > 0)
+                       
+
+                        List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
+                                                            join b in await _gradientModelRepository.GetAllListAsync(u => u.ProductId == entity.Productld) on a.Id equals b.GradientId
+                                                            join c in await _gradientModelYearRepository.GetAllListAsync(h => h.Year == entitySolution.Year && h.UpDown == entitySolution.UpDown) on b.Id equals c.GradientModelId
+                                                            select new GradientModelYear
+                                                            {
+                                                                Count = c.Count
+                                                            }).ToList();
+                        if (GradientModelYearList.Count > 0)
                         {
-                            logisticscostDto.YearMountCount = gradientModelYears[0].Count;
+                            logisticscostDto.YearMountCount = GradientModelYearList[0].Count;
                         }
                         else
                         {

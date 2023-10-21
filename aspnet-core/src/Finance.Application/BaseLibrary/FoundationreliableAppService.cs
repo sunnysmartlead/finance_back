@@ -85,14 +85,21 @@ namespace Finance.BaseLibrary
         {
             // 设置查询条件
             var query = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false);
+             List<FoundationreliableDto> l= new List<FoundationreliableDto>();
             if (!string.IsNullOrEmpty(input.Name) && null != input.Type)
             {
                 query = query.Where(t => t.Name.Contains(input.Name));
             }
+
+          /*  if (string.IsNullOrEmpty(input.Name) && null != input.Type)
+            {
+                return l;
+            }*/
             if (!string.IsNullOrEmpty(input.Name) && 1 == input.Type)
             {
                 query = query.Where(t => t.Name.Contains(input.Name));
             }
+
             if (!string.IsNullOrEmpty(input.Classification))
             {
                 query = query.Where(t => t.Classification.Contains(input.Classification));
