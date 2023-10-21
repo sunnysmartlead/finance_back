@@ -10,6 +10,8 @@ using Finance.Ext;
 using Finance.FinanceParameter;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.Processes.ProcessHoursEnterDtos;
+using Finance.ProductDevelopment;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
@@ -252,6 +254,7 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
                     p.Year = item;
+                    p.YearInt = decimal.Parse(item);
                     var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
                     foreach (var itemYear in queryYearItem)
@@ -1477,7 +1480,7 @@ namespace Finance.Processes
                         }
                         if (xtftl < 1)
                         {
-                            xtftl = xtftl * 100;
+                            xtftl = xtftl * 10;
                         }
 
                         XtslVale = Xtsl;
@@ -1603,7 +1606,7 @@ namespace Finance.Processes
 
                     CreateCell(herdRow3, 2, "", wk);
                 }
-                CreateCell(herdRow3, 3, item.LastModificationTime.Value.ToString(), wk);
+                CreateCell(herdRow3, 3, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
             
 
             }
@@ -1671,10 +1674,10 @@ namespace Finance.Processes
             sheet2.SetColumnWidth(12, 10 * 500);
             row002.CreateCell(13).SetCellValue("设备3供应商");
             sheet2.SetColumnWidth(13, 10 * 500);
-            row002.CreateCell(14).SetCellValue("维护时间");
-            sheet2.SetColumnWidth(14, 10 * 500);
-            row002.CreateCell(15).SetCellValue("维护人");
+            row002.CreateCell(15).SetCellValue("维护时间");
             sheet2.SetColumnWidth(15, 10 * 500);
+            row002.CreateCell(14).SetCellValue("维护人");
+            sheet2.SetColumnWidth(14, 10 * 500);
 
              /*设备*/
             var foundationDeviceQuery = _foundationDeviceRepository.GetAllList(p => p.IsDeleted == false).ToList();
@@ -1715,7 +1718,7 @@ namespace Finance.Processes
 
                     CreateCell(row3, 14, "", wk);
                 }
-                CreateCell(row3, 15, item.LastModificationTime.Value.ToString(), wk);
+                CreateCell(row3, 15, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
 
 
             }
@@ -1779,10 +1782,10 @@ namespace Finance.Processes
             row003.CreateCell(14).SetCellValue("软件单价");
             sheet3.SetColumnWidth(15, 10 * 500);
             row003.CreateCell(15).SetCellValue("软件供应商");
-            sheet3.SetColumnWidth(16, 10 * 500);
-            row003.CreateCell(16).SetCellValue("维护时间");
             sheet3.SetColumnWidth(17, 10 * 500);
-            row003.CreateCell(17).SetCellValue("维护人");
+            row003.CreateCell(17).SetCellValue("维护时间");
+            sheet3.SetColumnWidth(16, 10 * 500);
+            row003.CreateCell(16).SetCellValue("维护人");
             sheet3.SetColumnWidth(18, 10 * 500);
             /*硬件软件库*/
             var foundationHardwareQuery = _foundationHardwareRepository.GetAllList(p => p.IsDeleted == false).ToList();
@@ -1845,7 +1848,7 @@ namespace Finance.Processes
 
                     CreateCell(row3, 16, "", wk);
                 }
-                CreateCell(row3, 17, item.LastModificationTime.Value.ToString(), wk);
+                CreateCell(row3, 17, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
 
 
             }
@@ -1956,7 +1959,7 @@ namespace Finance.Processes
 
                     CreateCell(row3, 14, "", wk);
                 }
-                CreateCell(row3, 15, item.LastModificationTime.Value.ToString(), wk);
+                CreateCell(row3, 15, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
 
 
             }
@@ -2071,7 +2074,7 @@ namespace Finance.Processes
 
                     CreateCell(row3, 7, "", wk);
                 }
-                CreateCell(row3, 8, item.LastModificationTime.Value.ToString(), wk);
+                CreateCell(row3, 8, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
 
 
             }
@@ -2088,13 +2091,16 @@ namespace Finance.Processes
             sheet6.SetColumnWidth(1, 10 * 500);
 
             int colIndexRow =2;
-            if (null != yearCountList && yearCountList.Count > 0)
+           List<String> FoundationDeviceItemYear = this._foundationFoundationWorkingHourItemRepository.GetAllList(w =>w.IsDeleted ==false).OrderBy(y => y.Year).GroupBy(t => t.Year).Select(s => s.First()).Select(i => i.Year).ToList();
+           // var FoundationDeviceItemYear = _foundationFoundationWorkingHourItemRepository.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
+
+            if (null != FoundationDeviceItemYear && FoundationDeviceItemYear.Count > 0)
             {
-                for (int i = 0; i < yearCountList.Count(); i++)
+                for (int i = 0; i < FoundationDeviceItemYear.Count(); i++)
                 {
                     if (i == 0)
                     {
-                        string yaer = yearCountList[i].Year.ToString();
+                        string yaer = FoundationDeviceItemYear[i];
                         row006.CreateCell(colIndexRow).SetCellValue(yaer);
                         MergedRegion(sheet6, 0, 0, colIndexRow, colIndexRow + 2);
                         colIndexRow =  3 + colIndexRow;
@@ -2104,7 +2110,7 @@ namespace Finance.Processes
 
                     }
                     else {
-                        string yaer = yearCountList[i].Year.ToString();
+                        string yaer = FoundationDeviceItemYear[i];
                         row006.CreateCell(colIndexRow).SetCellValue(yaer);
                         MergedRegion(sheet6, 0, 0, colIndexRow, colIndexRow + 2);
                         row007.CreateCell(colIndexRow).SetCellValue("标准人工工时");
@@ -2160,7 +2166,8 @@ namespace Finance.Processes
 
                     CreateCell(row3, WorkingHour + 1, "", wk);
                 }
-                CreateCell(row3, WorkingHour + 2, item.LastModificationTime.Value.ToString(), wk);
+
+                CreateCell(row3, WorkingHour + 2, item.LastModificationTime.Value.ToString("yyyy-MM-dd HH:mm:ss"), wk);
 
 
             }
@@ -2961,6 +2968,32 @@ namespace Finance.Processes
             MyCell.CellStyle = cellStyle;//赋给单元格
         }
 
+        /// <summary>
+        /// 根据流程和方案获取硬件总价 、开发费追溯、开发费开图
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<ProcessHoursEnterTotalDto> GetProcessHoursEnterTotal(GetProcessHoursEntersInput input)
+        {
+            ProcessHoursEnterTotalDto process = new ProcessHoursEnterTotalDto();
+         
+        // 设置查询条件
+            var query = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId ).ToList();
+            decimal HardwareTotalPrice = 0;
+            decimal SoftwarePrice = 0;
+            decimal TraceabilitySoftware = 0;
+            foreach ( var item in query )
+            {
+                HardwareTotalPrice += item.HardwareTotalPrice;
+                SoftwarePrice += item.SoftwarePrice;
+                TraceabilitySoftware += item.TraceabilitySoftwareCost;
+
+            }
+            process.HardwareTotalPrice = HardwareTotalPrice;
+            process.SoftwarePrice = SoftwarePrice;
+            process.TraceabilitySoftware = TraceabilitySoftware;
+            return process;
+        }
         /// <summary>
         /// 合并单元格
         /// </summary>

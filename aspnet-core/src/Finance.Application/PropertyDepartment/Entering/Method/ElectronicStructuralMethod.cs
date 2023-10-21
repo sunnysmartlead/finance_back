@@ -226,7 +226,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                                        select new GradientValueModel
                                                        {
                                                            AuditFlowId = gradient.AuditFlowId,
-                                                           Kv = gradient.SystermGradientValue
+                                                           Kv = gradient.GradientValue
                                                        }).ToList();
             return gradientModels;
         }
@@ -238,7 +238,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <returns></returns>
         internal async Task<List<GradientModelYear>> NumberOfModules(long auditFlowId, decimal kv)
         {
-            List<Gradient> gradients = await _gradient.GetAllListAsync(g => g.AuditFlowId == auditFlowId && g.SystermGradientValue.Equals(kv));
+            List<Gradient> gradients = await _gradient.GetAllListAsync(g => g.AuditFlowId == auditFlowId && g.GradientValue.Equals(kv));
             List<GradientModel> gradientModels = await _gradientModel.GetAllListAsync(gm => gm.AuditFlowId == auditFlowId);
             List<GradientModelYear> gradientModelYears = await _gradientModelYear.GetAllListAsync(gmy => gmy.AuditFlowId == auditFlowId);
             List<GradientModelYear> gradientModelsAll = (from gradient in gradients
