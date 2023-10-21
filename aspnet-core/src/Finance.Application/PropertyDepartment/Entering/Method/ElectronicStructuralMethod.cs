@@ -283,6 +283,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             UpDown = a.UpDown
                         }).ToList();
                     List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+                    electronicBomInfo = electronicBomInfo.DeepClone();
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
@@ -396,6 +397,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                 foreach (SolutionModel item in solution)
                 {
                     List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+                    electronicBomInfo = electronicBomInfo.DeepClone();
                     //循环查询到的 电子料BOM表单
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
@@ -434,6 +436,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             //查询PCS中的梯度
             List<GradientValueModel> gradient = await TotalGradient(auditFlowId);
             ElectronicBomInfo electronicBomInfo = await _resourceElectronicBomInfo.FirstOrDefaultAsync(p => p.Id.Equals(ElectronicId) && p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+            electronicBomInfo = electronicBomInfo.DeepClone();
             //通过零件号获取 模组数量中的 年度模组数量以及年份               
             List<ModelCountYear> modelCountYearList = (await _resourceModelCountYear.GetAllListAsync(p => p.ProductId.Equals(ProductId)))
                 .Select(a => new ModelCountYear
@@ -505,6 +508,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             {
                 //获取电子料bom表单  根据流程主键id 和 每一个零件的id  
                 List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
+                electronicBomInfo = electronicBomInfo.DeepClone();
                 //循环查询到的 电子料BOM表单
                 foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                 {
@@ -564,6 +568,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         UpDown = a.UpDown
                     }).ToList();
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+                structureBomInfos = structureBomInfos.DeepClone();
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 // 按照结构料、胶水、包材顺序排序
                 structureBomInfosGr = structureBomInfosGr.OrderBy(m =>
@@ -735,6 +740,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             {
 
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+                structureBomInfos = structureBomInfos.DeepClone();
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 foreach (string SuperTypeName in structureBomInfosGr)//超级大种类  结构料 胶水等辅材 SMT外协 包材
                 {
@@ -764,6 +770,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             foreach (SolutionModel item in price)
             {
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(Id) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
+                structureBomInfos = structureBomInfos.DeepClone();
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
                 //超级大种类  结构料 胶水等辅材 SMT外协 包材
                 // 按照结构料、胶水、包材顺序排序
