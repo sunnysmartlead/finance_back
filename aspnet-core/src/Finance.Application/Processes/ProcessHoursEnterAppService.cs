@@ -254,7 +254,6 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
                     p.Year = item;
-                    p.YearInt = decimal.Parse(item);
                     var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
                     foreach (var itemYear in queryYearItem)
