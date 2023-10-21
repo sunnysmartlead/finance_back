@@ -276,6 +276,7 @@ namespace Finance.WorkFlows
                 FinanceConsts.MybhgSelect,
                 FinanceConsts.HjkbSelect,
                 FinanceConsts.ElectronicBomEvalSelect,
+                FinanceConsts.Spbjclyhjb,
             };
             var list = await _financeDictionaryDetailRepository.GetAll().Where(p => fd.Contains(p.FinanceDictionaryId)).Select(p => p.Id).ToListAsync();
 
@@ -285,7 +286,12 @@ namespace Finance.WorkFlows
                 FinanceConsts.BomEvalSelect_Yes,
                 FinanceConsts.MybhgSelect_No,
                 FinanceConsts.HjkbSelect_Yes,
-                FinanceConsts.ElectronicBomEvalSelect_Yes,FinanceConsts.Save,FinanceConsts.Save,FinanceConsts.YesOrNo_Save };
+                FinanceConsts.ElectronicBomEvalSelect_Yes,
+                FinanceConsts.Spbjclyhjb_Yes,
+                FinanceConsts.Save,
+                FinanceConsts.Save,
+                FinanceConsts.YesOrNo_Save
+            };
             foreach (var item in yes)
             {
                 if (list.Contains(item))
