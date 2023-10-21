@@ -74,7 +74,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
                  new FinanceDictionary { Id=FinanceConsts.QualityCostType,DisplayName="质量成本比例",},
 
-                 
+                 new FinanceDictionary { Id=FinanceConsts.Spbjclyhjb,DisplayName="审批报价策略与核价表选项",},
+
+
             };
 
             var noDb = financeDictionaryList.Where(p => !_context.FinanceDictionary.Contains(p));
@@ -284,6 +286,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Cnjc, DisplayName="舱内监测",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Hjgz, DisplayName="环境感知",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.QualityCostType, Id = FinanceConsts.QualityCostType_Wsxx, DisplayName="外摄显像",},
+            
+                //审批报价策略与核价表选项
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Spbjclyhjb, Id = FinanceConsts.Spbjclyhjb_Yes, DisplayName="同意",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Spbjclyhjb, Id = FinanceConsts.Spbjclyhjb_Hjkb, DisplayName="退回到核价看板",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Spbjclyhjb, Id = FinanceConsts.Spbjclyhjb_Bjfxkb, DisplayName="退回到报价分析看板界面",},
+
+
             };
 
             var noDbDetail = financeDictionaryDetailList.Where(p => !_context.FinanceDictionaryDetail.Contains(p));

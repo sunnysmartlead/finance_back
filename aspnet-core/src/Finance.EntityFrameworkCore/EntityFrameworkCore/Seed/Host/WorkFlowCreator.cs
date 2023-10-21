@@ -288,7 +288,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.MybhgSelect,
                     Activation = $"{MainFlowId}_贸易合规_{MainFlowId}_不合规是否退回",
                     RoleId = tradeComplianceAuditor.Id.ToString(),//和 贸易合规 相同
-                    ProcessIdentifier = "TradeCompliance",
+                    ProcessIdentifier = "NotTradeCompliance",
                 },
                 new Node
                 {
@@ -327,7 +327,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="生成报价分析界面选择报价方案",
                     FinanceDictionaryId = FinanceConsts.Done,
-                    Activation = $"{MainFlowId}_财务审核_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_报价反馈_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_确认中标金额_{MainFlowId}_生成报价分析界面选择报价方案",
+                    Activation = $"{MainFlowId}_财务审核_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_报价反馈_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_确认中标金额_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_审批报价策略与核价表_{MainFlowId}_生成报价分析界面选择报价方案",
                     RoleId = salesMan.Id.ToString(),
                     ProcessIdentifier = "QuoteAnalysis",
 
@@ -343,7 +343,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new Node
                 {
                     Name="审批报价策略与核价表",
-                    FinanceDictionaryId = FinanceConsts.YesOrNo,
+                    FinanceDictionaryId = FinanceConsts.Spbjclyhjb,
                     Activation = $"{MainFlowId}_选择是否报价_{MainFlowId}_审批报价策略与核价表 || {MainFlowId}_报价反馈_{MainFlowId}_审批报价策略与核价表",
                     RoleId = generalManager.Id.ToString(),
                     ProcessIdentifier = "QuoteApproval",
@@ -782,13 +782,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
                 },
-                new Line
-                {
-                    SoureNodeId = "审批报价策略与核价表",
-                    TargetNodeId = "核价看板",
-                    Index = 0,
-                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
-                },
+                
                 new Line
                 {
                     SoureNodeId = "财务审核",
@@ -801,7 +795,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "审批报价策略与核价表",
                     TargetNodeId = "系统生成报价审批表报价单",
                     Index = 0,
-                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                    FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Yes,
                 },
                 new Line
                 {
@@ -1157,6 +1151,25 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Nreemcsyflr,
                     LineType = LineType.Reset,
                 },
+
+                //审批报价策略与核价表
+                new Line
+                {
+                    SoureNodeId = "审批报价策略与核价表",
+                    TargetNodeId = "核价看板",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Hjkb,
+                    LineType = LineType.Reset,
+                },
+                new Line
+                {
+                    SoureNodeId = "审批报价策略与核价表",
+                    TargetNodeId = "生成报价分析界面选择报价方案",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Bjfxkb,
+                    LineType = LineType.Reset,
+                },
+
                 #endregion
             };
 
