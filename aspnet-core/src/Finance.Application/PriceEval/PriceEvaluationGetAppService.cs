@@ -530,6 +530,9 @@ namespace Finance.PriceEval
                 };
                 var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(result);
                 DtoExcel(dto);
+
+                //核价表总成本保留2位小数
+                Math.Round(dto.TotalCost, 2);
                 return dto;
             }
             else
@@ -537,6 +540,9 @@ namespace Finance.PriceEval
                 var result = await GetData(input.Year, input.UpDown);
                 var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(result);
                 DtoExcel(dto);
+
+                //核价表总成本保留2位小数
+                Math.Round(dto.TotalCost, 2);
                 return dto;
             }
 
@@ -1948,7 +1954,7 @@ namespace Finance.PriceEval
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
                 && p.SolutionId == input.SolutionId
-                && p.Year == input.Year && p.UpDown == upDown);
+                && p.Year == year && p.UpDown == upDown);
 
             var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
             if (manufacturingCostEdit is not null)
@@ -1962,24 +1968,15 @@ namespace Finance.PriceEval
             }
 
             //工序工时年份
-            //var yearInfo = await _yearInfoRepository.GetAllListAsync(p =>
-            //p.AuditFlowId == input.AuditFlowId
-            //&& p.ProductId == sProductld
-            //&& p.Year == year
-            //&& p.Part == YearPart.WorkingHour);
-            //var yearInfo = await (from yi in _yearInfoRepository.GetAll()
-            //                      join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
-            //                      where y.AuditFlowId == input.AuditFlowId
-            //                      && y.ProductId == sProductld
-            //                      && y.Year == input.Year && y.UpDown == upDown
-            //                      select yi).ToListAsync();
             var yearInfo = await (from yi in _yearInfoRepository.GetAll()
                                   join e in _processHoursEnterRepository.GetAll() on yi.ProcessHoursEnterId equals e.Id
                                   join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
                                   where y.AuditFlowId == input.AuditFlowId
                                   && e.SolutionId == input.SolutionId
-                                  && y.Year == input.Year && y.UpDown == upDown
+                                  && y.Year == year && y.UpDown == upDown
                                   select yi).ToListAsync();
+
+
 
             //获取制造成本参数
             var manufacturingCostInfo = await _manufacturingCostInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
@@ -2030,7 +2027,7 @@ namespace Finance.PriceEval
 
 
             //每班日产能
-            var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
+            var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * (manufacturingCostInfo.RateOfMobilization / 100);
 
             //工时工序静态字段表
             //var workingHoursInfo =await (from p in _processHoursEnterDeviceRepository.GetAll()
@@ -2065,7 +2062,7 @@ namespace Finance.PriceEval
             var monthlyCapacityAndlineCount = monthlyCapacity * lineCount;
 
             //产能利用率
-            var capacityUtilization = (monthlyDemand == 0 || monthlyCapacityAndlineCount == 0) ? 0 : monthlyDemand / monthlyCapacityAndlineCount / manufacturingCostInfo.CapacityUtilizationRate;
+            var capacityUtilization = (monthlyDemand == 0 || monthlyCapacityAndlineCount == 0) ? 0 : monthlyDemand / monthlyCapacityAndlineCount / (manufacturingCostInfo.CapacityUtilizationRate / 100);
             capacityUtilization = capacityUtilization > 1 ? 1 : capacityUtilization;
 
 
@@ -2097,13 +2094,13 @@ namespace Finance.PriceEval
 
 
             //跟线工价
-            var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
+            var linePrice = personPrice * manufacturingCostInfo.TraceLineOfPerson.To<decimal>() / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
 
             //跟线成本
             var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
 
             //切线成本
-            var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
+            var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / lineCount / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
 
             //换线成本
             var lineChangeCost = lineCost + switchLineCost;
