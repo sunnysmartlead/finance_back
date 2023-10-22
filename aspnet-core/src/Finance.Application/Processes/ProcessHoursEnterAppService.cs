@@ -2986,7 +2986,7 @@ namespace Finance.Processes
             decimal TraceabilitySoftware = 0;
             foreach ( var item in query )
             {
-                HardwareTotalPrice += item.HardwareTotalPrice;
+                HardwareTotalPrice += item.DeviceTotalPrice;
                 SoftwarePrice += item.SoftwarePrice;
                 TraceabilitySoftware += item.TraceabilitySoftwareCost;
 
