@@ -2952,34 +2952,34 @@ namespace Finance.PriceEval
             var result = new List<SolutionContrast>
             {
                 new SolutionContrast { ItemName="Sensor芯片",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPrice,
                     Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
                     Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
                     Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPrice,
                     Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
                     Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
                     Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
                 },
                 new SolutionContrast { ItemName="串行芯片",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPrice,
                     Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
                     Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
                     Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPrice,
                     Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
                     Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
                     Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
                 },
                 new SolutionContrast { ItemName="镜头",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
+                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPrice,
                     Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
                     Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
                     Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
+                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPrice,
                     Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
                     Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
                     Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
@@ -3077,6 +3077,8 @@ namespace Finance.PriceEval
                 },
             };
 
+            result.ForEach(p => p.Change = p.Sum_2 - p.Sum_1);
+
             return result;
         }
 
@@ -3088,11 +3090,30 @@ namespace Finance.PriceEval
 
         public async virtual Task<FileResult> GetSolutionContrastDonwload(GetSolutionContrastInput input)
         {
+
+            var solution1 = await _solutionRepository.FirstOrDefaultAsync(p => p.Id == input.SolutionId_1);
+            var solution2 = await _solutionRepository.FirstOrDefaultAsync(p => p.Id == input.SolutionId_2);
+
+            if (solution1 is null)
+            {
+                throw new FriendlyException($"系统中没有请求的方案Id：{input.SolutionId_1}");
+            }
+
+            if (solution2 is null)
+            {
+                throw new FriendlyException($"系统中没有请求的方案Id：{input.SolutionId_2}");
+            }
+
             var data = await GetSolutionContrast(input);
+
+
+            var dto = new SolutionContrastExcel { Name1 = solution1.ModuleName, Name2 = solution2.ModuleName, SolutionContrast = data };
 
             var memoryStream = new MemoryStream();
 
-            await MiniExcel.SaveAsAsync(memoryStream, data);
+            //await MiniExcel.SaveAsAsync(memoryStream, data);
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/SolutionContrast.xlsx", dto);
+
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
         }
