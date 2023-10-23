@@ -77,6 +77,7 @@ namespace Finance.Processes
         private readonly IRepository<FoundationDeviceItem, long> _foundationDeviceItemRepository;
         private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         private readonly IRepository<User, long> _userRepository;
+
         /// <summary>
         /// .ctor
         /// </summary>
@@ -254,7 +255,6 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
                     p.Year = item;
-                    p.YearInt = decimal.Parse(item);
                     var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
                     foreach (var itemYear in queryYearItem)
@@ -373,6 +373,7 @@ namespace Finance.Processes
                 //标准工时
                 var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
                                  select a).ToList();
+                queryYear.Sort();
                 List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
                 foreach (var device in queryYear)
                 {
@@ -2832,22 +2833,23 @@ namespace Finance.Processes
                 {
                     foreach (var year in listItem.SopInfo)
                     {
-
-                        foreach (var yearItem in year.Issues)
-                        {
+                     
                             ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
-                            processHoursEnteritem.Year = year.Year;
+                   
                             processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
-                            processHoursEnteritem.LaborHour = yearItem.LaborHour;
-                            processHoursEnteritem.PersonnelNumber = yearItem.PersonnelNumber;
-                            processHoursEnteritem.MachineHour = yearItem.MachineHour;
-                            processHoursEnteritem.ModelCountYearId = yearItem.ModelCountYearId;
+                            processHoursEnteritem.LaborHour = year.Issues[0].LaborHour;
+                            processHoursEnteritem.PersonnelNumber = year.Issues[0].PersonnelNumber;
+                            processHoursEnteritem.MachineHour = year.Issues[0].MachineHour;
+                            processHoursEnteritem.ModelCountYearId = year.Issues[0].ModelCountYearId;
                             if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId == 0)
                             {
                                 processHoursEnteritem.ModelCountYearId = queryYear[listItem.SopInfo.IndexOf(year)].Id;
+                       
                             }
+                            ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(processHoursEnteritem.ModelCountYearId);
+                            processHoursEnteritem.Year = modelCountYear.Year.ToString();
+
                             _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
-                        }
                     }
                 }
 
@@ -2984,7 +2986,7 @@ namespace Finance.Processes
             decimal TraceabilitySoftware = 0;
             foreach ( var item in query )
             {
-                HardwareTotalPrice += item.HardwareTotalPrice;
+                HardwareTotalPrice += item.DeviceTotalPrice;
                 SoftwarePrice += item.SoftwarePrice;
                 TraceabilitySoftware += item.TraceabilitySoftwareCost;
 
