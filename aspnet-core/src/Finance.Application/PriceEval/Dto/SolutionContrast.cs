@@ -74,9 +74,9 @@ namespace Finance.PriceEval.Dto
         public virtual decimal? Rate_1 { get; set; }
 
         /// <summary>
-        /// 方案2：合计
+        /// 方案1：合计
         /// </summary>
-        [ExcelColumn(Name = "方案2：合计", Width = FinanceConsts.ExcelColumnWidth)]
+        [ExcelColumn(Name = "方案1：合计", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Sum_1 { get; set; }
 
         /// <summary>
@@ -102,5 +102,32 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [ExcelColumn(Name = "方案2：合计", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Sum_2 { get; set; }
+
+        /// <summary>
+        /// 差异
+        /// </summary>
+        public virtual decimal? Change { get; set; }
+    }
+
+
+    /// <summary>
+    /// 方案对比DtoExcel
+    /// </summary>
+    public class SolutionContrastExcel
+    {
+        /// <summary>
+        /// 方案1名称
+        /// </summary>
+        public virtual string Name1 { get; set; }
+
+        /// <summary>
+        /// 方案2名称
+        /// </summary>
+        public virtual string Name2 { get; set; }
+
+        /// <summary>
+        /// 方案对比Dto数据
+        /// </summary>
+        public virtual List<SolutionContrast> SolutionContrast { get; set; }
     }
 }
