@@ -314,6 +314,11 @@ namespace Finance.WorkFlows
 
             //将信息写入节点中
             var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
+
+            if (changeNode.NodeInstanceStatus != NodeInstanceStatus.Current)
+            {
+                throw new FriendlyException($"该节点已流转或尚未激活！");
+            }
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
             //给业务节点增加历史记录
