@@ -49,7 +49,9 @@ namespace Finance.PriceEval
         /// <returns></returns>
         protected override IQueryable<ProjectSelf> CreateFilteredQuery(GetProjectSelfInput input)
         {
-            return Repository.GetAll().WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+            return Repository.GetAll()
+                .WhereIf(!input.Code.IsNullOrWhiteSpace(), p => p.Code.Contains(input.Code))
+                .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
                 p => p.Custom.Contains(input.Filter)
                 || p.CustomName.Contains(input.Filter)
                 || p.Code.Contains(input.Filter)
