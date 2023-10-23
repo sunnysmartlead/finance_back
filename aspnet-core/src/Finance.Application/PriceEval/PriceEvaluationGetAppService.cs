@@ -2100,7 +2100,7 @@ namespace Finance.PriceEval
             var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
 
             //切线成本
-            var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / lineCount / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
+            var switchLineCost = lineCount == 0 ? 0 : workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / lineCount / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
 
             //换线成本
             var lineChangeCost = lineCost + switchLineCost;

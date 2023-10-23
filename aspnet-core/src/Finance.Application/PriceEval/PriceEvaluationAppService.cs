@@ -304,11 +304,34 @@ namespace Finance.PriceEval
                     throw new FriendlyException($"模组数量合计有重复的产品名称！");
                 }
 
+                //if (input.GradientModel.GroupBy(p => p.Name).Any(p => p.Count() > 1))
+                //{
+
+                //    throw new FriendlyException($"梯度模组有重复的产品名称！");
+                //}
+
+                if (input.ModelCount.Any(p => p.Product.IsNullOrEmpty()))
+                {
+                    throw new FriendlyException($"模组数量合计有为空的产品名称！");
+                }
+
+                if (input.GradientModel.Any(p => p.Name.IsNullOrEmpty()))
+                {
+                    throw new FriendlyException($"梯度模组有为空的产品名称！");
+                }
+
+
                 if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
                 {
 
                     throw new FriendlyException($"模组数量合计有重复的客户零件号！");
                 }
+
+                //if (input.GradientModel.GroupBy(p => p.Number).Any(p => p.Count() > 1))
+                //{
+
+                //    throw new FriendlyException($"梯度模组有重复的客户零件号！");
+                //}
 
                 ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
                 //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
@@ -382,7 +405,7 @@ namespace Finance.PriceEval
                         await _priceEvaluationRepository.DeleteAsync(item);
                     }
 
-                    var sampleEntity =await _sampleRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    var sampleEntity = await _sampleRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
                     foreach (var item in sampleEntity)
                     {
                         await _sampleRepository.DeleteAsync(item);
@@ -587,7 +610,9 @@ namespace Finance.PriceEval
                     entity.PriceEvaluationId = priceEvaluationId;
                     entity.AuditFlowId = auditFlowId;
                     entity.GradientId = gradientIds.First(p => p.gradientValue == gradientModel.GradientValue).id;
-                    entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                    //entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                    entity.ProductId = modelCountIds.First(p => p.product == gradientModel.Name).productId;
+
                     var gradientModelId = await _gradientModelRepository.InsertAndGetIdAsync(entity);
                     var gradientModelYears = ObjectMapper.Map<List<GradientModelYear>>(gradientModel.GradientModelYear);
                     foreach (var gradient in gradientModelYears)
@@ -595,7 +620,9 @@ namespace Finance.PriceEval
                         gradient.PriceEvaluationId = priceEvaluationId;
                         gradient.AuditFlowId = auditFlowId;
                         gradient.GradientModelId = gradientModelId;
-                        gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                        //gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                        gradient.ProductId = modelCountIds.First(p => p.product == gradientModel.Name).productId;
+
                         await _gradientModelYearRepository.InsertAsync(gradient);
                     }
                 }
