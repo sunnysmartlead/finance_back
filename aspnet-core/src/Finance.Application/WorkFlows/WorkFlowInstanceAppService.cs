@@ -353,9 +353,8 @@ namespace Finance.WorkFlows
             }
 
             //获取被激活的线连接的节点，执行表达式，判断节点是否被激活。如果被激活，则改变此节点的状态为当前，并且把前面的线状态改为已经过
-            //如果未被激活，不执行任何操作 //给节点增加过滤：已经过的节点被筛选，已重置的不受影响
+            //如果未被激活，不执行任何操作 
             var business2Node = nodeInstance
-                //.Where(p => p.NodeInstanceStatus != NodeInstanceStatus.Passed)
                 .Where(p => activeLine.Select(o => o.TargetNodeId).Contains(p.NodeId));
 
             //如果当前节点没有后续的连线，就把当前节点设置为已经过
