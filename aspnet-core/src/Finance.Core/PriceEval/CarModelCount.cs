@@ -28,6 +28,11 @@ namespace Finance.PriceEval
         public virtual long PriceEvaluationId { get; set; }
 
         /// <summary>
+        /// 车厂
+        /// </summary>
+        public virtual string CarFactory { get; set; }
+
+        /// <summary>
         /// 车型
         /// </summary>
         public virtual string CarModel { get; set; }
