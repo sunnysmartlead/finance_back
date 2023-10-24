@@ -404,6 +404,7 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<UpdateItem> UpdateItem { get; set; }
         public virtual DbSet<PriceEvaluationStartData> PriceEvaluationStartData { get; set; }
+        public virtual DbSet<PanelJson> PanelJson { get; set; }
 
         /// <summary>
         /// 跟线切线工时参数库
