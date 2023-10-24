@@ -40,7 +40,7 @@ namespace Finance.BaseLibrary
         private readonly IRepository<GradientModel, long> _gradientModelRepository;
         private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
         private readonly IRepository<ModelCount, long> _modelCountRepository;
-        private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
+            private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<PriceEvaluation ,long> _priceEvaluationRepository;
 
@@ -212,7 +212,7 @@ namespace Finance.BaseLibrary
                         List<GradientModelYear> gradientModelYears = _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == entity.Productld && p.Year == entitySolution.Year && p.UpDown == entitySolution.UpDown).ToList();
                        
 
-                        List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
+                        List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == item.Id)
                                                             join b in await _gradientModelRepository.GetAllListAsync(u => u.ProductId == entity.Productld) on a.Id equals b.GradientId
                                                             join c in await _gradientModelYearRepository.GetAllListAsync(h => h.Year == entitySolution.Year && h.UpDown == entitySolution.UpDown) on b.Id equals c.GradientModelId
                                                             select new GradientModelYear

@@ -32,6 +32,8 @@ using Spire.Pdf.Exporting.XPS.Schema;
 using Spire.Xls;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -1010,8 +1012,17 @@ namespace Finance.Processes
             }
         }
 
+        public int GetFirstRowColumnCount(DataTable dt)
+        {
+            if (dt.Rows.Count > 0)
+            {
+                DataRow firstRow = dt.Rows[0];
+                return firstRow.ItemArray.Length;
+            }
+            return 0; // 如果表格中没有行，返回0
+        }
 
-
+      
         /// <summary>
         /// 工时工序导入
         /// </summary>
@@ -1024,19 +1035,9 @@ namespace Finance.Processes
                 //打开上传文件的输入流
                 using (Stream stream = file.OpenReadStream())
                 {
-
-                    ////根据文件流创建excel数据结构
-                    //IWorkbook workbook = WorkbookFactory.Create(stream);
-                    //stream.Close();
-
-                    ////尝试获取第一个sheet
-                    //var sheet = workbook.GetSheetAt(0);
-                    ////判断是否获取到 sheet
-                    //var tempmbPath = @"D:\aa.xlsx";
-
-                    //var memoryStream = new MemoryStream();
-                    //MiniExcel.SaveAsByTemplate(path, tempmbPath, list, configuration: config);
                     var rows = MiniExcel.Query(stream).ToList();
+
+
                     // 解析数量
                     int startCols = 3;
                     // 设备列数
@@ -1050,63 +1051,23 @@ namespace Finance.Processes
                     // 根据第一行计算
                     var startRow = rows[0];
                     List<string> yearStrs = new List<string>();
-
-
-                    bool isDevice = false;
-                    bool isFrock = false;
-                    bool isForm = false;
-                    bool isYear = false;
-
+                 
+                  
                     IDictionary<String, Object> cols = rows[0];
+                    IDictionary<String, Object> row0 = rows[0];
                     // 从第三个下标开始
-                    foreach (var col in cols)
-                    {
-                        string val = col.Value == null ? string.Empty : col.Value.ToString();
-                        if (val.Contains("设备"))
-                        {
-                            isDevice = true;
-                        }
-                        else if (val.Contains("追溯部分"))
-                        {
-                            isForm = true;
-                            isDevice = false;
-                        }
-                        else if (val.Contains("工装治具部分"))
-                        {
-                            isFrock = true;
-                            isForm = false;
-                            isDevice = false;
-                        }
-                        else if (val.Contains("年"))
-                        {
-                            isYear = true;
-                            isFrock = false;
-                            isForm = false;
-                            isDevice = false;
-                        }
-                        if (isDevice)
-                        {
-                            deviceCols++;
-                        }
-                        else if (isForm)
-                        {
-                            fromCols++;
-                        }
-                        else if (isFrock)
-                        {
-                            frockCols++;
-                        }
-                        else if (isYear)
-                        {
-                            yearStrs.Add(val);
-                            yearCols += 3;
-                            isYear = false;
-                        }
-                    }
                     List<ProcessHoursEnterDto> ProcessHoursEnterDList = new List<ProcessHoursEnterDto>();
 
                     // 取值
                     var keys = cols.Keys.ToList();
+                    var year = (keys.Count - 44) / 3;
+                    for (int i = 0; i < year; i++)
+                    {
+                        int fromStartIndex = i*3  + 44;
+                        var y = (row0[keys[fromStartIndex]]).ToString();
+                        yearStrs.Add(y);
+
+                    }
                     for (int i = 2; i < rows.Count; i++)
                     {
                         ProcessHoursEnterDto processHoursEnterDto = new ProcessHoursEnterDto();
@@ -1118,10 +1079,9 @@ namespace Finance.Processes
 
                         //获取设备
                         Object deviceInfo = new Object();
-                        int deviceNum = (deviceCols - 1) / 4;
                         ProcessHoursEnterResponseDeviceDto devices = new ProcessHoursEnterResponseDeviceDto();
                         List<ProcessHoursEnterDeviceDto> processHoursEnterDeviceDtoList = new List<ProcessHoursEnterDeviceDto>();
-                        for (int j = 0; j < deviceNum; j++)
+                        for (int j = 0; j < 3; j++)
                         {
                             ProcessHoursEnterDeviceDto foundationTechnologyDevice = new ProcessHoursEnterDeviceDto();
                             Dictionary<string, object> deviceItem = new Dictionary<string, object>();
@@ -1161,7 +1121,7 @@ namespace Finance.Processes
                         // 设备总价
                         int ddevNumIndex = startCols + deviceCols;
                         devices.DeviceArr = processHoursEnterDeviceDtoList;
-                        devices.DeviceTotalCost = decimal.Parse(row[keys[ddevNumIndex - 1]].ToString());
+                        devices.DeviceTotalCost = decimal.Parse(row[keys[15]].ToString());
                         processHoursEnterDto.DeviceInfo = devices;
 
 
@@ -1169,23 +1129,11 @@ namespace Finance.Processes
                         // 解析追溯信息
                         ProcessHoursEnterDevelopCostInfoDeviceDto foundationReliableProcessHoursdevelopCostInfoResponseDto = new ProcessHoursEnterDevelopCostInfoDeviceDto();
                         List<ProcessHoursEnterFrockDto> foundationTechnologyDeviceList = new List<ProcessHoursEnterFrockDto>();
-
-                        // 有6列是总结列，不是子表，需要将数量剔除
-                        if (i < 3)
-                        {
-                            fromCols = fromCols - 6;
-                        }
-                        else
-                        {
-                            fromCols = 6;
-                        }
-
-
-                        int fromNum = fromCols / 3;
-                        for (int j = 0; j < fromNum; j++)
+                        //硬件设备列表
+                        for (int j = 0; j < 2; j++)
                         {
                             Dictionary<string, object> fromItem = new Dictionary<string, object>();
-                            int fromStartIndex = j * 3 + startCols + deviceCols;
+                            int fromStartIndex = j * 3 + 16;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
@@ -1197,32 +1145,37 @@ namespace Finance.Processes
                             foundationTechnologyDeviceList.Add(foundationTechnologyFrockDto);
                         }
                         foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareInfo = foundationTechnologyDeviceList;
-                        // 设备总价
-                        int fromNumIndex = ddevNumIndex + fromCols;
-
-
-                        // 硬件总价
-                        if (null != row[keys[fromNumIndex]])
+                        // 硬件总价 hardwareTotalPrice
+                        if (null != row[keys[22]])
                         {
-                            rowItem.Add(keys[fromNumIndex], row[keys[fromNumIndex]].ToString());
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareTotalPrice = decimal.Parse(row[keys[22]].ToString());
                         }
-                        if (null != row[keys[fromNumIndex]])
+                        //追溯软件 traceabilitySoftware
+                        if (null != row[keys[23]])
                         {
-                            foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareTotalPrice = decimal.Parse(row[keys[fromNumIndex]].ToString());
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.TraceabilitySoftware = (row[keys[23]].ToString());
                         }
-                        if (null != row[keys[fromNumIndex +3]])
+                        //追溯软件费用traceabilitySoftwareCost
+                        if (null != row[keys[24]])
                         {
-                            foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[fromNumIndex + 3]].ToString());
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.TraceabilitySoftwareCost = decimal.Parse(row[keys[24]].ToString());
                         }
-                        if (null != row[keys[fromNumIndex + 4]])
+                        //开图软件 openDrawingSoftware
+                        if (null != row[keys[25]])
                         {
-                            foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwarePrice = decimal.Parse(row[keys[fromNumIndex + 4]].ToString()); ;
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[25]].ToString());
                         }
-                        if (null != row[keys[fromNumIndex + 5]])
+                     
+                        //开图软件费用                        softwarePrice
+                        if (null != row[keys[26]])
                         {
-                            foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[fromNumIndex + 5]].ToString());
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.SoftwarePrice = decimal.Parse(row[keys[26]].ToString()); ;
                         }
-
+                        if (null != row[keys[27]])
+                        {
+                            foundationReliableProcessHoursdevelopCostInfoResponseDto.HardwareDeviceTotalPrice = decimal.Parse(row[keys[27]].ToString());
+                        }
+                        //软硬件总价                        HardwareDeviceTotalPrice
                         processHoursEnterDto.DevelopCostInfo = foundationReliableProcessHoursdevelopCostInfoResponseDto;
 
 
@@ -1231,11 +1184,11 @@ namespace Finance.Processes
                         // 解析工装治具部分
                         ProcessHoursEnterToolInfoDto foundationReliableProcessHoursFixtureResponseDto = new ProcessHoursEnterToolInfoDto();
                         List<ProcessHoursEnterFixtureDto> foundationTechnologyFixtures = new List<ProcessHoursEnterFixtureDto>();
-                        int frocNum = (frockCols - 10) / 3;
-                        for (int j = 0; j < frocNum; j++)
+                        //治具数量
+                        for (int j = 0; j < 2; j++)
                         {
                             ProcessHoursEnterFixtureDto foundationTechnologyFixtureDto = new ProcessHoursEnterFixtureDto();
-                            int fromStartIndex = j * 3 + fromNumIndex + 6;
+                            int fromStartIndex = j * 3 + 28;
                             var val0 = row[keys[fromStartIndex]];
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
@@ -1261,69 +1214,72 @@ namespace Finance.Processes
                         }
                         foundationReliableProcessHoursFixtureResponseDto.ZhiJuArr = foundationTechnologyFixtures;
 
-                        // 设备总价
-                        int frocNumIndex = fromNumIndex + frockCols - 4;
-                        // 工装治具检具总价
-                        if (null != row[keys[frocNumIndex - 1]])
+                        
+                      
+                        //工装治具总价
+                        if (null != row[keys[43]])
                         {
-                            rowItem.Add(keys[frocNumIndex], row[keys[frocNumIndex - 1]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[43]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 9]])
+                        //测试线单价
+                        if (null != row[keys[42]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.DevelopTotalPrice = (row[keys[frocNumIndex + 9]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[42]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 8]])
+                        //测试线数量
+                        if (null != row[keys[41]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex + 8]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[41]].ToString());
+
+                        }
+                        //测试线名称
+                        if (null != row[keys[40]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[40]].ToString());
+
+                        }
+                        //工装单价
+                        if (null != row[keys[39 ]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[39]].ToString());
+
+                        }
+                        //工装数量
+                        if (null != row[keys[38]])
+                        {
+                            foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[38]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 7]])
+                        //工装名称
+                        if (null != row[keys[37]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex + 7]].ToString());
-
-                        }
-                        if (null != row[keys[frocNumIndex + 6]])
-                        {
-                            foundationReliableProcessHoursFixtureResponseDto.TestLineName = (row[keys[frocNumIndex + 6]].ToString());
-
-                        }
-                        if (null != row[keys[frocNumIndex + 5]])
-                        {
-                            foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex + 5]].ToString());
-
-                        }
-                        if (null != row[keys[frocNumIndex + 4]])
-                        {
-                            foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex + 4]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[37]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 3]])
+                        //检具单价
+                        if (null != row[keys[36]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.FrockName = (row[keys[frocNumIndex + 3]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[36]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 2]])
+                        //检具数量
+                        if (null != row[keys[35 + 1]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex + 2]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[35]].ToString());
 
 
                         }
-                        if (null != row[keys[frocNumIndex + 1]])
+                        //检具名称
+                        if (null != row[keys[34]])
                         {
-                            foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex + 1]].ToString());
-
-
-                        }
-                        if (null != row[keys[frocNumIndex]])
-                        {
-                            foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[frocNumIndex]].ToString());
+                            foundationReliableProcessHoursFixtureResponseDto.FixtureName = (row[keys[34]].ToString());
 
 
                         }
@@ -1332,7 +1288,7 @@ namespace Finance.Processes
                         // 解析年度部分
                         List<ProcessHoursEnterSopInfoDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnterSopInfoDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();
-                        int yearNum = yearCols / 3;
+                        int yearNum = (keys.Count -44) / 3;
                         for (int j = 0; j < yearNum; j++)
                         {
                             ProcessHoursEnterSopInfoDto foundationWorkingHourItem = new ProcessHoursEnterSopInfoDto();
@@ -1417,10 +1373,10 @@ namespace Finance.Processes
                         //每班正常工作时间
                         WorkingHours = (decimal)manufacturingCostInfo[0].WorkingHours;
                         //产能利用率
-                        CapacityUtilizationRate = (decimal)manufacturingCostInfo[0].CapacityUtilizationRate;
+                        CapacityUtilizationRate = (decimal)manufacturingCostInfo[0].CapacityUtilizationRate/100;
                     }
                     //每月产能
-                    decimal Capacity = Zcuph * rateOfMobilization * MonthlyWorkingDays * DailyShift * WorkingHours;
+                    decimal Capacity = Zcuph * CapacityUtilizationRate * MonthlyWorkingDays * DailyShift * WorkingHours;
                     //每月需求
                     decimal month = 0;
                     if (modelCountYear.UpDown == YearType.Year)
@@ -1481,7 +1437,7 @@ namespace Finance.Processes
                         }
                         if (xtftl < 1)
                         {
-                            xtftl = xtftl * 10;
+                            xtftl = xtftl;
                         }
 
                         XtslVale = Xtsl;
@@ -2708,7 +2664,7 @@ namespace Finance.Processes
 
                         yaer += 3;
                         CreateCell(herdRow3, yaer - 2, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
-                        CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
+                        CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].MachineHour.ToString(), wk);
                         CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].PersonnelNumber.ToString(), wk);
                     }
 
@@ -3009,6 +2965,8 @@ namespace Finance.Processes
             CellRangeAddress region = new CellRangeAddress(firstRow, lastRow, firstCol, lastCol);
             sheet.AddMergedRegion(region);
         }
+
+
 
         /// <summary>
         /// 处理字段为null判断
