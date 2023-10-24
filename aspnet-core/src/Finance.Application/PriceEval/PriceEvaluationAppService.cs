@@ -195,6 +195,65 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+
+            #region 通用参数校验
+            var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
+            if (isProductInformation)
+            {
+                throw new FriendlyException($"产品信息有重复的零件名称！");
+            }
+
+            var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
+            var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
+            var requirementMinYeay = input.Requirement.Min(p => p.Year);
+
+
+
+            if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
+            {
+                throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
+            }
+
+            if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的产品名称！");
+            }
+
+            //if (input.GradientModel.GroupBy(p => p.Name).Any(p => p.Count() > 1))
+            //{
+
+            //    throw new FriendlyException($"梯度模组有重复的产品名称！");
+            //}
+
+            if (input.ModelCount.Any(p => p.Product.IsNullOrEmpty()))
+            {
+                throw new FriendlyException($"模组数量合计有为空的产品名称！");
+            }
+
+            if (input.GradientModel.Any(p => p.Name.IsNullOrEmpty()))
+            {
+                throw new FriendlyException($"梯度模组有为空的产品名称！");
+            }
+
+
+            if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的客户零件号！");
+            }
+
+            if (input.CustomerTargetPrice.Any(p => p.Currency == 0) || input.CustomerTargetPrice.Any(p => p.ExchangeRate == 0))
+            {
+                throw new FriendlyException($"需要填写客户目标价的汇率和币种");
+            }
+
+            if (input.Pcs.GroupBy(p => new { p.CarFactory, p.CarModel, p.PcsType }).Count() != input.Pcs.Count)
+            {
+                throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
+            }
+            #endregion
+
             if (!input.IsSubmit)
             {
                 long auid;
@@ -283,62 +342,7 @@ namespace Finance.PriceEval
                 //{
                 //    throw new FriendlyException($"模组数量有重复的零件名称！");
                 //}
-                var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
-                if (isProductInformation)
-                {
-                    throw new FriendlyException($"产品信息有重复的零件名称！");
-                }
 
-                var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
-                var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
-                var requirementMinYeay = input.Requirement.Min(p => p.Year);
-
-
-
-                if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
-                {
-                    throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
-                }
-
-                if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
-                {
-
-                    throw new FriendlyException($"模组数量合计有重复的产品名称！");
-                }
-
-                //if (input.GradientModel.GroupBy(p => p.Name).Any(p => p.Count() > 1))
-                //{
-
-                //    throw new FriendlyException($"梯度模组有重复的产品名称！");
-                //}
-
-                if (input.ModelCount.Any(p => p.Product.IsNullOrEmpty()))
-                {
-                    throw new FriendlyException($"模组数量合计有为空的产品名称！");
-                }
-
-                if (input.GradientModel.Any(p => p.Name.IsNullOrEmpty()))
-                {
-                    throw new FriendlyException($"梯度模组有为空的产品名称！");
-                }
-
-
-                if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
-                {
-
-                    throw new FriendlyException($"模组数量合计有重复的客户零件号！");
-                }
-
-                if (input.CustomerTargetPrice.Any(p => p.Currency == 0) || input.CustomerTargetPrice.Any(p => p.ExchangeRate == 0))
-                {
-                    throw new FriendlyException($"需要填写客户目标价的汇率和币种");
-                }
-
-
-                if (input.Pcs.GroupBy(p => new { p.CarFactory, p.CarModel }).Count() > 1)
-                {
-                    throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
-                }
 
                 //if (input.GradientModel.GroupBy(p => p.Number).Any(p => p.Count() > 1))
                 //{
