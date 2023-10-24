@@ -305,6 +305,9 @@ namespace Finance.WorkFlows
                 throw new FriendlyException($"必须填写退回原因！");
             }
 
+
+
+
             //try
             //{
             //获取全部的线和节点
@@ -319,6 +322,20 @@ namespace Finance.WorkFlows
             {
                 throw new FriendlyException($"该节点已流转或尚未激活！");
             }
+
+            #region 核价看板流转逻辑
+
+            if (changeNode.Name == "核价看板")
+            {
+                var priceEvaluation =await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == changeNode.WorkFlowInstanceId);
+                if (priceEvaluation is null || !priceEvaluation.TrProgramme.HasValue)
+                {
+                    throw new FriendlyException($"必须上传TR方案！");
+                }
+            }
+
+            #endregion
+
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
             //给业务节点增加历史记录
