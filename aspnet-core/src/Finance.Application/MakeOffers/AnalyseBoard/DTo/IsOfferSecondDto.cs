@@ -37,7 +37,7 @@ public class IsOfferSecondDto
     /// <summary>
     /// 项目看板
     /// </summary>
-    public List<ProjectBoardModel> ProjectBoard { get; set; }
+    public List<BoardModel> ProjectBoard { get; set; }
 
     /// <summary>
     /// 报价毛利率测算 实际数量

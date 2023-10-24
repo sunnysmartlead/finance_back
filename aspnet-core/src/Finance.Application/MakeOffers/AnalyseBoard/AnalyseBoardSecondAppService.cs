@@ -30,77 +30,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 分析看板方法
     /// </summary>
     public readonly AnalysisBoardSecondMethod _analysisBoardSecondMethod;
-
-    /// <summary>
-    /// 报价审核表
-    /// </summary>
-    private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
-
-    /// <summary>
-    /// 核价梯度相关
-    /// </summary>
-    private readonly IRepository<Gradient, long> _gradientRepository;
-
-    protected readonly IRepository<ModelCount, long> _modelCountRepository;
-    protected readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
-
+    
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
-
-    /// <summary>
-    /// 核价相关
-    /// </summary>
-    private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
-
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly NrePricingAppService _nrePricingAppService;
-
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly ProcessHoursEnterLineAppService _processHoursEnterLineAppService;
-
-    public readonly PriceEvaluationAppService _priceEvaluationAppService;
-
-    /// <summary>
-    /// 归档文件列表实体类
-    /// </summary>
-    private readonly IRepository<DownloadListSave, long> _financeDownloadListSave;
-
-    /// <summary>
-    /// 报价分析看板中的 产品单价表 实体类
-    /// </summary>
-    private readonly IRepository<UnitPriceOffers, long> _resourceUnitPriceOffers;
-
-    private readonly IRepository<GradientModel, long> _gradientModelRepository;
-    private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
-    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
-    private readonly IRepository<Sample, long> _sampleRepository;
-
-    /// <summary>
-    ///报价 项目看板实体类 实体类
-    /// </summary>
-    private readonly IRepository<ProjectBoardOffers, long> _resourceProjectBoardOffers;
-
-    /// <summary>
-    /// 报价分析看板中的 汇总分析表  实体类
-    /// </summary>
-    private readonly IRepository<PooledAnalysisOffers, long> _resourcePooledAnalysisOffers;
-
-    /// <summary>
-    ///  财务维护 毛利率方案
-    /// </summary>
-    private readonly IRepository<GrossMarginForm, long> _configGrossMarginForm;
-
-    /// <summary>
-    /// 报价分析看板中的 动态单价表 实体类
-    /// </summary>
-    private readonly IRepository<DynamicUnitPriceOffers, long> _resourceDynamicUnitPriceOffers;
-
+    
     /// <summary>
     /// 流程流转服务
     /// </summary>
@@ -110,47 +45,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 构造函数
     /// </summary>
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-        IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
-        IRepository<UnitPriceOffers, long> unitPriceOffers,
-        NrePricingAppService nrePricingAppService,
-        PriceEvaluationAppService priceEvaluationAppService,
-        ProcessHoursEnterLineAppService processHoursEnterLineAppService,
-        IRepository<DynamicUnitPriceOffers, long> DynamicUnitPriceOffers,
-        IRepository<ProjectBoardOffers, long> projectBoardOffers,
+       
         AuditFlowAppService flowAppService,
-        IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<Sample, long> sampleRepository,
-        IRepository<PriceEvaluation, long> priceEvaluationRepository,
-        IRepository<PooledAnalysisOffers, long> pooledAnalysisOffers,
-        IRepository<GrossMarginForm, long> configGrossMarginForm,
-        IRepository<DownloadListSave, long> financeDownloadListSave,
-        IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository,
-        IRepository<GradientModelYear, long> gradientModelYearRepository,
+    
         IRepository<Solution, long> resourceSchemeTable)
     {
-        _priceEvaluationRepository = priceEvaluationRepository;
-        _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDownloadListSave = financeDownloadListSave;
-
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-        _resourceDynamicUnitPriceOffers = DynamicUnitPriceOffers;
-        _resourceProjectBoardOffers = projectBoardOffers;
-        _processHoursEnterLineAppService = processHoursEnterLineAppService;
         _flowAppService = flowAppService;
-        _gradientRepository = gradientRepository;
         _resourceSchemeTable = resourceSchemeTable;
-
-        _resourceUnitPriceOffers = unitPriceOffers;
-        _resourcePooledAnalysisOffers = pooledAnalysisOffers;
-        _priceEvaluationAppService = priceEvaluationAppService;
-        _nrePricingAppService = nrePricingAppService;
-        _configGrossMarginForm = configGrossMarginForm;
-        _modelCountRepository = modelCountRepository;
-        _priceEvaluationGetAppService = priceEvaluationGetAppService;
-        _modelCountYearRepository = modelCountYearRepository;
-        _gradientModelRepository = gradientModelRepository;
-        _sampleRepository = sampleRepository;
-        _gradientModelYearRepository = gradientModelYearRepository;
     }
 
     /// <summary>
@@ -166,14 +68,35 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         try
         {
             return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             analyseBoardSecondDto.mes = e.Message;
             return analyseBoardSecondDto;
         }
-
     }
 
+    /// <summary>
+    /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version)
+    {
+        AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
+
+        try
+        {
+        return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond( auditFlowId,version);
+        }
+        catch (Exception e)
+        {
+            analyseBoardSecondDto.mes = e.Message;
+            return analyseBoardSecondDto;
+        }
+    }
 
     /// <summary>
     /// 下载成本信息表二开
@@ -193,32 +116,19 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 汇总分析表 根据 整套 毛利率 计算(本次报价)
+    /// 查看年度对比（阶梯数量）
     /// </summary>
-    //public async Task<TargetPrice> PostSpreadSheetCalculate(SpreadSheetCalculateSecondDto productBoardProcessDto)
-    //{
-    //    try
-    //    {
-    //        return null;
-    //    }
-    //    catch (Exception e)
-    //    {
-    //        throw new FriendlyException(e.Message);
-    //    }
-    //}
-    public async Task<List<SpreadSheetCalculateDto>> PostSpreadSheetCalculate(ProductBoardProcessDto productBoardProcessDto)
+    /// <param name="yearProductBoardProcessDto"></param>
+    /// <returns></returns>
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForGradient(
+        YearProductBoardProcessSecondDto yearProductBoardProcessDto)
     {
-        try
-        {
-            return await _analysisBoardSecondMethod.SpreadSheetCalculate(productBoardProcessDto.AuditFlowId, 1M, productBoardProcessDto.ProductBoards);
-        }
-        catch (Exception e)
-        {
-            throw new FriendlyException(e.Message);
-        }
-
+        return await _analysisBoardSecondMethod.YearDimensionalityComparisonForGradient(yearProductBoardProcessDto);
     }
 
+    
+    
+    
     /// <summary>
     /// 查看 核心器件、Nre费用拆分
     /// </summary>
@@ -249,28 +159,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
-    /// <summary>
-    /// 查看年份维度对比(全部模组)
-    /// 全部模组=所有模组+梯度集合上传
-    /// 单独具体的模组=对应模组id(梯度id为null)集合
-    /// 单独的梯度+模组=对应的模组id+梯度id集合
-    /// </summary>
-    /// <param name="yearProductBoardProcessDto"></param>
-    /// <returns></returns>
-    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparison(
-        YearProductBoardProcessSecond_DynamicProductDto yearProductBoardProcessDto)
-    {
-        return await _analysisBoardSecondMethod.YearDimensionalityComparison(yearProductBoardProcessDto);
-    }
-    ///// <summary>
-    ///// 查看年份维度对比（各模组+整套）
-    ///// </summary>
-    ///// <param name = "productBoardProcessDto" ></param >
-    ///// <returns ></returns >
-    //public async Task<List<YearDimensionalityComparisonDto>> PostSomeYearDimensionalityComparison(YearProductBoardProcessSecond_DynamicProductDto productBoardProcessDto)
-    //{
-    //    return null;/*await _analysisBoardSecondMethod.YearDimensionalityComparison(productBoardProcessDto);*/
-    //}
 
     /// <summary>
     /// 下载对外报价单
@@ -296,6 +184,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId);
     }
+
     /// <summary>
     /// 根据流程号获取报价目录
     /// </summary>
@@ -326,7 +215,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
-    /// <summary>
+    /*/// <summary>
     /// 报价分析看板 的保存
     /// </summary>
     /// <param name="quotationListDto"></param>
@@ -349,7 +238,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 AuditQuotationListJson = JsonConvert.SerializeObject(analyseBoardSecondDto),
             });
         }
-    }
+    }*/
 
     /// <summary>
     /// 报价接口
@@ -389,9 +278,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
-    
 
- 
 
     /// <summary>
     /// 总经理报价审批界面一
@@ -447,126 +334,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationFeedbackDto> GetQuotationFeedback(long auditFlowId)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId,int version)
     {
-        QuotationFeedbackDto analyseBoardSecondDto = new();
-
-        //获取方案
-        List<Solution> Solutions = await _resourceSchemeTable.GetAllListAsync(p => p.Id == 115);
-        //获取核价营销相关数据
-        var priceEvaluationStartInputResult =
-            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
-
-        //获取梯度
-        List<Gradient> gradients =
-            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-        //最小梯度值
-        var mintd = gradients.OrderBy(e => e.GradientValue).First();
-
-        List<GradientGrossMarginModel> gradientGrossMarginModels = new();
-        //获取毛利率
-        List<decimal> gross = await _analysisBoardSecondMethod.GetGrossMargin();
-        //sop年份
-        var soptime = priceEvaluationStartInputResult.SopTime;
-        List<CreateSampleDto> sampleDtos = priceEvaluationStartInputResult.Sample;
+        
 
 
-        List<OnlySampleDto> samples = new List<OnlySampleDto>();
-        //样品阶段
-        foreach (var Solution in Solutions)
-        {
-            var productld = Solution.Productld;
-            var gepr = new GetPriceEvaluationTableResultInput();
-            gepr.AuditFlowId = auditFlowId;
-            gepr.Year = soptime;
-            gepr.UpDown = YearType.Year;
-            gepr.GradientId = mintd.Id;
-            gepr.ProductId = productld;
-            //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-            //    var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);接口弃用
-            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
-            {
-                AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
-                Year = soptime, UpDown = YearType.FirstHalf
-            });
-
-            //最小梯度SOP年成本
-            var totalcost = ex.TotalCost;
-
-            //样品阶段
-            if (priceEvaluationStartInputResult.IsHasSample == true)
-            {
-                OnlySampleDto onlySampleDto = new();
-                List<SampleQuotation> onlySampleModels =
-                    await _analysisBoardSecondMethod.getSample(sampleDtos, totalcost);
-                onlySampleDto.SolutionName = Solution.SolutionName;
-                onlySampleDto.OnlySampleModels = onlySampleModels;
-                samples.Add(onlySampleDto);
-            }
-        }
-
-//单价表
-        List<SopAnalysisModel> sops = new List<SopAnalysisModel>();
-        foreach (var gradient in gradients)
-        {
-            foreach (var Solution in Solutions)
-            {
-                SopAnalysisModel sopAnalysisModel = new();
-
-                var productld = Solution.Productld;
-                var gepr = new GetPriceEvaluationTableResultInput();
-                gepr.AuditFlowId = auditFlowId;
-                gepr.Year = soptime;
-                gepr.UpDown = YearType.Year;
-                gepr.GradientId = gradient.Id;
-                gepr.ProductId = productld;
-                //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
-                //var ex = await _priceEvaluationGetAppService.GetPriceEvaluationTableResult(gepr);
-                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
-                {
-                    AuditFlowId = auditFlowId, GradientId = mintd.Id, InputCount = 0, SolutionId = Solution.Id,
-                    Year = soptime, UpDown = YearType.FirstHalf
-                });
-
-                //最小梯度SOP年成本
-                var totalcost = ex.TotalCost;
-                //var totalcost = 100;
-
-                sopAnalysisModel.Product = Solution.SolutionName;
-                sopAnalysisModel.GradientValue = gradient.GradientValue + "K/Y";
-                List<GrossValue> grosss = new List<GrossValue>();
-                foreach (var gro in gross)
-                {
-                    GrossValue gr = new GrossValue();
-                    gr.Grossvalue = totalcost / (1 - (gro / 100));
-                    gr.Gross = gro.ToString();
-                    grosss.Add(gr);
-                }
-
-                sopAnalysisModel.GrossValues = grosss;
-                sops.Add(sopAnalysisModel);
-            }
-        }
-
-
-//NRE
-        analyseBoardSecondDto.nres = await _analysisBoardSecondMethod.getNre(auditFlowId,
-            Solutions);
-        //样品阶段
-        analyseBoardSecondDto.SampleOffer = samples;
-        //sop单价表
-        analyseBoardSecondDto.Sops = sops;
-        analyseBoardSecondDto.FullLifeCycle =
-            await _analysisBoardSecondMethod.GetPoolAnalysis(auditFlowId, gradients, priceEvaluationStartInputResult,
-                gross, Solutions, sops);
-        analyseBoardSecondDto.GradientQuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetstepsNum(priceEvaluationStartInputResult, Solutions, gradients, sops)
-            ;
-        analyseBoardSecondDto.QuotedGrossMargins =
-            await _analysisBoardSecondMethod.GetActual(priceEvaluationStartInputResult, Solutions);
-
-
-        return analyseBoardSecondDto;
+        return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId,version);
     }
 
     /// <summary>
