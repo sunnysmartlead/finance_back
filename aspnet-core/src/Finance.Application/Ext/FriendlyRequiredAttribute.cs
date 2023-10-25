@@ -96,7 +96,14 @@ namespace Finance.Ext
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             //如果是true的话,无论流程是保存还是提交,都需要校验
-            if(_skip)
+#if DEBUG
+            // 当前是Debug模式  
+            return ValidationResult.Success;
+#else
+ 
+#endif
+
+            if (_skip)
             {
                 // 需要验证
                 return base.IsValid(value, validationContext);

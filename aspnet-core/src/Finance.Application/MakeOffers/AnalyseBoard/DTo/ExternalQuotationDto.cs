@@ -155,12 +155,12 @@ public class ExternalQuotationDto
     /// 产品报价清单
     /// </summary>
     [FriendlyRequired("产品报价清单")]
-    public List<ProductQuotationListDto> ProductQuotationListDtos;
+    public List<ProductQuotationListDto> ProductQuotationListDtos { get; set; }
     /// <summary>
     /// NRE报价清单
     /// </summary>
     [FriendlyRequired("NRE报价清单")]
-    public List<NreQuotationListDto> NreQuotationListDtos;
+    public List<NreQuotationListDto> NreQuotationListDtos { get; set; }
 }
 /// <summary>
 /// 产品报价清单交互类
@@ -185,7 +185,7 @@ public class ProductQuotationListDto
     /// 年份
     /// </summary>
     [FriendlyRequired("产品报价清单-年份")]
-    public virtual string Year { get; set; }   
+    public virtual long Year { get; set; }   
     /// <summary>
     /// 走量
     /// </summary>       

@@ -180,6 +180,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 对外报价单查询
     /// </summary>
     /// <returns></returns>
+    [HttpGet]
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
@@ -188,6 +189,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 对外报价单保存/提交
     /// </summary>
     /// <returns></returns>
+    [HttpPost]
     public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
          await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
@@ -197,6 +199,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
+    [HttpGet]
     public async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
         return await _analysisBoardSecondMethod.DownloadExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
