@@ -203,16 +203,16 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"产品信息有重复的零件名称！");
             }
 
-            var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
-            var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
-            var requirementMinYeay = input.Requirement.Min(p => p.Year);
+            var modelMinYeay = input.ModelCount?.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
+            var pcsMinYeay = input.Pcs?.SelectMany(p => p.PcsYearList).Min(p => p.Year);
+            var requirementMinYeay = input?.Requirement.Min(p => p.Year);
 
-
-
-            if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
-            {
-                throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
-            }
+            
+                if ((modelMinYeay is not null && modelMinYeay < input.SopTime) || (pcsMinYeay is not null && pcsMinYeay < input.SopTime) || (requirementMinYeay is not null && requirementMinYeay < input.SopTime))
+                {
+                    throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
+                }
+            
 
             if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
             {
@@ -294,11 +294,6 @@ namespace Finance.PriceEval
             else
             {
                 #region 参数校验
-                //var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-                //if (priceEvaluationStartData is not null)
-                //{
-                //    input = JsonConvert.DeserializeObject<PriceEvaluationStartInput>(priceEvaluationStartData.DataJson);
-                //}
 
                 if (input.Opinion.IsNullOrWhiteSpace())
                 {
@@ -324,46 +319,11 @@ namespace Finance.PriceEval
                 var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
 
                 long auditFlowId;
-                //var check = from m in input.ModelCount
-                //            join p in input.ProductInformation on m.Product equals p.Product
-                //            select m;
-                //if (check.Count() != input.ModelCount.Count)
-                //{
-                //    throw new FriendlyException($"产品信息和模组数量没有正确对应！");
-                //}
+
                 if (!input.SorFile.Any())
                 {
                     throw new FriendlyException($"SOR文件没有上传！");
                 }
-
-                ////验证模组信息是否存在重复数据
-                //var isModelCount = input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1);
-                //if (isModelCount)
-                //{
-                //    throw new FriendlyException($"模组数量有重复的零件名称！");
-                //}
-
-
-                //if (input.GradientModel.GroupBy(p => p.Number).Any(p => p.Count() > 1))
-                //{
-
-                //    throw new FriendlyException($"梯度模组有重复的客户零件号！");
-                //}
-
-                ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
-                //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
-
-                //var gradientCheck = from m in modelCountDto
-                //                    join p in input.GradientModel on m.PartNumber equals p.Number
-                //                    select m;
-
-                //var dfd = gradientCheck.Count();
-                //var yh35dfd = modelCountDto.Count();
-
-                //if (gradientCheck.Count() != modelCountDto.Count() || modelCountDto.Count() != input.GradientModel.Count)
-                //{
-                //    throw new FriendlyException($"模组数量和梯度模组没有正确对应！");
-                //}
 
                 #endregion
 
