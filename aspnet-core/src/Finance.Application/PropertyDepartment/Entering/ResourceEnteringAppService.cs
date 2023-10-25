@@ -202,8 +202,10 @@ namespace Finance.Entering
                                 ElectronicDto electronicDto = electronicDtos.Where(p => p.ElectronicId.Equals(elecBom.ElectronicId)).FirstOrDefault();//索引
                                 if (electronicDto is not null)
                                 {
+                                    long id = electronicDto.Id;
                                     int index = electronicDtos.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
                                     electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId, item.ProductId, auditFlowId, elecBom.ElectronicId);
+                                    electronicDto.Id= id;
                                     electronicDtos[index] = electronicDto;
                                 }
                             }

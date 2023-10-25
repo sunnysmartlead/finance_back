@@ -40,6 +40,7 @@ using Rougamo;
 using Spire.Pdf.Exporting.XPS.Schema;
 using Spire.Xls.Core;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
 using System.IO;
@@ -130,6 +131,8 @@ namespace Finance.PriceEval
         private readonly IRepository<ProcessHoursEnterDevice, long> _processHoursEnterDeviceRepository;
         private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
 
+        private readonly IRepository<PanelJson, long> _panelJsonRepository;
+
 
         private string errMessage = string.Empty;
 
@@ -137,8 +140,15 @@ namespace Finance.PriceEval
         /// <summary>
         /// 构造函数
         /// </summary>
-        public PriceEvaluationGetAppService(IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository,
-            IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository,
+        public PriceEvaluationGetAppService(
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
+            IRepository<PriceEvaluation, long> priceEvaluationRepository,
+            IRepository<Pcs, long> pcsRepository,
+            IRepository<PcsYear, long> pcsYearRepository,
+            IRepository<ModelCount, long> modelCountRepository,
+            IRepository<ModelCountYear, long> modelCountYearRepository,
+            IRepository<Requirement, long> requirementRepository,
+            IRepository<ElectronicBomInfo, long> electronicBomInfoRepository,
             IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
@@ -155,19 +165,24 @@ namespace Finance.PriceEval
             IRepository<QualityRatioYearInfo, long> qualityCostProportionYearInfoRepository,
             IRepository<UPHInfo, long> uphInfoRepository,
             IRepository<AllManufacturingCost, long> allManufacturingCostRepository,
-          IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
-          IRepository<GradientModelYear, long> gradientModelYearRepository,
-     IRepository<UpdateItem, long> updateItemRepository, IRepository<Solution, long> solutionRepository,
-     IRepository<BomEnter, long> bomEnterRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository,
-     NrePricingAppService nrePricingAppService,
-            IRepository<ShareCount, long> shareCountRepository, IRepository<Logisticscost, long> logisticscostRepository,
+            IRepository<Gradient, long> gradientRepository,
+            IRepository<GradientModel, long> gradientModelRepository,
+            IRepository<GradientModelYear, long> gradientModelYearRepository,
+            IRepository<UpdateItem, long> updateItemRepository,
+            IRepository<Solution, long> solutionRepository,
+            IRepository<BomEnter, long> bomEnterRepository,
+            IRepository<BomEnterTotal, long> bomEnterTotalRepository,
+            NrePricingAppService nrePricingAppService,
+            IRepository<ShareCount, long> shareCountRepository,
+            IRepository<Logisticscost, long> logisticscostRepository,
             IRepository<QualityCostRatio, long> qualityCostRatioRepository,
             IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository,
             IRepository<CustomerTargetPrice, long> customerTargetPriceRepository,
             IRepository<FollowLineTangent, long> followLineTangentRepository,
             IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
-            IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
+            IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
+            IRepository<PanelJson, long> panelJsonRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -215,6 +230,8 @@ namespace Finance.PriceEval
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
             _processHoursEnterDeviceRepository = processHoursEnterDeviceRepository;
             _processHoursEnterRepository = processHoursEnterRepository;
+
+            _panelJsonRepository = panelJsonRepository;
         }
 
 
@@ -429,6 +446,13 @@ namespace Finance.PriceEval
         /// <returns>项目核价表</returns>
         public async virtual Task<ExcelPriceEvaluationTableDto> GetPriceEvaluationTable(GetPriceEvaluationTableInput input)
         {
+            var json = await _panelJsonRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == input.InputCount
+            && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (json is not null)
+            {
+                return json.DataJson.FromJsonString<ExcelPriceEvaluationTableDto>();
+            }
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
 
@@ -530,6 +554,9 @@ namespace Finance.PriceEval
                 };
                 var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(result);
                 DtoExcel(dto);
+
+                //核价表总成本保留2位小数
+                Math.Round(dto.TotalCost, 2);
                 return dto;
             }
             else
@@ -537,6 +564,9 @@ namespace Finance.PriceEval
                 var result = await GetData(input.Year, input.UpDown);
                 var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(result);
                 DtoExcel(dto);
+
+                //核价表总成本保留2位小数
+                Math.Round(dto.TotalCost, 2);
                 return dto;
             }
 
@@ -1948,7 +1978,7 @@ namespace Finance.PriceEval
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
                 && p.SolutionId == input.SolutionId
-                && p.Year == input.Year && p.UpDown == upDown);
+                && p.Year == year && p.UpDown == upDown);
 
             var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
             if (manufacturingCostEdit is not null)
@@ -1962,24 +1992,15 @@ namespace Finance.PriceEval
             }
 
             //工序工时年份
-            //var yearInfo = await _yearInfoRepository.GetAllListAsync(p =>
-            //p.AuditFlowId == input.AuditFlowId
-            //&& p.ProductId == sProductld
-            //&& p.Year == year
-            //&& p.Part == YearPart.WorkingHour);
-            //var yearInfo = await (from yi in _yearInfoRepository.GetAll()
-            //                      join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
-            //                      where y.AuditFlowId == input.AuditFlowId
-            //                      && y.ProductId == sProductld
-            //                      && y.Year == input.Year && y.UpDown == upDown
-            //                      select yi).ToListAsync();
             var yearInfo = await (from yi in _yearInfoRepository.GetAll()
                                   join e in _processHoursEnterRepository.GetAll() on yi.ProcessHoursEnterId equals e.Id
                                   join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
                                   where y.AuditFlowId == input.AuditFlowId
                                   && e.SolutionId == input.SolutionId
-                                  && y.Year == input.Year && y.UpDown == upDown
+                                  && y.Year == year && y.UpDown == upDown
                                   select yi).ToListAsync();
+
+
 
             //获取制造成本参数
             var manufacturingCostInfo = await _manufacturingCostInfoRepository.FirstOrDefaultAsync(p => p.Year == year);
@@ -2030,7 +2051,7 @@ namespace Finance.PriceEval
 
 
             //每班日产能
-            var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * manufacturingCostInfo.RateOfMobilization;
+            var dailyCapacityPerShift = uph * manufacturingCostInfo.WorkingHours.To<decimal>() * (manufacturingCostInfo.RateOfMobilization / 100);
 
             //工时工序静态字段表
             //var workingHoursInfo =await (from p in _processHoursEnterDeviceRepository.GetAll()
@@ -2065,7 +2086,7 @@ namespace Finance.PriceEval
             var monthlyCapacityAndlineCount = monthlyCapacity * lineCount;
 
             //产能利用率
-            var capacityUtilization = (monthlyDemand == 0 || monthlyCapacityAndlineCount == 0) ? 0 : monthlyDemand / monthlyCapacityAndlineCount / manufacturingCostInfo.CapacityUtilizationRate;
+            var capacityUtilization = (monthlyDemand == 0 || monthlyCapacityAndlineCount == 0) ? 0 : monthlyDemand / monthlyCapacityAndlineCount / (manufacturingCostInfo.CapacityUtilizationRate / 100);
             capacityUtilization = capacityUtilization > 1 ? 1 : capacityUtilization;
 
 
@@ -2097,13 +2118,13 @@ namespace Finance.PriceEval
 
 
             //跟线工价
-            var linePrice = personPrice / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
+            var linePrice = personPrice * manufacturingCostInfo.TraceLineOfPerson.To<decimal>() / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
 
             //跟线成本
             var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
 
             //切线成本
-            var switchLineCost = workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
+            var switchLineCost = lineCount == 0 ? 0 : workingHoursInputInfo.MachineHour.To<decimal>() * (allocatedDepreciation / lineCount / manufacturingCostInfo.MonthlyWorkingDays.To<decimal>() / (manufacturingCostInfo.WorkingHours.To<decimal>() * 2) / 3600);
 
             //换线成本
             var lineChangeCost = lineCost + switchLineCost;
@@ -2954,40 +2975,40 @@ namespace Finance.PriceEval
 
             var result = new List<SolutionContrast>
             {
-                new SolutionContrast { ItemName="Sensor芯片",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
-                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
-                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
-                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
+                //new SolutionContrast { ItemName="Sensor芯片",
+                //    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPrice,
+                //    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
+                //    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
+                //    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPriceCyn,
-                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
-                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
-                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
-                },
-                new SolutionContrast { ItemName="串行芯片",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
-                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
-                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
-                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
+                //    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.MaterialPrice,
+                //    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.AssemblyCount.To<decimal>(),
+                //    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="Sensor芯片" )?.ExchangeRate,
+                //    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="Sensor芯片" )?.TotalMoneyCynNoCustomerSupply,
+                //},
+                //new SolutionContrast { ItemName="串行芯片",
+                //    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPrice,
+                //    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
+                //    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
+                //    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPriceCyn,
-                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
-                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
-                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
-                },
-                new SolutionContrast { ItemName="镜头",
-                    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
-                    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
-                    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
-                    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
+                //    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.MaterialPrice,
+                //    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.AssemblyCount.To<decimal>(),
+                //    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="串行芯片" )?.ExchangeRate,
+                //    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="串行芯片" )?.TotalMoneyCynNoCustomerSupply,
+                //},
+                //new SolutionContrast { ItemName="镜头",
+                //    Price_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPrice,
+                //    Count_1 = bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
+                //    Rate_1 = bom1.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
+                //    Sum_1 =bom1.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
 
-                    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPriceCyn,
-                    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
-                    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
-                    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
+                //    Price_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.MaterialPrice,
+                //    Count_2 = bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.AssemblyCount.To<decimal>(),
+                //    Rate_2 = bom2.Material.FirstOrDefault(p=>p.TypeName =="镜头" )?.ExchangeRate,
+                //    Sum_2 =bom2.Material.FirstOrDefault(p=> p.TypeName =="镜头" )?.TotalMoneyCynNoCustomerSupply,
 
-                },
+                //},
 
                 new SolutionContrast { ItemName="PCBA（除sensor芯片、串行芯片）",
                     Price_1 = null,
@@ -3002,9 +3023,9 @@ namespace Finance.PriceEval
                 },
                 new SolutionContrast { ItemName="结构件（除lens）",
                     Price_1 = null,
-                    Count_1 = bom1.Material.Count(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头"),
+                    Count_1 = bom1.Material.Count(p=>p.SuperType == FinanceConsts.ElectronicName && p.TypeName != "镜头"),
                     Rate_1 = null,
-                    Sum_1 =bom1.Material.Where(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                    Sum_1 =bom1.Material.Where(p=>p.SuperType == FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
 
                     Price_2 = null,
                     Count_2 = bom1.Material.Count(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头"),
@@ -3080,6 +3101,27 @@ namespace Finance.PriceEval
                 },
             };
 
+            var list = new List<string> { "Sensor芯片", "串行芯片", "镜头" };
+
+            var data = from o in bom1.Material
+                       join t in bom2.Material on o.Id equals t.Id
+                       where list.Contains(o.TypeName)
+                       select new SolutionContrast
+                       {
+                           ItemName = $"{o.TypeName}：{o.MaterialName}",
+                           Price_1 = o?.MaterialPrice,
+                           Count_1 = o?.AssemblyCount.To<decimal>(),
+                           Rate_1 = o?.ExchangeRate,
+                           Sum_1 = o?.TotalMoneyCynNoCustomerSupply,
+
+                           Price_2 = t?.MaterialPrice,
+                           Count_2 = t?.AssemblyCount.To<decimal>(),
+                           Rate_2 = t?.ExchangeRate,
+                           Sum_2 = t?.TotalMoneyCynNoCustomerSupply,
+                       };
+            result.AddRange(data);
+            result.ForEach(p => p.Change = p.Sum_2 - p.Sum_1);
+
             return result;
         }
 
@@ -3091,11 +3133,30 @@ namespace Finance.PriceEval
 
         public async virtual Task<FileResult> GetSolutionContrastDonwload(GetSolutionContrastInput input)
         {
+
+            var solution1 = await _solutionRepository.FirstOrDefaultAsync(p => p.Id == input.SolutionId_1);
+            var solution2 = await _solutionRepository.FirstOrDefaultAsync(p => p.Id == input.SolutionId_2);
+
+            if (solution1 is null)
+            {
+                throw new FriendlyException($"系统中没有请求的方案Id：{input.SolutionId_1}");
+            }
+
+            if (solution2 is null)
+            {
+                throw new FriendlyException($"系统中没有请求的方案Id：{input.SolutionId_2}");
+            }
+
             var data = await GetSolutionContrast(input);
+
+
+            var dto = new SolutionContrastExcel { Name1 = solution1.ModuleName, Name2 = solution2.ModuleName, SolutionContrast = data };
 
             var memoryStream = new MemoryStream();
 
-            await MiniExcel.SaveAsAsync(memoryStream, data);
+            //await MiniExcel.SaveAsAsync(memoryStream, data);
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/SolutionContrast.xlsx", dto);
+
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
         }

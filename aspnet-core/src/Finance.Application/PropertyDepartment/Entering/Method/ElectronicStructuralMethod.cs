@@ -1508,6 +1508,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                         enteringElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(electronic.SystemiginalCurrency);//系统单价(原币)
                         await _configEnteringElectronic.UpdateAsync(enteringElectronic);
                     }
+                    //删除电子差异表中的数据                 
+                    await _configElecBomDifferent.DeleteAsync(p => p.AuditFlowId.Equals(submitElectronicDto.AuditFlowId) && p.SolutionId.Equals(electronic.SolutionId) && p.ElectronicId.Equals(electronic.ElectronicId));
                 }
             }
             catch (Exception e)
@@ -1681,6 +1683,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
                         await _configStructureElectronic.UpdateAsync(structureElectronic);
                     }
+                    //删除结构差异表中的数据  
+                    await _configStructBomDifferent.DeleteAsync(p => p.AuditFlowId.Equals(structuralMemberEntering.AuditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(item.StructureId));
                 }
             }
             catch (Exception e)

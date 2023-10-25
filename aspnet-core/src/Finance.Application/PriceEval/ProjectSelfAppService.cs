@@ -18,6 +18,7 @@ using MiniExcelLibs;
 using System.IO;
 using System.Linq.Dynamic.Core;
 using Abp.Domain.Entities;
+using NPOI.SS.Formula.Functions;
 
 namespace Finance.PriceEval
 {
@@ -48,7 +49,9 @@ namespace Finance.PriceEval
         /// <returns></returns>
         protected override IQueryable<ProjectSelf> CreateFilteredQuery(GetProjectSelfInput input)
         {
-            return Repository.GetAll().WhereIf(!input.Filter.IsNullOrWhiteSpace(),
+            return Repository.GetAll()
+                .WhereIf(!input.Code.IsNullOrWhiteSpace(), p => p.Code.Contains(input.Code))
+                .WhereIf(!input.Filter.IsNullOrWhiteSpace(),
                 p => p.Custom.Contains(input.Filter)
                 || p.CustomName.Contains(input.Filter)
                 || p.Code.Contains(input.Filter)
@@ -162,20 +165,27 @@ namespace Finance.PriceEval
             var stream = excle.OpenReadStream();
             var rows = MiniExcel.Query<CreateProjectSelfInput>(stream).ToList();
 
-            foreach (var row in rows)
-            {
-                var entity = await Repository.FirstOrDefaultAsync(p => p.Code == row.Code);
+            var dbEntity = await Repository.GetAllListAsync();
+            dbEntity.ForEach(async p => await Repository.DeleteAsync(p));
 
-                if (entity is null)
-                {
-                    await Repository.InsertAsync(ObjectMapper.Map<ProjectSelf>(row));
-                }
-                else
-                {
-                    ObjectMapper.Map(row, entity);
-                    await Repository.UpdateAsync(entity);
-                }
-            }
+            var entity = ObjectMapper.Map<List<ProjectSelf>>(rows);
+            await Repository.BulkInsertAsync(entity);
+
+
+            //foreach (var row in rows)
+            //{
+            //    var entity = await Repository.FirstOrDefaultAsync(p => p.Code == row.Code);
+
+            //    if (entity is null)
+            //    {
+            //        await Repository.InsertAsync(ObjectMapper.Map<ProjectSelf>(row));
+            //    }
+            //    else
+            //    {
+            //        ObjectMapper.Map(row, entity);
+            //        await Repository.UpdateAsync(entity);
+            //    }
+            //}
 
             await _baseStoreLogRepository.InsertAsync(new BaseStoreLog
             {

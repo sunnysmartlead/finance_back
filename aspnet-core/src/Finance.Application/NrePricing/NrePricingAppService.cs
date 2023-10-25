@@ -561,30 +561,35 @@ namespace Finance.NerPricing
                 mouldInventoryPartModel.SolutionId = part.SolutionId;//方案的 Id             
                 //获取初始值的时候如果数据库里有,直接拿数据库中的
                 //删除的结构BOMid
-                List<long> longs = new();
-                List<StructBomDifferent> structBomDifferents = await _configStructBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(part.SolutionId));
-                if (structBomDifferents.Count is not 0)//有差异
-                {
-                    foreach (StructBomDifferent structBom in structBomDifferents)
-                    {
-                        //判断差异类型
-                        if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
-                        {
-                            //删除存在数据库里的数据和返回数据中的数据即可
-                            //1.删除数据库中的数据
-                            await _resourceMouldInventory.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId) && p.StructuralId.Equals(structBom.StructureId));
-                            longs.Add(structBom.StructureId);
-                        }
-                    }
-                }
+                //List<long> longs = new();
+                //List<StructBomDifferent> structBomDifferents = await _configStructBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(part.SolutionId));
+                //if (structBomDifferents.Count is not 0)//有差异
+                //{
+                //    foreach (StructBomDifferent structBom in structBomDifferents)
+                //    {
+                //        //判断差异类型
+                //        if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
+                //        {
+                //            //删除存在数据库里的数据和返回数据中的数据即可
+                //            //1.删除数据库中的数据
+                //            await _resourceMouldInventory.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId) && p.StructuralId.Equals(structBom.StructureId));
+                //            longs.Add(structBom.StructureId);
+                //        }
+                //    }
+                //}
                 //获取初始值的时候如果数据库里有,直接拿数据库中的
                 List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));
-                List<MouldInventory> mouldInventoryEquals = (from a in mouldInventory
-                                                             join b in longs on a.StructuralId equals b
-                                                             select a).ToList();//相等的
+                //List<MouldInventory> mouldInventoryEquals = (from a in mouldInventory
+                //                                             join b in longs on a.StructuralId equals b
+                //                                             select a).ToList();//相等的
 
-                mouldInventory = mouldInventory.Except(mouldInventoryEquals).Distinct().ToList();//差集
+                //mouldInventory = mouldInventory.Except(mouldInventoryEquals).Distinct().ToList();//差集
                 mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
+                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p=>p.StructuralId).ToList();
+                var id= mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p=>p.Id).ToList();
+                await _resourceMouldInventory.DeleteAsync(p=> id.Contains(p.Id));
+
+                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
                     MouldInventory mouldInventory1 = mouldInventory.FirstOrDefault(p => p.StructuralId.Equals(item.StructuralId));
