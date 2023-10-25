@@ -19,7 +19,18 @@ public class GrossMargin
     /// 产品
     /// </summary>
     public string product { get; set; }
-    
+    /// <summary>
+    /// 数据id
+    /// </summary>
+    public long Id{ get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
     /// <summary>
     /// 单车产品数量
     /// </summary>

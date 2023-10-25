@@ -8,6 +8,14 @@ public class QuotedGrossMarginModel
     /// 产品
     /// </summary>
     public string product { get; set; }
+    /// <summary>
+    /// 数据id
+    /// </summary>
+    public long Id{ get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
     public QuotedGrossMarginSimple QuotedGrossMarginSimple { get; set; }
     
 }

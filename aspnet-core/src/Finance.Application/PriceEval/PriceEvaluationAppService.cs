@@ -123,11 +123,13 @@ namespace Finance.PriceEval
            IRepository<CountryLibrary, long> countryLibraryRepository, IRepository<BomEnterTotal, long> bomEnterTotalRepository, IRepository<Logisticscost, long> logisticscostRepository,
            IRepository<QualityCostRatio, long> qualityCostRatioRepository, IRepository<QualityCostRatioYear, long> qualityCostRatioYearRepository, IRepository<FollowLineTangent, long> followLineTangentRepository,
            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
-           IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository, IRepository<ProcessHoursEnter, long> processHoursEnterRepository)
+           IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
+           IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
+           IRepository<PanelJson, long> panelJsonRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
-                  processHoursEnterDeviceRepository, processHoursEnterRepository)
+                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
@@ -193,6 +195,65 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+
+            #region 通用参数校验
+            var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
+            if (isProductInformation)
+            {
+                throw new FriendlyException($"产品信息有重复的零件名称！");
+            }
+
+            var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
+            var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
+            var requirementMinYeay = input.Requirement.Min(p => p.Year);
+
+
+
+            if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
+            {
+                throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
+            }
+
+            if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的产品名称！");
+            }
+
+            //if (input.GradientModel.GroupBy(p => p.Name).Any(p => p.Count() > 1))
+            //{
+
+            //    throw new FriendlyException($"梯度模组有重复的产品名称！");
+            //}
+
+            if (input.ModelCount.Any(p => p.Product.IsNullOrEmpty()))
+            {
+                throw new FriendlyException($"模组数量合计有为空的产品名称！");
+            }
+
+            if (input.GradientModel.Any(p => p.Name.IsNullOrEmpty()))
+            {
+                throw new FriendlyException($"梯度模组有为空的产品名称！");
+            }
+
+
+            if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
+            {
+
+                throw new FriendlyException($"模组数量合计有重复的客户零件号！");
+            }
+
+            if (input.CustomerTargetPrice.Any(p => p.Currency == 0) || input.CustomerTargetPrice.Any(p => p.ExchangeRate == 0))
+            {
+                throw new FriendlyException($"需要填写客户目标价的汇率和币种");
+            }
+
+            if (input.Pcs.GroupBy(p => new { p.CarFactory, p.CarModel, p.PcsType }).Count() != input.Pcs.Count)
+            {
+                throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
+            }
+            #endregion
+
             if (!input.IsSubmit)
             {
                 long auid;
@@ -281,34 +342,13 @@ namespace Finance.PriceEval
                 //{
                 //    throw new FriendlyException($"模组数量有重复的零件名称！");
                 //}
-                var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
-                if (isProductInformation)
-                {
-                    throw new FriendlyException($"产品信息有重复的零件名称！");
-                }
-
-                var modelMinYeay = input.ModelCount.SelectMany(p => p.ModelCountYearList).Min(p => p.Year);
-                var pcsMinYeay = input.Pcs.SelectMany(p => p.PcsYearList).Min(p => p.Year);
-                var requirementMinYeay = input.Requirement.Min(p => p.Year);
 
 
+                //if (input.GradientModel.GroupBy(p => p.Number).Any(p => p.Count() > 1))
+                //{
 
-                if (modelMinYeay < input.SopTime || pcsMinYeay < input.SopTime || requirementMinYeay < input.SopTime)
-                {
-                    throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
-                }
-
-                if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
-                {
-
-                    throw new FriendlyException($"模组数量合计有重复的产品名称！");
-                }
-
-                if (input.ModelCount.GroupBy(p => p.PartNumber).Any(p => p.Count() > 1))
-                {
-
-                    throw new FriendlyException($"模组数量合计有重复的客户零件号！");
-                }
+                //    throw new FriendlyException($"梯度模组有重复的客户零件号！");
+                //}
 
                 ////校验梯度模组和模组数量是否一致，如果一致，就要在后面把梯度和模组数量挂钩，Id赋值过去
                 //var modelCountDto = input.ModelCount.Where(p => p.PartNumber == "-");
@@ -382,7 +422,7 @@ namespace Finance.PriceEval
                         await _priceEvaluationRepository.DeleteAsync(item);
                     }
 
-                    var sampleEntity =await _sampleRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                    var sampleEntity = await _sampleRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
                     foreach (var item in sampleEntity)
                     {
                         await _sampleRepository.DeleteAsync(item);
@@ -587,7 +627,9 @@ namespace Finance.PriceEval
                     entity.PriceEvaluationId = priceEvaluationId;
                     entity.AuditFlowId = auditFlowId;
                     entity.GradientId = gradientIds.First(p => p.gradientValue == gradientModel.GradientValue).id;
-                    entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                    //entity.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                    entity.ProductId = modelCountIds.First(p => p.product == gradientModel.Name).productId;
+
                     var gradientModelId = await _gradientModelRepository.InsertAndGetIdAsync(entity);
                     var gradientModelYears = ObjectMapper.Map<List<GradientModelYear>>(gradientModel.GradientModelYear);
                     foreach (var gradient in gradientModelYears)
@@ -595,7 +637,9 @@ namespace Finance.PriceEval
                         gradient.PriceEvaluationId = priceEvaluationId;
                         gradient.AuditFlowId = auditFlowId;
                         gradient.GradientModelId = gradientModelId;
-                        gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                        //gradient.ProductId = modelCountIds.First(p => p.number == gradientModel.Number).productId;
+                        gradient.ProductId = modelCountIds.First(p => p.product == gradientModel.Name).productId;
+
                         await _gradientModelYearRepository.InsertAsync(gradient);
                     }
                 }

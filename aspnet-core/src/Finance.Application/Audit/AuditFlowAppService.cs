@@ -228,6 +228,9 @@ namespace Finance.Audit
                 //项目经理
                 .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier))
 
+                //生成报价分析界面选择报价方案、选择是否报价，必须是发起核价需求录入的人才能看到
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis)
+
                 .ToList();
         }
 

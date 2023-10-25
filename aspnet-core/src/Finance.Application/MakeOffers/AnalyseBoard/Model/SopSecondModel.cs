@@ -6,6 +6,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Model;
 public class SopSecondModel
 {
     /// <summary>
+    /// 数据id
+    /// </summary>
+    public long Id{ get; set; }
+    /// <summary>
     /// 年份
     /// </summary>
     public int Year { get; set; }
@@ -34,6 +38,10 @@ public class SopSecondModel
 public class SopAnalysisModel
 {
     /// <summary>
+    /// 数据id
+    /// </summary>
+    public long Id{ get; set; }
+    /// <summary>
     /// 梯度(K/Y)
     /// </summary>
     public virtual string GradientValue { get; set; }
@@ -48,7 +56,10 @@ public class SopAnalysisModel
     public long AuditFlowId { get; set; }
     public List<GrossValue> GrossValues{ get; set; }
     
-    
+    /// <summary>
+    /// 版本号
+    /// </summary> 
+    public int version { get; set; }
 }
 
 public class GrossValue

@@ -15,6 +15,17 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
-       
+        /// <summary>
+        /// 数据id
+        /// </summary>
+        public long Id{ get; set; }
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
+        /// <summary>
+        /// 流程号Id
+        /// </summary> 
+        public long AuditFlowId { get; set; }
     }
 }

@@ -12,6 +12,11 @@ namespace Finance.PriceEval.Dto.ProjectSelf
         /// <summary>
         /// 查询关键字
         /// </summary>
-        public string Filter { get; set; }
+        public virtual string Filter { get; set; }
+
+        /// <summary>
+        /// 项目代码
+        /// </summary>
+        public virtual string Code { get; set; }
     }
 }

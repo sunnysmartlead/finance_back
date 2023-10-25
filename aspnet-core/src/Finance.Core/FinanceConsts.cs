@@ -921,6 +921,11 @@ namespace Finance
         public const string PriceEvaluationBoard = "PriceEvaluationBoard";
 
 
+        /// <summary>
+        /// 生成报价分析界面选择报价方案
+        /// </summary>
+        public const string QuoteAnalysis = "QuoteAnalysis";
+
         #endregion
 
 
