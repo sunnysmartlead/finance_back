@@ -9,18 +9,12 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
-using Finance.FinanceMaintain;
 using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
-using Finance.NerPricing;
-using Finance.NrePricing.Dto;
-using Finance.PriceEval;
-using Finance.PriceEval.Dto;
-using Finance.Processes;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+
 
 namespace Finance.MakeOffers.AnalyseBoard;
 
@@ -126,7 +120,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         return await _analysisBoardSecondMethod.YearDimensionalityComparisonForGradient(yearProductBoardProcessDto);
     }
 
-    
+    /// <summary>
+    /// 查看年度对比（实际数量）
+    /// </summary>
+    /// <param name="yearProductBoardProcessDto"></param>
+    /// <returns></returns>
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+        YearProductBoardProcessSecondDto yearProductBoardProcessDto)
+    {
+        return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
+    }
     
     
     /// <summary>
@@ -383,4 +386,51 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         pigeonholeDownloadTableModels.Add(pg);
         return pigeonholeDownloadTableModels;
     }
+    /// <summary>
+    /// 用于对外报价产品清单
+    /// <param name="auditFlowId"></param>
+    /// <param name="version">报价方案版本</param>
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId,int version)
+    {
+        List<ProductDto> productDtos = new List<ProductDto>();
+        productDtos.Add(new ProductDto()
+        {
+            ProductName="测试",
+            Motion=1,
+            Year="2023",
+            UntilPrice="12"
+            
+        });
+        
+        return productDtos;
+    }
+    
+    /// <summary>
+    /// 用于对外报价NRE清单
+    ///  /// <param name="auditFlowId"></param>
+    /// <param name="version">报价方案版本</param>
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId,int version)
+    {
+        List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
+        productDtos.Add(new QuotationNreDto()
+        {
+            Product="测试",
+            Pcs=1,
+            shouban=12,
+            moju=12,
+            gzyj=12,
+            sy=12,
+            csrj=123,
+            cl=122,
+            qt=12
+        });
+        
+        
+        return productDtos;
+    }
+
 }
