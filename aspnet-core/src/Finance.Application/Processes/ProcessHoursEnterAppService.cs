@@ -1303,7 +1303,7 @@ namespace Finance.Processes
                             var val2 = row[keys[fromStartIndex + 2]];
                             foundationWorkingHourItem.Year = yearstr;
                             List<ProcessHoursEnteritemDto> processHoursEnteritems = new List<ProcessHoursEnteritemDto>();
-                            for (int g = 0; g < yearNum; g++)
+                            for (int g = 0; g < 1; g++)
                             {
                                 Solution entity = await _resourceSchemeTable.GetAsync((long)SolutionId);
 
@@ -1319,6 +1319,8 @@ namespace Finance.Processes
                                 }
                                 processHoursEnteritems.Add(processHoursEnteritem);
                             }
+                            string str2 = Regex.Replace(yearstr, @"[^0-9]+", "");
+                            foundationWorkingHourItem.YearInt = Decimal.Parse(str2);
                             foundationWorkingHourItem.Issues = processHoursEnteritems;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
 

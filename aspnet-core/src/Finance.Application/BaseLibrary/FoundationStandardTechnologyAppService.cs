@@ -300,7 +300,7 @@ namespace Finance.BaseLibrary
                 {
                     ProcessHoursEnterDto foundationReliableProcess = new ProcessHoursEnterDto();
                     //设备信息
-                    List<FoundationTechnologyDevice> devices = this._foundationTechnologyDeviceRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id).ToList();
+                    List<FoundationTechnologyDevice> devices = this._foundationTechnologyDeviceRepository.GetAll().Where(t => t.FoundationReliableHoursId == foundationReliableProcessHours.Id && t.IsDeleted == false).ToList();
                     List<ProcessHoursEnterDeviceDto> foundationTechnologyDeviceDtos = new List<ProcessHoursEnterDeviceDto>();
                     foreach (var device in devices)
                     {
@@ -430,9 +430,11 @@ namespace Finance.BaseLibrary
                     foundationReliableProcess.ToolInfo.FixtureNumber = foundationReliableProcessHours.FixtureNumber;
 
 
+         
+
                     List<ProcessHoursEnterSopInfoDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnterSopInfoDto>();
 
-                    var queryYear = (from a in _fTWorkingHourRepository.GetAllList(p => p.IsDeleted == false && p.FoundationReliableHoursId == item.Id).Select(p => p.Year).Distinct()
+                    var queryYear = (from a in _fTWorkingHourRepository.GetAllList(p => p.IsDeleted == false && p.FoundationReliableHoursId == foundationReliableProcessHours.Id).Select(p => p.Year).Distinct()
                                      select a).ToList();
                     foreach (var year in queryYear)
                     {
@@ -441,7 +443,7 @@ namespace Finance.BaseLibrary
                         string str2 = Regex.Replace(year, @"[^0-9]+", "");
                         processHoursEnteritemDto.YearInt = Decimal.Parse(str2);
                         List<ProcessHoursEnteritemDto> foundationWorkingHourItemDtosItem = new List<ProcessHoursEnteritemDto>();
-                        List<FTWorkingHour> foundationWorkingHourItemDtosList =  _fTWorkingHourRepository.GetAllList(p => p.IsDeleted == false && p.FoundationReliableHoursId == item.Id &&  p.Year == year);
+                        List<FTWorkingHour> foundationWorkingHourItemDtosList =  _fTWorkingHourRepository.GetAllList(p => p.IsDeleted == false && p.FoundationReliableHoursId == foundationReliableProcessHours.Id &&  p.Year == year);
                         foreach (var device in foundationWorkingHourItemDtosList)
                         {
                             ProcessHoursEnteritemDto technologyHardware = new ProcessHoursEnteritemDto();
@@ -454,13 +456,13 @@ namespace Finance.BaseLibrary
 
 
                         }
+
+
+                    
                         processHoursEnteritemDto.Issues = foundationWorkingHourItemDtosItem;
                         foundationWorkingHourItemDtos.Add(processHoursEnteritemDto);
+
                     }
-                    
-
-
-               
                     foundationReliableProcess.SopInfo = foundationWorkingHourItemDtos;
                     foundationReliableProcess.ProcessName = foundationReliableProcessHours.ProcessName;
                     foundationReliableProcess.ProcessNumber = foundationReliableProcessHours.ProcessNumber;
