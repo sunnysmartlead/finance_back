@@ -2801,7 +2801,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return quotationListSecondDto;
     }
 
-    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId,long solutionId,long numberOfQuotations)
+    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId,long solutionId,long numberOfQuotations)
     {
         ExternalQuotationDto externalQuotationDto=new ExternalQuotationDto();
         ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
@@ -2833,7 +2833,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                                                  select new ProductQuotationListDto()
                                                  {
                                                      ProductName = crm.Name,
-                                                     Year = priceEvaluationStartInputResult.SopTime.ToString(),
+                                                     Year = priceEvaluationStartInputResult.SopTime,
                                                      TravelVolume = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
                                                  }).ToList();
 
@@ -2850,9 +2850,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return externalQuotationDto;
     }
 
-    public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
+    internal async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
-        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId));
+        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit);
         //将报价单存入库中
         ExternalQuotation externalQuotation = ObjectMapper.Map<ExternalQuotation>(externalQuotationDto);
         if (externalQuotationDto.IsSubmit)
@@ -2864,7 +2864,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotation.NumberOfQuotations++;
         }   
         long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
-        externalQuotation.RecordNo=DateTime.Now.ToString("yyMM")+i.ToString("D4");        
+        string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
+        string iSttring = (i + 1).ToString("D4");
+        externalQuotation.RecordNo= year+ iSttring;        
         long id= await  _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
         List<ProductExternalQuotationMx> productExternalQuotationMxes = ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
@@ -2881,7 +2883,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
-    public async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
+    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
         ExternalQuotationDto external = await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
         external.ProductQuotationListDtos=external.ProductQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
