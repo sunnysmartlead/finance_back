@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 using Abp;
 using Abp.AutoMapper;
 using Abp.Dependency;
@@ -168,6 +169,21 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     private readonly ProcessHoursEnterDeviceAppService _processHoursEnterDeviceAppService;
 
+
+    /// <summary>
+    /// 对外报价单
+    /// </summary>
+    private readonly IRepository<ExternalQuotation, long> _externalQuotation;
+
+    /// <summary>
+    /// 产品报价清单实体类
+    /// </summary>
+    private readonly IRepository<ProductExternalQuotationMx, long> _externalQuotationMx;
+    /// <summary>
+    /// NRE报价清单实体类
+    /// </summary>
+    private readonly IRepository<NreQuotationList, long> _NreQuotationList;
+
     public AnalysisBoardSecondMethod(IRepository<ModelCountYear, long> modelCountYear,
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<ModelCount, long> modelCount,
@@ -198,7 +214,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ProductInformation, long> productInformation,
         IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
         NrePricingAppService nrePricingAppService,
-        IRepository<GrossMarginForm, long> resourceGrossMarginForm)
+        IRepository<GrossMarginForm, long> resourceGrossMarginForm,
+        IRepository<ExternalQuotation, long> externalQuotation,
+        IRepository<ProductExternalQuotationMx, long> externalQuotationMx,
+        IRepository<NreQuotationList, long> nreQuotationList)
     {
         _resourceRequirement = requirement;
         _resourceProjectBoardOffers = resourceProjectBoardOffers;
@@ -231,6 +250,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _priceEvaluationRepository = priceEvaluationRepository;
         _resourceGrossMarginForm = resourceGrossMarginForm;
         _resourceModelCountYear = modelCountYear;
+        _externalQuotation = externalQuotation;
+        _externalQuotationMx = externalQuotationMx;
+        _NreQuotationList = nreQuotationList;
     }
 
     public async Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(
@@ -3099,53 +3121,54 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return quotationListSecondDto;
     }
 
-    public async Task<ExternalQuotationDto> GetExternalQuotation(long processId)
+    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId,long solutionId,long numberOfQuotations)
     {
-        //获取核价营销相关数据
-        var priceEvaluationStartInputResult =
-            await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
-
-
-        ExternalQuotationDto externalQuotationDto = new()
+       
+        ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
+        if(externalQuotation is not null)
         {
-            CustomerName = priceEvaluationStartInputResult.CustomerName,
-            ProjectName = priceEvaluationStartInputResult.ProjectName,
-            SopTime = priceEvaluationStartInputResult.SopTime,
-            ProjectCycle = priceEvaluationStartInputResult.ProjectCycle
-        };
-
-        List<CreateColumnFormatProductInformationDto> createColumnFormatProductInformationDtos =
-            priceEvaluationStartInputResult.ProductInformation;
-        List<ExternalQuotationMxDto> mxs = (from crm in createColumnFormatProductInformationDtos
-                                            select new ExternalQuotationMxDto()
-                                            {
-                                                productName = crm.Name,
-                                                year = priceEvaluationStartInputResult.SopTime.ToString(),
-
-                                                amout = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
-                                            }).ToList();
-
-        externalQuotationDto.mxs = mxs;
-
-        List<SopOrValueMode> sopls = new List<SopOrValueMode>();
-        sopls.Add(new SopOrValueMode()
+            List<ProductExternalQuotationMx> externalQuotationMxs= await  _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            ExternalQuotationDto externalQuotationDto = new();
+            var p=from externalQuotation in externalQuotation join
+        }
+        else
         {
-            Year = priceEvaluationStartInputResult.SopTime,
-            Value = 11
-        });
-        sopls.Add(new SopOrValueMode()
-        {
-            Year = priceEvaluationStartInputResult.SopTime + 1,
-            Value = 11
-        });
-        sopls.Add(new SopOrValueMode()
-        {
-            Year = priceEvaluationStartInputResult.SopTime + 2,
-            Value = 11
-        });
+            //获取核价营销相关数据
+            PriceEvaluationStartInputResult priceEvaluationStartInputResult =
+                await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
+            ExternalQuotationDto externalQuotationDto = new()
+            {
+                //CustomerName = priceEvaluationStartInputResult.CustomerName,
+                ProjectName = priceEvaluationStartInputResult.ProjectName,
+                SopTime = priceEvaluationStartInputResult.SopTime,
+                ProjectCycle = priceEvaluationStartInputResult.ProjectCycle
+            };
+            List<CreateColumnFormatProductInformationDto> createColumnFormatProductInformationDtos =
+                priceEvaluationStartInputResult.ProductInformation;
+            List<ProductQuotationListDto> mxs = (from crm in createColumnFormatProductInformationDtos
+                                                 select new ProductQuotationListDto()
+                                                 {
+                                                     ProductName = crm.Name,
+                                                     Year = priceEvaluationStartInputResult.SopTime.ToString(),
+                                                     Amout = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
+                                                 }).ToList();
 
-        externalQuotationDto.sopls = sopls;
+            externalQuotationDto.ProductQuotationListDtos = mxs;
+            externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
+
+            externalQuotationDto.AccountName = "浙江舜宇智领技术有限公司";
+            externalQuotationDto.DutyParagraph = "91330281MA2816W038";
+            externalQuotationDto.BankOfDeposit = "中国农业银行余姚市环城支行";
+            externalQuotationDto.AccountNumber = "39603001040014366";
+            externalQuotationDto.Address = "浙江省余姚市阳明街道丰乐路67-69号";
+        }        
+       
         return externalQuotationDto;
+    }
+
+    public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
+    {
+       
     }
 
     public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId)

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Finance.Ext;
 using Finance.MakeOffers.AnalyseBoard.Model;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
@@ -8,92 +10,223 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 public class ExternalQuotationDto
 {
     /// <summary>
+    /// Id
+    /// </summary>
+    public long Id { get; set; }
+    /// <summary>
     /// 客户名称
     /// </summary>
     //[Required]
+    [FriendlyRequired("客户名称")]
     public virtual string CustomerName { get; set; }
     /// <summary>
     /// 客户地址
     /// </summary>
     //[Required]
+    [FriendlyRequired("客户地址")]
     public virtual string CustomerAdd { get; set; }
     /// <summary>
     /// 客户联系人
     /// </summary>
     //[Required]
+    [FriendlyRequired("客户联系人")]
     public virtual string CustomerLink { get; set; }
     /// <summary>
     /// 客户联系人号码
     /// </summary>
     //[Required]
+    [FriendlyRequired("客户联系人号码")]
     public virtual string CustomerNum { get; set; }
-    
     /// <summary>
     /// 报价单位
     /// </summary>
     //[Required]
+    [FriendlyRequired("报价单位")]
     public virtual string QuotationName { get; set; }
     /// <summary>
     /// 报价地址
     /// </summary>
     //[Required]
+    [FriendlyRequired("报价地址")]
     public virtual string QuotationAdd { get; set; }
     /// <summary>
     /// 报价联系人
     /// </summary>
     //[Required]
+    [FriendlyRequired("报价联系人")]
     public virtual string QuotationLink { get; set; }
     /// <summary>
     /// 报价联系人号码
     /// </summary>
     //[Required]
+    [FriendlyRequired("报价联系人号码")]
     public virtual string QuotationNum { get; set; }
-    
+
     /// <summary>
     /// 项目周期（年）
     /// </summary>
+    [FriendlyRequired("项目周期（年）")]
     public virtual int ProjectCycle { get; set; }
     /// <summary>
     /// 项目名称
     /// </summary>
     //[Required]
+    [FriendlyRequired("项目名称")]
     public virtual string ProjectName { get; set; }
     /// <summary>
     /// Sop时间（年份）
     /// </summary>
+    [FriendlyRequired("Sop时间（年份）")]
     public virtual int SopTime { get; set; }
     /// <summary>
-    /// 报价币种（汇率录入表（ExchangeRate）主键）（二开应该注释掉）
+    /// 报价币种
     /// </summary>
     //[Required]
-    public virtual long Currency { get; set; }
-
-
-    public List<SopOrValueMode> sopls;
-    public List<ExternalQuotationMxDto> mxs;
+    [FriendlyRequired("报价币种")]
+    public virtual string Currency { get; set; }
+    /// <summary>
+    /// 制作
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string Make { get; set; }
+    /// <summary>
+    /// 审核
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string ToExamine { get; set; }
+    /// <summary>
+    /// 记录编号
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string RecordNo { get; set; }
+    /// <summary>
+    /// 户名
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string AccountName { get; set; }
+    /// <summary>
+    /// 税号
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string DutyParagraph { get; set; }
+    /// <summary>
+    /// 开户行
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string BankOfDeposit { get; set; }
+    /// <summary>
+    /// 账号
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string AccountNumber { get; set; }
+    /// <summary>
+    /// 地址
+    /// </summary>
+    [FriendlyRequired("报价币种")]
+    public virtual string Address { get; set; }
+    /// <summary>
+    /// 报价次数
+    /// </summary>
+    public virtual long NumberOfQuotations { get; set; }
+    /// <summary>
+    /// 是否提交
+    /// </summary>
+    public virtual bool IsSubmit { get; set; }
+    /// <summary>
+    /// 产品报价清单
+    /// </summary>
+    [FriendlyRequired("产品报价清单")]
+    public List<ProductQuotationListDto> ProductQuotationListDtos;
+    /// <summary>
+    /// NRE报价清单
+    /// </summary>
+    [FriendlyRequired("NRE报价清单")]
+    public List<NreQuotationListDto> NreQuotationListDtos;
 }
+/// <summary>
+/// 产品报价清单交互类
+/// </summary>
 
-public class ExternalQuotationMxDto
+public class ProductQuotationListDto
 {
+    /// <summary>
+    /// Id
+    /// </summary>
+    public long  Id { get; set; }
     /// <summary>
     /// 产品名称
     /// </summary>
-    public virtual string productName { get; set; }
+    [FriendlyRequired("报价清单-产品名称")]
+    public virtual string ProductName { get; set; }
     /// <summary>
     /// 年份
     /// </summary>
-    public virtual string year { get; set; }
+    [FriendlyRequired("报价清单-年份")]
+    public virtual string Year { get; set; }
     /// <summary>
     /// 数量
     /// </summary>
-    public virtual decimal amout { get; set; }
+    [FriendlyRequired("报价清单-数量")]
+    public virtual decimal Amout { get; set; }
     /// <summary>
     /// 单价
     /// </summary>
+    [FriendlyRequired("报价清单-单价")]
     public decimal UnitPrice { get; set; }
     /// <summary>
     /// 备注
     /// </summary>
-    public virtual string remark { get; set; }
+    public virtual string Remark { get; set; }
     
+}
+/// <summary>
+/// NRE报价清单交互类
+/// </summary>
+
+public class NreQuotationListDto
+{
+    /// <summary>
+    /// Id
+    /// </summary>
+    public long Id { get; set; }
+    /// <summary>
+    /// 产品名称
+    /// </summary>       
+    [FriendlyRequired("NRE-产品名称")]
+    public virtual string ProductName { get; set; }
+    /// <summary>
+    /// 走量
+    /// </summary>     
+    [FriendlyRequired("NRE-走量")]
+    public virtual decimal TravelVolume { get; set; }
+    /// <summary>
+    /// 手板件费
+    /// </summary>
+    [FriendlyRequired("NRE-手板件费")]
+    public virtual decimal HandmadePartsFee { get; }
+    /// <summary>
+    /// 模具费
+    /// </summary>
+    [FriendlyRequired("NRE-模具费")]
+    public virtual decimal MyPropMoldCosterty { get; set; }
+    /// <summary>
+    /// 工装治具费
+    /// </summary>
+    [FriendlyRequired("NRE-工装治具费")]
+    public virtual decimal CostOfToolingAndFixtures { get; set; }
+    /// <summary>
+    /// 实验费
+    /// </summary>
+    [FriendlyRequired("NRE-实验费")]
+    public virtual decimal ExperimentalFees { get; set; }
+    /// <summary>
+    /// 研发费	
+    /// </summary>
+    [FriendlyRequired("NRE-研发费")]
+    public virtual decimal RDExpenses { get; set; }
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public virtual string Remark { get; set; }
+
 }

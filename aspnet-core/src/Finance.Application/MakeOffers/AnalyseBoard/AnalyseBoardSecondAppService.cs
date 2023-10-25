@@ -289,14 +289,21 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 对外报价单
+    /// 对外报价单查询
     /// </summary>
     /// <returns></returns>
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId)
     {
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId);
     }
-
+    /// <summary>
+    /// 对外报价单保存/提交
+    /// </summary>
+    /// <returns></returns>
+    public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
+    {
+         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
+    }
 
     /// <summary>
     /// 根据流程号获取方案
