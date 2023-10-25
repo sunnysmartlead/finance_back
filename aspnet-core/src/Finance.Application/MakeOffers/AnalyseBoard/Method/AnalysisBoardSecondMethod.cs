@@ -9,6 +9,7 @@ using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.UI;
 using Finance.DemandApplyAudit;
+using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.FinanceParameter;
 using Finance.Infrastructure;
@@ -2802,20 +2803,24 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId,long solutionId,long numberOfQuotations)
     {
-       
+        ExternalQuotationDto externalQuotationDto=new ExternalQuotationDto();
         ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
         if(externalQuotation is not null)
         {
             List<ProductExternalQuotationMx> externalQuotationMxs= await  _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
-            ExternalQuotationDto externalQuotationDto = new();
-            var p=from externalQuotation in externalQuotation join
+            List<NreQuotationList> nreQuotationLists = await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
+            externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
+            externalQuotationDto.ProductQuotationListDtos= ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
+            externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
+            externalQuotationDto.NreQuotationListDtos= ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
         }
         else
         {
             //获取核价营销相关数据
             PriceEvaluationStartInputResult priceEvaluationStartInputResult =
                 await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
-            ExternalQuotationDto externalQuotationDto = new()
+            externalQuotationDto = new()
             {
                 //CustomerName = priceEvaluationStartInputResult.CustomerName,
                 ProjectName = priceEvaluationStartInputResult.ProjectName,
@@ -2829,7 +2834,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                                                  {
                                                      ProductName = crm.Name,
                                                      Year = priceEvaluationStartInputResult.SopTime.ToString(),
-                                                     Amout = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
+                                                     TravelVolume = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
                                                  }).ToList();
 
             externalQuotationDto.ProductQuotationListDtos = mxs;
@@ -2847,7 +2852,45 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
-       
+        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId));
+        //将报价单存入库中
+        ExternalQuotation externalQuotation = ObjectMapper.Map<ExternalQuotation>(externalQuotationDto);
+        if (externalQuotationDto.IsSubmit)
+        {
+            if (external !=null&&external.NumberOfQuotations-1 == externalQuotationDto.NumberOfQuotations)
+            {
+                throw new FriendlyException("不可以重复提交");
+            }
+            externalQuotation.NumberOfQuotations++;
+        }   
+        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
+        externalQuotation.RecordNo=DateTime.Now.ToString("yyMM")+i.ToString("D4");        
+        long id= await  _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
+        await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
+        List<ProductExternalQuotationMx> productExternalQuotationMxes = ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
+        productExternalQuotationMxes.ForEach(p => p.ExternalQuotationId = id);
+        await _externalQuotationMx.BulkInsertAsync(productExternalQuotationMxes);
+
+        await _NreQuotationList.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
+        List<NreQuotationList> nreQuotationLists = ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
+        nreQuotationLists.ForEach(p => p.ExternalQuotationId = id);
+        await _NreQuotationList.BulkInsertAsync(nreQuotationLists);
+    }
+
+    /// <summary>
+    ///  下载对外报价单
+    /// </summary>
+    /// <returns></returns>
+    public async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
+    {
+        ExternalQuotationDto external = await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
+        external.ProductQuotationListDtos=external.ProductQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
+        external.NreQuotationListDtos=external.NreQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
+        var memoryStream = new MemoryStream();
+
+        await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/报价单下载.xlsx", external);
+
+        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "报价单下载.xlsx" };
     }
 
     public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId)

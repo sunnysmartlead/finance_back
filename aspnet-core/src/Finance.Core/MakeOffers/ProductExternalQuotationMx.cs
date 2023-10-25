@@ -27,11 +27,7 @@ namespace Finance.MakeOffers
         /// <summary>
         /// 年份
         /// </summary>     
-        public virtual long Year { get; set; }
-        /// <summary>
-        /// 数量
-        /// </summary>     
-        public virtual decimal Amout { get; set; }
+        public virtual long Year { get; set; }       
         /// <summary>
         /// 单价
         /// </summary>     
