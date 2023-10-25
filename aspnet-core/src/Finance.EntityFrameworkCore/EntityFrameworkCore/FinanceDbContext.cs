@@ -413,6 +413,20 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
+        #region 报价单新增表
+        /// <summary>
+        /// NRE报价清单
+        /// </summary>
+        public virtual DbSet<NreQuotationList> NreQuotationList { get; set; }
+        /// <summary>
+        /// 产品报价清单实体类
+        /// </summary>
+        public virtual DbSet<ProductExternalQuotationMx> ProductExternalQuotationMx { get; set; }
+        /// <summary>
+        /// 对外报价单
+        /// </summary>
+        public virtual DbSet<ExternalQuotation> ExternalQuotation { get; set; }
+        #endregion
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
         {

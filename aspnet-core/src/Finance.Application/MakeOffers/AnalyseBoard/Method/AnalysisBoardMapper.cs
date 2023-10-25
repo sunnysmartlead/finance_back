@@ -26,6 +26,11 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             configuration.CreateMap<ProductBoardModel, DynamicUnitPriceOffers>()
                 .ForMember(u => u.Id, options => options.Ignore());
             configuration.CreateMap<BiddingStrategy, BiddingStrategyModel>();
+
+            configuration.CreateMap<ExternalQuotation, ExternalQuotationDto>();
+            configuration.CreateMap<ExternalQuotationDto, ExternalQuotation>();
+            configuration.CreateMap<ProductExternalQuotationMx, ProductQuotationListDto>();
+            configuration.CreateMap<NreQuotationList, NreQuotationListDto>();
         }
     }
 }
