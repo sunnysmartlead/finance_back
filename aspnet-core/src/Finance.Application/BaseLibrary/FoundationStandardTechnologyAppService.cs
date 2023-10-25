@@ -232,8 +232,9 @@ namespace Finance.BaseLibrary
                     foundationReliableProcess.toolInfo.FrockPrice = foundationReliableProcessHours.FrockPrice;
                     foundationReliableProcess.toolInfo.HardwareDeviceTotalPrice = foundationReliableProcessHours.HardwareDeviceTotalPrice;
                     foundationReliableProcess.toolInfo.SoftwarePrice = foundationReliableProcessHours.SoftwarePrice;
-                    foundationReliableProcess.toolInfo.FixtureName = foundationReliableProcessHours.FrockName;
-                    foundationReliableProcess.toolInfo.FixtureNumber = 0;
+                    foundationReliableProcess.toolInfo.FixtureName = foundationReliableProcessHours.FixtureName;
+                    foundationReliableProcess.toolInfo.FixtureNumber = foundationReliableProcessHours.FixtureNumber;
+                    foundationReliableProcess.toolInfo.FixturePrice = foundationReliableProcessHours.FixturePrice;
 
 
                     List<FoundationWorkingHourItemDto> foundationWorkingHourItemDtos = new List<FoundationWorkingHourItemDto>();
