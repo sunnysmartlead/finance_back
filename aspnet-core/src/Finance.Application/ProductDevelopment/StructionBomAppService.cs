@@ -151,12 +151,22 @@ namespace Finance.ProductDevelopment
                                 }
                                 else
                                 {
-                                    //string IsInvol = dto.IsInvolveItem;
-                                    //if (j>=4 && IsInvol.Length != 0 && IsInvol != "是")
-                                    //{
-                                    //    continue;
-                                    //}
                                     dto = DataToList(dto, row.GetCell(j), j);
+                                    if (j == 5 && dto.IsInvolveItem.Equals("是"))
+                                    {
+                                        if (dto.AssemblyQuantity <= 0)
+                                        {
+                                            throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“是”，装配数量不能再填0,请检查！");
+                                        }
+                                    }
+                                    if (j == 5 && dto.IsInvolveItem.Equals("否"))
+                                    {
+                                        if (dto.AssemblyQuantity != 0)
+                                        {
+                                            throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“否”，装配数量必须填0,请检查！");
+                                        }
+                                    }
+
                                 }
                             }
                             catch

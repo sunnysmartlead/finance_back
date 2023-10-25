@@ -36,6 +36,13 @@ namespace Finance.EngineeringDepartment
         {
             var entity = ObjectMapper.Map<FollowLineTangent>(input);
 
+            //根据前面7项检查出来是否存在
+            var exsitBomInfos = await _followLineTangentRepository.GetAllListAsync(p => p.Year == input.Year );
+
+            if (null != exsitBomInfos) {
+                throw new FriendlyException("年份已经存在！");
+            }
+
             await _followLineTangentRepository.InsertAsync(entity);
             await CreateLog("添加了跟线切线参数库1条", LogType.FollowLineTangent);
         }
