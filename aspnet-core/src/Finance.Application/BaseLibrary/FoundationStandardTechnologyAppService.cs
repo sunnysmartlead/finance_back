@@ -356,6 +356,22 @@ namespace Finance.BaseLibrary
                     {
                         foundationReliableProcess.DevelopCostInfo.Development = 0;
                     }
+                    if (null != foundationReliableProcessHours.Development)
+                    {
+                        foundationReliableProcess.DevelopCostInfo.TraceabilitySoftwareCost = (long)foundationReliableProcessHours.Development;
+                    }
+                    else
+                    {
+                        foundationReliableProcess.DevelopCostInfo.TraceabilitySoftwareCost = 0;
+                    }
+                    if (null != foundationReliableProcessHours.PictureDevelopment)
+                    {
+                        foundationReliableProcess.DevelopCostInfo.SoftwarePrice = (decimal)foundationReliableProcessHours.PictureDevelopment;
+                    }
+                    else {
+                        foundationReliableProcess.DevelopCostInfo.SoftwarePrice = 0;
+                    }
+                   
                     foundationReliableProcess.DevelopCostInfo.OpenDrawingSoftware = foundationReliableProcessHours.DrawingSoftware;
                     foundationReliableProcess.DevelopCostInfo.TraceabilitySoftware = foundationReliableProcessHours.TraceabilitySoftware;
                     foundationReliableProcess.DevelopCostInfo.HardwareInfo = foundationTechnologyFrockDtos;
@@ -379,6 +395,7 @@ namespace Finance.BaseLibrary
                     }
                     foundationReliableProcess.ToolInfo.ZhiJuArr = foundationTechnologyFixtureDtos;
                     foundationReliableProcess.ToolInfo.TestLineName = foundationReliableProcessHours.TestLineName;
+                    
                     if (null != foundationReliableProcessHours.TestLineNumber)
                     {
                         foundationReliableProcess.ToolInfo.TestLineNumber =(long) foundationReliableProcessHours.TestLineNumber;
@@ -397,7 +414,7 @@ namespace Finance.BaseLibrary
                     {
                         foundationReliableProcess.ToolInfo.FrockNumber = 0;
                     }
-                    foundationReliableProcess.ToolInfo.FrockPrice = 0;
+                    foundationReliableProcess.ToolInfo.FrockPrice = foundationReliableProcessHours.FrockPrice;
                     foundationReliableProcess.ToolInfo.DevelopTotalPrice =  foundationReliableProcessHours.HardwareDeviceTotalPrice.ToString();
 
                     if (null != foundationReliableProcessHours.SoftwarePrice)
