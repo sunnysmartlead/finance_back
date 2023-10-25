@@ -12,9 +12,18 @@ public class YearProductBoardProcessSecondDto
     /// </summary>
     public long AuditFlowId { get; set; }
     /// <summary>
-    /// 毛利率
+    /// 梯度数量主键 若无需获取对应梯度
+    /// 此行不传
     /// </summary>
-    public decimal GrossMargin { get; set; }
+    public long GradientId { get; set; }
+    /// <summary>
+    /// 本次报价-单价
+    /// </summary>
+    public decimal UnitPrice { get; set; }
+    /// <summary>
+    /// 方案表ID
+    /// </summary>
+    public long SolutionId { get; set; }
 
 }
 

@@ -29,6 +29,10 @@ public class YearDimensionalityComparisonSecondDto
     /// </summary>
     public List<YearValue> SalesMargin { get; set; }
     /// <summary>
+    /// 佣金
+    /// </summary>
+    public List<YearValue> commission { get; set; }
+    /// <summary>
     /// 毛利率
     /// </summary>
     public List<YearValue> GrossMargin { get; set; }
@@ -39,7 +43,7 @@ public class YearValue
     /// <summary>
     /// 年份
     /// </summary>
-    public long year { get; set; }
+    public string key { get; set; }
 
     /// <summary>
     /// 值

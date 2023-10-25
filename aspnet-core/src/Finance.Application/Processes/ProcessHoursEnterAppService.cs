@@ -539,7 +539,7 @@ namespace Finance.Processes
         public virtual async Task<List<ProcessHoursEnterSopInfoDto>> GetYearAsync(GetProcessHoursEntersInput input)
         {
             // 设置查询条件
-  
+
                 //无数据的情况下
                 Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
 
@@ -1024,7 +1024,7 @@ namespace Finance.Processes
             return 0; // 如果表格中没有行，返回0
         }
 
-      
+
         /// <summary>
         /// 工时工序导入
         /// </summary>
@@ -1053,8 +1053,8 @@ namespace Finance.Processes
                     // 根据第一行计算
                     var startRow = rows[0];
                     List<string> yearStrs = new List<string>();
-                 
-                  
+
+
                     IDictionary<String, Object> cols = rows[0];
                     IDictionary<String, Object> row0 = rows[0];
                     // 从第三个下标开始
@@ -1167,7 +1167,7 @@ namespace Finance.Processes
                         {
                             foundationReliableProcessHoursdevelopCostInfoResponseDto.OpenDrawingSoftware = (row[keys[25]].ToString());
                         }
-                     
+
                         //开图软件费用                        softwarePrice
                         if (null != row[keys[26]])
                         {
@@ -1216,8 +1216,8 @@ namespace Finance.Processes
                         }
                         foundationReliableProcessHoursFixtureResponseDto.ZhiJuArr = foundationTechnologyFixtures;
 
-                        
-                      
+
+
                         //工装治具总价
                         if (null != row[keys[43]])
                         {
@@ -2793,9 +2793,9 @@ namespace Finance.Processes
                 {
                     foreach (var year in listItem.SopInfo)
                     {
-                     
+
                             ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
-                   
+
                             processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
                             processHoursEnteritem.LaborHour = year.Issues[0].LaborHour;
                             processHoursEnteritem.PersonnelNumber = year.Issues[0].PersonnelNumber;
@@ -2804,7 +2804,7 @@ namespace Finance.Processes
                             if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId == 0)
                             {
                                 processHoursEnteritem.ModelCountYearId = queryYear[listItem.SopInfo.IndexOf(year)].Id;
-                       
+
                             }
                             ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(processHoursEnteritem.ModelCountYearId);
                             processHoursEnteritem.Year = modelCountYear.Year.ToString();

@@ -151,12 +151,22 @@ namespace Finance.ProductDevelopment
                                 }
                                 else
                                 {
-                                    //string IsInvol = dto.IsInvolveItem;
-                                    //if (j>=4 && IsInvol.Length != 0 && IsInvol != "是")
-                                    //{
-                                    //    continue;
-                                    //}
                                     dto = DataToList(dto, row.GetCell(j), j);
+                                    if (j == 5 && dto.IsInvolveItem.Equals("是"))
+                                    {
+                                        if (dto.AssemblyQuantity <= 0)
+                                        {
+                                            throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“是”，装配数量不能再填0,请检查！");
+                                        }
+                                    }
+                                    if (j == 5 && dto.IsInvolveItem.Equals("否"))
+                                    {
+                                        if (dto.AssemblyQuantity != 0)
+                                        {
+                                            throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“否”，装配数量必须填0,请检查！");
+                                        }
+                                    }
+
                                 }
                             }
                             catch
@@ -345,21 +355,27 @@ namespace Finance.ProductDevelopment
                 }
 
                 #region 录入完成之后
-                await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_StructBomImport });
+
+                //为提交操作才执行插库、流转工作流操作
+                if (dto.Opinion == FinanceConsts.Done)
+                {
+                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_StructBomImport });
+
+                    List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
+                    //当前已保存的确认表中零件数目等于 核价需求导入时的零件数目
+                    if (solutionId.Count == allProductIsSubmits.Count + 1)
+                    {
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                        {
+                            NodeInstanceId = dto.NodeInstanceId,
+                            FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
+                            Comment = dto.Comment,
+                        });
+                    }
+                }
                 #endregion
 
-                List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
-                //当前已保存的确认表中零件数目等于 核价需求导入时的零件数目
-                if (solutionId.Count == allProductIsSubmits.Count + 1)
-                {
-                    //嵌入工作流
-                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                    {
-                        NodeInstanceId = dto.NodeInstanceId,
-                        FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
-                        Comment = dto.Comment,
-                    });
-                }
             }
         }
 

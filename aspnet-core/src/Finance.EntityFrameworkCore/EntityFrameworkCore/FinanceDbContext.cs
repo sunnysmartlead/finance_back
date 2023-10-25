@@ -122,6 +122,8 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<PooledAnalysisOffers> PooledAnalysisOffers { set; get; }
         //报价 项目看板实体类 实体类
         public virtual DbSet<ProjectBoardOffers> ProjectBoardOffers { set; get; }
+        //报价 项目看板实体类 实体类
+        public virtual DbSet<ProjectBoardSecondOffers> ProjectBoardSecondOffers { set; get; }
         // 报价分析看板中的 产品单价表 实体类
         public virtual DbSet<UnitPriceOffers> UnitPriceOffers { set; get; }
         // 报价审核表 中的  内部核价信息
@@ -404,12 +406,27 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<FTWorkingHour> FTWorkingHour { get; set; }
         public virtual DbSet<UpdateItem> UpdateItem { get; set; }
         public virtual DbSet<PriceEvaluationStartData> PriceEvaluationStartData { get; set; }
+        public virtual DbSet<PanelJson> PanelJson { get; set; }
 
         /// <summary>
         /// 跟线切线工时参数库
         /// </summary>
         public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
+        #region 报价单新增表
+        /// <summary>
+        /// NRE报价清单
+        /// </summary>
+        public virtual DbSet<NreQuotationList> NreQuotationList { get; set; }
+        /// <summary>
+        /// 产品报价清单实体类
+        /// </summary>
+        public virtual DbSet<ProductExternalQuotationMx> ProductExternalQuotationMx { get; set; }
+        /// <summary>
+        /// 对外报价单
+        /// </summary>
+        public virtual DbSet<ExternalQuotation> ExternalQuotation { get; set; }
+        #endregion
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)
         {

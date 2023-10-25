@@ -15,10 +15,5 @@ public interface IAnalyseBoardSecondAppService
     /// <param name="analyseBoardSecondInputDto"></param>
     /// <returns></returns>
     Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(AnalyseBoardSecondInputDto analyseBoardSecondInputDto);
-    /// <summary>
-    /// 计算毛利率
-    /// </summary>
-    /// <param name="productBoardProcessDto"></param>
-    /// <returns></returns>
-    Task<List<SpreadSheetCalculateDto>> PostSpreadSheetCalculate(ProductBoardProcessDto productBoardProcessDto);
+   
 }

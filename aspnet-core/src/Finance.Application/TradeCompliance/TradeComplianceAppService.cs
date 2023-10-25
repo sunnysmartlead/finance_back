@@ -14,6 +14,7 @@ using Finance.PropertyDepartment.Entering.Model;
 using Finance.TradeCompliance.Dto;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -136,11 +137,12 @@ namespace Finance.TradeCompliance
 
 
 
+
                 //存入部分合规信息生成ID
                 var tradeComplianceCheckId = await _tradeComplianceCheckRepository.InsertOrUpdateAndGetIdAsync(tradeComplianceCheckDto.TradeComplianceCheck);
 
-                decimal sumEccns = 0m;
-                decimal sumPending = 0m;
+                decimal sumEccns = 0;
+                decimal sumPending = 0;
                 var sopYear = await GetFristSopYear(input.AuditFlowId);
                 GetPriceEvaluationTableInput priceTableByPart = new()
                 {
@@ -152,8 +154,13 @@ namespace Finance.TradeCompliance
                     UpDown = sopYear.Item2
                 };
                 var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
-                tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;
+                tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;//产品公允价=核价表成本合计*1.1
 
+
+                var countryIdList = (from a in await _priceEvalRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
+                                   join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
+                                   select b.Id).ToList();
+                tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId = countryIdList.Count > 0 ? countryIdList.FirstOrDefault() : 0;
 
                 var countries = await _countryLibraryRepository.GetAllListAsync(p => p.Id.Equals(tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId));
                 decimal rate = 0;//取国家库的比例
@@ -271,11 +278,19 @@ namespace Finance.TradeCompliance
                 tradeComplianceCheckDto.TradeComplianceCheck = tradeComplianceCheckList.FirstOrDefault();
                 tradeComplianceCheckDto.ProductMaterialInfos = new();
                 var productMaterialList = await _productMaterialInfoRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.TradeComplianceCheckId == tradeComplianceCheckDto.TradeComplianceCheck.Id);
-                foreach (var productMaterial in productMaterialList)
+                if (productMaterialList.Count == 0)
                 {
-                    tradeComplianceCheckDto.ProductMaterialInfos.Add(productMaterial);
+                    throw new FriendlyException("产品组成物料信息表未查询到对应方案信息，请检查！");
                 }
-                return tradeComplianceCheckDto;
+                else 
+                {
+                    foreach (var productMaterial in productMaterialList)
+                    {
+                        tradeComplianceCheckDto.ProductMaterialInfos.Add(productMaterial);
+                    }
+                    return tradeComplianceCheckDto;
+                }
+                
             }
             else
             {
@@ -349,8 +364,13 @@ namespace Finance.TradeCompliance
 
             IRow row004 = sheet.CreateRow(4);
             row004.CreateCell(0).SetCellValue("产品组成物料");
-
+            //合并单元格
             sheet.AddMergedRegion(new CellRangeAddress( 4, 4+ TradeTable.ProductMaterialInfos.Count+3, 0, 0));
+
+            sheet.AddMergedRegion(new CellRangeAddress(1, 1, 0, 8));
+            sheet.AddMergedRegion(new CellRangeAddress(2, 2, 7, 8));
+            sheet.AddMergedRegion(new CellRangeAddress(3, 3, 7, 8));
+
 
             row004.CreateCell(1).SetCellValue("序号");
             row004.CreateCell(2).SetCellValue("物料编码");
@@ -379,22 +399,78 @@ namespace Finance.TradeCompliance
 
             IRow rowAfterN1= sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);
             rowAfterN1.CreateCell(1).SetCellValue("ECCN成分价值占比");
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 1, 4 + TradeTable.ProductMaterialInfos.Count + 1, 1, 4));
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 1, 4 + TradeTable.ProductMaterialInfos.Count + 1, 5, 8));
+            rowAfterN1.CreateCell(5).SetCellValue(TradeTable.TradeComplianceCheck.EccnPricePercent.ToString());
 
             IRow rowAfterN2 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 2);
             rowAfterN2.CreateCell(1).SetCellValue("待定成分价值占比");
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 2, 4 + TradeTable.ProductMaterialInfos.Count + 2, 1, 4));
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 2, 4 + TradeTable.ProductMaterialInfos.Count + 2, 5, 8));
+            rowAfterN2.CreateCell(5).SetCellValue(TradeTable.TradeComplianceCheck.PendingPricePercent.ToString());
 
             IRow rowAfterN3 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 3);
             rowAfterN3.CreateCell(1).SetCellValue("合计价值占比");
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 3, 4 + TradeTable.ProductMaterialInfos.Count + 3, 1, 4));
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 3, 4 + TradeTable.ProductMaterialInfos.Count + 3, 5, 8));
+            rowAfterN3.CreateCell(5).SetCellValue(TradeTable.TradeComplianceCheck.AmountPricePercent.ToString());
 
             IRow rowAfterN4 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 4);
             rowAfterN4.CreateCell(0).SetCellValue("分析结论");
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 4, 4 + TradeTable.ProductMaterialInfos.Count + 4, 1, 8));
+            rowAfterN4.CreateCell(1).SetCellValue(TradeTable.TradeComplianceCheck.AnalysisConclusion.ToString());
 
             IRow rowAfterN5 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 5);
             rowAfterN5.CreateCell(0).SetCellValue("做成/日期");
+            sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 5, 4 + TradeTable.ProductMaterialInfos.Count + 5, 1, 8));
+            rowAfterN5.CreateCell(1).SetCellValue(TradeTable.TradeComplianceCheck.CreationTime.ToString());
+
+            //创建  占比  样式和列宽度
+            XSSFCellStyle zhanbiStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+            zhanbiStyle.Alignment = HorizontalAlignment.Center; // 居中
+            sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 1).GetCell(1).CellStyle = zhanbiStyle;
+            sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 2).GetCell(1).CellStyle = zhanbiStyle;
+            sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 3).GetCell(1).CellStyle = zhanbiStyle;
 
 
-           
 
+
+
+            //创建头部样式和列宽度
+            XSSFCellStyle titleStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+            titleStyle.Alignment = HorizontalAlignment.Center; // 居中
+            IFont titleFont = workbook.CreateFont();
+            titleFont.IsBold = true;
+            titleFont.FontHeightInPoints = 12;
+            titleFont.Color = HSSFColor.Black.Index;//设置字体颜色
+            titleStyle.SetFont(titleFont);
+            sheet.GetRow(1).GetCell(0).CellStyle = titleStyle;
+
+            //边框
+            //XSSFCellStyle cellStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+            //cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+            //cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+            //cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+            //cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+
+            //for (int i =0; i< 4 + TradeTable.ProductMaterialInfos.Count + 5;i++) {
+            //    for (int j = 0;j < 8; j++)
+            //    {
+            //        sheet.GetRow(i).GetCell(j).CellStyle = cellStyle;
+            //    }
+            //}
+
+
+            //列宽
+            sheet.SetColumnWidth(0, 4000);
+            sheet.SetColumnWidth(1, 5000);
+            sheet.SetColumnWidth(2, 5500);
+            sheet.SetColumnWidth(3, 6000);
+            sheet.SetColumnWidth(4, 12000);
+            sheet.SetColumnWidth(5, 2000);
+            sheet.SetColumnWidth(6, 4000);
+            sheet.SetColumnWidth(7, 5000);
+            sheet.SetColumnWidth(8, 5000);
 
 
             MemoryStream ms = new MemoryStream();

@@ -329,7 +329,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_财务审核_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_报价反馈_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_确认中标金额_{MainFlowId}_生成报价分析界面选择报价方案 || {MainFlowId}_审批报价策略与核价表_{MainFlowId}_生成报价分析界面选择报价方案",
                     RoleId = salesMan.Id.ToString(),
-                    ProcessIdentifier = "QuoteAnalysis",
+                    ProcessIdentifier = FinanceConsts.QuoteAnalysis,
 
                  },
                 new Node
@@ -338,7 +338,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_生成报价分析界面选择报价方案_{MainFlowId}_选择是否报价",
                     RoleId = salesMan.Id.ToString(),//和 生成报价分析界面选择报价方案  相同
-                    ProcessIdentifier = "QuoteAnalysis",
+                    ProcessIdentifier = FinanceConsts.QuoteAnalysis,
                 },
                 new Node
                 {
