@@ -18,6 +18,7 @@ using Finance.DemandApplyAudit;
 using Finance.PriceEval.Dto;
 using Microsoft.EntityFrameworkCore;
 using Abp.Json;
+using Finance.NerPricing;
 
 namespace Finance.WorkFlows
 {
@@ -39,23 +40,9 @@ namespace Finance.WorkFlows
         private readonly IRepository<Solution, long> _solutionRepository;
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
+        private readonly NrePricingAppService _nrePricingAppService;
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="tradeComplianceAppService"></param>
-        /// <param name="workflowInstanceAppService"></param>
-        /// <param name="unitOfWorkManager"></param>
-        /// <param name="electronicBomAppService"></param>
-        /// <param name="structionBomAppService"></param>
-        /// <param name="resourceEnteringAppService"></param>
-        /// <param name="priceEvaluationGetAppService"></param>
-        /// <param name="modelCountYearRepository"></param>
-        /// <param name="gradientRepository"></param>
-        /// <param name="solutionRepository"></param>
-        /// <param name="panelJsonRepository"></param>
-        /// <param name="priceEvaluationStartDataRepository"></param>
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -69,7 +56,10 @@ namespace Finance.WorkFlows
             _solutionRepository = solutionRepository;
             _panelJsonRepository = panelJsonRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
+            _nrePricingAppService = nrePricingAppService;
         }
+
+
 
 
 
@@ -220,10 +210,24 @@ namespace Finance.WorkFlows
                         }
                     }
 
+                    //到核价审批录入后，要清空核价需求录入的缓存
                     if (eventData.Entity.NodeId == "主流程_核价审批录入")
                     {
                         await _priceEvaluationStartDataRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
                     }
+
+                    //NRE手板件清空
+                    if (eventData.Entity.NodeId == "主流程_NRE手板件")
+                    {
+                        await _nrePricingAppService.GetProjectManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                    }
+
+                    if (eventData.Entity.NodeId == "主流程_NRE_EMC实验费录入")
+                    {
+                        await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
+
+                    }
+
 
                 }
 
