@@ -37,6 +37,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using test;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -392,6 +393,7 @@ namespace Finance.Processes
                         processHoursEnteritemDto.ModelCountYearId = yearItem.ModelCountYearId;
                         processHoursEnteritems1.Add(processHoursEnteritemDto);
                     }
+                    processHoursEnteritem.YearInt = (decimal)(query.Year);
                     processHoursEnteritem.Issues = processHoursEnteritems1;
                     if (query.UpDown == YearType.FirstHalf)
                     {
@@ -444,7 +446,7 @@ namespace Finance.Processes
                         processHoursEnteritemDto.ModelCountYearId = yearItem.Id;
                         processHoursEnteritem.Issues.Add(processHoursEnteritemDto);
                     }
-
+                    processHoursEnteritem.YearInt = (decimal)(device.Year);
                     if (device.UpDown == YearType.FirstHalf)
                     {
 

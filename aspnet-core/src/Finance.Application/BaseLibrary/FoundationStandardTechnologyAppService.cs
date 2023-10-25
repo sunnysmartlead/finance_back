@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -437,6 +438,8 @@ namespace Finance.BaseLibrary
                     {
                         ProcessHoursEnterSopInfoDto processHoursEnteritemDto = new ProcessHoursEnterSopInfoDto();
                         processHoursEnteritemDto.Year = year;
+                        string str2 = Regex.Replace(year, @"[^0-9]+", "");
+                        processHoursEnteritemDto.YearInt = Decimal.Parse(str2);
                         List<ProcessHoursEnteritemDto> foundationWorkingHourItemDtosItem = new List<ProcessHoursEnteritemDto>();
                         List<FTWorkingHour> foundationWorkingHourItemDtosList =  _fTWorkingHourRepository.GetAllList(p => p.IsDeleted == false && p.FoundationReliableHoursId == item.Id &&  p.Year == year);
                         foreach (var device in foundationWorkingHourItemDtosList)
