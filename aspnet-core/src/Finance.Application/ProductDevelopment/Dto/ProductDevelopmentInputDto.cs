@@ -346,7 +346,14 @@ namespace Finance.ProductDevelopment.Dto
         /// </summary>
         public virtual string PlaceOfDelivery { get; set; }
 
-
+        /// <summary>
+        /// 电子BOM文件Id
+        /// </summary>
+        public string ElcFileId { get; set; }
+        /// <summary>
+        /// 结构BOM文件Id
+        /// </summary>
+        public string Stu3DFileId { get; set; }
 
     }
 
