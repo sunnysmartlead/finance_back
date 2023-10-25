@@ -2118,7 +2118,8 @@ namespace Finance.PriceEval
 
 
             //跟线工价
-            var linePrice = personPrice * manufacturingCostInfo.TraceLineOfPerson.To<decimal>() / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
+            //var linePrice = personPrice * manufacturingCostInfo.TraceLineOfPerson.To<decimal>() / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
+            var linePrice = personPrice * workingHoursInputInfo.PerFollowUpQuantity.To<decimal>() / (decimal)manufacturingCostInfo.MonthlyWorkingDays / manufacturingCostInfo.WorkingHours.To<decimal>() / 3600;
 
             //跟线成本
             var lineCost = linePrice * workingHoursInputInfo.LaborHour.To<decimal>();
@@ -2663,7 +2664,8 @@ namespace Finance.PriceEval
             {
                 data.Add(new YearListDto { Id = PriceEvalConsts.AllYear, Name = "全生命周期" });
             }
-            return new ListResultDto<YearListDto>(data);
+
+            return new ListResultDto<YearListDto>(data.OrderBy(p => p.Id).ThenBy(p => p.UpDown).ToList());
         }
 
         /// <summary>
