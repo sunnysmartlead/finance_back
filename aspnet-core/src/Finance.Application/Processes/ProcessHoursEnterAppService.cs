@@ -2946,7 +2946,13 @@ namespace Finance.Processes
             decimal TraceabilitySoftware = 0;
             foreach ( var item in query )
             {
-                HardwareTotalPrice += item.DeviceTotalPrice;
+                decimal hardwareTotalPriceItem = 0;
+                var frockList=  _processHoursEnterFrockRepository.GetAll().Where(t => t.ProcessHoursEnterId == item.Id).ToList();
+                foreach (var itemHardwareTotal in frockList)
+                {
+                    hardwareTotalPriceItem += (decimal)(itemHardwareTotal.HardwareDeviceNumber * itemHardwareTotal.HardwareDevicePrice);
+                }
+                HardwareTotalPrice += hardwareTotalPriceItem;
                 SoftwarePrice += item.SoftwarePrice;
                 TraceabilitySoftware += item.TraceabilitySoftwareCost;
 
