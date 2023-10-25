@@ -15,16 +15,7 @@ public class AnalyseBoardSecondDto : ResultDto
     /// </summary>
     public long AuditFlowId { get; set; }
 
-    /// <summary>
-    /// 毛利率
-    /// </summary>
-    public List<decimal> grossMarginList { get; set; }
-
-
-    /// <summary>
-    /// 单价表
-    /// </summary>
-    public List<UnitPriceModel> UnitPrice { get; set; }
+   
 
     /// <summary>
     /// Nre相关
@@ -59,7 +50,7 @@ public class AnalyseBoardSecondDto : ResultDto
     /// <summary>
     /// 项目看板
     /// </summary>
-    public List<ProjectBoardModel> ProjectBoard { get; set; }
+    public List<BoardModel> ProjectBoard { get; set; }
 
 
     public string mes { get; set; }
