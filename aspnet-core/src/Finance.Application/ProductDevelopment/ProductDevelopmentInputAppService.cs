@@ -2,6 +2,7 @@
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.ObjectMapping;
+using Abp.Runtime.Session;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
@@ -31,23 +32,27 @@ namespace Finance.ProductDevelopment
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
         private readonly IRepository<FileManagement, long> _fileManagementRepository;
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
+        private readonly IRepository<Solution, long> _solutionTableRepository;
         private readonly IObjectMapper _objectMapper;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
 
-        public ProductDevelopmentInputAppService(ILogger<ProductDevelopmentInput> logger, IRepository<ProductDevelopmentInput, long> productDevelopmentInputRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<FileManagement, long> fileManagementRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IObjectMapper objectMapper, IRepository<Solution, long> resourceSchemeTable)
+        public ProductDevelopmentInputAppService(ILogger<ProductDevelopmentInput> logger, IRepository<ProductDevelopmentInput, long> productDevelopmentInputRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<FileManagement, long> fileManagementRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<Solution, long> solutionTableRepository, IObjectMapper objectMapper, IRepository<Solution, long> resourceSchemeTable)
         {
-            _logger=logger;
-            _productDevelopmentInputRepository=productDevelopmentInputRepository;
-            _modelCountRepository=modelCountRepository;
-            _priceEvaluationRepository=priceEvaluationRepository;
-            _fileManagementRepository=fileManagementRepository;
-            _financeDictionaryDetailRepository=financeDictionaryDetailRepository;
-            _objectMapper=objectMapper;
-            _resourceSchemeTable=resourceSchemeTable;
+            _logger = logger;
+            _productDevelopmentInputRepository = productDevelopmentInputRepository;
+            _modelCountRepository = modelCountRepository;
+            _priceEvaluationRepository = priceEvaluationRepository;
+            _fileManagementRepository = fileManagementRepository;
+            _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
+            _solutionTableRepository = solutionTableRepository;
+            _objectMapper = objectMapper;
+            _resourceSchemeTable = resourceSchemeTable;
         }
+
+
 
 
 
@@ -59,43 +64,52 @@ namespace Finance.ProductDevelopment
 
         public async Task<ProductDevelopmentInput> SaveProductDevelopmentInput(ProductDevelopmentInputDto input)
         {
-            if(input.Picture3DFileId.IsNullOrEmpty())
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == input.SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
             {
-                throw new FriendlyException("3D爆炸图必选上传");
-            }
-            ProductDevelopmentInput entity;
-            var productInput = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
+                if (input.Picture3DFileId.IsNullOrEmpty())
+                {
+                    throw new FriendlyException("3D爆炸图必选上传");
+                }
+                ProductDevelopmentInput entity;
+                var productInput = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
 
-            if (productInput.Count > 0)
-            {
-                entity = productInput.FirstOrDefault();
+                if (productInput.Count > 0)
+                {
+                    entity = productInput.FirstOrDefault();
+                }
+                else
+                {
+                    entity = new();
+                    entity.ProductId = input.ProductId;
+                    entity.SolutionId = input.SolutionId;
+                    entity.AuditFlowId = input.AuditFlowId;
+                }
+                entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
+                entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
+                entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
+                entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
+                entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
+                entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
+                entity.SingleProductWeight = input.SingleProductWeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.SingleProductWeight);
+                entity.SingleBoxQuantity = input.SingleBoxQuantity.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.SingleBoxQuantity);
+                entity.InnerPackagingLength = input.InnerPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingLength);
+                entity.InnerPackagingWidth = input.InnerPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingWidth);
+                entity.InnerPackagingHeight = input.InnerPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingHeight);
+                entity.IsHit = input.IsHit;
+                entity.BoxesPerPallet = input.BoxesPerPallet.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.BoxesPerPallet);
+                entity.QuantityPerBox = input.QuantityPerBox.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.QuantityPerBox);
+                entity.Remarks = input.Remarks;
+
+                ProductDevelopmentInput entityRet = await _productDevelopmentInputRepository.InsertOrUpdateAsync(entity);
+
+                return entityRet;
             }
             else
             {
-                entity = new();
-                entity.ProductId = input.ProductId;
-                entity.SolutionId = input.SolutionId;
-                entity.AuditFlowId = input.AuditFlowId;
+                throw new FriendlyException(input.SolutionId + ":该零件方案您没有权限查看！");
             }
-            entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
-            entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
-            entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
-            entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
-            entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
-            entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
-            entity.SingleProductWeight = input.SingleProductWeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.SingleProductWeight);
-            entity.SingleBoxQuantity = input.SingleBoxQuantity.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.SingleBoxQuantity);
-            entity.InnerPackagingLength = input.InnerPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingLength);
-            entity.InnerPackagingWidth = input.InnerPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingWidth);
-            entity.InnerPackagingHeight = input.InnerPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingHeight);
-            entity.IsHit = input.IsHit;
-            entity.BoxesPerPallet = input.BoxesPerPallet.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.BoxesPerPallet);
-            entity.QuantityPerBox = input.QuantityPerBox.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.QuantityPerBox);
-            entity.Remarks = input.Remarks;
-
-            ProductDevelopmentInput entityRet = await _productDevelopmentInputRepository.InsertOrUpdateAsync(entity);
-
-            return entityRet;
         }
 
         /// <summary>
@@ -103,36 +117,44 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<PostProductDevelopmentInputDto> PostProductDevelopmentInput(PostProductDevelopmentInputDto dto)
         {
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
+            {
+                //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
 
-            //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
-
-            List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
+                List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
                         .Where(p => dto.AuditFlowId.Equals(p.AuditFlowId))
                         .Where(p => dto.SolutionId.Equals(p.SolutionId)).ToListAsync();
-            PostProductDevelopmentInputDto result = new PostProductDevelopmentInputDto();
-            if (data.Count==1)
-            {
-                result.Picture3DFileId=data.FirstOrDefault().Picture3DFileId.ToString();
-                result.Pixel=data.FirstOrDefault().Pixel.ToString();
-                result.FOV=data.FirstOrDefault().FOV.ToString();
-                result.OuterPackagingLength=data.FirstOrDefault().OuterPackagingLength.ToString();
-                result.OuterPackagingWidth=data.FirstOrDefault().OuterPackagingWidth.ToString();
-                result.OuterPackagingHeight=data.FirstOrDefault().OuterPackagingHeight.ToString();
-                result.SingleProductWeight=data.FirstOrDefault().SingleProductWeight.ToString();
-                result.SingleBoxQuantity=data.FirstOrDefault().SingleBoxQuantity.ToString();
-                result.InnerPackagingLength=data.FirstOrDefault().InnerPackagingLength.ToString();
-                result.InnerPackagingWidth=data.FirstOrDefault().InnerPackagingWidth.ToString();
-                result.InnerPackagingHeight=data.FirstOrDefault().InnerPackagingHeight.ToString();
-                result.IsHit=data.FirstOrDefault().IsHit;
-                result.BoxesPerPallet=data.FirstOrDefault().BoxesPerPallet.ToString();
-                result.QuantityPerBox=data.FirstOrDefault()?.QuantityPerBox.ToString();
-                result.Remarks=data[0].Remarks;
-                var productInformation = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
-                result.ShippingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().ShippingType).DisplayName;
-                result.PackagingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().PackagingType).DisplayName;
-                result.PlaceOfDelivery = productInformation.FirstOrDefault()?.PlaceOfDelivery;
+                PostProductDevelopmentInputDto result = new PostProductDevelopmentInputDto();
+                if (data.Count == 1)
+                {
+                    result.Picture3DFileId = data.FirstOrDefault().Picture3DFileId.ToString();
+                    result.Pixel = data.FirstOrDefault().Pixel.ToString();
+                    result.FOV = data.FirstOrDefault().FOV.ToString();
+                    result.OuterPackagingLength = data.FirstOrDefault().OuterPackagingLength.ToString();
+                    result.OuterPackagingWidth = data.FirstOrDefault().OuterPackagingWidth.ToString();
+                    result.OuterPackagingHeight = data.FirstOrDefault().OuterPackagingHeight.ToString();
+                    result.SingleProductWeight = data.FirstOrDefault().SingleProductWeight.ToString();
+                    result.SingleBoxQuantity = data.FirstOrDefault().SingleBoxQuantity.ToString();
+                    result.InnerPackagingLength = data.FirstOrDefault().InnerPackagingLength.ToString();
+                    result.InnerPackagingWidth = data.FirstOrDefault().InnerPackagingWidth.ToString();
+                    result.InnerPackagingHeight = data.FirstOrDefault().InnerPackagingHeight.ToString();
+                    result.IsHit = data.FirstOrDefault().IsHit;
+                    result.BoxesPerPallet = data.FirstOrDefault().BoxesPerPallet.ToString();
+                    result.QuantityPerBox = data.FirstOrDefault()?.QuantityPerBox.ToString();
+                    result.Remarks = data[0].Remarks;
+                    var productInformation = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
+                    result.ShippingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().ShippingType).DisplayName;
+                    result.PackagingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().PackagingType).DisplayName;
+                    result.PlaceOfDelivery = productInformation.FirstOrDefault()?.PlaceOfDelivery;
+                }
+                return result;
             }
-            return result;
+            else
+            {
+                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
+            }
         }
 
         /// <summary>
