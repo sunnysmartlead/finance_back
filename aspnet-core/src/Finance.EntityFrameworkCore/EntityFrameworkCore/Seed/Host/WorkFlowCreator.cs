@@ -22,9 +22,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
         public const string MainFlowId = "主流程";
         private void CreateWorkFlows()
         {
-            //获取角色1
-            var role1 = _context.Roles.FirstOrDefault(p => p.Name == "测试角色1");
-            var roleId = role1.Id.ToString();
+            ////获取角色1
+            //var role1 = _context.Roles.FirstOrDefault(p => p.Name == "测试角色1");
+            //var roleId = role1.Id.ToString();
 
 
             #region 获取角色
