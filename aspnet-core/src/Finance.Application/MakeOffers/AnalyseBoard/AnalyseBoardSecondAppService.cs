@@ -31,18 +31,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 报价审核表
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
-
-
-
+    
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
     
-
-
-
-
     /// <summary>
     /// 流程流转服务
     /// </summary>
@@ -52,22 +46,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 构造函数
     /// </summary>
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-        IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
-        IRepository<UnitPriceOffers, long> unitPriceOffers,
-        NrePricingAppService nrePricingAppService,
-        PriceEvaluationAppService priceEvaluationAppService,
-        ProcessHoursEnterLineAppService processHoursEnterLineAppService,
-        IRepository<DynamicUnitPriceOffers, long> DynamicUnitPriceOffers,
-        IRepository<ProjectBoardOffers, long> projectBoardOffers,
+   
         AuditFlowAppService flowAppService,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<Sample, long> sampleRepository,
-        IRepository<PriceEvaluation, long> priceEvaluationRepository,
-        IRepository<PooledAnalysisOffers, long> pooledAnalysisOffers,
-        IRepository<GrossMarginForm, long> configGrossMarginForm,
-        IRepository<DownloadListSave, long> financeDownloadListSave,
-        IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository,
-        IRepository<GradientModelYear, long> gradientModelYearRepository,
         IRepository<Solution, long> resourceSchemeTable)
     {
         _financeAuditQuotationList = financeAuditQuotationList;
@@ -120,6 +101,37 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             analyseBoardSecondDto.mes = e.Message;
             return analyseBoardSecondDto;
         }
+    }
+    
+    /// <summary>
+    /// 毛利率（阶梯数量）
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForGradient( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+
+       
+            return await _analysisBoardSecondMethod.PostGrossMarginForGradient( yearProductBoardProcessSecondDto);
+       
+        
+    }
+    /// <summary>
+    /// 毛利率（实际数量）
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactual( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+
+       
+        return await _analysisBoardSecondMethod.PostGrossMarginForactual( yearProductBoardProcessSecondDto);
+       
+        
     }
 
     /// <summary>

@@ -142,6 +142,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 产品报价清单实体类
     /// </summary>
     private readonly IRepository<ProductExternalQuotationMx, long> _externalQuotationMx;
+
     /// <summary>
     /// NRE报价清单实体类
     /// </summary>
@@ -165,7 +166,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<FinanceDictionary, string> financeDictionaryRepository,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<Gradient, long> gradientRepository,
-
         IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
         IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
@@ -353,6 +353,359 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return gross.GrossMarginPrice;
     }
 
+    public async Task<GrossMarginSecondDto> PostGrossMarginForGradient(
+        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+        
+        var gradientId = yearProductBoardProcessSecondDto.GradientId;
+        var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
+        var unprice = yearProductBoardProcessSecondDto.UnitPrice;
+        var solutionid = yearProductBoardProcessSecondDto.SolutionId;
+
+        //获取梯度
+        var gradient =
+            await _gradientRepository.FirstOrDefaultAsync(p => p.AuditFlowId == AuditFlowId && p.Id == gradientId);
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        var createRequirementDtos = priceEvaluationStartInputResult.Requirement;
+        YearDimensionalityComparisonSecondDto yearDimensionalityComparisonSecondDto = new();
+
+        List<YearValue> numk = new List<YearValue>(); //数量K
+        List<YearValue> Prices = new List<YearValue>(); //单价
+        List<YearValue> SellingCost = new List<YearValue>(); //销售成本
+        List<YearValue> AverageCost = new List<YearValue>(); //单位平均成本
+        List<YearValue> SalesRevenue = new List<YearValue>(); //销售收入
+        List<YearValue> commission = new List<YearValue>(); //佣金
+        List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
+        
+        List<YearValue> kgPrices = new List<YearValue>(); //客供单价
+        List<YearValue> kgSalesRevenue = new List<YearValue>(); //客供销售收入
+        List<YearValue> kgcommission = new List<YearValue>(); //客供佣金
+        List<YearValue> kgSalesMargin = new List<YearValue>(); //客供销售毛利
+        
+        List<YearValue> ftPrices = new List<YearValue>(); //分摊单价
+        List<YearValue> ftSalesRevenue = new List<YearValue>(); //分销售收入
+        List<YearValue> ftcommission = new List<YearValue>(); //分佣金
+        List<YearValue> ftSalesMargin = new List<YearValue>(); //分销售毛利
+        
+        
+        
+
+        foreach (var crm in createRequirementDtos)
+        {
+            //数量K
+            YearValue num = new();
+            num.value = gradient.GradientValue;
+            numk.Add(num);
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = AuditFlowId, GradientId = gradientId, InputCount = 0, SolutionId = solutionid,
+                Year = crm.Year, UpDown = crm.UpDown
+            });
+            //单位平均成本
+            var totalcost = ex.TotalCost; //核价看板成本
+            YearValue Average = new();
+            Average.value = totalcost;
+            AverageCost.Add(Average);
+            //销售成本
+
+            YearValue sell = new();
+            sell.value = totalcost * num.value;
+            SellingCost.Add(sell);
+            //单价
+            YearValue price = new();
+            price.value = unprice * (1 - crm.AnnualDeclineRate / 100);
+            Prices.Add(price);
+
+            
+
+         
+
+            //销售收入（千元）
+            YearValue rev = new();
+            rev.value = unprice * (1 - crm.AnnualDeclineRate / 100) * gradient.GradientValue *
+                        (1 - crm.AnnualRebateRequirements / 100) *
+                        (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //佣金（千元）
+            YearValue com = new();
+            com.value = unprice * (1 - crm.AnnualDeclineRate / 100) * gradient.GradientValue *
+                        (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            commission.Add(com);
+            //销售毛利
+            YearValue mar = new();
+            mar.value = rev.value - sell.value - com.value; //销售收入-销售成本-佣金
+            SalesMargin.Add(mar);
+
+
+       var kg=     ex.Material.Sum(p => p.TotalMoneyCyn);
+            //客供单价
+            YearValue kgprice = new();
+            decimal kgup = unprice * (1 - crm.AnnualDeclineRate / 100)+kg;//增加客供成本
+            kgprice.value = kgup;
+            kgPrices.Add(kgprice);
+            
+            //客供销售收入（千元）
+            YearValue kgrev = new();
+            kgrev.value = (kgup)* gradient.GradientValue *
+                          (1 - crm.AnnualRebateRequirements / 100) *
+                          (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //客供佣金（千元）
+            YearValue kgcom = new();
+            kgcom.value =kgup * gradient.GradientValue *
+                         (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            kgcommission.Add(com);
+            //客供销售毛利
+            YearValue kgmar = new();
+            kgmar.value = kgrev.value - sell.value - kgcom.value; //销售收入-销售成本-佣金
+            kgSalesMargin.Add(kgmar);
+            
+            
+            
+            var ft=ex.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total.Value;
+            //分摊单价
+            YearValue ftprice = new();
+            decimal ftup = unprice * (1 - crm.AnnualDeclineRate / 100)-ft;//增加客供成本
+            kgprice.value = ftup;
+            kgPrices.Add(kgprice);
+            
+            //分摊销售收入（千元）
+            YearValue ftrev = new();
+            ftrev.value = (ftup)* gradient.GradientValue *
+                          (1 - crm.AnnualRebateRequirements / 100) *
+                          (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //分摊佣金（千元）
+            YearValue ftcom = new();
+            ftcom.value =ftup * gradient.GradientValue *
+                         (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            ftcommission.Add(com);
+            //分摊销售毛利
+            YearValue ftmar = new();
+            ftmar.value = ftrev.value - sell.value - ftcom.value; //销售收入-销售成本-佣金
+            ftSalesMargin.Add(kgmar);
+            
+        }
+
+        var total = numk.Sum(p => p.value); //总数量
+      
+        var xszcb = SellingCost.Sum(p => p.value); //销售总成本
+        
+        
+        var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
+        
+        var xsml = SalesMargin.Sum(p => p.value); //销售毛利总和
+        
+      
+        var kgxszcb = SellingCost.Sum(p => p.value); //客供销售总成本
+        
+        var kgtotalsale = kgSalesRevenue.Sum(p => p.value); //客供销售收入总和
+        
+        var kgxsml = kgSalesMargin.Sum(p => p.value); //客供销售毛利总和
+        
+        var ftxszcb = SellingCost.Sum(p => p.value); //分摊销售总成本
+        
+        var fttotalsale = ftSalesRevenue.Sum(p => p.value); //分摊销售收入总和
+        
+        var ftxsml = ftSalesMargin.Sum(p => p.value); //分摊销售毛利总和
+        
+        GrossMarginSecondDto grossMarginSecondDto = new();
+        grossMarginSecondDto.GrossMargin = (xsml / totalsale) * 100;
+        grossMarginSecondDto.ClientGrossMargin = (kgxsml / kgtotalsale) * 100;
+        grossMarginSecondDto.NreGrossMargin = (ftxsml / fttotalsale) * 100;
+
+
+        return grossMarginSecondDto;
+
+       
+    }
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactual(
+        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+       
+        var gradientId = yearProductBoardProcessSecondDto.GradientId;
+        var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
+        var unprice = yearProductBoardProcessSecondDto.UnitPrice;
+        var solutionid = yearProductBoardProcessSecondDto.SolutionId;
+        var carModel = yearProductBoardProcessSecondDto.CarModel; //车型
+
+        //获取梯度
+        var gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == AuditFlowId);
+
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        var createRequirementDtos = priceEvaluationStartInputResult.Requirement;
+        YearDimensionalityComparisonSecondDto yearDimensionalityComparisonSecondDto = new();
+        var carModelCount = priceEvaluationStartInputResult.CarModelCount;
+        List<CreateCarModelCountYearDto> carmodelModelCountYearList = new List<CreateCarModelCountYearDto>(); //
+        foreach (var carmodel in carModelCount)
+        {
+            if (carmodel.CarModel.Equals(carModel))
+            {
+                carmodelModelCountYearList = carmodel.ModelCountYearList; //核价需求该车型相关的数据
+            }
+        }
+
+        List<YearValue> numk = new List<YearValue>(); //数量K
+        List<YearValue> Prices = new List<YearValue>(); //单价
+        List<YearValue> SellingCost = new List<YearValue>(); //销售成本
+        List<YearValue> AverageCost = new List<YearValue>(); //单位平均成本
+        List<YearValue> SalesRevenue = new List<YearValue>(); //销售收入
+        List<YearValue> commission = new List<YearValue>(); //佣金
+        List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
+        
+        List<YearValue> kgPrices = new List<YearValue>(); //客供单价
+        List<YearValue> kgSalesRevenue = new List<YearValue>(); //客供销售收入
+        List<YearValue> kgcommission = new List<YearValue>(); //客供佣金
+        List<YearValue> kgSalesMargin = new List<YearValue>(); //客供销售毛利
+        
+        List<YearValue> ftPrices = new List<YearValue>(); //分摊单价
+        List<YearValue> ftSalesRevenue = new List<YearValue>(); //分销售收入
+        List<YearValue> ftcommission = new List<YearValue>(); //分佣金
+        List<YearValue> ftSalesMargin = new List<YearValue>(); //分销售毛利
+        
+        
+        
+
+        foreach (var crm in createRequirementDtos)
+        {
+            var carModelcount = carmodelModelCountYearList.Find(p => p.Year.Equals(crm.Year.ToString())); //相关年度数据
+            var qu = carModelcount.Quantity / 1000;
+            var grad = new Gradient();
+            foreach (var gradient in gradients)
+            {
+                if (qu < gradient.GradientValue)
+                {
+                    grad = gradient;
+                    break;
+                }
+            }
+            //数量K
+            YearValue num = new();
+            num.value =carModelcount.Quantity;;
+            numk.Add(num);
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = AuditFlowId, GradientId = gradientId, InputCount = 0, SolutionId = solutionid,
+                Year = crm.Year, UpDown = crm.UpDown
+            });
+            //单位平均成本
+            var totalcost = ex.TotalCost; //核价看板成本
+            YearValue Average = new();
+            Average.value = totalcost;
+            AverageCost.Add(Average);
+            //销售成本
+
+            YearValue sell = new();
+            sell.value = totalcost * num.value;
+            SellingCost.Add(sell);
+            //单价
+            YearValue price = new();
+            price.value = unprice * (1 - crm.AnnualDeclineRate / 100);
+            Prices.Add(price);
+            
+
+            //销售收入（千元）
+            YearValue rev = new();
+            rev.value = unprice * (1 - crm.AnnualDeclineRate / 100) * carModelcount.Quantity *
+                        (1 - crm.AnnualRebateRequirements / 100) *
+                        (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //佣金（千元）
+            YearValue com = new();
+            com.value = unprice * (1 - crm.AnnualDeclineRate / 100) * carModelcount.Quantity *
+                        (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            commission.Add(com);
+            //销售毛利
+            YearValue mar = new();
+            mar.value = rev.value - sell.value - com.value; //销售收入-销售成本-佣金
+            SalesMargin.Add(mar);
+
+
+       var kg=     ex.Material.Sum(p => p.TotalMoneyCyn);
+            //客供单价
+            YearValue kgprice = new();
+            decimal kgup = unprice * (1 - crm.AnnualDeclineRate / 100)+kg;//增加客供成本
+            kgprice.value = kgup;
+            kgPrices.Add(kgprice);
+            
+            //客供销售收入（千元）
+            YearValue kgrev = new();
+            kgrev.value = (kgup)* carModelcount.Quantity *
+                          (1 - crm.AnnualRebateRequirements / 100) *
+                          (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //客供佣金（千元）
+            YearValue kgcom = new();
+            kgcom.value =kgup * carModelcount.Quantity *
+                         (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            kgcommission.Add(com);
+            //客供销售毛利
+            YearValue kgmar = new();
+            kgmar.value = kgrev.value - sell.value - kgcom.value; //销售收入-销售成本-佣金
+            kgSalesMargin.Add(kgmar);
+            
+            
+            
+            var ft=ex.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total.Value;
+            //分摊单价
+            YearValue ftprice = new();
+            decimal ftup = unprice * (1 - crm.AnnualDeclineRate / 100)-ft;//增加客供成本
+            kgprice.value = ftup;
+            kgPrices.Add(kgprice);
+            
+            //分摊销售收入（千元）
+            YearValue ftrev = new();
+            ftrev.value = (ftup)* carModelcount.Quantity *
+                          (1 - crm.AnnualRebateRequirements / 100) *
+                          (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //分摊佣金（千元）
+            YearValue ftcom = new();
+            ftcom.value =ftup * carModelcount.Quantity *
+                         (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            ftcommission.Add(com);
+            //分摊销售毛利
+            YearValue ftmar = new();
+            ftmar.value = ftrev.value - sell.value - ftcom.value; //销售收入-销售成本-佣金
+            ftSalesMargin.Add(kgmar);
+            
+        }
+
+        var total = numk.Sum(p => p.value); //总数量
+      
+        var xszcb = SellingCost.Sum(p => p.value); //销售总成本
+        
+        
+        var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
+        
+        var xsml = SalesMargin.Sum(p => p.value); //销售毛利总和
+        
+      
+        var kgxszcb = SellingCost.Sum(p => p.value); //客供销售总成本
+        
+        var kgtotalsale = kgSalesRevenue.Sum(p => p.value); //客供销售收入总和
+        
+        var kgxsml = kgSalesMargin.Sum(p => p.value); //客供销售毛利总和
+        
+        var ftxszcb = SellingCost.Sum(p => p.value); //分摊销售总成本
+        
+        var fttotalsale = ftSalesRevenue.Sum(p => p.value); //分摊销售收入总和
+        
+        var ftxsml = ftSalesMargin.Sum(p => p.value); //分摊销售毛利总和
+        
+        GrossMarginSecondDto grossMarginSecondDto = new();
+        grossMarginSecondDto.GrossMargin = (xsml / totalsale) * 100;
+        grossMarginSecondDto.ClientGrossMargin = (kgxsml / kgtotalsale) * 100;
+        grossMarginSecondDto.NreGrossMargin = (ftxsml / fttotalsale) * 100;
+
+
+        return grossMarginSecondDto;
+    }
     /// <summary>
     /// 查看年度对比（实际数量）
     /// </summary>
@@ -382,6 +735,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 carmodelModelCountYearList = carmodel.ModelCountYearList; //核价需求该车型相关的数据
             }
         }
+
         List<YearValue> numk = new List<YearValue>(); //数量K
         List<YearValue> Prices = new List<YearValue>(); //单价
         List<YearValue> SellingCost = new List<YearValue>(); //销售成本
@@ -679,6 +1033,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new UserFriendlyException("请选择报价方案");
         }
+
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         List<AnalyseBoardNreDto> nres = await getNreForData(auditFlowId, version);
         List<OnlySampleDto> sampleDtos = await getSampleForData(auditFlowId, solutionQuotations);
@@ -705,7 +1060,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<Solution> solutions = isOfferDto.Solutions;
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
-        var count=_solutionQutation.GetAllList(p => p.AuditFlowId == AuditFlowId).Count;//报价提交次数
+        var count = _solutionQutation.GetAllList(p => p.AuditFlowId == AuditFlowId).Count; //报价提交次数
         int time = 0;
         if (count == 0)
         {
@@ -713,7 +1068,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         else
         {
-            time=  _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId).Result.Max(p=>p.ntime);
+            time = _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId).Result.Max(p => p.ntime);
             if (time >= 3)
             {
                 throw new UserFriendlyException("本流程报价提交次数已经到顶");
@@ -721,8 +1076,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-
-        await InsertSolution(solutions, version,time+1);
+        await InsertSolution(solutions, version, time + 1);
         //获取报价方案
         List<SolutionQuotation> solutionQuotations =
             await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.version == version);
@@ -1096,7 +1450,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 报价方案 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertSolution(List<Solution> solutions, int version,int time)
+    public async Task InsertSolution(List<Solution> solutions, int version, int time)
     {
         List<SolutionQuotation> solutionQuotations = (from solution in solutions
             select new SolutionQuotation()
@@ -2986,19 +3340,25 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return quotationListSecondDto;
     }
 
-    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId,long solutionId,long numberOfQuotations)
+    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
+        long numberOfQuotations)
     {
-        ExternalQuotationDto externalQuotationDto=new ExternalQuotationDto();
-        ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
-        if(externalQuotation is not null)
+        ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
+        ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p =>
+            p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) &&
+            p.NumberOfQuotations.Equals(numberOfQuotations));
+        if (externalQuotation is not null)
         {
-            List<ProductExternalQuotationMx> externalQuotationMxs= await  _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
-            List<NreQuotationList> nreQuotationLists = await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            List<ProductExternalQuotationMx> externalQuotationMxs =
+                await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            List<NreQuotationList> nreQuotationLists =
+                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos= ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
+            externalQuotationDto.ProductQuotationListDtos =
+                ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos= ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
+            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
         }
         else
         {
@@ -3015,12 +3375,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<CreateColumnFormatProductInformationDto> createColumnFormatProductInformationDtos =
                 priceEvaluationStartInputResult.ProductInformation;
             List<ProductQuotationListDto> mxs = (from crm in createColumnFormatProductInformationDtos
-                                                 select new ProductQuotationListDto()
-                                                 {
-                                                     ProductName = crm.Name,
-                                                     Year = priceEvaluationStartInputResult.SopTime,
-                                                     TravelVolume = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
-                                                 }).ToList();
+                select new ProductQuotationListDto()
+                {
+                    ProductName = crm.Name,
+                    Year = priceEvaluationStartInputResult.SopTime,
+                    TravelVolume = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
+                }).ToList();
 
             externalQuotationDto.ProductQuotationListDtos = mxs;
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
@@ -3037,29 +3397,35 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     internal async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
-        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit);
+        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p =>
+            p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) &&
+            p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit);
         //将报价单存入库中
         ExternalQuotation externalQuotation = ObjectMapper.Map<ExternalQuotation>(externalQuotationDto);
         if (externalQuotationDto.IsSubmit)
         {
-            if (external !=null&&external.NumberOfQuotations-1 == externalQuotationDto.NumberOfQuotations)
+            if (external != null && external.NumberOfQuotations - 1 == externalQuotationDto.NumberOfQuotations)
             {
                 throw new FriendlyException("不可以重复提交");
             }
+
             externalQuotation.NumberOfQuotations++;
         }
+
         long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
-        externalQuotation.RecordNo= year+ iSttring;
-        long id= await  _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
+        externalQuotation.RecordNo = year + iSttring;
+        long id = await _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
-        List<ProductExternalQuotationMx> productExternalQuotationMxes = ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
+        List<ProductExternalQuotationMx> productExternalQuotationMxes =
+            ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
         productExternalQuotationMxes.ForEach(p => p.ExternalQuotationId = id);
         await _externalQuotationMx.BulkInsertAsync(productExternalQuotationMxes);
 
         await _NreQuotationList.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
-        List<NreQuotationList> nreQuotationLists = ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
+        List<NreQuotationList> nreQuotationLists =
+            ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
         nreQuotationLists.ForEach(p => p.ExternalQuotationId = id);
         await _NreQuotationList.BulkInsertAsync(nreQuotationLists);
     }
@@ -3068,16 +3434,26 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
-    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
+    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId,
+        long numberOfQuotations)
     {
         ExternalQuotationDto external = await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
-        external.ProductQuotationListDtos=external.ProductQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
-        external.NreQuotationListDtos=external.NreQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
+        external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
+        {
+            p.SerialNumber = index + 1;
+            return p;
+        }).ToList();
+        external.NreQuotationListDtos = external.NreQuotationListDtos.Select((p, index) =>
+        {
+            p.SerialNumber = index + 1;
+            return p;
+        }).ToList();
         var memoryStream = new MemoryStream();
 
         await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/报价单下载.xlsx", external);
 
-        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "报价单下载.xlsx" };
+        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+            { FileDownloadName = "报价单下载.xlsx" };
     }
 
     public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId)
