@@ -1,7 +1,9 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
 using Finance.Authorization.Users;
+using Interface.Expends;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +14,13 @@ using MiniExcelLibs.OpenXml;
 using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
+using xyxandwxx.Expends;
 
 namespace Finance.BaseLibrary
 {
@@ -229,7 +234,11 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
+                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
+                    {
+                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
+                    }
+                    //"zy".GetEnumType<Status>().GetAttribute<Status, DescriptionAttribute>().Description;
                     if (AbpSession.UserId != null)
                     {
                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -279,7 +288,10 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
+                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
+                    {
+                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
+                    }
                     if (AbpSession.UserId != null)
                     {
                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -403,7 +415,10 @@ namespace Finance.BaseLibrary
                                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
+                                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
+                                    {
+                                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
+                                    }
                                     if (AbpSession.UserId != null)
                                     {
                                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -512,7 +527,20 @@ namespace Finance.BaseLibrary
                 {
                     FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
-                    value["DeviceStatus" + j] = foundationFixtureItemDto.HardwareState;
+             /*       if (null != foundationFixtureItemDto.HardwareState && !foundationFixtureItemDto.HardwareState.Equals(""))
+                    {
+                        String HardwareState = foundationFixtureItemDto.HardwareState;
+                        EnumHelperStatus.GetNVCFromEnumValue(typeof(HardwareState));
+                        if (null != status)
+                        {
+                            value["DeviceStatus" + j] = status;
+                        }
+                        else {
+                            value["DeviceStatus" + j] = "";
+                        }
+                  
+                    }*/
+                    value["DeviceStatus" + j] = "";
                     value["DevicePrice" + j] = foundationFixtureItemDto.HardwarePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.HardwareBusiness;
                 }
