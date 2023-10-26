@@ -2771,14 +2771,14 @@ namespace Finance.PriceEval
                 .Where(p => p.AuditFlowId == input.AuditFlowId)
                 .Select(p => new YearListDto { Id = p.Year, Name = $"{p.Year}年", UpDown = p.UpDown })
                 .Distinct()
-                .OrderBy(p => p.Id)
+                .OrderBy(p => p.Id).ThenBy(p => p.UpDown)
                 .ToListAsync();
             if (data.Count > 0)
             {
                 data.Add(new YearListDto { Id = PriceEvalConsts.AllYear, Name = "全生命周期" });
             }
 
-            return new ListResultDto<YearListDto>(data.OrderBy(p => p.Id).ThenBy(p => p.UpDown).ToList());
+            return new ListResultDto<YearListDto>(data);
         }
 
         /// <summary>
@@ -3183,21 +3183,21 @@ namespace Finance.PriceEval
 
             var list = new List<string> { "Sensor芯片", "串行芯片", "镜头" };
 
-            var data = from o in bom1.Material
-                       join t in bom2.Material on o.Id equals t.Id
-                       where list.Contains(o.TypeName)
+            var data = from one in bom1.Material
+                       join two in bom2.Material on one.Sap equals two.Sap
+                       where list.Contains(one.TypeName)
                        select new SolutionContrast
                        {
-                           ItemName = $"{o.TypeName}：{o.MaterialName}",
-                           Price_1 = o?.MaterialPrice,
-                           Count_1 = o?.AssemblyCount.To<decimal>(),
-                           Rate_1 = o?.ExchangeRate,
-                           Sum_1 = o?.TotalMoneyCynNoCustomerSupply,
+                           ItemName = $"{one.TypeName}：{one.MaterialName}",
+                           Price_1 = one?.MaterialPrice,
+                           Count_1 = one?.AssemblyCount.To<decimal>(),
+                           Rate_1 = one?.ExchangeRate,
+                           Sum_1 = one?.TotalMoneyCynNoCustomerSupply,
 
-                           Price_2 = t?.MaterialPrice,
-                           Count_2 = t?.AssemblyCount.To<decimal>(),
-                           Rate_2 = t?.ExchangeRate,
-                           Sum_2 = t?.TotalMoneyCynNoCustomerSupply,
+                           Price_2 = two?.MaterialPrice,
+                           Count_2 = two?.AssemblyCount.To<decimal>(),
+                           Rate_2 = two?.ExchangeRate,
+                           Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
                        };
             result.AddRange(data);
             result.ForEach(p => p.Change = p.Sum_2 - p.Sum_1);

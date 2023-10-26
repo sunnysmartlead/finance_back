@@ -42,6 +42,22 @@ namespace Finance.WorkFlows
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
         private readonly NrePricingAppService _nrePricingAppService;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="tradeComplianceAppService"></param>
+        /// <param name="workflowInstanceAppService"></param>
+        /// <param name="unitOfWorkManager"></param>
+        /// <param name="electronicBomAppService"></param>
+        /// <param name="structionBomAppService"></param>
+        /// <param name="resourceEnteringAppService"></param>
+        /// <param name="priceEvaluationGetAppService"></param>
+        /// <param name="modelCountYearRepository"></param>
+        /// <param name="gradientRepository"></param>
+        /// <param name="solutionRepository"></param>
+        /// <param name="panelJsonRepository"></param>
+        /// <param name="priceEvaluationStartDataRepository"></param>
+        /// <param name="nrePricingAppService"></param>
         public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
@@ -58,13 +74,6 @@ namespace Finance.WorkFlows
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _nrePricingAppService = nrePricingAppService;
         }
-
-
-
-
-
-
-
 
         /// <summary>
         /// 贸易合规等节点被激活时触发
@@ -146,6 +155,8 @@ namespace Finance.WorkFlows
                     //如果是流转到主流程_电子BOM匹配修改
                     if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                     {
+                        await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
+
                         await _resourceEnteringAppService.ElectronicBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
                     }
 
@@ -153,6 +164,8 @@ namespace Finance.WorkFlows
                     if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
                     {
                         await _resourceEnteringAppService.StructureBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+                        await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
+
                     }
 
                     //如果是流转到主流程_核价看板
@@ -227,13 +240,10 @@ namespace Finance.WorkFlows
                         await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
 
                     }
-
-
                 }
 
                 uow.Complete();
             }
-
         }
     }
 }
