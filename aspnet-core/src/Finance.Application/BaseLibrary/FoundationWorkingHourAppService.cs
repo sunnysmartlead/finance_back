@@ -137,7 +137,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
             if (query.Count > 0)
             {
-                throw new Exception("工序编号重复！");
+                throw new FriendlyException("工序编号重复！");
             }
             var entity = ObjectMapper.Map<FoundationWorkingHourDto, FoundationWorkingHour>(input,new FoundationWorkingHour());
 
@@ -192,7 +192,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
             if (query.Count > 0)
             {
-                throw new Exception("工序编号重复！");
+                throw new FriendlyException("工序编号重复！");
             }
             FoundationWorkingHour entity = await _foundationWorkingHourRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);

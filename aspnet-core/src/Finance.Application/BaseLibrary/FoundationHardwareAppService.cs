@@ -202,7 +202,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
             if (query.Count > 0)
             {
-                throw new Exception("工序编号重复！");
+                throw new FriendlyException("工序编号重复！");
             }
             var entity = ObjectMapper.Map<FoundationHardwareDto, FoundationHardware>(input, new FoundationHardware());
             entity.CreationTime = DateTime.Now;
@@ -259,7 +259,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
             if (query.Count > 0)
             {
-                throw new Exception("工序编号重复！");
+                throw new FriendlyException("工序编号重复！");
             }
             FoundationHardware entity = await _foundationHardwareRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
