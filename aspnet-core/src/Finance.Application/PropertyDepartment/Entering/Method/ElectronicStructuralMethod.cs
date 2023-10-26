@@ -32,7 +32,7 @@ namespace Finance.PropertyDepartment.Entering.Method
     /// <summary>
     /// 
     /// </summary>
-    public class ElectronicStructuralMethod : AsyncCrudAppService<User, UserDto, long, PagedUserResultRequestDto, CreateUserDto, UserDto>, ISingletonDependency
+    public class ElectronicStructuralMethod : FinanceAppServiceBase, ISingletonDependency
     {
         /// <summary>
         /// 是否涉及选项
@@ -115,6 +115,10 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 客户目标价
         /// </summary>
         private readonly IRepository<CustomerTargetPrice, long> _customerTargetPrice;
+        /// <summary>
+        /// 用户表
+        /// </summary>
+        private readonly IRepository<User, long> _user;
 
         /// <summary>
         /// 构造函数
@@ -129,7 +133,7 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// <param name="exchangeRate"></param>
         /// <param name="enteringElectronic"></param>
         /// <param name="userManager"></param>
-        /// <param name="repository"></param>
+        /// <param name="user"></param>
         /// <param name="structureElectronic"></param>
         /// <param name="elecBomDifferent"></param>
         /// <param name="structBomDifferent"></param>
@@ -151,8 +155,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<UInitPriceForm, long> uInitPriceForm,
             IRepository<ExchangeRate, long> exchangeRate,
             IRepository<EnteringElectronic, long> enteringElectronic,
-            UserManager userManager,
-            IRepository<User, long> repository,
+            UserManager userManager,           
             IRepository<StructureElectronic, long> structureElectronic,
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
@@ -162,7 +165,8 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<Gradient, long> gradientRepository,
             IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository,
-            IRepository<CustomerTargetPrice, long> customerTargetPrice) : base(repository)
+            IRepository<CustomerTargetPrice, long> customerTargetPrice,
+            IRepository<User, long> user)
         {
             _resourceFinanceDictionaryDetail = resourceFinanceDictionaryDetail;
             _resourceElectronicBomInfo = electronicBomInfo;
@@ -184,6 +188,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             _gradientModel = gradientModelRepository;
             _gradientModelYear = gradientModelYearRepository;
             _customerTargetPrice = customerTargetPrice;
+            _user = user;
         }
 
         /// <summary>
@@ -303,10 +308,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                             electronicDto.TypeName = BomInfo.TypeName;//物料种类
                             electronicDto.SapItemNum = BomInfo.SapItemNum;//物料编号
                             electronicDto.SapItemName = BomInfo.SapItemName;//材料名称
-                            electronicDto.AssemblyQuantity = BomInfo.AssemblyQuantity;//装配数量
-                            //获取某个ID的人员信息
-                            var user = GetAsync(new EntityDto<long> { Id = enteringElectronic.PeopleId });
-                            if (user.Result is not null) electronicDto.PeopleName = user.Result.Name;
+                            electronicDto.AssemblyQuantity = BomInfo.AssemblyQuantity;//装配数量                           
+                            electronicDto.PeopleName = await GetUserName(enteringElectronic.PeopleId);
                             electronicBomList.Add(electronicDto);
                             continue;//直接进行下一个循环
                         }
@@ -529,9 +532,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                         electronicDto.TypeName = BomInfo.TypeName;//物料种类
                         electronicDto.SapItemNum = BomInfo.SapItemNum;//物料编号
                         electronicDto.SapItemName = BomInfo.SapItemName;//材料名称
-                        electronicDto.AssemblyQuantity = BomInfo.AssemblyQuantity;//装配数量
-                        var user = GetAsync(new EntityDto<long> { Id = enteringElectronic.PeopleId });
-                        if (user.Result is not null) electronicDto.PeopleName = user.Result.Name;
+                        electronicDto.AssemblyQuantity = BomInfo.AssemblyQuantity;//装配数量                  
+                        electronicDto.PeopleName = await GetUserName(enteringElectronic.PeopleId);
                         //返利金额不给项目经理看
                         if (Roles.Items.Where(p => p.Name.Equals(Host.ProjectManager)).ToList().Count is not 0)
                         {
@@ -662,9 +664,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.IsEntering = structureElectronic.IsEntering;//是否录入
                             construction.MOQ = structureElectronic.MOQ;//MOQ
                             construction.Remark = structureElectronic.Remark;//备注
-                            construction.IsSystemiginal= structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出
-                            var user = GetAsync(new Abp.Application.Services.Dto.EntityDto<long> { Id = structureElectronic.PeopleId });
-                            if (user.Result is not null) construction.PeopleName = user.Result.Name;
+                            construction.IsSystemiginal= structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                         
+                            construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
                             int countUp = structureBOMIdModify.Where(p => p.Equals(construction.StructureId)).Count();//如果修改了,重置参数
                             if (countUp != 0)
                             {
@@ -820,9 +821,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.PeopleId = structureElectronic.PeopleId;//确认人
                             construction.Remark = structureElectronic.Remark;//备注
                             construction.SolutionId = item.SolutionId;//方案ID
-                            construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出
-                            var user = GetAsync(new Abp.Application.Services.Dto.EntityDto<long> { Id = structureElectronic.PeopleId });
-                            if (user.Result is not null) construction.PeopleName = user.Result.Name;
+                            construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                          
+                            construction.PeopleName =await GetUserName(structureElectronic.PeopleId);
                             continue;//直接进行下一个循环
                         }
                         else
@@ -1770,6 +1770,23 @@ namespace Finance.PropertyDepartment.Entering.Method
                 }
             }
             return true;
+        }
+        /// <summary>
+        /// 根据用户ID获取
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        internal async Task<string> GetUserName(long Id)
+        {
+            User user = await _user.FirstOrDefaultAsync(p => p.Id.Equals(Id));
+            if (user is not null)
+            {
+                return user.Name;
+            }
+            else
+            {
+                return "";
+            }
         }
     }
 }

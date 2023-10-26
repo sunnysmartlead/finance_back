@@ -29,8 +29,14 @@ public class GrossMargin
     public int version { get; set; }
     /// <summary>
     /// 流程号Id
-    /// </summary> 
+    /// </summary>
     public long AuditFlowId { get; set; }
+
+    /// <summary>
+    /// 方案的id
+    /// </summary>
+    public long SolutionId { get; set; }
+  
     /// <summary>
     /// 单车产品数量
     /// </summary>

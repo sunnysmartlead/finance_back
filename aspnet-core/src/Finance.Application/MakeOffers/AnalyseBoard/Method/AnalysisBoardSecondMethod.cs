@@ -27,6 +27,7 @@ using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.X509;
 using test;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
@@ -358,7 +359,174 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
-    /// 年度对比
+    /// 查看年度对比（实际数量）
+    /// </summary>
+    /// <returns></returns>
+    /*public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+        var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
+        var unprice = yearProductBoardProcessSecondDto.UnitPrice;
+        var solutionid = yearProductBoardProcessSecondDto.SolutionId;
+        var carModel = yearProductBoardProcessSecondDto.CarModel; //车型
+
+        //获取梯度
+        var gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == AuditFlowId);
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        var createRequirementDtos = priceEvaluationStartInputResult.Requirement;
+        YearDimensionalityComparisonSecondDto yearDimensionalityComparisonSecondDto = new();
+        var carModelCount = priceEvaluationStartInputResult.CarModelCount;
+        List<CreateCarModelCountYearDto> carmodelModelCountYearList = new List<CreateCarModelCountYearDto>(); //
+        foreach (var carmodel in carModelCount)
+        {
+            if (carmodel.CarModel.Equals(carModel))
+            {
+                carmodelModelCountYearList = carmodel.ModelCountYearList; //核价需求该车型相关的数据
+            }
+        }
+
+
+        List<YearValue> numk = new List<YearValue>(); //数量K
+        List<YearValue> Prices = new List<YearValue>(); //单价
+        List<YearValue> SellingCost = new List<YearValue>(); //销售成本
+        List<YearValue> AverageCost = new List<YearValue>(); //单位平均成本
+        List<YearValue> SalesRevenue = new List<YearValue>(); //销售收入
+        List<YearValue> commission = new List<YearValue>(); //佣金
+        List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
+        List<YearValue> GrossMargin = new List<YearValue>(); //毛利率
+
+        foreach (var crm in createRequirementDtos)
+        {
+            var carModelcount = carmodelModelCountYearList.Find(p => p.Year.Equals(crm.Year.ToString())); //相关年度数据
+            var qu = carModelcount.Quantity / 1000;
+            var grad = new Gradient();
+            foreach (var gradient in gradients)
+            {
+                if (qu < gradient.GradientValue)
+                {
+                    grad = gradient;
+                    break;
+                }
+            }
+
+            //数量K
+            YearValue num = new();
+            num.key = crm.Year.ToString();
+            num.value = carModelcount.Quantity;
+            numk.Add(num);
+
+            //单价
+            foreach (var yl in YearList)
+            {
+                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput()
+                {
+                    AuditFlowId = AuditFlowId, GradientId = grad.Id, InputCount = 0, SolutionId = solutionid,
+                Year = crm.Year, UpDown = crm.UpDown
+            });
+
+            var totalcost = ex.TotalCost; //核价看板成本
+            //单位平均成本
+            YearValue Average = new();
+            Average.key = crm.Year.ToString();
+            Average.value = totalcost;
+            AverageCost.Add(Average);
+            //销售成本
+            YearValue sell = new();
+            sell.key = crm.Year.ToString();
+            sell.value = totalcost * num.value;
+            SellingCost.Add(sell);
+
+            //销售收入（千元）
+            YearValue rev = new();
+            rev.key = crm.Year.ToString();
+            rev.value = unprice * (1 - crm.AnnualDeclineRate / 100) * carModelcount.Quantity *
+                        (1 - crm.AnnualRebateRequirements / 100) *
+                        (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
+            SalesRevenue.Add(rev);
+            //佣金（千元）
+            YearValue com = new();
+            com.key = crm.Year.ToString();
+            com.value = unprice * (1 - crm.AnnualDeclineRate / 100) * carModelcount.Quantity *
+                        (crm.CommissionRate / 100); //单价*数量*年度佣金比例
+            commission.Add(com);
+            //销售毛利
+            YearValue mar = new();
+            mar.key = crm.Year.ToString();
+            mar.value = rev.value - sell.value - com.value; //销售收入-销售成本-佣金
+            SalesMargin.Add(mar);
+
+            //毛利率
+            YearValue gross = new();
+            gross.key = crm.Year.ToString();
+            gross.value = (mar.value / rev.value) * 100; //销售毛利/销售收入
+            GrossMargin.Add(gross);
+        }
+
+        var total = numk.Sum(p => p.value); //总数量
+        numk.Add(new YearValue()
+        {
+            key = "总和",
+            value = total
+        });
+
+        var xszcb = SellingCost.Sum(p => p.value); //销售总成本
+        SellingCost.Add(new YearValue()
+        {
+            key = "总和",
+            value = xszcb
+        });
+
+        AverageCost.Add(new YearValue()
+        {
+            key = "总和",
+            value = xszcb / total //销售成本/数量
+        });
+        var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
+        SalesRevenue.Add(new YearValue()
+        {
+            key = "总和",
+            value = totalsale
+        });
+        Prices.Add(new YearValue() //单价总和=销售收入总和/数量总和
+        {
+            key = "总和",
+            value = totalsale / total
+        });
+        var yj = SalesRevenue.Sum(p => p.value); //佣金总和
+        commission.Add(new YearValue()
+        {
+            key = "总和",
+            value = yj
+        });
+        var xsml = SalesMargin.Sum(p => p.value); //销售毛利总和
+        SalesMargin.Add(new YearValue()
+        {
+            key = "总和",
+            value = xsml
+        });
+        GrossMargin.Add(new YearValue() //销售毛利/销售收入
+        {
+            key = "总和",
+            value = (xsml / totalsale) * 100
+        });
+        yearDimensionalityComparisonSecondDto.numk = numk;
+        yearDimensionalityComparisonSecondDto.Prices = Prices;
+        yearDimensionalityComparisonSecondDto.SellingCost = SellingCost;
+        yearDimensionalityComparisonSecondDto.AverageCost = AverageCost;
+        yearDimensionalityComparisonSecondDto.SalesRevenue = SalesRevenue;
+        yearDimensionalityComparisonSecondDto.commission = commission;
+        yearDimensionalityComparisonSecondDto.SalesMargin = SalesMargin;
+        yearDimensionalityComparisonSecondDto.GrossMargin = GrossMargin;
+
+
+        return yearDimensionalityComparisonSecondDto;
+    }*/
+
+    /// <summary>
+    /// 查看年度对比（阶梯数量）
     /// </summary>
     /// <returns></returns>
     public async Task<YearDimensionalityComparisonSecondDto> YearDimensionalityComparisonForGradient(
@@ -386,7 +554,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<YearValue> commission = new List<YearValue>(); //佣金
         List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
         List<YearValue> GrossMargin = new List<YearValue>(); //毛利率
-        
+
         foreach (var crm in createRequirementDtos)
         {
             //数量K
@@ -407,17 +575,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 AuditFlowId = AuditFlowId, GradientId = gradientId, InputCount = 0, SolutionId = solutionid,
                 Year = crm.Year, UpDown = crm.UpDown
             });
-            //销售成本
-            var totalcost = ex.TotalCost; //核价看板成本
-            YearValue sell = new();
-            sell.key = crm.Year.ToString();
-            sell.value = totalcost;
-            SellingCost.Add(sell);
             //单位平均成本
+            var totalcost = ex.TotalCost; //核价看板成本
             YearValue Average = new();
             Average.key = crm.Year.ToString();
-            Average.value = totalcost / gradient.GradientValue;
+            Average.value = totalcost;
             AverageCost.Add(Average);
+            //销售成本
+
+            YearValue sell = new();
+            sell.key = crm.Year.ToString();
+            sell.value = totalcost * num.value;
+            SellingCost.Add(sell);
+
             //销售收入（千元）
             YearValue rev = new();
             rev.key = crm.Year.ToString();
@@ -486,7 +656,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             key = "总和",
             value = xsml
         });
-        GrossMargin.Add(new YearValue()//销售毛利/销售收入
+        GrossMargin.Add(new YearValue() //销售毛利/销售收入
         {
             key = "总和",
             value = (xsml / totalsale) * 100
@@ -542,7 +712,24 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<Solution> solutions = isOfferDto.Solutions;
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
-        await InsertSolution(solutions, version);
+        var count=_solutionQutation.GetAllList(p => p.AuditFlowId == AuditFlowId).Count;//报价提交次数
+        int time = 0;
+        if (count == 0)
+        {
+            time = 0;
+        }
+        else
+        {
+            time=  _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId).Result.Max(p=>p.ntime);
+            if (time >= 3)
+            {
+                throw new UserFriendlyException("本流程报价提交次数已经到顶");
+            }
+        }
+
+
+
+        await InsertSolution(solutions, version,time+1);
         //获取报价方案
         List<SolutionQuotation> solutionQuotations =
             await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.version == version);
@@ -804,7 +991,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
-    /// 从数据库查询汇总分析  
+    /// 从数据库查询汇总分析
     /// </summary>
     /// <returns></returns>
     public async Task<List<PooledAnalysisModel>> getPoolForData(long auditFlowId, int version)
@@ -916,7 +1103,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 报价方案 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertSolution(List<Solution> solutions, int version)
+    public async Task InsertSolution(List<Solution> solutions, int version,int time)
     {
         List<SolutionQuotation> solutionQuotations = (from solution in solutions
             select new SolutionQuotation()
@@ -931,6 +1118,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ElecEngineerId = solution.ElecEngineerId,
                 StructEngineerId = solution.StructEngineerId,
                 IsFirst = solution.IsFirst,
+                ntime = time,
                 version = version
             }).ToList();
         foreach (var solutionQuotation in solutionQuotations)
@@ -1819,28 +2007,30 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 GrossMargin grossMargin = new();
                 grossMargin.product = solution.Product + "-" + solution.SolutionName;
                 grossMargin.ProductNumber = carModelCount.SingleCarProductsQuantity;
+
+                grossMargin.SolutionId = solution.Id;
                 QuotedGrossMarginSimple grossMarginSimple = new();
                 decimal unprice = 1;
                 TargetPrice Interior = new TargetPrice();
                 Interior.Price = unprice;
-                Interior.GrossMargin = 20;
-                Interior.NreGrossMargin = 20;
-                Interior.ClientGrossMargin = 22;
+                Interior.GrossMargin = 0;
+                Interior.NreGrossMargin = 0;
+                Interior.ClientGrossMargin = 0;
                 TargetPrice Client = new TargetPrice();
                 Client.Price = unprice;
-                Client.GrossMargin = 20;
-                Client.NreGrossMargin = 25;
-                Client.ClientGrossMargin = 22;
+                Client.GrossMargin = 0;
+                Client.NreGrossMargin = 0;
+                Client.ClientGrossMargin = 0;
                 TargetPrice ThisQuotation = new TargetPrice();
                 ThisQuotation.Price = unprice;
-                ThisQuotation.GrossMargin = 20;
-                ThisQuotation.NreGrossMargin = 25;
-                ThisQuotation.ClientGrossMargin = 24;
+                ThisQuotation.GrossMargin = 0;
+                ThisQuotation.NreGrossMargin = 0;
+                ThisQuotation.ClientGrossMargin = 0;
                 TargetPrice LastRound = new TargetPrice();
                 LastRound.Price = unprice;
-                LastRound.GrossMargin = 20;
-                LastRound.NreGrossMargin = 25;
-                LastRound.ClientGrossMargin = 21;
+                LastRound.GrossMargin = 0;
+                LastRound.NreGrossMargin = 0;
+                LastRound.ClientGrossMargin = 0;
                 grossMarginSimple.Interior = Interior; //目标价（内部）
                 grossMarginSimple.Client = Client; //目标价（客户）
                 grossMarginSimple.ThisQuotation = ThisQuotation; //本次报价
@@ -1874,6 +2064,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 GradientQuotedGrossMarginModel grossMarginModel = new GradientQuotedGrossMarginModel();
                 grossMarginModel.gradient = gradient.GradientValue + "K/Y";
+                grossMarginModel.GradientId = gradient.Id;
+                grossMarginModel.SolutionId = solution.Id;
                 grossMarginModel.product = solution.Product + "-" + solution.SolutionName;
                 var smple = createCustomerTargetPriceDtos.Where(p => p.Kv == gradient.GradientValue).ToList();
                 decimal unprice = smple.Count == 0
@@ -1882,24 +2074,24 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 QuotedGrossMarginSimple quotedGrossMarginSimple = new();
                 TargetPrice Interior = new TargetPrice();
                 Interior.Price = unprice;
-                Interior.GrossMargin = 20;
-                Interior.NreGrossMargin = 20;
-                Interior.ClientGrossMargin = 22;
+                Interior.GrossMargin = 0;
+                Interior.NreGrossMargin = 0;
+                Interior.ClientGrossMargin = 0;
                 TargetPrice Client = new TargetPrice();
                 Client.Price = unprice;
-                Client.GrossMargin = 20;
-                Client.NreGrossMargin = 25;
-                Client.ClientGrossMargin = 22;
+                Client.GrossMargin = 0;
+                Client.NreGrossMargin = 0;
+                Client.ClientGrossMargin = 0;
                 TargetPrice ThisQuotation = new TargetPrice();
                 ThisQuotation.Price = unprice;
-                ThisQuotation.GrossMargin = 20;
-                ThisQuotation.NreGrossMargin = 25;
-                ThisQuotation.ClientGrossMargin = 24;
+                ThisQuotation.GrossMargin = 0;
+                ThisQuotation.NreGrossMargin = 0;
+                ThisQuotation.ClientGrossMargin = 0;
                 TargetPrice LastRound = new TargetPrice();
                 LastRound.Price = unprice;
-                LastRound.GrossMargin = 20;
-                LastRound.NreGrossMargin = 25;
-                LastRound.ClientGrossMargin = 21;
+                LastRound.GrossMargin = 0;
+                LastRound.NreGrossMargin = 0;
+                LastRound.ClientGrossMargin = 0;
                 quotedGrossMarginSimple.Interior = Interior; //目标价（内部）
                 quotedGrossMarginSimple.Client = Client; //目标价（客户）
                 quotedGrossMarginSimple.ThisQuotation = ThisQuotation; //本次报价
@@ -2845,8 +3037,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.BankOfDeposit = "中国农业银行余姚市环城支行";
             externalQuotationDto.AccountNumber = "39603001040014366";
             externalQuotationDto.Address = "浙江省余姚市阳明街道丰乐路67-69号";
-        }        
-       
+        }
+
         return externalQuotationDto;
     }
 
@@ -2862,11 +3054,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 throw new FriendlyException("不可以重复提交");
             }
             externalQuotation.NumberOfQuotations++;
-        }   
+        }
         long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
-        externalQuotation.RecordNo= year+ iSttring;        
+        externalQuotation.RecordNo= year+ iSttring;
         long id= await  _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
         List<ProductExternalQuotationMx> productExternalQuotationMxes = ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
