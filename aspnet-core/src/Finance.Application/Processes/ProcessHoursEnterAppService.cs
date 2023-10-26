@@ -1358,6 +1358,7 @@ namespace Finance.Processes
                     decimal Zcuph = (decimal)item.Zcuph;
 
                     decimal rateOfMobilization = 0;
+                    decimal CapacityrateOfMobilization = 0;
                     decimal MonthlyWorkingDays = 0;
                     decimal DailyShift = 0;
                     decimal WorkingHours = 0; ;
@@ -1370,6 +1371,7 @@ namespace Finance.Processes
                     {
                         //嫁接率
                         rateOfMobilization = manufacturingCostInfo[0].RateOfMobilization;
+                        CapacityrateOfMobilization = manufacturingCostInfo[0].RateOfMobilization/100;
                         //月工作天数
                         MonthlyWorkingDays = (decimal)manufacturingCostInfo[0].MonthlyWorkingDays;
                         //每日班次
@@ -1380,7 +1382,7 @@ namespace Finance.Processes
                         CapacityUtilizationRate = (decimal)manufacturingCostInfo[0].CapacityUtilizationRate/100;
                     }
                     //每月产能
-                    decimal Capacity = Zcuph * CapacityUtilizationRate * MonthlyWorkingDays * DailyShift * WorkingHours;
+                    decimal Capacity = Zcuph * CapacityrateOfMobilization * MonthlyWorkingDays * DailyShift * WorkingHours;
                     //每月需求
                     decimal month = 0;
                     if (modelCountYear.UpDown == YearType.Year)
@@ -1441,7 +1443,7 @@ namespace Finance.Processes
                         }
                         if (xtftl < 1)
                         {
-                            xtftl = xtftl;
+                            xtftl = xtftl*100;
                         }
 
                         XtslVale = Xtsl;
