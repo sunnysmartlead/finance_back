@@ -228,11 +228,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
-    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+   /* public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
-    }
+    }*/
 
 
     /// <summary>
@@ -341,7 +341,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
-    /*/// <summary>
+    ///// <summary>
     /// 报价分析看板 的保存
     /// </summary>
     /// <param name="quotationListDto"></param>
