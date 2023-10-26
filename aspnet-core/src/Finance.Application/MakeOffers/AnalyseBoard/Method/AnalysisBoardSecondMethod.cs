@@ -362,7 +362,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 查看年度对比（实际数量）
     /// </summary>
     /// <returns></returns>
-    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+    /*public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
         var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
@@ -421,7 +421,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //单价
             foreach (var yl in YearList)
             {
-                AuditFlowId = AuditFlowId, GradientId = grad.Id, InputCount = 0, SolutionId = solutionid,
+                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput()
+                {
+                    AuditFlowId = AuditFlowId, GradientId = grad.Id, InputCount = 0, SolutionId = solutionid,
                 Year = crm.Year, UpDown = crm.UpDown
             });
 
@@ -521,7 +523,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
         return yearDimensionalityComparisonSecondDto;
-    }
+    }*/
 
     /// <summary>
     /// 查看年度对比（阶梯数量）
