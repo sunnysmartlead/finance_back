@@ -21,6 +21,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using test;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Finance.BaseLibrary
@@ -1001,8 +1002,8 @@ namespace Finance.BaseLibrary
                             if (null != val1)
                             {
                                 //需要转换的地方
-
-                                foundationTechnologyDevice.DeviceStatus = val1.ToString();
+                                string p = EnumHelper.GettDescriptionFromEnum(val1.ToString());
+                                foundationTechnologyDevice.DeviceStatus = p;
                             }
                             foundationTechnologyDeviceDtoList.Add(foundationTechnologyDevice);
                         }
@@ -1383,7 +1384,8 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[0].DeviceStatus)
                 {
-                    CreateCell(herdRow3, 4, listDevice[0].DeviceStatus, wk);
+                    string p = EnumHelper.GetCodeFromEnum(listDevice[0].DeviceStatus.ToString());
+                    CreateCell(herdRow3, 4, p, wk);
                 }
                 else
                 {
@@ -1420,7 +1422,8 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[1].DeviceStatus)
                 {
-                    CreateCell(herdRow3, 8, listDevice[1].DeviceStatus.ToString(), wk);
+                    string p = EnumHelper.GetCodeFromEnum(listDevice[1].DeviceStatus.ToString());
+                    CreateCell(herdRow3, 8, p, wk);
 
                 }
                 else
@@ -1461,8 +1464,8 @@ namespace Finance.BaseLibrary
                 if (null != listDevice[2].DeviceStatus)
                 {
                     //需要转换的地方
-
-                    CreateCell(herdRow3, 12, listDevice[2].DeviceStatus.ToString(), wk);
+                    string p = EnumHelper.GetCodeFromEnum(listDevice[2].DeviceStatus.ToString());
+                    CreateCell(herdRow3, 12, p, wk);
 
                 }
                 else

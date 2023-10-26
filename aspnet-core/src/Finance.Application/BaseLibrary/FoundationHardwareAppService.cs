@@ -234,11 +234,7 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
-                    {
-                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
-                    }
-                    //"zy".GetEnumType<Status>().GetAttribute<Status, DescriptionAttribute>().Description;
+                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
                     if (AbpSession.UserId != null)
                     {
                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -288,10 +284,7 @@ namespace Finance.BaseLibrary
                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
-                    {
-                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
-                    }
+                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
                     if (AbpSession.UserId != null)
                     {
                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -416,10 +409,8 @@ namespace Finance.BaseLibrary
                                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
                                     //需要转换的地方
-                                    if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
-                                    {
-                                        foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
-                                    }
+                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.HardwareState);
+                                    foundationHardwareItem.HardwareState = p;
                                     if (AbpSession.UserId != null)
                                     {
                                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -528,21 +519,9 @@ namespace Finance.BaseLibrary
                 {
                     FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
-                       //需要转换的地方
-             /*       if (null != foundationFixtureItemDto.HardwareState && !foundationFixtureItemDto.HardwareState.Equals(""))
-                    {
-                        String HardwareState = foundationFixtureItemDto.HardwareState;
-                        EnumHelperStatus.GetNVCFromEnumValue(typeof(HardwareState));
-                        if (null != status)
-                        {
-                            value["DeviceStatus" + j] = status;
-                        }
-                        else {
-                            value["DeviceStatus" + j] = "";
-                        }
-                  
-                    }*/
-                    value["DeviceStatus" + j] = "";
+                    //需要转换的地方
+                    string p = EnumHelper.GetCodeFromEnum(foundationFixtureItemDto.HardwareState);
+                    value["DeviceStatus" + j] = p;
                     value["DevicePrice" + j] = foundationFixtureItemDto.HardwarePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.HardwareBusiness;
                 }

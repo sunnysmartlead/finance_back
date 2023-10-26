@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NPOI.SS.Formula.Functions;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -60,7 +61,53 @@ namespace test
             return result;
         }
 
-  
+        /// <summary>
+        /// 根据枚举获取描述
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string GetCodeFromEnum(string code)
+        {
+            if (null == code || code.Equals(""))
+            {
+                return "";
+            }
+            var res = EnumHelper.GetEnumItems<Status>();
+            for (int i = 0; i < res.Count; i++)
+            {
+                if (code.Equals(res[i].Code))
+                {
+
+                    return res[i].Value;
+                }
+            }
+
+            return "";
+        }
+
+        /// <summary>
+        /// 根据获取描述枚举
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string GettDescriptionFromEnum(string value)
+        {
+            if (null == value || value.Equals(""))
+            {
+                return "";
+            }
+            var res = EnumHelper.GetEnumItems<Status>();
+            for (int i = 0; i < res.Count; i++)
+            {
+                if (value.Equals(res[i].Value))
+                {
+
+                    return res[i].Code;
+                }
+            }
+
+            return "";
+        }
 
 
     }

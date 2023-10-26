@@ -101,11 +101,16 @@ namespace Finance.BaseLibrary
                 var dtos = ObjectMapper.Map<List<FoundationDevice>, List<FoundationDeviceDto>>(list, new List<FoundationDeviceDto>());
                 foreach (var item in dtos)
                 {
+               
                     var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
                     var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == item.Id).ToList();
 
                     //数据转换
                     var dtosItem = ObjectMapper.Map<List<FoundationDeviceItem>, List<FoundationDeviceItemDto>>(FoundationDeviceItemlist, new List<FoundationDeviceItemDto>());
+                    //需要转换的地方
+                    foreach (var foundationDeviceItem in dtosItem)
+                    {
+                    }
                     item.DeviceList = dtosItem;
                     if (user != null)
                     {
@@ -308,7 +313,10 @@ namespace Finance.BaseLibrary
                                     foundationDeviceItem.CreationTime = DateTime.Now;
                                     foundationDeviceItem.DeviceNumber = entityItem.DeviceNumber;
                                     foundationDeviceItem.DeviceName = entityItem.DeviceName;
-                                    foundationDeviceItem.DeviceStatus = entityItem.DeviceStatus;
+                                    //需要转换的地方
+                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.DeviceStatus);
+                                    //需要转换的地方
+                                    foundationDeviceItem.DeviceStatus =p;
                                     foundationDeviceItem.DevicePrice = entityItem.DevicePrice;
                                     foundationDeviceItem.DeviceProvider = entityItem.DeviceProvider;
                                     if (AbpSession.UserId != null)
@@ -405,7 +413,10 @@ namespace Finance.BaseLibrary
                 {
                     FoundationDeviceItemDto foundationDeviceItemDto = foundationDeviceDto.DeviceList[j];
                     value["DeviceName" + j] = foundationDeviceItemDto.DeviceName;
-                    value["DeviceStatus" + j] = foundationDeviceItemDto.DeviceStatus;
+                    //需要转换的地方
+                    //需要转换的地方
+                    string p = EnumHelper.GetCodeFromEnum(foundationDeviceItemDto.DeviceStatus);
+                    value["DeviceStatus" + j] =p;
                     value["DevicePrice" + j] = foundationDeviceItemDto.DevicePrice;
                     value["DeviceProvider" + j] = foundationDeviceItemDto.DeviceProvider;
                 }

@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.BaseLibrary
 {
@@ -190,6 +191,8 @@ namespace Finance.BaseLibrary
                                 entity.LastModifierUserId = AbpSession.UserId.Value;
                             }
                             entity.LastModificationTime = DateTime.Now;
+                            string pe = EnumHelper.GettDescriptionFromEnum(entity.FixtureGaugeState);
+                            entity.FixtureGaugeState = pe;
                             entity = await this._foundationFixtureRepository.InsertAsync(entity);
                             var foundationDevice = _foundationFixtureRepository.InsertAndGetId(entity);
                             var result = ObjectMapper.Map<FoundationFixture, FoundationFixtureDto>(entity, new FoundationFixtureDto());
@@ -206,7 +209,8 @@ namespace Finance.BaseLibrary
                                     foundationFixtureItem.FixtureName = entityItem.FixtureName;
                                     foundationFixtureItem.FixturePrice = entityItem.FixturePrice;
                                     //需要转换的地方
-                                    foundationFixtureItem.FixtureState = entityItem.FixtureState;
+                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.FixtureState);
+                                    foundationFixtureItem.FixtureState = p;
                                     foundationFixtureItem.FixtureProvider = entityItem.FixtureProvider;
                                     if (AbpSession.UserId != null)
                                     {
@@ -299,6 +303,7 @@ namespace Finance.BaseLibrary
             {
                 FoundationFixtureDto foundationFixtureDto = dtos[i];
                 // 填充数据
+                string pr = EnumHelper.GetCodeFromEnum(foundationFixtureDto.FixtureGaugeState);
                 var value = new Dictionary<string, object>()
                 {
                     ["ProcessNumber"] = foundationFixtureDto.ProcessNumber,
@@ -306,7 +311,8 @@ namespace Finance.BaseLibrary
                     ["FixtureGaugeName"] = foundationFixtureDto.FixtureGaugeName,
                     ["FixtureGaugePrice"] = foundationFixtureDto.FixtureGaugePrice,
                     //需要转换的地方
-                    ["FixtureGaugeState"] = foundationFixtureDto.FixtureGaugeState,
+                    ["FixtureGaugeState"] = pr,
+
                     ["FixtureGaugeBusiness"] = foundationFixtureDto.FixtureGaugeBusiness
                 };
                 for (int j = 0; j < foundationFixtureDto.FixtureList.Count; j++)
@@ -314,7 +320,8 @@ namespace Finance.BaseLibrary
                     FoundationFixtureItemDto foundationFixtureItemDto = foundationFixtureDto.FixtureList[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.FixtureName;
                     //需要转换的地方
-                    value["DeviceStatus" + j] = foundationFixtureItemDto.FixtureState;
+                    string p = EnumHelper.GetCodeFromEnum(foundationFixtureItemDto.FixtureState);
+                    value["DeviceStatus" + j] = p;
                     value["DevicePrice" + j] = foundationFixtureItemDto.FixturePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.FixtureProvider;
                 }
