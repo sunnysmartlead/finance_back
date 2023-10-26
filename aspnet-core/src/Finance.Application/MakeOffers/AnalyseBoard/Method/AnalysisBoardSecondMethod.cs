@@ -152,14 +152,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ModelCount, long> modelCount,
         IRepository<DeviceQuotation, long> deviceQuotation,
         IRepository<UnitPriceOffers, long> resourceUnitPriceOffers,
-        PriceEvaluationGetAppService priceEvaluationGetAppService,
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
         IRepository<ProjectBoardSecondOffers, long> resourceProjectBoardSecondOffers,
         IRepository<ActualUnitPriceOffer, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         PriceEvaluationAppService priceEvaluationAppService,
-        IRepository<PriceEvaluation, long> resourcePriceEvaluation,
         ElectronicBomAppService electronicBomAppService,
         StructionBomAppService structionBomAppService,
         IRepository<PooledAnalysisOffers, long> resourcePooledAnalysisOffers,
@@ -167,12 +165,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<FinanceDictionary, string> financeDictionaryRepository,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<Gradient, long> gradientRepository,
-        IRepository<ManufacturingCostInfo, long> manufacturingCostInfo,
-        IRepository<StructureBomInfo, long> structureBomInfo,
-        IRepository<Requirement, long> requirement,
+
         IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
-        IRepository<ProductInformation, long> productInformation,
         IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
         NrePricingAppService nrePricingAppService,
         IRepository<GrossMarginForm, long> resourceGrossMarginForm,
@@ -362,7 +357,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 查看年度对比（实际数量）
     /// </summary>
     /// <returns></returns>
-    /*public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
         var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
@@ -387,8 +382,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 carmodelModelCountYearList = carmodel.ModelCountYearList; //核价需求该车型相关的数据
             }
         }
-
-
         List<YearValue> numk = new List<YearValue>(); //数量K
         List<YearValue> Prices = new List<YearValue>(); //单价
         List<YearValue> SellingCost = new List<YearValue>(); //销售成本
@@ -419,11 +412,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             numk.Add(num);
 
             //单价
-            foreach (var yl in YearList)
+            YearValue price = new();
+            price.key = crm.Year.ToString();
+            price.value = unprice * (1 - crm.AnnualDeclineRate / 100);
+            Prices.Add(price);
+
+
+            var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
             {
-                var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput()
-                {
-                    AuditFlowId = AuditFlowId, GradientId = grad.Id, InputCount = 0, SolutionId = solutionid,
+                AuditFlowId = AuditFlowId, GradientId = grad.Id, InputCount = 0, SolutionId = solutionid,
                 Year = crm.Year, UpDown = crm.UpDown
             });
 
@@ -523,7 +520,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
         return yearDimensionalityComparisonSecondDto;
-    }*/
+    }
 
     /// <summary>
     /// 查看年度对比（阶梯数量）
@@ -682,11 +679,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new UserFriendlyException("请选择报价方案");
         }
-
-
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
-
-
         List<AnalyseBoardNreDto> nres = await getNreForData(auditFlowId, version);
         List<OnlySampleDto> sampleDtos = await getSampleForData(auditFlowId, solutionQuotations);
         List<SopAnalysisModel> sops = await getSopForData(auditFlowId, version);

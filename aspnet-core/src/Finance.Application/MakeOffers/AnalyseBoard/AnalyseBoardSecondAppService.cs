@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Abp.UI;
-using Abp.Authorization;
 using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.DemandApplyAudit;
@@ -14,12 +13,9 @@ using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
-using Finance.NrePricing.Dto;
 using Finance.PriceEval;
-using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace Finance.MakeOffers.AnalyseBoard;
@@ -36,70 +32,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
 
-    /// <summary>
-    /// 核价梯度相关
-    /// </summary>
-    private readonly IRepository<Gradient, long> _gradientRepository;
 
-    protected readonly IRepository<ModelCount, long> _modelCountRepository;
-    protected readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
 
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
+    
 
-    /// <summary>
-    /// 核价相关
-    /// </summary>
-    private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
 
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly NrePricingAppService _nrePricingAppService;
 
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly ProcessHoursEnterLineAppService _processHoursEnterLineAppService;
-
-    public readonly PriceEvaluationAppService _priceEvaluationAppService;
-
-    /// <summary>
-    /// 归档文件列表实体类
-    /// </summary>
-    private readonly IRepository<DownloadListSave, long> _financeDownloadListSave;
-
-    /// <summary>
-    /// 报价分析看板中的 产品单价表 实体类
-    /// </summary>
-    private readonly IRepository<UnitPriceOffers, long> _resourceUnitPriceOffers;
-
-    private readonly IRepository<GradientModel, long> _gradientModelRepository;
-    private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
-    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
-    private readonly IRepository<Sample, long> _sampleRepository;
-
-    /// <summary>
-    ///报价 项目看板实体类 实体类
-    /// </summary>
-    private readonly IRepository<ProjectBoardOffers, long> _resourceProjectBoardOffers;
-
-    /// <summary>
-    /// 报价分析看板中的 汇总分析表  实体类
-    /// </summary>
-    private readonly IRepository<PooledAnalysisOffers, long> _resourcePooledAnalysisOffers;
-
-    /// <summary>
-    ///  财务维护 毛利率方案
-    /// </summary>
-    private readonly IRepository<GrossMarginForm, long> _configGrossMarginForm;
-
-    /// <summary>
-    /// 报价分析看板中的 动态单价表 实体类
-    /// </summary>
-    private readonly IRepository<DynamicUnitPriceOffers, long> _resourceDynamicUnitPriceOffers;
 
     /// <summary>
     /// 流程流转服务
@@ -128,29 +70,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<GradientModelYear, long> gradientModelYearRepository,
         IRepository<Solution, long> resourceSchemeTable)
     {
-        _priceEvaluationRepository = priceEvaluationRepository;
         _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDownloadListSave = financeDownloadListSave;
 
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-        _resourceDynamicUnitPriceOffers = DynamicUnitPriceOffers;
-        _resourceProjectBoardOffers = projectBoardOffers;
-        _processHoursEnterLineAppService = processHoursEnterLineAppService;
+       
         _flowAppService = flowAppService;
-        _gradientRepository = gradientRepository;
         _resourceSchemeTable = resourceSchemeTable;
 
-        _resourceUnitPriceOffers = unitPriceOffers;
-        _resourcePooledAnalysisOffers = pooledAnalysisOffers;
-        _priceEvaluationAppService = priceEvaluationAppService;
-        _nrePricingAppService = nrePricingAppService;
-        _configGrossMarginForm = configGrossMarginForm;
-        _modelCountRepository = modelCountRepository;
-        _priceEvaluationGetAppService = priceEvaluationGetAppService;
-        _modelCountYearRepository = modelCountYearRepository;
-        _gradientModelRepository = gradientModelRepository;
-        _sampleRepository = sampleRepository;
-        _gradientModelYearRepository = gradientModelYearRepository;
+      
     }
 
     /// <summary>
@@ -228,11 +155,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
-   /* public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+   public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
-    }*/
+    }
 
 
     /// <summary>
