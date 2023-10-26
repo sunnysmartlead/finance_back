@@ -70,7 +70,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                  new FinanceDictionary { Id=FinanceConsts.HjkbSelect,DisplayName="核价看板选项",},
                  new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="电子BOM单价审核选项",},
 
-                 new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="设备状态",},
+                 new FinanceDictionary { Id=FinanceConsts.Sbzt,DisplayName="设备状态",},
 
                  new FinanceDictionary { Id=FinanceConsts.QualityCostType,DisplayName="质量成本比例",},
 

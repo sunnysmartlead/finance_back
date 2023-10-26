@@ -142,9 +142,16 @@ namespace Finance.ProductDevelopment
                                     //在读取EXCLE的时候，是否涉及这一列的如果填了“是”，这个装配数量希望做个校验，不能再填0了
                                     if (j == 5&&dto.IsInvolveItem.Equals("是")) 
                                     {
-                                        if (dto.AssemblyQuantity==0)
+                                        if (dto.AssemblyQuantity<=0)
                                         {
                                             throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“是”，装配数量不能再填0,请检查！");
+                                        }
+                                    }
+                                    if (j == 5 && dto.IsInvolveItem.Equals("否"))
+                                    {
+                                        if (dto.AssemblyQuantity != 0)
+                                        {
+                                            throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“否”，装配数量必须填0,请检查！");
                                         }
                                     }
                                 }
@@ -282,7 +289,22 @@ namespace Finance.ProductDevelopment
                             AssemblyQuantity = item.AssemblyQuantity,
                             EncapsulationSize = item.EncapsulationSize,
                         };
-                        await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
+
+                        //根据前面7项检查出来是否存在
+                        var exsitBomInfos = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId
+                                                                                       && p.CategoryName == item.CategoryName && p.TypeName == item.TypeName
+                                                                                    && p.IsInvolveItem == item.IsInvolveItem && p.SapItemName == item.SapItemName
+                                                                                    && p.SapItemNum == item.SapItemNum);
+
+                        //如果不存在，则是一个新增
+                        if (exsitBomInfos.Count == 0)
+                        {
+                            await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
+                        }
+                        else {
+                            throw new FriendlyException("有重复零件，请检查后重新上传！");
+                        }
+                            
                     }
                 }
 
@@ -449,11 +471,13 @@ namespace Finance.ProductDevelopment
                         }
                         else
                         {
-                            foreach (var bominfo in exsitBomInfos)
+                            foreach (ElectronicBomInfo bominfo in exsitBomInfos)
                             {
+                            
                                 //如果前面7项相同，但后面两项有不同，则是一个修改
                                 if (bominfo.AssemblyQuantity != item.AssemblyQuantity || bominfo.EncapsulationSize != item.EncapsulationSize)
                                 {
+                                   
                                     bominfo.AssemblyQuantity = item.AssemblyQuantity;
                                     bominfo.EncapsulationSize = item.EncapsulationSize;
                                     await _electronicBomInfoRepository.UpdateAsync(bominfo);

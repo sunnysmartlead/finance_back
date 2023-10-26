@@ -24,6 +24,6 @@ public class GradientQuotedGrossMarginModel:QuotedGrossMarginModel
     public int version { get; set; }
     /// <summary>
     /// 流程号Id
-    /// </summary> 
+    /// </summary>
     public long AuditFlowId { get; set; }
 }

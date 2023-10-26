@@ -121,5 +121,18 @@ namespace Finance.ProductDevelopment
         /// </summary>
         [Column("REMARKS")]
         public string Remarks { get; set; }
+
+        /// <summary>
+        /// 电子BOM文件id，关联至filemanagerid
+        /// </summary>
+        [Required]
+        [Column("ELCFILEID")]
+        public long ElcFileId { get; set; }
+        /// <summary>
+        /// 结构BOM文件id，关联至filemanagerid
+        /// </summary>
+        [Required]
+        [Column("STUFILEID")]
+        public long StuFileId { get; set; }
     }
 }

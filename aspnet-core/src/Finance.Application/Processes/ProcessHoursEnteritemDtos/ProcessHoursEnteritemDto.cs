@@ -20,6 +20,7 @@ namespace Finance.Processes
         public System.Nullable<System.Decimal> PersonnelNumber { get; set; }
         public System.Nullable<System.Decimal> ProcessHoursEnterId { get; set; }
         public string Year { get; set; }
+        public string YearInt { get; set; }
         public long ModelCountYearId { get; set; }
     }
 }
