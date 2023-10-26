@@ -22,11 +22,6 @@ namespace Finance.EntityFrameworkCore.Seed.Host
         public const string MainFlowId = "主流程";
         private void CreateWorkFlows()
         {
-            //获取角色1
-            var role1 = _context.Roles.FirstOrDefault(p => p.Name == "测试角色1");
-            var roleId = role1.Id.ToString();
-
-
             #region 获取角色
 
             var salesMan = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.SalesMan);
@@ -174,7 +169,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="NRE手板件",
                     FinanceDictionaryId = FinanceConsts.Done,
-                    Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_NRE手板件 || {MainFlowId}_核价看板_{MainFlowId}_NRE手板件",
+                    Activation = $"{MainFlowId}_TR审核_{MainFlowId}_NRE手板件 || {MainFlowId}_核价看板_{MainFlowId}_NRE手板件",
                     RoleId= $"{projectManager.Id},{marketProjectManager.Id}",
                     ProcessIdentifier =FinanceConsts.NRE_ManualComponentInput,
                 },
@@ -432,7 +427,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 },
                 new Line
                 {
-                    SoureNodeId = "核价审批录入",
+                    SoureNodeId = "TR审核",
                     TargetNodeId = "NRE手板件",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
