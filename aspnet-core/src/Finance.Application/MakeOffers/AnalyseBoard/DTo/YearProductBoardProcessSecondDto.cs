@@ -24,6 +24,10 @@ public class YearProductBoardProcessSecondDto
     /// 方案表ID
     /// </summary>
     public long SolutionId { get; set; }
+    /// <summary>
+    /// 车型
+    /// </summary>
+    public string CarModel { get; set; }
 
 }
 
