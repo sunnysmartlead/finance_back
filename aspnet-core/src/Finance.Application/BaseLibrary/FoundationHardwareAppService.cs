@@ -378,7 +378,7 @@ namespace Finance.BaseLibrary
                         
                         entity.TraceabilitySoftware = initRow.GetCell(2 + deviceCountt * 4).ToString();
                         entity.TraceabilitySoftwareCost = decimal.Parse(initRow.GetCell(3 + deviceCountt * 4).ToString());
-                            entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
+                         entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
                         entity.SoftwareState = initRow.GetCell(5 + deviceCountt * 4).ToString();
                         entity.SoftwarePrice = decimal.Parse(initRow.GetCell(6 + deviceCountt * 4).ToString());
                         entity.SoftwareBusiness = initRow.GetCell(7 + deviceCountt * 4).ToString();
@@ -415,6 +415,7 @@ namespace Finance.BaseLibrary
                                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
+                                    //需要转换的地方
                                     if (null != entityItem.HardwareState && !entityItem.HardwareState.Equals(""))
                                     {
                                         foundationHardwareItem.HardwareState = entityItem.HardwareState.ToEnum<Status, DescriptionAttribute>("Description").ToString();
@@ -527,6 +528,7 @@ namespace Finance.BaseLibrary
                 {
                     FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
+                       //需要转换的地方
              /*       if (null != foundationFixtureItemDto.HardwareState && !foundationFixtureItemDto.HardwareState.Equals(""))
                     {
                         String HardwareState = foundationFixtureItemDto.HardwareState;

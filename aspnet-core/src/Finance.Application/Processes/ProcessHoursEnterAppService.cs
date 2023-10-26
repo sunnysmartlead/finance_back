@@ -1113,6 +1113,8 @@ namespace Finance.Processes
                             }
                             if (null != val1)
                             {
+                                //需要转换的地方
+
                                 foundationTechnologyDevice.DeviceStatus = val1.ToString();
 
 
@@ -2440,6 +2442,8 @@ namespace Finance.Processes
                 }
                 if (null != listDevice[1].DeviceStatus)
                 {
+                    //需要转换的地方
+
                     CreateCell(herdRow3, 8, listDevice[1].DeviceStatus.ToString(), wk);
 
                 }

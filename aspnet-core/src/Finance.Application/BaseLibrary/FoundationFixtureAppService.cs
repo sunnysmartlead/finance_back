@@ -182,6 +182,7 @@ namespace Finance.BaseLibrary
                         {
                             var entity = ObjectMapper.Map<FoundationFixtureDto, FoundationFixture>(Item, new FoundationFixture());
                             entity.CreationTime = DateTime.Now;
+                            //需要转换的地方
                             if (AbpSession.UserId != null)
                             {
                                 entity.CreatorUserId = AbpSession.UserId.Value;
@@ -204,6 +205,7 @@ namespace Finance.BaseLibrary
                                     foundationFixtureItem.CreationTime = DateTime.Now;
                                     foundationFixtureItem.FixtureName = entityItem.FixtureName;
                                     foundationFixtureItem.FixturePrice = entityItem.FixturePrice;
+                                    //需要转换的地方
                                     foundationFixtureItem.FixtureState = entityItem.FixtureState;
                                     foundationFixtureItem.FixtureProvider = entityItem.FixtureProvider;
                                     if (AbpSession.UserId != null)
@@ -303,6 +305,7 @@ namespace Finance.BaseLibrary
                     ["ProcessName"] = foundationFixtureDto.ProcessName,
                     ["FixtureGaugeName"] = foundationFixtureDto.FixtureGaugeName,
                     ["FixtureGaugePrice"] = foundationFixtureDto.FixtureGaugePrice,
+                    //需要转换的地方
                     ["FixtureGaugeState"] = foundationFixtureDto.FixtureGaugeState,
                     ["FixtureGaugeBusiness"] = foundationFixtureDto.FixtureGaugeBusiness
                 };
@@ -310,6 +313,7 @@ namespace Finance.BaseLibrary
                 {
                     FoundationFixtureItemDto foundationFixtureItemDto = foundationFixtureDto.FixtureList[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.FixtureName;
+                    //需要转换的地方
                     value["DeviceStatus" + j] = foundationFixtureItemDto.FixtureState;
                     value["DevicePrice" + j] = foundationFixtureItemDto.FixturePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.FixtureProvider;

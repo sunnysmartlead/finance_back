@@ -1000,6 +1000,8 @@ namespace Finance.BaseLibrary
                             }
                             if (null != val1)
                             {
+                                //需要转换的地方
+
                                 foundationTechnologyDevice.DeviceStatus = val1.ToString();
                             }
                             foundationTechnologyDeviceDtoList.Add(foundationTechnologyDevice);
@@ -1458,6 +1460,8 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[2].DeviceStatus)
                 {
+                    //需要转换的地方
+
                     CreateCell(herdRow3, 12, listDevice[2].DeviceStatus.ToString(), wk);
 
                 }

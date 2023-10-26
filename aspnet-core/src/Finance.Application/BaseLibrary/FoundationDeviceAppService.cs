@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Castle.MicroKernel.Registration;
 using Finance.Authorization.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.BaseLibrary
 {
@@ -452,6 +454,7 @@ namespace Finance.BaseLibrary
                     foundationDeviceItem.DeviceStatus = entityItem.DeviceStatus;
                     foundationDeviceItem.DevicePrice = entityItem.DevicePrice;
                     foundationDeviceItem.DeviceProvider = entityItem.DeviceProvider;
+
                     if (AbpSession.UserId != null)
                     {
                         foundationDeviceItem.CreatorUserId = AbpSession.UserId.Value;
