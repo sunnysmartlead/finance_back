@@ -536,6 +536,28 @@ namespace Finance.BaseLibrary
 
 
             }
+            FoundationLogs temp = null;
+            try
+            {
+                temp = _foundationLogsRepository.GetAllList(p => p.Type == logType).OrderByDescending(p => p.LastModificationTime).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            VersionWithIncrement versionWithIncrement = null;
+            if (temp != null && !string.IsNullOrEmpty(temp.Version))
+            {
+                versionWithIncrement = new VersionWithIncrement(temp.Version);
+                var str = versionWithIncrement.IncrementRevision();
+                entity.Version = str;
+            }
+            else
+            {
+                versionWithIncrement = new VersionWithIncrement();
+                var str = versionWithIncrement.IncrementRevision();
+                entity.Version = str;
+            }
             entity.Remark = Remark;
             entity.Type = logType;
             entity = await _foundationLogsRepository.InsertAsync(entity);
