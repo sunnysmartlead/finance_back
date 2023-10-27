@@ -1,7 +1,9 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
 using Finance.Authorization.Users;
+using Interface.Expends;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,10 +14,13 @@ using MiniExcelLibs.OpenXml;
 using NPOI.SS.UserModel;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using test;
+using xyxandwxx.Expends;
 
 namespace Finance.BaseLibrary
 {
@@ -366,7 +371,7 @@ namespace Finance.BaseLibrary
                         
                         entity.TraceabilitySoftware = initRow.GetCell(2 + deviceCountt * 4).ToString();
                         entity.TraceabilitySoftwareCost = decimal.Parse(initRow.GetCell(3 + deviceCountt * 4).ToString());
-                            entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
+                         entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
                         entity.SoftwareState = initRow.GetCell(5 + deviceCountt * 4).ToString();
                         entity.SoftwarePrice = decimal.Parse(initRow.GetCell(6 + deviceCountt * 4).ToString());
                         entity.SoftwareBusiness = initRow.GetCell(7 + deviceCountt * 4).ToString();
@@ -403,7 +408,9 @@ namespace Finance.BaseLibrary
                                     foundationHardwareItem.HardwarePrice = entityItem.HardwarePrice;
                                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
-                                    foundationHardwareItem.HardwareState = entityItem.HardwareState;
+                                    //需要转换的地方
+                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.HardwareState);
+                                    foundationHardwareItem.HardwareState = p;
                                     if (AbpSession.UserId != null)
                                     {
                                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -512,7 +519,9 @@ namespace Finance.BaseLibrary
                 {
                     FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
-                    value["DeviceStatus" + j] = foundationFixtureItemDto.HardwareState;
+                    //需要转换的地方
+                    string p = EnumHelper.GetCodeFromEnum(foundationFixtureItemDto.HardwareState);
+                    value["DeviceStatus" + j] = p;
                     value["DevicePrice" + j] = foundationFixtureItemDto.HardwarePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.HardwareBusiness;
                 }

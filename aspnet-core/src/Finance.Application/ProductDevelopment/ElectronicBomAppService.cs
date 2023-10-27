@@ -237,101 +237,111 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveElectronicBom(ProductDevelopmentInputDto dto)
         {
-            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
-            if (productIsSubmits.Count is not 0)
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
             {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
-            }
-            else
-            {
-                //查询总方案
-                List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
-
-                List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
-                long AuditFlowId = dto.AuditFlowId;
-                long SolutionId = dto.SolutionId;
-                long ProductId = dto.ProductId;
-                electronicBomDtos.ForEach(bomInfo =>
+                List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+                if (productIsSubmits.Count is not 0)
                 {
-                    bomInfo.AuditFlowId = AuditFlowId;
-                    bomInfo.SolutionId = SolutionId;
-                    bomInfo.ProductId = ProductId;
-                });
-
-                //要保存的bom表list
-                var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
-                if (listBak.Count > 0)
-                {
-                    await _electronicBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                    _electronicBomInfoBakRepository.GetDbContext().Set<ElectronicBomInfoBak>().AddRange(listBak);
-                    _electronicBomInfoBakRepository.GetDbContext().SaveChanges();
+                    throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
                 }
                 else
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
-                }
+                    //查询总方案
+                    List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
 
-                var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if (bomInfoByProductIds.Count == 0)
-                {
-                    foreach (var item in electronicBomDtos)
+                    List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
+                    long AuditFlowId = dto.AuditFlowId;
+                    long SolutionId = dto.SolutionId;
+                    long ProductId = dto.ProductId;
+                    electronicBomDtos.ForEach(bomInfo =>
                     {
-                        ElectronicBomInfo electronicBomInfo = new()
-                        {
-                            AuditFlowId = item.AuditFlowId,
-                            SolutionId = item.SolutionId,
-                            ProductId = item.ProductId,
-                            CategoryName = item.CategoryName,
-                            TypeName = item.TypeName,
-                            IsInvolveItem = item.IsInvolveItem,
-                            SapItemName = item.SapItemName,
-                            SapItemNum = item.SapItemNum,
-                            AssemblyQuantity = item.AssemblyQuantity,
-                            EncapsulationSize = item.EncapsulationSize,
-                        };
+                        bomInfo.AuditFlowId = AuditFlowId;
+                        bomInfo.SolutionId = SolutionId;
+                        bomInfo.ProductId = ProductId;
+                    });
 
-                        //根据前面7项检查出来是否存在
-                        var exsitBomInfos = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId
-                                                                                       && p.CategoryName == item.CategoryName && p.TypeName == item.TypeName
-                                                                                    && p.IsInvolveItem == item.IsInvolveItem && p.SapItemName == item.SapItemName
-                                                                                    && p.SapItemNum == item.SapItemNum);
-
-                        //如果不存在，则是一个新增
-                        if (exsitBomInfos.Count == 0)
-                        {
-                            await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
-                        }
-                        else {
-                            throw new FriendlyException("有重复零件，请检查后重新上传！");
-                        }
-                            
-                    }
-                }
-
-                #region 录入完成之后
-
-                //为提交操作才执行插库、流转工作流操作
-                if (dto.Opinion == FinanceConsts.Done)
-                {
-                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
-
-                    List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
-                    //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                    if (solutionId.Count == allProductIsSubmits.Count + 1)
+                    //要保存的bom表list
+                    var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
+                    if (listBak.Count > 0)
                     {
-                        //嵌入工作流
-                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                        {
-                            NodeInstanceId = dto.NodeInstanceId,
-                            FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
-                            Comment = dto.Comment,
-                        });
+                        await _electronicBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                        _electronicBomInfoBakRepository.GetDbContext().Set<ElectronicBomInfoBak>().AddRange(listBak);
+                        _electronicBomInfoBakRepository.GetDbContext().SaveChanges();
                     }
+                    else
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                    }
+
+                    var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                    if (bomInfoByProductIds.Count == 0)
+                    {
+                        foreach (var item in electronicBomDtos)
+                        {
+                            ElectronicBomInfo electronicBomInfo = new()
+                            {
+                                AuditFlowId = item.AuditFlowId,
+                                SolutionId = item.SolutionId,
+                                ProductId = item.ProductId,
+                                CategoryName = item.CategoryName,
+                                TypeName = item.TypeName,
+                                IsInvolveItem = item.IsInvolveItem,
+                                SapItemName = item.SapItemName,
+                                SapItemNum = item.SapItemNum,
+                                AssemblyQuantity = item.AssemblyQuantity,
+                                EncapsulationSize = item.EncapsulationSize,
+                            };
+
+                            //根据前面7项检查出来是否存在
+                            var exsitBomInfos = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId
+                                                                                           && p.CategoryName == item.CategoryName && p.TypeName == item.TypeName
+                                                                                        && p.IsInvolveItem == item.IsInvolveItem && p.SapItemName == item.SapItemName
+                                                                                        && p.SapItemNum == item.SapItemNum);
+
+                            //如果不存在，则是一个新增
+                            if (exsitBomInfos.Count == 0)
+                            {
+                                await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
+                            }
+                            else
+                            {
+                                throw new FriendlyException("有重复零件，请检查后重新上传！");
+                            }
+
+                        }
+                    }
+
+                    #region 录入完成之后
+
+                    //为提交操作才执行插库、流转工作流操作
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
+
+                        List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+                        //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
+                        if (solutionId.Count == allProductIsSubmits.Count + 1)
+                        {
+                            //嵌入工作流
+                            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                            {
+                                NodeInstanceId = dto.NodeInstanceId,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
+                                Comment = dto.Comment,
+                            });
+                        }
+                    }
+
+                    #endregion
+
+
                 }
-
-                #endregion
-
-
+            }
+            else
+            {
+                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
             }
         }
 
@@ -344,59 +354,69 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveBoard(ProductDevelopmentInputDto dto)
         {
-            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
-            if (productIsSubmits.Count is not 0)
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
             {
-                return;
-                throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+                List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
+                if (productIsSubmits.Count is not 0)
+                {
+                    return;
+                    throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+                }
+                else
+                {
+                    //查询核价需求导入时的零件信息
+                    var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
+
+                    List<BoardDto> boardDtos = dto.BoardDtos;
+                    long AuditFlowId = dto.AuditFlowId;
+                    long SolutionId = dto.SolutionId;
+                    long ProductId = dto.ProductId;
+                    boardDtos.ForEach(bomInfo =>
+                    {
+                        bomInfo.AuditFlowId = AuditFlowId;
+                        bomInfo.SolutionId = SolutionId;
+                        bomInfo.ProductId = ProductId;
+                    });
+
+
+                    var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                    if (boardInfoByProductIds.Count == 0)
+                    {
+                        foreach (var item in boardDtos)
+                        {
+                            BoardInfo boardInfo = new()
+                            {
+                                AuditFlowId = item.AuditFlowId,
+                                SolutionId = item.SolutionId,
+                                ProductId = item.ProductId,
+                                BoardId = item.BoardId,
+                                BoardName = item.BoardName,
+                                BoardLenth = item.BoardLenth,
+                                BoardWidth = item.BoardWidth,
+                                BoardSquare = item.BoardSquare,
+                                StoneQuantity = item.StoneQuantity,
+                            };
+                            await _boardInfoRepository.InsertAsync(boardInfo);
+                        }
+                    }
+
+                    #region 录入完成之后
+                    //为提交操作才执行插库、流转工作流操作
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
+
+                    }
+                    #endregion
+                }
             }
             else
             {
-                //查询核价需求导入时的零件信息
-                var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
-
-                List<BoardDto> boardDtos = dto.BoardDtos;
-                long AuditFlowId = dto.AuditFlowId;
-                long SolutionId = dto.SolutionId;
-                long ProductId = dto.ProductId;
-                boardDtos.ForEach(bomInfo =>
-                {
-                    bomInfo.AuditFlowId = AuditFlowId;
-                    bomInfo.SolutionId = SolutionId;
-                    bomInfo.ProductId = ProductId;
-                });
-
-
-                var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if (boardInfoByProductIds.Count == 0)
-                {
-                    foreach (var item in boardDtos)
-                    {
-                        BoardInfo boardInfo = new()
-                        {
-                            AuditFlowId = item.AuditFlowId,
-                            SolutionId = item.SolutionId,
-                            ProductId = item.ProductId,
-                            BoardId = item.BoardId,
-                            BoardName = item.BoardName,
-                            BoardLenth = item.BoardLenth,
-                            BoardWidth = item.BoardWidth,
-                            BoardSquare = item.BoardSquare,
-                            StoneQuantity = item.StoneQuantity,
-                        };
-                        await _boardInfoRepository.InsertAsync(boardInfo);
-                    }
-                }
-
-                #region 录入完成之后
-                //为提交操作才执行插库、流转工作流操作
-                if (dto.Opinion == FinanceConsts.Done)
-                {
-                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
-
-                }
-                #endregion
+                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
             }
+
         }
 
 
@@ -600,25 +620,34 @@ namespace Finance.ProductDevelopment
          [AbpAuthorize]
         public async Task<List<ElectronicBomInfo>> FindElectronicBomByProcess(ProductDevelopmentInputDto dto)
         {
-            long a = AbpSession.GetUserId();//获取登录人ID
-            long AuditFlowId = dto.AuditFlowId;
-            long SolutionId = dto.SolutionId;
-            var dataBak = _electronicBomInfoBakRepository.GetAll()
-                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
-
-            List<ElectronicBomInfoBak> resultBak = await dataBak.ToListAsync();
-            List<ElectronicBomInfo> result = _objectMapper.Map<List<ElectronicBomInfo>>(resultBak);
-            if (result.Count == 0)
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
             {
-                var data = _electronicBomInfoRepository.GetAll()
-                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
+                long AuditFlowId = dto.AuditFlowId;
+                long SolutionId = dto.SolutionId;
+                var dataBak = _electronicBomInfoBakRepository.GetAll()
+                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                result = await data.ToListAsync();
+                List<ElectronicBomInfoBak> resultBak = await dataBak.ToListAsync();
+                List<ElectronicBomInfo> result = _objectMapper.Map<List<ElectronicBomInfo>>(resultBak);
+                if (result.Count == 0)
+                {
+                    var data = _electronicBomInfoRepository.GetAll()
+                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
+
+                    result = await data.ToListAsync();
+                }
+
+                return result;
             }
-
-            return result;
+            else
+            {
+                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
+            }
+            
         }
 
         /// <summary>
@@ -637,9 +666,18 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<List<BoardDto>> GetBoardInfomation(long auditFlowId, long SolutionId)
         {
-            var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
-            List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
-            return boardDto;
+            long PeopleId = AbpSession.GetUserId();//获取登录人ID
+            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.Id == SolutionId);
+            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
+            {
+                var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
+                List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
+                return boardDto;
+            }
+            else
+            {
+                throw new FriendlyException(SolutionId + ":该零件方案您没有权限查看！");
+            }
         }
 
     }
