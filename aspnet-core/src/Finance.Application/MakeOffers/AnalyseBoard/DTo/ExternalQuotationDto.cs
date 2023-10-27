@@ -230,7 +230,7 @@ public class NreQuotationListDto
     /// 手板件费
     /// </summary>
     [FriendlyRequired("NRE报价清单-手板件费")]
-    public virtual decimal HandmadePartsFee { get; }
+    public virtual decimal HandmadePartsFee { get; set; }
     /// <summary>
     /// 模具费
     /// </summary>
