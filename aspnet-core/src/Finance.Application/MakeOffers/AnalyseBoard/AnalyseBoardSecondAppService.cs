@@ -228,7 +228,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     [HttpGet]
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
-        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
+        //暂时注释 等报价看板完成之后放开
+        //List<SolutionQuotation> solutionQuotations = await GeCatalogue(auditFlowId);
+        //solutionQuotations= solutionQuotations.Where(p=>p.Id == solutionId).ToList();
+        //if(solutionQuotations is null|| solutionQuotations.Count==0)
+        //{
+        //    throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
+        //}
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations);
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations);
+
+        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
     }
     /// <summary>
     /// 对外报价单保存/提交
@@ -237,7 +247,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     [HttpPost]
     public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
-         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
+        //暂时注释 等报价看板完成之后放开
+        //List<SolutionQuotation> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
+        //solutionQuotations = solutionQuotations.Where(p => p.Id == externalQuotationDto.SolutionId).ToList();
+        //if (solutionQuotations is null || solutionQuotations.Count == 0)
+        //{
+        //    throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
+        //}
+        await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
 
     /// <summary>

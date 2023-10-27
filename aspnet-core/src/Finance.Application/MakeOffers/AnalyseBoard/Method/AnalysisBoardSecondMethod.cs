@@ -8,6 +8,7 @@ using Abp;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.UI;
+using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.FinanceMaintain;
@@ -24,6 +25,7 @@ using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductDevelopment.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
+using Finance.UpdateLog;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using Newtonsoft.Json;
@@ -153,12 +155,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ModelCount, long> modelCount,
         IRepository<DeviceQuotation, long> deviceQuotation,
         IRepository<UnitPriceOffers, long> resourceUnitPriceOffers,
+        PriceEvaluationGetAppService priceEvaluationGetAppService,
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
         IRepository<ProjectBoardSecondOffers, long> resourceProjectBoardSecondOffers,
         IRepository<ActualUnitPriceOffer, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         PriceEvaluationAppService priceEvaluationAppService,
+        IRepository<PriceEvaluation, long> resourcePriceEvaluation,
         ElectronicBomAppService electronicBomAppService,
         StructionBomAppService structionBomAppService,
         IRepository<PooledAnalysisOffers, long> resourcePooledAnalysisOffers,
@@ -166,8 +170,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<FinanceDictionary, string> financeDictionaryRepository,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<Gradient, long> gradientRepository,
+        IRepository<ManufacturingCostInfo, long> manufacturingCostInfo,
+        IRepository<StructureBomInfo, long> structureBomInfo,
+        IRepository<Requirement, long> requirement,
         IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
+        IRepository<ProductInformation, long> productInformation,
         IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
         NrePricingAppService nrePricingAppService,
         IRepository<GrossMarginForm, long> resourceGrossMarginForm,
@@ -1235,15 +1243,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<GradientQuotedGrossMarginModel> gradientQuotedGross, int version)
     {
         var list = (from grd in gradientQuotedGross
-            select new ActualUnitPriceOffer()
-            {
-                AuditFlowId = AuditFlowId,
-                version = version,
-                Kv = grd.gradient,
-                InteriorTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Interior),
-                ClientTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Client),
-                Offer = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.ThisQuotation)
-            }).ToList();
+                    select new ActualUnitPriceOffer()
+                    {
+                        AuditFlowId = AuditFlowId,
+                        version = version,
+                        Kv = grd.gradient,
+                        InteriorTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Interior),
+                        ClientTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Client),
+                        Offer = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.ThisQuotation)
+                    }).ToList();
 
         foreach (var actual in list)
         {
@@ -1261,15 +1269,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             var projects = bord.ProjectBoardModels;
             var projectbords = (from board in projects
-                select new ProjectBoardOffers()
-                {
-                    AuditFlowId = AuditFlowId,
-                    ProjectName = board.ProjectName,
-                    version = version,
-                    InteriorTarget = JsonConvert.SerializeObject(board.InteriorTarget),
-                    ClientTarget = JsonConvert.SerializeObject(board.ClientTarget),
-                    Offer = JsonConvert.SerializeObject(board.Offer)
-                }).ToList();
+                                select new ProjectBoardOffers()
+                                {
+                                    AuditFlowId = AuditFlowId,
+                                    ProjectName = board.ProjectName,
+                                    version = version,
+                                    InteriorTarget = JsonConvert.SerializeObject(board.InteriorTarget),
+                                    ClientTarget = JsonConvert.SerializeObject(board.ClientTarget),
+                                    Offer = JsonConvert.SerializeObject(board.Offer)
+                                }).ToList();
 
             foreach (var projectbord in projectbords)
             {
@@ -1324,13 +1332,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task InsertPool(long AuditFlowId, List<PooledAnalysisModel> pooledAnalysisModels, int version)
     {
         var polls = (from pool in pooledAnalysisModels
-            select new PooledAnalysisOffers()
-            {
-                AuditFlowId = AuditFlowId,
-                ProjectName = pool.ProjectName,
-                version = version,
-                GrossMarginList = JsonConvert.SerializeObject(pool.GrossMarginList)
-            }).ToList();
+                     select new PooledAnalysisOffers()
+                     {
+                         AuditFlowId = AuditFlowId,
+                         ProjectName = pool.ProjectName,
+                         version = version,
+                         GrossMarginList = JsonConvert.SerializeObject(pool.GrossMarginList)
+                     }).ToList();
         foreach (var pool in polls)
         {
             await _resourcePooledAnalysisOffers.InsertAsync(pool);
@@ -3340,25 +3348,33 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return quotationListSecondDto;
     }
 
-    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
-        long numberOfQuotations)
+    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations, List<ProductDto> productDtos, List<QuotationNreDto> quotationNreDtos)
     {
         ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
-        ExternalQuotation externalQuotation = await _externalQuotation.FirstOrDefaultAsync(p =>
-            p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) &&
-            p.NumberOfQuotations.Equals(numberOfQuotations));
+        List<ExternalQuotation> externalQuotations = await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+
+        if (externalQuotations.Count != 0 && externalQuotations.Max(p => p.NumberOfQuotations) + 1 < numberOfQuotations || numberOfQuotations == 0)
+        {
+            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
+        }
+        if (externalQuotations.Count == 0 && numberOfQuotations != 1)
+        {
+            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
+        }
+        if(numberOfQuotations>3)
+        {
+            throw new FriendlyException($"version:{numberOfQuotations}版本号最大为3!");
+        }
+        ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p => p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
         if (externalQuotation is not null)
         {
-            List<ProductExternalQuotationMx> externalQuotationMxs =
-                await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
-            List<NreQuotationList> nreQuotationLists =
-                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            List<ProductExternalQuotationMx> externalQuotationMxs = await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+            List<NreQuotationList> nreQuotationLists = await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos =
-                ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
+            externalQuotationDto.ProductQuotationListDtos = ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
+            externalQuotationDto.NreQuotationListDtos= ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
         }
         else
         {
@@ -3370,20 +3386,31 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 //CustomerName = priceEvaluationStartInputResult.CustomerName,
                 ProjectName = priceEvaluationStartInputResult.ProjectName,
                 SopTime = priceEvaluationStartInputResult.SopTime,
-                ProjectCycle = priceEvaluationStartInputResult.ProjectCycle
+                ProjectCycle = priceEvaluationStartInputResult.ProjectCycle,
+                SolutionId = solutionId,
+                AuditFlowId = auditFlowId,
+                CreationTime = DateTime.Now,
+                NumberOfQuotations = externalQuotations.Count == 0 ? 1 : externalQuotations.Max(p => p.NumberOfQuotations) + 1
             };
-            List<CreateColumnFormatProductInformationDto> createColumnFormatProductInformationDtos =
-                priceEvaluationStartInputResult.ProductInformation;
-            List<ProductQuotationListDto> mxs = (from crm in createColumnFormatProductInformationDtos
-                select new ProductQuotationListDto()
-                {
-                    ProductName = crm.Name,
-                    Year = priceEvaluationStartInputResult.SopTime,
-                    TravelVolume = priceEvaluationStartInputResult.ModelCount.Sum(p => p.SumQuantity)
-                }).ToList();
+            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) => new ProductQuotationListDto()
+            {
+                SerialNumber = index + 1,
+                ProductName = a.ProductName,
+                Year = long.Parse(a.Year),
+                TravelVolume = a.Motion,
+                UnitPrice = decimal.Parse(a.UntilPrice)
+            }).ToList();
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) => new NreQuotationListDto()
+            {
+                SerialNumber = index + 1,
+                ProductName = a.Product,
+                HandmadePartsFee = a.shouban,
+                MyPropMoldCosterty = a.moju,
+                CostOfToolingAndFixtures = a.gzyj,
+                ExperimentalFees = a.sy,
+                RDExpenses= a.qt+a.cl+a.csrj,
 
-            externalQuotationDto.ProductQuotationListDtos = mxs;
-            externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
+            }).ToList();
 
             externalQuotationDto.AccountName = "浙江舜宇智领技术有限公司";
             externalQuotationDto.DutyParagraph = "91330281MA2816W038";
@@ -3397,35 +3424,41 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     internal async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
-        ExternalQuotation external = await _externalQuotation.FirstOrDefaultAsync(p =>
-            p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) &&
-            p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit);
+        List<ExternalQuotation> externalQuotations = await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
+
+        if (externalQuotations.Count != 0 && externalQuotationDto.NumberOfQuotations == 0 && externalQuotations.Max(p => p.NumberOfQuotations) + 1 < externalQuotationDto.NumberOfQuotations)
+        {
+            throw new FriendlyException($"version:{externalQuotationDto.NumberOfQuotations}版本号有误!");
+        }
+        if ((externalQuotations.Count == 0 && externalQuotationDto.NumberOfQuotations != 1) || externalQuotationDto.NumberOfQuotations < 1)
+        {
+            throw new FriendlyException($"version:{externalQuotationDto.NumberOfQuotations}版本号有误!");
+        }
+        ExternalQuotation external = externalQuotations.FirstOrDefault(p => p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
         //将报价单存入库中
         ExternalQuotation externalQuotation = ObjectMapper.Map<ExternalQuotation>(externalQuotationDto);
-        if (externalQuotationDto.IsSubmit)
+        if (external != null && external.NumberOfQuotations == externalQuotationDto.NumberOfQuotations && external.IsSubmit)
         {
-            if (external != null && external.NumberOfQuotations - 1 == externalQuotationDto.NumberOfQuotations)
-            {
-                throw new FriendlyException("不可以重复提交");
-            }
-
-            externalQuotation.NumberOfQuotations++;
+            throw new FriendlyException("已提交不可操作");
         }
-
+        if (externalQuotation.NumberOfQuotations > 3)
+        {
+            throw new FriendlyException("报价已经超过三次,不可继续流转");
+        }
         long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
         externalQuotation.RecordNo = year + iSttring;
-        long id = await _externalQuotation.InsertOrUpdateAndGetIdAsync(externalQuotation);
+        externalQuotation.CreationTime = DateTime.Now;
+        ExternalQuotation prop = await _externalQuotation.BulkInsertOrUpdateAsync(externalQuotation);
+        long id = prop.Id;
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
-        List<ProductExternalQuotationMx> productExternalQuotationMxes =
-            ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
+        List<ProductExternalQuotationMx> productExternalQuotationMxes = ObjectMapper.Map<List<ProductExternalQuotationMx>>(externalQuotationDto.ProductQuotationListDtos);
         productExternalQuotationMxes.ForEach(p => p.ExternalQuotationId = id);
         await _externalQuotationMx.BulkInsertAsync(productExternalQuotationMxes);
 
         await _NreQuotationList.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
-        List<NreQuotationList> nreQuotationLists =
-            ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
+        List<NreQuotationList> nreQuotationLists = ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
         nreQuotationLists.ForEach(p => p.ExternalQuotationId = id);
         await _NreQuotationList.BulkInsertAsync(nreQuotationLists);
     }
@@ -3434,26 +3467,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
-    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId,
-        long numberOfQuotations)
+    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
-        ExternalQuotationDto external = await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
-        external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
-        {
-            p.SerialNumber = index + 1;
-            return p;
-        }).ToList();
-        external.NreQuotationListDtos = external.NreQuotationListDtos.Select((p, index) =>
-        {
-            p.SerialNumber = index + 1;
-            return p;
-        }).ToList();
+        ExternalQuotationDto external = await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
+        external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
+        external.NreQuotationListDtos = external.NreQuotationListDtos.Select((p, index) => { p.SerialNumber = index + 1; return p; }).ToList();
         var memoryStream = new MemoryStream();
 
         await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/报价单下载.xlsx", external);
 
-        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-            { FileDownloadName = "报价单下载.xlsx" };
+        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "报价单下载.xlsx" };
     }
 
     public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId)
@@ -3485,15 +3508,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     GradientValue = gradient.GradientValue,
                     Product = product,
                     solutionAndprices = (from solution in solutions
-                        select new SolutionAndprice()
-                        {
-                            solutionName = solution.SolutionName,
-                            SolutionId = solution.Id,
-                            Number = 1,
-                            Price = 100,
-                            ExchangeRate = 1,
-                            nsum = 12
-                        }).ToList()
+                                         select new SolutionAndprice()
+                                         {
+                                             solutionName = solution.SolutionName,
+                                             SolutionId = solution.Id,
+                                             Number = 1,
+                                             Price = 100,
+                                             ExchangeRate = 1,
+                                             nsum = 12
+                                         }).ToList()
                 });
             }
         }
@@ -3505,12 +3528,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             "合计"
         };
         List<NreExpense> nres = (from nrerr in nree
-            select new NreExpense()
-            {
-                nre = nrerr,
-                price = 100,
-                remark = "12"
-            }).ToList();
+                                 select new NreExpense()
+                                 {
+                                     nre = nrerr,
+                                     price = 100,
+                                     remark = "12"
+                                 }).ToList();
         coreComponentAndNreDto.nres = nres;
         coreComponentAndNreDto.ProductAndGradients = ProductAndGradients;
         return coreComponentAndNreDto;
