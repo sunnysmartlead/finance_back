@@ -2999,24 +2999,24 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return quotationListSecondDto;
     }
 
-    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long version, List<ProductDto> productDtos, List<QuotationNreDto> quotationNreDtos)
+    internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations, List<ProductDto> productDtos, List<QuotationNreDto> quotationNreDtos)
     {
         ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
         List<ExternalQuotation> externalQuotations = await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
 
-        if (externalQuotations.Count != 0 && externalQuotations.Max(p => p.NumberOfQuotations) + 1 < version || version == 0)
+        if (externalQuotations.Count != 0 && externalQuotations.Max(p => p.NumberOfQuotations) + 1 < numberOfQuotations || numberOfQuotations == 0)
         {
-            throw new FriendlyException($"version:{version}版本号有误!");
+            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
         }
-        if (externalQuotations.Count == 0 && version != 1)
+        if (externalQuotations.Count == 0 && numberOfQuotations != 1)
         {
-            throw new FriendlyException($"version:{version}版本号有误!");
+            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
         }
-        if(version>3)
+        if(numberOfQuotations>3)
         {
-            throw new FriendlyException($"version:{version}版本号最大为3!");
+            throw new FriendlyException($"version:{numberOfQuotations}版本号最大为3!");
         }
-        ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p => p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(version));
+        ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p => p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
         if (externalQuotation is not null)
         {
             List<ProductExternalQuotationMx> externalQuotationMxs = await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));

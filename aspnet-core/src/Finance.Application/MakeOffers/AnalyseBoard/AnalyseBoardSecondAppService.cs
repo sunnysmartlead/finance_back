@@ -287,7 +287,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long version)
+    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
         //暂时注释 等报价看板完成之后放开
         //List<SolutionQuotation> solutionQuotations = await GeCatalogue(auditFlowId);
@@ -296,10 +296,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //{
         //    throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         //}
-        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)version);
-        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)version);
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations);
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations);
 
-        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, version, productDtos, quotationNreDtos);
+        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
     }
     /// <summary>
     /// 对外报价单保存/提交
