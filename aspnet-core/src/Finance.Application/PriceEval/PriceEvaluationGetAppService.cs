@@ -1026,7 +1026,7 @@ namespace Finance.PriceEval
             var shareCount = await _shareCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
             var data = await _nrePricingAppService.GetPricingFormDownload(input.AuditFlowId, input.SolutionId);
 
-            var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+            var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
             var sopYear = modelCountYears.MinBy(p => p.Year);
 
             //分摊年数
@@ -1150,16 +1150,18 @@ namespace Finance.PriceEval
                     UpDown = p.UpDown
                 }));
 
-                var ff = dto.SelectMany(p => p).GroupBy(p => p.ItemName).Select(item => new OtherCostItem2List
+                var allData = dto.SelectMany(p => p).GroupBy(p => p.ItemName).Select(item => new OtherCostItem2List
                 {
                     ItemName = item.Key,
-                    Cost = item.Sum(p => p.Cost * modelCountYears.First(o => o.Year == p.Year).Quantity),
+                    Cost = item
+                    .Sum(p => p.Cost * modelCountYears.First(o => o.Year == p.Year && o.UpDown == p.UpDown).Quantity)
+                    / modelCountYears.Sum(p => p.Quantity),
                 });
 
                 otherCostItem2List.ForEach(item =>
                 {
                     item.Count = shareCount is null ? 0 : shareCount.Count * 1000;
-                    item.Cost = ff.First(p => p.ItemName == item.ItemName).Cost; //item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
+                    item.Cost = allData.First(p => p.ItemName == item.ItemName).Cost; //item.Count == decimal.Zero ? decimal.Zero : item.Total / item.Count;
                     item.YearCount = yearCount;
                 });
             }
@@ -2409,12 +2411,16 @@ namespace Finance.PriceEval
                                       Year = input.Year.ToString(),
                                       Freight = l.FreightPrice.GetValueOrDefault(),
                                       MonthEndDemand = monthEndDemand, //l.MonthlyDemandPrice.GetValueOrDefault(),
-                                      PerFreight = l.SinglyDemandPrice.GetValueOrDefault(),
+                                      //PerFreight = l.SinglyDemandPrice.GetValueOrDefault(),
                                       PerPackagingPrice = l.PackagingPrice.GetValueOrDefault(),
-                                      PerTotalLogisticsCost = l.TransportPrice.GetValueOrDefault(),
+                                      //PerTotalLogisticsCost = l.TransportPrice.GetValueOrDefault(),
                                       StorageExpenses = l.StoragePrice.GetValueOrDefault(),
                                   }).ToListAsync();
-
+                data.ForEach(item =>
+                {
+                    item.PerFreight = item.Freight * item.StorageExpenses / item.MonthEndDemand;
+                    item.PerTotalLogisticsCost = item.PerPackagingPrice + ((item.Freight + item.StorageExpenses) / item.MonthEndDemand);
+                });
                 if (isChange)
                 {
 
