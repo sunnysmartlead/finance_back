@@ -4,11 +4,13 @@ using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
+using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.Processes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
@@ -43,6 +45,7 @@ namespace Finance.BaseLibrary
         private readonly IRepository<FoundationTechnologyHardware, long> _foundationTechnologyHardwareRepository;
         private readonly IRepository<FoundationTechnologyFixture, long> _foundationTechnologyFixtureRepository;
         private readonly IRepository<FTWorkingHour, long> _fTWorkingHourRepository;
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
@@ -58,6 +61,7 @@ namespace Finance.BaseLibrary
             IRepository<FTWorkingHour, long> fTWorkingHourRepository,
             IRepository<FoundationTechnologyFixture, long> foundationTechnologyFixtureRepository,
             IRepository<FoundationTechnologyHardware, long> foundationTechnologyHardwareRepository,
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<FoundationTechnologyDevice, long> foundationTechnologyDeviceRepository,
             IRepository<FoundationReliableProcessHours, long> foundationFoundationReliableProcessHoursRepository,
             IRepository<User, long> userRepository,
@@ -74,6 +78,7 @@ namespace Finance.BaseLibrary
             _foundationTechnologyFixtureRepository = foundationTechnologyFixtureRepository;
             _fTWorkingHourRepository = fTWorkingHourRepository;
             _resourceSchemeTable = resourceSchemeTable;
+            _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         }
 
         /// <summary>
@@ -1001,9 +1006,17 @@ namespace Finance.BaseLibrary
                             }
                             if (null != val1)
                             {
+                                List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == val1.ToString() && p.FinanceDictionaryId == "Sbzt").ToList();
                                 //需要转换的地方
-                                string p = EnumHelper.GettDescriptionFromEnum(val1.ToString());
-                                foundationTechnologyDevice.DeviceStatus = p;
+
+                                if (dics != null && dics.Count > 0)
+                                {
+                                    foundationTechnologyDevice.DeviceStatus = dics[0].Id;
+                                }
+                                else
+                                {
+                                    foundationTechnologyDevice.DeviceStatus = "";
+                                }
                             }
                             foundationTechnologyDeviceDtoList.Add(foundationTechnologyDevice);
                         }
@@ -1384,8 +1397,15 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[0].DeviceStatus)
                 {
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[0].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 4, p, wk);
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[0].DeviceStatus.ToString());
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 4, entityDictionary.DisplayName, wk);
+                    }
+                    else
+                    {
+                        CreateCell(herdRow3, 4, "", wk);
+                    }
                 }
                 else
                 {
@@ -1422,8 +1442,16 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[1].DeviceStatus)
                 {
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[1].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 8, p, wk);
+
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[1].DeviceStatus.ToString());
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 8, entityDictionary.DisplayName, wk);
+                    }
+                    else
+                    {
+                        CreateCell(herdRow3, 8, "", wk);
+                    }
 
                 }
                 else
@@ -1463,9 +1491,15 @@ namespace Finance.BaseLibrary
                 }
                 if (null != listDevice[2].DeviceStatus)
                 {
-                    //需要转换的地方
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[2].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 12, p, wk);
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[2].DeviceStatus.ToString());
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 12, entityDictionary.DisplayName, wk);
+                    }
+                    else
+                    {
+                        CreateCell(herdRow3, 12, "", wk);
+                    }
 
                 }
                 else

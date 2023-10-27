@@ -3,6 +3,7 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Finance.Authorization.Users;
+using Finance.Infrastructure;
 using Interface.Expends;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -37,12 +38,14 @@ namespace Finance.BaseLibrary
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
         private readonly IRepository<FoundationHardwareItem, long> _foundationFoundationHardwareItemRepository;
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
         /// <summary>
         /// .ctor
         /// </summary>
         /// <param name="foundationHardwareRepository"></param>
         public FoundationHardwareAppService(
              IRepository<FoundationHardwareItem, long> foundationFoundationHardwareItemRepository,
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<User, long> userRepository,
             IRepository<FoundationLogs, long> foundationLogsRepository,
             IRepository<FoundationHardware, long> foundationHardwareRepository)
@@ -52,6 +55,7 @@ namespace Finance.BaseLibrary
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationHardwareItemRepository = foundationFoundationHardwareItemRepository;
+            _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         }
 
         /// <summary>
@@ -409,8 +413,20 @@ namespace Finance.BaseLibrary
                                     foundationHardwareItem.HardwareName = entityItem.HardwareName;
                                     foundationHardwareItem.HardwareBusiness = entityItem.HardwareBusiness;
                                     //需要转换的地方
-                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.HardwareState);
-                                    foundationHardwareItem.HardwareState = p;
+                                    if (null != entityItem.HardwareState)
+                                    {
+                                        List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == entityItem.HardwareState && p.FinanceDictionaryId == "Sbzt").ToList();
+                                        //需要转换的地方
+
+                                        if (dics != null && dics.Count > 0)
+                                        {
+                                            foundationHardwareItem.HardwareState = dics[0].Id;
+                                        }
+                                        else
+                                        {
+                                            foundationHardwareItem.HardwareState = "";
+                                        }
+                                    }
                                     if (AbpSession.UserId != null)
                                     {
                                         foundationHardwareItem.CreatorUserId = AbpSession.UserId.Value;
@@ -520,8 +536,15 @@ namespace Finance.BaseLibrary
                     FoundationHardwareItemDto foundationFixtureItemDto = foundationHardwareDto.ListHardware[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.HardwareName;
                     //需要转换的地方
-                    string p = EnumHelper.GetCodeFromEnum(foundationFixtureItemDto.HardwareState);
-                    value["DeviceStatus" + j] = p;
+                    var entity = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == foundationFixtureItemDto.HardwareState);
+                    if (null != entity)
+                    {
+                        value["DeviceStatus" + j] = entity.DisplayName;
+                    }
+                    else {
+
+                        value["DeviceStatus" + j] ="";
+                    }
                     value["DevicePrice" + j] = foundationFixtureItemDto.HardwarePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.HardwareBusiness;
                 }

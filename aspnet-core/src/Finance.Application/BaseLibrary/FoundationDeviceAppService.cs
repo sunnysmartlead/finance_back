@@ -3,6 +3,7 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Castle.MicroKernel.Registration;
 using Finance.Authorization.Users;
+using Finance.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,8 +37,10 @@ namespace Finance.BaseLibrary
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
         private readonly IRepository<FoundationDeviceItem, long> _foundationFoundationDeviceItemRepository;
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
         public FoundationDeviceAppService(
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<FoundationDevice, long> foundationDeviceRepository,
             IRepository<FoundationDeviceItem, long> foundationFoundationDeviceItemRepository,
             IRepository<User, long> userRepository,
@@ -47,6 +50,7 @@ namespace Finance.BaseLibrary
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationDeviceItemRepository = foundationFoundationDeviceItemRepository;
+            _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         }
 
 
@@ -314,9 +318,20 @@ namespace Finance.BaseLibrary
                                     foundationDeviceItem.DeviceNumber = entityItem.DeviceNumber;
                                     foundationDeviceItem.DeviceName = entityItem.DeviceName;
                                     //需要转换的地方
-                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.DeviceStatus);
-                                    //需要转换的地方
-                                    foundationDeviceItem.DeviceStatus =p;
+                                    if (null != entityItem.DeviceStatus)
+                                    {
+                                        List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == entityItem.DeviceStatus && p.FinanceDictionaryId == "Sbzt").ToList();
+                                        //需要转换的地方
+
+                                        if (dics != null && dics.Count > 0)
+                                        {
+                                            foundationDeviceItem.DeviceStatus = dics[0].Id;
+                                        }
+                                        else
+                                        {
+                                            foundationDeviceItem.DeviceStatus = "";
+                                        }
+                                    }
                                     foundationDeviceItem.DevicePrice = entityItem.DevicePrice;
                                     foundationDeviceItem.DeviceProvider = entityItem.DeviceProvider;
                                     if (AbpSession.UserId != null)
@@ -415,8 +430,15 @@ namespace Finance.BaseLibrary
                     value["DeviceName" + j] = foundationDeviceItemDto.DeviceName;
                     //需要转换的地方
                     //需要转换的地方
-                    string p = EnumHelper.GetCodeFromEnum(foundationDeviceItemDto.DeviceStatus);
-                    value["DeviceStatus" + j] =p;
+                    var entity = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == foundationDeviceItemDto.DeviceStatus);
+                    if (entity == null)
+                    {
+                        value["DeviceStatus" + j] = "";
+
+                    }
+                    else {
+                        value["DeviceStatus" + j] = entity.DisplayName;
+                    }
                     value["DevicePrice" + j] = foundationDeviceItemDto.DevicePrice;
                     value["DeviceProvider" + j] = foundationDeviceItemDto.DeviceProvider;
                 }
