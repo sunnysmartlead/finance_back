@@ -3059,6 +3059,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 MyPropMoldCosterty = a.moju,
                 CostOfToolingAndFixtures = a.gzyj,
                 ExperimentalFees = a.sy,
+                RDExpenses= a.qt+a.cl+a.csrj,
 
             }).ToList();
 
