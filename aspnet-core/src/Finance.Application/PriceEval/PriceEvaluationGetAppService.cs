@@ -1523,7 +1523,7 @@ namespace Finance.PriceEval
                         item.Year = year;
                         item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
                         item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.Currency == item.ExchangeRateId ? customerTargetPrice.ExchangeRate : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
-                        item.MaterialPriceCyn = GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
+                        item.MaterialPriceCyn = item.MaterialPrice * item.ExchangeRate;  //GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
                         item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
                         item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
@@ -3205,7 +3205,8 @@ namespace Finance.PriceEval
                            Rate_2 = two?.ExchangeRate,
                            Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
                        };
-            result.AddRange(data);
+            //result.AddRange(data);
+            result.InsertRange(0, data);
             result.ForEach(p => p.Change = p.Sum_2 - p.Sum_1);
 
             return result;
