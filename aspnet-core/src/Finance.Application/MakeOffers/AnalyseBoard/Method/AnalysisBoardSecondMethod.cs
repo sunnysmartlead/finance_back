@@ -155,14 +155,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ModelCount, long> modelCount,
         IRepository<DeviceQuotation, long> deviceQuotation,
         IRepository<UnitPriceOffers, long> resourceUnitPriceOffers,
-        PriceEvaluationGetAppService priceEvaluationGetAppService,
+
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
         IRepository<ProjectBoardSecondOffers, long> resourceProjectBoardSecondOffers,
         IRepository<ActualUnitPriceOffer, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         PriceEvaluationAppService priceEvaluationAppService,
-        IRepository<PriceEvaluation, long> resourcePriceEvaluation,
+
         ElectronicBomAppService electronicBomAppService,
         StructionBomAppService structionBomAppService,
         IRepository<PooledAnalysisOffers, long> resourcePooledAnalysisOffers,
@@ -170,9 +170,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<FinanceDictionary, string> financeDictionaryRepository,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<Gradient, long> gradientRepository,
-        IRepository<ManufacturingCostInfo, long> manufacturingCostInfo,
-        IRepository<StructureBomInfo, long> structureBomInfo,
-        IRepository<Requirement, long> requirement,
+        
         IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
         IRepository<ProductInformation, long> productInformation,
@@ -472,7 +470,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             
             
             
-            var ft=ex.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total.Value;
+            var ft=ex.OtherCostItem2.Where(p=>p.ItemName == "单颗成本").Sum(p=>p.Total.Value);
             //分摊单价
             YearValue ftprice = new();
             decimal ftup = unprice * (1 - crm.AnnualDeclineRate / 100)-ft;//增加客供成本
@@ -916,15 +914,33 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var crm in createRequirementDtos)
         {
+           var ud= crm.UpDown;
+           string key = crm.Year.ToString();
+           if (ud.Equals(YearType.FirstHalf))
+           {
+               key += "上半年";
+           }
+           if (ud.Equals(YearType.SecondHalf))
+           {
+               key += "下半年";
+           }
+
+           if (ud.Equals(YearType.Year))
+           {
+               key += "年";
+           }
+
+           
+            
             //数量K
             YearValue num = new();
-            num.key = crm.Year.ToString();
+            num.key = key;
             num.value = gradient.GradientValue;
             numk.Add(num);
 
             //单价
             YearValue price = new();
-            price.key = crm.Year.ToString();
+            price.key = key;
             price.value = unprice * (1 - crm.AnnualDeclineRate / 100);
             Prices.Add(price);
 
@@ -937,38 +953,38 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //单位平均成本
             var totalcost = ex.TotalCost; //核价看板成本
             YearValue Average = new();
-            Average.key = crm.Year.ToString();
+            Average.key =key;
             Average.value = totalcost;
             AverageCost.Add(Average);
             //销售成本
 
             YearValue sell = new();
-            sell.key = crm.Year.ToString();
+            sell.key = key;
             sell.value = totalcost * num.value;
             SellingCost.Add(sell);
 
             //销售收入（千元）
             YearValue rev = new();
-            rev.key = crm.Year.ToString();
+            rev.key = key;
             rev.value = unprice * (1 - crm.AnnualDeclineRate / 100) * gradient.GradientValue *
                         (1 - crm.AnnualRebateRequirements / 100) *
                         (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
             SalesRevenue.Add(rev);
             //佣金（千元）
             YearValue com = new();
-            com.key = crm.Year.ToString();
+            com.key = key;
             com.value = unprice * (1 - crm.AnnualDeclineRate / 100) * gradient.GradientValue *
                         (crm.CommissionRate / 100); //单价*数量*年度佣金比例
             commission.Add(com);
             //销售毛利
             YearValue mar = new();
-            mar.key = crm.Year.ToString();
+            mar.key = key;
             mar.value = rev.value - sell.value - com.value; //销售收入-销售成本-佣金
             SalesMargin.Add(mar);
 
             //毛利率
             YearValue gross = new();
-            gross.key = crm.Year.ToString();
+            gross.key =key;
             gross.value = (mar.value / rev.value) * 100; //销售毛利/销售收入
             GrossMargin.Add(gross);
         }
@@ -2002,11 +2018,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal totalcost)
     {
         List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll()
-            .Where(p => p.FinanceDictionaryId == "SampleName").ToList();
+            .Where(p => p.FinanceDictionaryId .Equals("SampleName") ).ToList();
         //样品
 
         List<SampleQuotation> onlySampleModels = (from sample in samples
-            join dic in dics on sample.Name equals dic.Id
+            join dic in dics on sample.Name equals(dic.Id) 
             select new SampleQuotation()
             {
                 Pcs = sample.Pcs, //需求量
@@ -2069,7 +2085,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<DeviceQuotation> hzde = new();
         foreach (var solutionTable in solutionTables)
         {
-            var solutionName = solutionTable.SolutionName;
+            var solutionName = solutionTable.Product;
 
             GetProcessHoursEntersInput getProcessHoursEntersInput = new();
             getProcessHoursEntersInput.AuditFlowId = processId;
@@ -2488,10 +2504,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal xscb = 0;
         foreach (var gradient in gradients.OrderBy(p => p.GradientValue))
         {
+            
             if (nsum <= gradient.GradientValue * 1000)
             {
                 td = gradient.GradientValue;
-                tdid = gradient.Id;
+                tdid = gradient.Id;//
             }
         }
 
@@ -2531,11 +2548,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         //    _priceEvaluationGetAppService.GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput() {});
         List<GrossMarginModel> slsl = new List<GrossMarginModel>();
-        foreach (var gros in gross)
+        foreach (var gros in gross)//销售数量
         {
             GrossMarginModel grossMarginModel = new GrossMarginModel();
             grossMarginModel.GrossMargin = gros;
-            grossMarginModel.GrossMarginNumber = Math.Round(nsum / (1 - (gros / 100)), 2);
+            grossMarginModel.GrossMarginNumber = nsum;
 
             slsl.Add(grossMarginModel);
         }

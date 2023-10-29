@@ -9,6 +9,7 @@ using Finance.Audit.Dto;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
 using Finance.FinanceMaintain;
+using Finance.Infrastructure;
 using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
@@ -41,6 +42,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 流程流转服务
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
+    private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
     /// <summary>
     /// 构造函数
@@ -48,11 +50,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
    
         AuditFlowAppService flowAppService,
+        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable)
     {
         _financeAuditQuotationList = financeAuditQuotationList;
-
+        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
        
         _flowAppService = flowAppService;
@@ -80,6 +83,21 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return analyseBoardSecondDto;
         }
     }
+    /// <summary>
+    /// 用于调试接口
+    /// </summary>
+    /// <param name="analyseBoardSecondInputDto"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<List<FinanceDictionaryDetail>> getsample(
+        AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
+    {
+        List<FinanceDictionaryDetail> dics =  _financeDictionaryDetailRepository.GetAll()
+            .Where(p => p.FinanceDictionaryId =="SampleName" ).ToList();
+        return dics;
+    }
+    
+    
 
     /// <summary>
     /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
@@ -323,7 +341,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 报价接口
+    /// 报价分析看板 保存
     /// </summary>
     /// <param name="isOfferDto"></param>
     /// <returns></returns>
