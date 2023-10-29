@@ -25,7 +25,7 @@ public class YearProductBoardProcessSecondDto
     /// </summary>
     public long SolutionId { get; set; }
     /// <summary>
-    /// 车型
+    /// 车型  实际数量必传
     /// </summary>
     public string CarModel { get; set; }
 
