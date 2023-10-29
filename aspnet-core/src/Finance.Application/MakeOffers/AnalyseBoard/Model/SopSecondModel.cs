@@ -46,6 +46,10 @@ public class SopAnalysisModel
     /// </summary>
     public virtual string GradientValue { get; set; }
     /// <summary>
+    /// 梯度id
+    /// </summary>
+    public long GradientId { get; set; }
+    /// <summary>
     /// 产品
     /// </summary>
    

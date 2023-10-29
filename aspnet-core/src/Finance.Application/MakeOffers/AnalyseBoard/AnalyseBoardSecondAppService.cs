@@ -27,6 +27,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 分析看板方法
     /// </summary>
     public readonly AnalysisBoardSecondMethod _analysisBoardSecondMethod;
+    /// <summary>
+    /// 核价梯度相关
+    /// </summary>
+    private readonly IRepository<Gradient, long> _gradientRepository;
 
     /// <summary>
     /// 报价审核表
@@ -52,12 +56,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         AuditFlowAppService flowAppService,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
+        IRepository<Gradient, long> gradientRepository,
+        
         IRepository<Solution, long> resourceSchemeTable)
     {
         _financeAuditQuotationList = financeAuditQuotationList;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-       
+        _gradientRepository = gradientRepository;
         _flowAppService = flowAppService;
         _resourceSchemeTable = resourceSchemeTable;
 
@@ -89,12 +95,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="analyseBoardSecondInputDto"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<List<FinanceDictionaryDetail>> getsample(
-        AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
+    public async Task<List<Gradient>> getInterface(
+       long auid)
     {
-        List<FinanceDictionaryDetail> dics =  _financeDictionaryDetailRepository.GetAll()
-            .Where(p => p.FinanceDictionaryId =="SampleName" ).ToList();
-        return dics;
+        //获取梯度
+        List<Gradient> gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
+        return gradients;
     }
     
     
