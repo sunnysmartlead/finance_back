@@ -2,6 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
+using Finance.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
@@ -28,6 +29,7 @@ namespace Finance.BaseLibrary
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
         private readonly IRepository<FoundationFixtureItem, long> _foundationFoundationFixtureItemRepository;
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
         /// <summary>
         /// 日志类型
@@ -40,6 +42,7 @@ namespace Finance.BaseLibrary
         public FoundationFixtureAppService(
             IRepository<FoundationFixture, long> foundationFixtureRepository,
             IRepository<FoundationFixtureItem, long> foundationFoundationFixtureItemRepository,
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<User, long> userRepository,
             IRepository<FoundationLogs, long> foundationLogsRepository)
         {
@@ -47,6 +50,7 @@ namespace Finance.BaseLibrary
             _userRepository = userRepository;
             _foundationLogsRepository = foundationLogsRepository;
             _foundationFoundationFixtureItemRepository = foundationFoundationFixtureItemRepository;
+            _financeDictionaryDetailRepository= financeDictionaryDetailRepository;
         }
 
 
@@ -191,8 +195,20 @@ namespace Finance.BaseLibrary
                                 entity.LastModifierUserId = AbpSession.UserId.Value;
                             }
                             entity.LastModificationTime = DateTime.Now;
-                            string pe = EnumHelper.GettDescriptionFromEnum(entity.FixtureGaugeState);
-                            entity.FixtureGaugeState = pe;
+                            if (null != entity.FixtureGaugeState)
+                            {
+                                List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == entity.FixtureGaugeState && p.FinanceDictionaryId == "Sbzt").ToList();
+                                //需要转换的地方
+
+                                if (dics != null && dics.Count > 0)
+                                {
+                                    entity.FixtureGaugeState = dics[0].Id;
+                                }
+                                else
+                                {
+                                    entity.FixtureGaugeState = "";
+                                }
+                            }
                             entity = await this._foundationFixtureRepository.InsertAsync(entity);
                             var foundationDevice = _foundationFixtureRepository.InsertAndGetId(entity);
                             var result = ObjectMapper.Map<FoundationFixture, FoundationFixtureDto>(entity, new FoundationFixtureDto());
@@ -209,8 +225,22 @@ namespace Finance.BaseLibrary
                                     foundationFixtureItem.FixtureName = entityItem.FixtureName;
                                     foundationFixtureItem.FixturePrice = entityItem.FixturePrice;
                                     //需要转换的地方
-                                    string p = EnumHelper.GettDescriptionFromEnum(entityItem.FixtureState);
-                                    foundationFixtureItem.FixtureState = p;
+                                    if (null != entityItem.FixtureState)
+                                    {
+                                        List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == entityItem.FixtureState && p.FinanceDictionaryId == "Sbzt").ToList();
+                                        //需要转换的地方
+
+                                        if (dics != null && dics.Count > 0)
+                                        {
+                                            foundationFixtureItem.FixtureState = dics[0].Id;
+                                        }
+                                        else
+                                        {
+                                            foundationFixtureItem.FixtureState = "";
+                                        }
+                                    }
+                                
+                                    
                                     foundationFixtureItem.FixtureProvider = entityItem.FixtureProvider;
                                     if (AbpSession.UserId != null)
                                     {
@@ -303,7 +333,11 @@ namespace Finance.BaseLibrary
             {
                 FoundationFixtureDto foundationFixtureDto = dtos[i];
                 // 填充数据
-                string pr = EnumHelper.GetCodeFromEnum(foundationFixtureDto.FixtureGaugeState);
+                var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == foundationFixtureDto.FixtureGaugeState);
+                string StateStr = "";
+                if (entityDictionary != null) {
+                    StateStr = entityDictionary.DisplayName;
+                }
                 var value = new Dictionary<string, object>()
                 {
                     ["ProcessNumber"] = foundationFixtureDto.ProcessNumber,
@@ -311,7 +345,7 @@ namespace Finance.BaseLibrary
                     ["FixtureGaugeName"] = foundationFixtureDto.FixtureGaugeName,
                     ["FixtureGaugePrice"] = foundationFixtureDto.FixtureGaugePrice,
                     //需要转换的地方
-                    ["FixtureGaugeState"] = pr,
+                    ["FixtureGaugeState"] = StateStr,
 
                     ["FixtureGaugeBusiness"] = foundationFixtureDto.FixtureGaugeBusiness
                 };
@@ -320,8 +354,16 @@ namespace Finance.BaseLibrary
                     FoundationFixtureItemDto foundationFixtureItemDto = foundationFixtureDto.FixtureList[j];
                     value["DeviceName" + j] = foundationFixtureItemDto.FixtureName;
                     //需要转换的地方
-                    string p = EnumHelper.GetCodeFromEnum(foundationFixtureItemDto.FixtureState);
-                    value["DeviceStatus" + j] = p;
+                    var entity = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == foundationFixtureItemDto.FixtureState);
+                    if (null !=entity)
+                    {
+                        value["DeviceStatus" + j] = entity.DisplayName;
+                    }
+                    else
+                    {
+                        value["DeviceStatus" + j] = "";
+                    }
+            
                     value["DevicePrice" + j] = foundationFixtureItemDto.FixturePrice;
                     value["DeviceProvider" + j] = foundationFixtureItemDto.FixtureProvider;
                 }
@@ -483,6 +525,28 @@ namespace Finance.BaseLibrary
                 entity.CreatorUserId = AbpSession.UserId.Value;
 
 
+            }
+            FoundationLogs temp = null;
+            try
+            {
+                temp = _foundationLogsRepository.GetAllList(p => p.Type == logType).OrderByDescending(p => p.LastModificationTime).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            VersionWithIncrement versionWithIncrement = null;
+            if (temp != null && !string.IsNullOrEmpty(temp.Version))
+            {
+                versionWithIncrement = new VersionWithIncrement(temp.Version);
+                var str = versionWithIncrement.IncrementRevision();
+                entity.Version = str;
+            }
+            else
+            {
+                versionWithIncrement = new VersionWithIncrement();
+                var str = versionWithIncrement.IncrementRevision();
+                entity.Version = str;
             }
             entity.Remark = Remark;
             entity.Type = logType;

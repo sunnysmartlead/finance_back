@@ -8,6 +8,7 @@ using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.FinanceParameter;
+using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes.ProcessHoursEnterDtos;
@@ -80,6 +81,7 @@ namespace Finance.Processes
         private readonly IRepository<FoundationDeviceItem, long> _foundationDeviceItemRepository;
         private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
         /// <summary>
         /// .ctor
@@ -99,6 +101,8 @@ namespace Finance.Processes
                       IRepository<FoundationWorkingHourItem, long> foundationFoundationWorkingHourItemRepository,
                       IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
                       IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
+                      IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
+
                       WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
@@ -127,6 +131,7 @@ namespace Finance.Processes
             _foundationHardwareItemRepository = foundationHardwareItemRepository;
             _foundationHardwareItemRepository = foundationHardwareItemRepository;
             _userRepository = userRepository;
+            _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         }
 
         /// <summary>
@@ -1113,9 +1118,17 @@ namespace Finance.Processes
                             }
                             if (null != val1)
                             {
+                                List<FinanceDictionaryDetail> dics = _financeDictionaryDetailRepository.GetAll().Where(p => p.DisplayName == val1.ToString() && p.FinanceDictionaryId == "Sbzt").ToList();
                                 //需要转换的地方
-                                string p = EnumHelper.GettDescriptionFromEnum(val1.ToString());
-                                foundationTechnologyDevice.DeviceStatus = p;
+                               
+                                if (dics != null && dics.Count>0)
+                                {
+                                    foundationTechnologyDevice.DeviceStatus = dics[0].Id;
+                                }
+                                else {
+                                    foundationTechnologyDevice.DeviceStatus = "";
+                                }
+                                
 
 
 
@@ -2405,8 +2418,17 @@ namespace Finance.Processes
                 }
                 if (null != listDevice[0].DeviceStatus)
                 {
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[0].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 4, p, wk);
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[0].DeviceStatus.ToString());
+                    if (null != entity && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 4, entityDictionary.DisplayName, wk);
+                    }
+                    else {
+                        CreateCell(herdRow3, 4, "", wk);
+                    }
+             
+                    
+             
                 }
                 else
                 {
@@ -2444,8 +2466,15 @@ namespace Finance.Processes
                 if (null != listDevice[1].DeviceStatus)
                 {
                     //需要转换的地方
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[1].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 8, p, wk);
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[1].DeviceStatus.ToString());
+                    if (null != entity && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 8, entityDictionary.DisplayName, wk);
+                    }
+                    else
+                    {
+                        CreateCell(herdRow3, 8, "", wk);
+                    }
 
                 }
                 else
@@ -2485,9 +2514,15 @@ namespace Finance.Processes
                 }
                 if (null != listDevice[2].DeviceStatus)
                 {
-                    string p = EnumHelper.GetCodeFromEnum(listDevice[2].DeviceStatus.ToString());
-                    CreateCell(herdRow3, 12, p, wk);
-
+                    var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[2].DeviceStatus.ToString());
+                    if (null != entity && null != entityDictionary.DisplayName)
+                    {
+                        CreateCell(herdRow3, 12, entityDictionary.DisplayName, wk);
+                    }
+                    else {
+                        CreateCell(herdRow3, 12, "", wk);
+                    }
+                  
                 }
                 else
                 {
@@ -2900,8 +2935,19 @@ namespace Finance.Processes
         /// <returns></returns>
         public async Task<List<EnumItem>> GetDeviceStatus()
         {
-            var res = EnumHelper.GetEnumItems<Status>();
-            return res;
+
+            var filter = _financeDictionaryDetailRepository.GetAll()
+            .Where(p => p.FinanceDictionaryId.Equals("Sbzt"));
+            List<EnumItem> enumItems= new List<EnumItem>();
+            foreach (var item in filter)
+            {
+                EnumItem enumItem = new EnumItem();
+                enumItem.Code = item.Id;
+                enumItem.Value = item.DisplayName;
+                enumItems.Add(enumItem);
+
+            }
+            return enumItems;
         }
 
         /// <summary>

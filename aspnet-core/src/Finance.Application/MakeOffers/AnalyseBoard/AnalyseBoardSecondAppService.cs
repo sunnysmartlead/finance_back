@@ -63,6 +63,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _financeAuditQuotationList = financeAuditQuotationList;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
+       
+        _flowAppService = flowAppService;
         _gradientRepository = gradientRepository;
         _flowAppService = flowAppService;
         _resourceSchemeTable = resourceSchemeTable;
