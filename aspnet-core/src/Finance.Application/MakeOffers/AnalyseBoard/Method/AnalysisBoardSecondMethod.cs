@@ -236,11 +236,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<CreateSampleDto> sampleDtos = priceEvaluationStartInputResult.Sample;
         List<OnlySampleDto> samples = new List<OnlySampleDto>();
         //判断是否是仅含样品
-        var pricetype=priceEvaluationStartInputResult.PriceEvalType;
+        var pricetype = priceEvaluationStartInputResult.PriceEvalType;
         if ("PriceEvalType_Sample".Equals(pricetype))
         {
-
-
             foreach (var Solution in Solutions)
             {
                 //获取核价看板，sop年份数据,参数：年份、年份类型、梯度Id、模组Id,TotalCost为总成本,列表Material中，IsCustomerSupply为True的是客供料，TotalMoneyCyn是客供料的成本列表OtherCostItem2中，ItemName值等于【单颗成本】的项，Total是分摊成本
@@ -283,20 +281,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             return analyseBoardSecondDto;
         }
-        
-        
-        
-        
-       
+
 
         //获取毛利率
         List<decimal> gross = await GetGrossMargin();
         //sop年份
         //var soptime = priceEvaluationStartInputResult.SopTime;
 
-      
 
-      
         //单价表
         List<SopAnalysisModel> sops = new List<SopAnalysisModel>();
         //样品阶段
