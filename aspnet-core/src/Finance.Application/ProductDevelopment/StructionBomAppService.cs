@@ -153,14 +153,14 @@ namespace Finance.ProductDevelopment
                                 else
                                 {
                                     dto = DataToList(dto, row.GetCell(j), j);
-                                    if (j == 5 && dto.IsInvolveItem.Equals("是"))
+                                    if (j == 6 && dto.IsInvolveItem.Equals("是"))
                                     {
                                         if (dto.AssemblyQuantity <= 0)
                                         {
                                             throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“是”，装配数量不能再填0,请检查！");
                                         }
                                     }
-                                    if (j == 5 && dto.IsInvolveItem.Equals("否"))
+                                    if (j == 6 && dto.IsInvolveItem.Equals("否"))
                                     {
                                         if (dto.AssemblyQuantity != 0)
                                         {
@@ -170,9 +170,9 @@ namespace Finance.ProductDevelopment
 
                                 }
                             }
-                            catch
+                            catch (Exception ex)
                             {
-                                throw new FriendlyException("第" + (i + 1) + "行第" + (j + 1) + "列数据格式错误，请检查！");
+                                throw new FriendlyException(ex.Message);
                             }
                         }
                     }
