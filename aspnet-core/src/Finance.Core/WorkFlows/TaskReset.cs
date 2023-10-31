@@ -15,7 +15,7 @@ namespace Finance.WorkFlows
         /// <summary>
         /// 工作流节点实例Id
         /// </summary>
-        public virtual string NodeInstanceId { get; set; }
+        public virtual long NodeInstanceId { get; set; }
 
         /// <summary>
         /// 重置用户Id
@@ -27,5 +27,9 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual long TargetUserId { get; set; }
 
+        /// <summary>
+        /// 是否激活
+        /// </summary>
+        public virtual bool IsActive { get; set; }
     }
 }
