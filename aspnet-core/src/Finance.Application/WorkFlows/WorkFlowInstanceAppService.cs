@@ -504,11 +504,14 @@ namespace Finance.WorkFlows
         public async virtual Task ResetTask(ResetTaskInput input)
         {
             //将重置给自己的任务取消激活
-            await _taskResetRepository
-                   .GetAll()
-                   .Where(p => p.NodeInstanceId == input.NodeInstanceId
-                   && p.TargetUserId == AbpSession.UserId.Value)
-                   .UpdateFromQueryAsync(p => new TaskReset { IsActive = false });
+            var entity = await _taskResetRepository.FirstOrDefaultAsync(
+                p => p.NodeInstanceId == input.NodeInstanceId
+                   && p.TargetUserId == AbpSession.UserId.Value);
+            if (entity is not null)
+            {
+                entity.IsActive = false;
+            }
+
 
             //再把任务重置给别人
             await _taskResetRepository.InsertAsync(new TaskReset
@@ -521,7 +524,7 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
-        /// 获取他人重置的任务
+        /// 获取他人重置给自己的任务
         /// </summary>
         /// <param name="userId"></param>
         /// <returns></returns>
@@ -554,6 +557,35 @@ namespace Finance.WorkFlows
             var result = await node.ToListAsync();
             return new PagedResultDto<UserTask>(result.Count, result);
 
+        }
+
+        /// <summary>
+        /// 获取任务重置详情（重置页面专用）
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<ResetList>> GetResetList(GetResetListInput input)
+        {
+            var data = (from t in _taskResetRepository.GetAll()
+                        join ur in _userManager.Users on t.ResetUserId equals ur.Id
+                        join ut in _userManager.Users on t.TargetUserId equals ut.Id
+                        join n in _nodeInstanceRepository.GetAll() on t.NodeInstanceId equals n.Id
+                        select new ResetList
+                        {
+                            Id = t.Id,
+                            NodeName = n.Name,
+                            ResetUser = ur.Name,
+                            TargetUser = ut.Name,
+                            NodeStatus = n.NodeInstanceStatus,
+                            AuditFlowId = n.WorkFlowInstanceId,
+                            CreationTime = t.CreationTime,
+                            CreatorUserId = t.CreatorUserId,
+                        })
+                       .WhereIf(!input.NodeName.IsNullOrWhiteSpace(), p => p.NodeName.Contains(input.NodeName))
+                       .WhereIf(!input.ResetUser.IsNullOrWhiteSpace(), p => p.ResetUser.Contains(input.ResetUser))
+                       .WhereIf(!input.TargetUser.IsNullOrWhiteSpace(), p => p.TargetUser.Contains(input.TargetUser));
+            var count = await data.CountAsync();
+            var result = await data.PageBy(input).ToListAsync();
+            return new PagedResultDto<ResetList>(count, result);
         }
 
         /// <summary>
