@@ -197,6 +197,19 @@ namespace Finance.Processes
                     processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
 
                 }
+                if (null == FoundationDeviceItemlist || FoundationDeviceItemlist.Count < 1)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        ProcessHoursEnterDeviceDto processHoursEnterDeviceDto = new ProcessHoursEnterDeviceDto();
+                        processHoursEnterDeviceDto.DevicePrice = 0;
+                        processHoursEnterDeviceDto.DeviceStatus = "";
+                        processHoursEnterDeviceDto.DeviceNumber = 0;
+                        processHoursEnterDeviceDto.DeviceName = "";
+                        processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+                    }
+
+                }
                 processHoursEnterDto.DeviceInfo.DeviceArr = processHoursEnterDeviceDtos;
             }
             //追溯部分(硬件及软件开发费用)
@@ -217,6 +230,37 @@ namespace Finance.Processes
                     processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
 
                 }
+                if (null == FoundationDeviceItemlist || FoundationDeviceItemlist.Count < 1)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        ProcessHoursEnterFrockDto processHoursEnterDeviceDto = new ProcessHoursEnterFrockDto();
+                        processHoursEnterDeviceDto.HardwareDevicePrice = 0;
+                        processHoursEnterDeviceDto.HardwareDeviceNumber = 0;
+                        processHoursEnterDeviceDto.HardwareDeviceName = null;
+                        processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+                    }
+
+                }
+                processHoursEnterDto.DevelopCostInfo.HardwareInfo = processHoursEnterDeviceDtos;
+            }
+            else {
+
+                processHoursEnterDto.DevelopCostInfo.HardwareDeviceTotalPrice = 0;
+                processHoursEnterDto.DevelopCostInfo.OpenDrawingSoftware = "";
+                processHoursEnterDto.DevelopCostInfo.SoftwarePrice = 0;
+                List<ProcessHoursEnterFrockDto> processHoursEnterDeviceDtos = new List<ProcessHoursEnterFrockDto>();
+        
+                    for (int i = 0; i < 2; i++)
+                    {
+                        ProcessHoursEnterFrockDto processHoursEnterDeviceDto = new ProcessHoursEnterFrockDto();
+                        processHoursEnterDeviceDto.HardwareDevicePrice = 0;
+                        processHoursEnterDeviceDto.HardwareDeviceNumber = 0;
+                        processHoursEnterDeviceDto.HardwareDeviceName = null;
+                        processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+                    }
+
+                
                 processHoursEnterDto.DevelopCostInfo.HardwareInfo = processHoursEnterDeviceDtos;
             }
             //工装治具部分
@@ -233,6 +277,18 @@ namespace Finance.Processes
                     processHoursEnterDeviceDto.FixtureNumber = 0;
                     processHoursEnterDeviceDto.FixtureName = item.FixtureName;
                     processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+
+                }
+                if (null == FoundationDeviceItemlist || FoundationDeviceItemlist.Count < 1)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        ProcessHoursEnterFixtureDto processHoursEnterDeviceDto = new ProcessHoursEnterFixtureDto();
+                        processHoursEnterDeviceDto.FixturePrice = 0;
+                        processHoursEnterDeviceDto.FixtureNumber = 0;
+                        processHoursEnterDeviceDto.FixtureName = "";
+                        processHoursEnterDeviceDtos.Add(processHoursEnterDeviceDto);
+                    }
 
                 }
                 processHoursEnterDto.ToolInfo.FixtureName = queryFixture[0].FixtureGaugeName;
@@ -263,6 +319,8 @@ namespace Finance.Processes
                 {
                     ProcessHoursEnterSopInfoDto p = new ProcessHoursEnterSopInfoDto();
                     p.Year = item;
+                    string str2 = Regex.Replace(item, @"[^0-9]+", "");
+                    p.YearInt = Decimal.Parse(str2);
                     var queryYearItem = _foundationFoundationWorkingHourItemRepository.GetAll().Where(t => t.IsDeleted == false && t.Year == item && t.FoundationWorkingHourId == queryWorkingHour[0].Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritemDtos = new List<ProcessHoursEnteritemDto>();
                     foreach (var itemYear in queryYearItem)
@@ -379,15 +437,16 @@ namespace Finance.Processes
                 processHoursEnter.ToolInfo.ZhiJuArr = processHoursEnterFixtures;
 
                 //标准工时
-                var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
-                                 select a).ToList();
-                queryYear.Sort();
+                Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+                var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).OrderBy(y => y.Year).ToList();
+
+                //var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
+                  //               select a).ToList();
                 List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
                 foreach (var device in queryYear)
                 {
                     ProcessHoursEnterSopInfoDto processHoursEnteritem = new ProcessHoursEnterSopInfoDto();
-                    ModelCountYear query = await _modelCountYearRepository.GetAsync(device);
-                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == query.Id).ToList();
+                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == device.Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
                     foreach (var yearItem in deviceYear)
                     {
@@ -398,20 +457,29 @@ namespace Finance.Processes
                         processHoursEnteritemDto.ModelCountYearId = yearItem.ModelCountYearId;
                         processHoursEnteritems1.Add(processHoursEnteritemDto);
                     }
-                    processHoursEnteritem.YearInt = (decimal)(query.Year);
+                    processHoursEnteritem.YearInt = (decimal)(device.Year);
+                    if (null == processHoursEnteritems1 || processHoursEnteritems1.Count<1)
+                    {
+                        ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
+                        processHoursEnteritemDto.LaborHour = 0;
+                        processHoursEnteritemDto.PersonnelNumber = 0 ;
+                        processHoursEnteritemDto.MachineHour = 0;
+                        processHoursEnteritemDto.ModelCountYearId = device.Id;
+                        processHoursEnteritems1.Add(processHoursEnteritemDto);
+                    }
                     processHoursEnteritem.Issues = processHoursEnteritems1;
-                    if (query.UpDown == YearType.FirstHalf)
+                    if (device.UpDown == YearType.FirstHalf)
                     {
 
-                        processHoursEnteritem.Year = query.Year + "上半年";
+                        processHoursEnteritem.Year = device.Year + "上半年";
                     }
-                    else if (query.UpDown == YearType.SecondHalf)
+                    else if (device.UpDown == YearType.SecondHalf)
                     {
-                        processHoursEnteritem.Year = query.Year + "下半年";
+                        processHoursEnteritem.Year = device.Year + "下半年";
                     }
                     else
                     {
-                        processHoursEnteritem.Year = query.Year.ToString();
+                        processHoursEnteritem.Year = device.Year.ToString();
                     }
                     processHoursEnteritems.Add(processHoursEnteritem);
                 }
@@ -2419,7 +2487,7 @@ namespace Finance.Processes
                 if (null != listDevice[0].DeviceStatus)
                 {
                     var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[0].DeviceStatus.ToString());
-                    if (null != entity && null != entityDictionary.DisplayName)
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
                     {
                         CreateCell(herdRow3, 4, entityDictionary.DisplayName, wk);
                     }
@@ -2467,7 +2535,7 @@ namespace Finance.Processes
                 {
                     //需要转换的地方
                     var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[1].DeviceStatus.ToString());
-                    if (null != entity && null != entityDictionary.DisplayName)
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
                     {
                         CreateCell(herdRow3, 8, entityDictionary.DisplayName, wk);
                     }
@@ -2515,7 +2583,7 @@ namespace Finance.Processes
                 if (null != listDevice[2].DeviceStatus)
                 {
                     var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == listDevice[2].DeviceStatus.ToString());
-                    if (null != entity && null != entityDictionary.DisplayName)
+                    if (null != entityDictionary && null != entityDictionary.DisplayName)
                     {
                         CreateCell(herdRow3, 12, entityDictionary.DisplayName, wk);
                     }
@@ -2678,13 +2746,16 @@ namespace Finance.Processes
 
 
                 //标准工时
-                var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
-                                 select a).ToList();
+              //  var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
+                //                 select a).ToList();
+                Solution solution = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+
+                var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == solution.Productld).ToList();
                 List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
                 foreach (var device in queryYear)
                 {
                     ProcessHoursEnterSopInfoDto processHoursEnteritem = new ProcessHoursEnterSopInfoDto();
-                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == device).ToList();
+                    var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == device.Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
                     foreach (var yearItem in deviceYear)
                     {
@@ -2693,6 +2764,15 @@ namespace Finance.Processes
                         processHoursEnteritemDto.PersonnelNumber = yearItem.PersonnelNumber;
                         processHoursEnteritemDto.MachineHour = yearItem.MachineHour;
                         processHoursEnteritemDto.ModelCountYearId = yearItem.ModelCountYearId;
+                        processHoursEnteritems1.Add(processHoursEnteritemDto);
+                    }
+                    if (null == processHoursEnteritems1 || processHoursEnteritems1.Count < 1)
+                    {
+                        ProcessHoursEnteritemDto processHoursEnteritemDto = new ProcessHoursEnteritemDto();
+                        processHoursEnteritemDto.LaborHour = 0;
+                        processHoursEnteritemDto.PersonnelNumber = 0;
+                        processHoursEnteritemDto.MachineHour = 0;
+                        processHoursEnteritemDto.ModelCountYearId = device.Id;
                         processHoursEnteritems1.Add(processHoursEnteritemDto);
                     }
                     processHoursEnteritem.Issues = processHoursEnteritems1;
