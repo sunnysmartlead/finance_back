@@ -413,6 +413,10 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
+
+        public virtual DbSet<TaskReset> TaskReset { get; set; }
+
+
         #region 报价单新增表
         /// <summary>
         /// NRE报价清单

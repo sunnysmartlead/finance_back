@@ -46,6 +46,8 @@ namespace Finance.Audit.Dto
     /// </summary>
     public class AuditFlowRightDetailDto : Entity<long>
     {
+        internal virtual bool IsReset { get; set; }
+
         /// <summary>
         /// 流程标识符
         /// </summary>

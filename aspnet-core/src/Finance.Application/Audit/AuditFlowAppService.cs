@@ -201,35 +201,35 @@ namespace Finance.Audit
             return list
 
                 //如果当前用户不是电子工程师，就把电子BOM录入页面过滤掉
-                .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM)
+                .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM || p.IsReset)
 
                 //如果当前用户不是结构工程师，就把结构BOM录入页面过滤掉
-                .WhereIf(!solutionList.Any(p => p.StructEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.StructureBOM)
+                .WhereIf(!solutionList.Any(p => p.StructEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.StructureBOM || p.IsReset)
 
                 //公式工序
-                .WhereIf(pricingTeam == null || pricingTeam.EngineerId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.FormulaOperationAddition)
+                .WhereIf(pricingTeam == null || pricingTeam.EngineerId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.FormulaOperationAddition || p.IsReset)
 
                 //环境实验费
-                .WhereIf(pricingTeam == null || pricingTeam.QualityBenchId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                .WhereIf(pricingTeam == null || pricingTeam.QualityBenchId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_ReliabilityExperimentFeeInput || p.IsReset)
 
                 //EMC+电性能实验费录入
-                .WhereIf(pricingTeam == null || pricingTeam.EMCId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_EMCExperimentalFeeInput)
+                .WhereIf(pricingTeam == null || pricingTeam.EMCId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_EMCExperimentalFeeInput || p.IsReset)
 
                 //制造成本录入
-                .WhereIf(pricingTeam == null || pricingTeam.ProductCostInputId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.COBManufacturingCostEntry)
+                .WhereIf(pricingTeam == null || pricingTeam.ProductCostInputId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.COBManufacturingCostEntry || p.IsReset)
 
                 //物流成本录入
-                .WhereIf(pricingTeam == null || pricingTeam.ProductManageTimeId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.LogisticsCostEntry)
+                .WhereIf(pricingTeam == null || pricingTeam.ProductManageTimeId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.LogisticsCostEntry || p.IsReset)
 
 
                 //项目核价审核
-                .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit)
+                .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit || p.IsReset)
 
                 //项目经理
-                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier))
+                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier) || p.IsReset)
 
                 //生成报价分析界面选择报价方案、选择是否报价，必须是发起核价需求录入的人才能看到
-                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis)
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.IsReset)
 
                 .ToList();
         }
@@ -249,6 +249,13 @@ namespace Finance.Audit
 
             //待办
             var data = await _workflowInstanceAppService.GetTaskByUserId(0);
+
+            //重置
+            var resetData = await _workflowInstanceAppService.GetReset(0);
+
+            data.Items = data.Items.Where(p => !resetData.Items.Select(o => o.Id).Contains(p.Id))
+                .Union(resetData.Items).ToList();
+
             var dto = (await data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
             {
                 AuditFlowId = p.Key.WorkFlowInstanceId,
@@ -260,10 +267,13 @@ namespace Finance.Audit
                     Right = RIGHTTYPE.Edit,
                     ProcessIdentifier = o.ProcessIdentifier,
                     IsRetype = o.IsBack,
-                    JumpDescription = o.Comment
+                    JumpDescription = o.Comment,
+                    IsReset = o.IsReset,
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());
+
+
 
             auditFlowRightInfoDtoList.AddRange(dto);
 

@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using NPOI.SS.UserModel;
+using NUglify;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,6 +57,7 @@ namespace Finance.WorkFlows
 
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
 
+        private readonly IRepository<TaskReset, long> _taskResetRepository;
 
         /// <summary>
         /// Constructor
@@ -75,7 +78,8 @@ namespace Finance.WorkFlows
             IRepository<InstanceHistory, long> instanceHistoryRepository,
             IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
             IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository,
-            UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository
+            UserManager userManager, RoleManager roleManager,
+            IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository
             )
         {
             _workflowRepository = workflowRepository;
@@ -99,6 +103,8 @@ namespace Finance.WorkFlows
             _roleManager = roleManager;
 
             _priceEvaluationRepository = priceEvaluationRepository;
+
+            _taskResetRepository = taskResetRepository;
         }
 
         /// <summary>
@@ -327,7 +333,7 @@ namespace Finance.WorkFlows
 
             if (changeNode.Name == "核价看板")
             {
-                var priceEvaluation =await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == changeNode.WorkFlowInstanceId);
+                var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == changeNode.WorkFlowInstanceId);
                 if (priceEvaluation is null || !priceEvaluation.TrProgramme.HasValue)
                 {
                     throw new FriendlyException($"必须上传TR方案！");
@@ -488,8 +494,99 @@ namespace Finance.WorkFlows
 
             //    throw;
             //}
+
         }
 
+        /// <summary>
+        /// 将任务重置给别人
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task ResetTask(ResetTaskInput input)
+        {
+            //将重置给自己的任务取消激活
+            var entity = await _taskResetRepository.FirstOrDefaultAsync(
+                p => p.NodeInstanceId == input.NodeInstanceId
+                   && p.TargetUserId == AbpSession.UserId.Value);
+            if (entity is not null)
+            {
+                entity.IsActive = false;
+            }
+
+
+            //再把任务重置给别人
+            await _taskResetRepository.InsertAsync(new TaskReset
+            {
+                IsActive = true,
+                NodeInstanceId = input.NodeInstanceId,
+                ResetUserId = AbpSession.UserId.Value,
+                TargetUserId = input.TargetUserId,
+            });
+        }
+
+        /// <summary>
+        /// 获取他人重置给自己的任务
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetReset(long userId)
+        {
+            if (userId == 0)
+            {
+                userId = AbpSession.UserId == null ? 0 : AbpSession.UserId.Value;
+            }
+
+            var node = from n in _nodeInstanceRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
+                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId
+                       where t.TargetUserId == userId && t.IsActive
+                       && w.WorkflowState == WorkflowState.Running && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                       select new UserTask
+                       {
+                           Id = n.Id,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = n.CreationTime,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = w.Id,
+                           ProcessIdentifier = n.ProcessIdentifier,
+                           IsBack = n.IsBack,
+                           Comment = n.Comment,
+                           IsReset = true,
+                       };
+            var result = await node.ToListAsync();
+            return new PagedResultDto<UserTask>(result.Count, result);
+
+        }
+
+        /// <summary>
+        /// 获取任务重置详情（重置页面专用）
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<ResetList>> GetResetList(GetResetListInput input)
+        {
+            var data = (from t in _taskResetRepository.GetAll()
+                        join ur in _userManager.Users on t.ResetUserId equals ur.Id
+                        join ut in _userManager.Users on t.TargetUserId equals ut.Id
+                        join n in _nodeInstanceRepository.GetAll() on t.NodeInstanceId equals n.Id
+                        select new ResetList
+                        {
+                            Id = t.Id,
+                            NodeName = n.Name,
+                            ResetUser = ur.Name,
+                            TargetUser = ut.Name,
+                            NodeStatus = n.NodeInstanceStatus,
+                            AuditFlowId = n.WorkFlowInstanceId,
+                            CreationTime = t.CreationTime,
+                            CreatorUserId = t.CreatorUserId,
+                        })
+                       .WhereIf(!input.NodeName.IsNullOrWhiteSpace(), p => p.NodeName.Contains(input.NodeName))
+                       .WhereIf(!input.ResetUser.IsNullOrWhiteSpace(), p => p.ResetUser.Contains(input.ResetUser))
+                       .WhereIf(!input.TargetUser.IsNullOrWhiteSpace(), p => p.TargetUser.Contains(input.TargetUser));
+            var count = await data.CountAsync();
+            var result = await data.PageBy(input).ToListAsync();
+            return new PagedResultDto<ResetList>(count, result);
+        }
 
         /// <summary>
         /// 根据用户Id 获取待办
