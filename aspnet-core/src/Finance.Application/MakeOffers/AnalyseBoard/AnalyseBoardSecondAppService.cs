@@ -103,6 +103,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //获取梯度
         List<Gradient> gradients =
             await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
+        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
         return gradients;
     }
     
