@@ -1528,7 +1528,7 @@ namespace Finance.PriceEval
                         item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
                         item.MaterialCost = item.TotalMoneyCyn + item.Loss;//材料成本（含损耗）
                         //item.InputCount = Math.Round((decimal)item.AssemblyCount * (1 + item.LossRate) * input.InputCount, 0).To<int>();//（装配数量*（1+损耗率）*投入量） ，四舍五入，取整
-                        item.InputCount = (electronicAndStructureList.Count(p => p.Sap == item.Sap) * gradientModelYear.Count * 1000) / (1 - (item.LossRate / 100));
+                        item.InputCount = (electronicAndStructureList.Where(p => p.Sap == item.Sap).Sum(p => p.AssemblyCount).To<decimal>() * gradientModelYear.Count * 1000) / (1 - (item.LossRate / 100));
 
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);

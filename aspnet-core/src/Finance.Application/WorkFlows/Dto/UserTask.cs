@@ -12,6 +12,8 @@ namespace Finance.WorkFlows.Dto
     /// </summary>
     public class UserTask : EntityDto<long>
     {
+        internal virtual bool IsReset { get; set; }
+
         internal virtual string RoleIds { get; set; }
         /// <summary>
         /// 工作流实例Id
