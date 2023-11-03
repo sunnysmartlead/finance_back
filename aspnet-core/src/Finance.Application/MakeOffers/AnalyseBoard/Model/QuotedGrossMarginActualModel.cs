@@ -35,7 +35,7 @@ public class QuotedGrossMarginActual
     /// <summary>
     /// 单车数量
     /// </summary>
-    public string carNum { get; set; }
+    public int carNum { get; set; }
     /// <summary>
     /// 数据id
     /// </summary>

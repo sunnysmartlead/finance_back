@@ -567,14 +567,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             BoardModel boardModel = new();
 
             List<ProjectBoardSecondModel> projectBoardSecondModels = new();
-            decimal mbnbsl = 0;//目标内部
+            decimal mbnbsl = 0; //目标内部
             decimal mbnbxscb = 0;
             decimal mbnbxssr = 0;
             decimal mbnbml = 0;
             decimal mbnbyj = 0;
-            
-            
-            decimal mbkhsl = 0;//目标客户
+
+
+            decimal mbkhsl = 0; //目标客户
             decimal mbkhxscb = 0;
             decimal mbkhxssr = 0;
             decimal mbkhml = 0;
@@ -630,28 +630,25 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 mbnbxssr += jtsl.xssr;
                 mbnbml += jtsl.xsml;
                 mbnbyj += jtsl.yj;
-                
-            
-                
+
 
                 CreateCustomerTargetPriceDto ctp = priceEvaluationStartInputResult.CustomerTargetPrice.FindFirst(p =>
                     p.Kv == gradient.GradientValue && p.Product.Equals(solution.ModuleName));
-                 var mbj = (Convert.ToDecimal(ctp.TargetPrice) )* ctp.ExchangeRate;
-                 var khmbjex = await PostGrossMarginForGradient(new YearProductBoardProcessSecondDto()
-                 {
-                     AuditFlowId = auditFlowId,
-                     GradientId = gradient.Id,
-                     SolutionId = solution.Id,
-                     UnitPrice = mbj
-                 });
-                 mbkhsl += khmbjex.sl;
-                 mbkhxscb += khmbjex.xscb;
-                 mbkhxssr += khmbjex.xssr;
-                 mbkhml += khmbjex.xsml;
-                 mbkhyj += khmbjex.yj;
-                 
-                 
-                
+                var mbj = (Convert.ToDecimal(ctp.TargetPrice)) * ctp.ExchangeRate;
+                var khmbjex = await PostGrossMarginForGradient(new YearProductBoardProcessSecondDto()
+                {
+                    AuditFlowId = auditFlowId,
+                    GradientId = gradient.Id,
+                    SolutionId = solution.Id,
+                    UnitPrice = mbj
+                });
+                mbkhsl += khmbjex.sl;
+                mbkhxscb += khmbjex.xscb;
+                mbkhxssr += khmbjex.xssr;
+                mbkhml += khmbjex.xsml;
+                mbkhyj += khmbjex.yj;
+
+
                 GradientGrossMarginCalculateModel model = new()
                 {
                     GradientId = gradient.Id,
@@ -663,11 +660,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     InteriorGrossMargin = ml, //目标价内部
                     InteriorClientGrossMargin = jtsl.ClientGrossMargin,
                     InteriorNreGrossMargin = jtsl.NreGrossMargin,
-                    ClientPrice=mbj,//目标价（客户）
-                    ClientGrossMargin=khmbjex.GrossMargin,
-                    ClientClientGrossMargin=khmbjex.ClientGrossMargin,
-                    ClientNreGrossMargin=khmbjex.NreGrossMargin
-                    
+                    ClientPrice = mbj, //目标价（客户）
+                    ClientGrossMargin = khmbjex.GrossMargin,
+                    ClientClientGrossMargin = khmbjex.ClientGrossMargin,
+                    ClientNreGrossMargin = khmbjex.NreGrossMargin
                 };
 
 
@@ -679,53 +675,53 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             sl.ProjectName = "数量";
             sl.InteriorTarget = mbnbsl;
             sl.ClientTarget = mbkhsl;
-           
+
             projectBoardSecondModels.Add(sl);
 
             ProjectBoardSecondModel xscb = new();
             xscb.ProjectName = "销售成本";
             xscb.InteriorTarget = mbnbxscb;
             xscb.ClientTarget = mbkhxscb;
-            
+
             projectBoardSecondModels.Add(xscb);
 
             ProjectBoardSecondModel dwpjcb = new();
             dwpjcb.ProjectName = "单位平均成本";
             dwpjcb.InteriorTarget = Math.Round(mbnbxscb / mbnbsl, 2);
             dwpjcb.ClientTarget = Math.Round(mbkhxscb / mbkhsl, 2);
-           
+
             projectBoardSecondModels.Add(dwpjcb);
 
             ProjectBoardSecondModel xssr = new();
             xssr.ProjectName = "销售收入";
-            xssr.InteriorTarget = mbnbxssr;
-            xssr.ClientTarget = mbkhxssr;
-           
+            xssr.InteriorTarget =Math.Round( mbnbxssr, 2);
+            xssr.ClientTarget = Math.Round(mbkhxssr, 2);
+
             projectBoardSecondModels.Add(xssr);
             ProjectBoardSecondModel yj = new();
             yj.ProjectName = "佣金";
             yj.InteriorTarget = mbnbyj;
             yj.ClientTarget = mbkhyj;
-           
+
             projectBoardSecondModels.Add(yj);
             ProjectBoardSecondModel pjdj = new();
             pjdj.ProjectName = "平均单价";
-            pjdj.InteriorTarget =mbnbxssr/ mbnbml;
-            pjdj.ClientTarget = mbkhxssr/mbkhsl;
-           
+            pjdj.InteriorTarget = Math.Round(mbnbxssr / mbnbml, 2);
+            pjdj.ClientTarget =Math.Round( mbkhxssr / mbkhsl, 2);
+
             projectBoardSecondModels.Add(pjdj);
 
             ProjectBoardSecondModel xsml = new();
             xsml.ProjectName = "销售毛利";
-            xsml.InteriorTarget = mbnbml;
-            xsml.ClientTarget = mbkhml;
-           
+            xsml.InteriorTarget = Math.Round(mbnbml, 2);
+            xsml.ClientTarget = Math.Round(mbkhml, 2);
+
             projectBoardSecondModels.Add(xsml);
             ProjectBoardSecondModel mll = new();
             mll.ProjectName = "毛利率";
-            mll.InteriorTarget = Math.Round((mbnbml/mbnbxssr)*100,2);
-            mll.ClientTarget =Math.Round((mbkhml/mbkhxssr)*100,2) ;
-           
+            mll.InteriorTarget = Math.Round((mbnbml / mbnbxssr) * 100, 2);
+            mll.ClientTarget = Math.Round((mbkhml / mbkhxssr) * 100, 2);
+
             projectBoardSecondModels.Add(mll);
             boardModel.ProjectBoardModels = projectBoardSecondModels;
             boardModel.title = gradient.GradientValue + "KV";
@@ -737,15 +733,37 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 //报价实际数量测算
         var carmodelcouts = priceEvaluationStartInputResult.CarModelCount;
         List<QuotedGrossMarginActualModel> quotedGrossMarginActualModels = new();
-        foreach (var carmodelcout in carmodelcouts)
-        {
-            QuotedGrossMarginActualModel quotedGrossMarginActualModel = new QuotedGrossMarginActualModel();
-            quotedGrossMarginActualModel.project = "报价毛利率测算-实际数量-" + carmodelcout.CarModel;
-            
-            
-            quotedGrossMarginActualModels.Add(quotedGrossMarginActualModel);
+        //存在多个车型的可能
+        Dictionary<String, List<CreateCarModelCountDto>> cardicts = carmodelcouts.GroupBy(p => p.CarModel)
+            .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
+        foreach (var cardict in cardicts)
+        {
+            string key = cardict.Key;
+            List<CreateCarModelCountDto> createCarModelCountDtos = cardict.Value;
+            QuotedGrossMarginActualModel quotedGrossMarginActualModel = new QuotedGrossMarginActualModel();
+            quotedGrossMarginActualModel.project = "报价毛利率测算-实际数量-" + key;
+
+
+            List<QuotedGrossMarginActual> QuotedGrossMarginActualList = new();
+            foreach (var solution in Solutions)
+            {
+                QuotedGrossMarginActual quotedGrossMarginActual = new QuotedGrossMarginActual()
+                {
+                    carModel = key,
+                    AuditFlowId = auditFlowId,
+                    product = solution.ModuleName
+                };
+                var crm = createCarModelCountDtos.FindFirst(p => p.Product.Equals(solution.ModuleName));
+                quotedGrossMarginActual.carNum =crm.SingleCarProductsQuantity ;
+
+                QuotedGrossMarginActualList.Add(quotedGrossMarginActual);
+            }
+
+            quotedGrossMarginActualModel.QuotedGrossMarginActualList = QuotedGrossMarginActualList;
+            quotedGrossMarginActualModels.Add(quotedGrossMarginActualModel);
         }
+
 
         analyseBoardSecondDto.QuotedGrossMargins = quotedGrossMarginActualModels;
 
@@ -802,7 +820,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<YearValue> SalesRevenue = new List<YearValue>(); //销售收入
         List<YearValue> commission = new List<YearValue>(); //佣金
         List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
-        
+
         List<YearValue> kgSellingCost = new List<YearValue>(); //销售成本
         List<YearValue> kgAverageCost = new List<YearValue>(); //单位平均成本
         List<YearValue> kgPrices = new List<YearValue>(); //客供单价
@@ -849,9 +867,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             YearValue Average = new();
             Average.value = totalcost;
             AverageCost.Add(Average);
-            
-            
-            
+
+
             //销售成本
 
             YearValue sell = new();
@@ -875,17 +892,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             SalesMargin.Add(mar);
 
 
-            var kg = ex.Material.Where(p=>p.IsCustomerSupply).Sum(p => p.TotalMoneyCyn);
+            var kg = ex.Material.Where(p => p.IsCustomerSupply).Sum(p => p.TotalMoneyCyn);
             //客供单价
             YearValue kgprice = new();
             decimal kgup = price.value + kg; //增加客供成本
             kgprice.value = kgup;
             kgPrices.Add(kgprice);
-            
+
             //客供销售成本
 
             YearValue kgsell = new();
-            kgsell.value = (totalcost+kg) * num.value;
+            kgsell.value = (totalcost + kg) * num.value;
             kgSellingCost.Add(kgsell);
 
             //客供销售收入（千元）
@@ -913,7 +930,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             ftPrices.Add(ftprice);
             //分摊销售成本
             YearValue ftsell = new();
-            ftsell.value = (totalcost-ft) * num.value;
+            ftsell.value = (totalcost - ft) * num.value;
             ftSellingCost.Add(ftsell);
 
             //分摊销售收入（千元）
@@ -957,13 +974,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         GrossMarginSecondDto grossMarginSecondDto = new();
         grossMarginSecondDto.sl = total;
-        grossMarginSecondDto.xscb =Math.Round( xszcb,2);
-        grossMarginSecondDto.xssr =Math.Round( totalsale,2);
-        grossMarginSecondDto.xsml = Math.Round(xsml,2);
-        grossMarginSecondDto.yj = Math.Round(yj,2);
-        grossMarginSecondDto.GrossMargin =Math.Round((xsml / totalsale) * 100,2);
-        grossMarginSecondDto.ClientGrossMargin = Math.Round((kgxsml / kgtotalsale) * 100,2);
-        grossMarginSecondDto.NreGrossMargin =Math.Round( (ftxsml / fttotalsale) * 100,2);
+        grossMarginSecondDto.xscb = Math.Round(xszcb, 2);
+        grossMarginSecondDto.xssr = Math.Round(totalsale, 2);
+        grossMarginSecondDto.xsml = Math.Round(xsml, 2);
+        grossMarginSecondDto.yj = Math.Round(yj, 2);
+        grossMarginSecondDto.GrossMargin = Math.Round((xsml / totalsale) * 100, 2);
+        grossMarginSecondDto.ClientGrossMargin = Math.Round((kgxsml / kgtotalsale) * 100, 2);
+        grossMarginSecondDto.NreGrossMargin = Math.Round((ftxsml / fttotalsale) * 100, 2);
         grossMarginSecondDto.GradientId = gradientId;
 
         return grossMarginSecondDto;
