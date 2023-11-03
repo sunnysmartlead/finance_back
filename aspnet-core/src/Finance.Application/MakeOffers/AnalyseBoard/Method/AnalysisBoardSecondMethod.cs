@@ -694,7 +694,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             ProjectBoardSecondModel xssr = new();
             xssr.ProjectName = "销售收入";
-            xssr.InteriorTarget =Math.Round( mbnbxssr, 2);
+            xssr.InteriorTarget = Math.Round(mbnbxssr, 2);
             xssr.ClientTarget = Math.Round(mbkhxssr, 2);
 
             projectBoardSecondModels.Add(xssr);
@@ -707,7 +707,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             ProjectBoardSecondModel pjdj = new();
             pjdj.ProjectName = "平均单价";
             pjdj.InteriorTarget = Math.Round(mbnbxssr / mbnbml, 2);
-            pjdj.ClientTarget =Math.Round( mbkhxssr / mbkhsl, 2);
+            pjdj.ClientTarget = Math.Round(mbkhxssr / mbkhsl, 2);
 
             projectBoardSecondModels.Add(pjdj);
 
@@ -755,7 +755,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     product = solution.ModuleName
                 };
                 var crm = createCarModelCountDtos.FindFirst(p => p.Product.Equals(solution.ModuleName));
-                quotedGrossMarginActual.carNum =crm.SingleCarProductsQuantity ;
+                quotedGrossMarginActual.carNum = crm.SingleCarProductsQuantity;
 
                 QuotedGrossMarginActualList.Add(quotedGrossMarginActual);
             }
@@ -1180,10 +1180,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var unprice = yearProductBoardProcessSecondDto.UnitPrice;
         var solutionid = yearProductBoardProcessSecondDto.SolutionId;
         var carModel = yearProductBoardProcessSecondDto.CarModel; //车型
-
         //获取梯度
         var gradients =
             await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == AuditFlowId);
+        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
         //获取核价营销相关数据
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
