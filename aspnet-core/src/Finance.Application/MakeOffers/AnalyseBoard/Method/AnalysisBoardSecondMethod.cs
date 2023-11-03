@@ -356,9 +356,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
         }
 
-        /*//NRE
+        //NRE
         analyseBoardSecondDto.nres = await getNre(analyseBoardSecondInputDto.auditFlowId,
-            analyseBoardSecondInputDto.solutionTables);*/
+            analyseBoardSecondInputDto.solutionTables);
         //样品阶段
         analyseBoardSecondDto.SampleOffer = samples;
         //sop单价表
