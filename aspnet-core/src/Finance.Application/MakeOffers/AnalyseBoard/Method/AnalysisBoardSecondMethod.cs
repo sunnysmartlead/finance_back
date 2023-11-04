@@ -811,6 +811,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     carModel = key,
                     AuditFlowId = auditFlowId,
                     carNum = carnum,
+                    SolutionId=solution.Id,
                     product = solution.ModuleName,
                     InteriorPrice = gradq.InteriorPrice,
                     InteriorGrossMargin = nmj.GrossMargin,
