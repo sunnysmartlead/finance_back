@@ -31,12 +31,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 核价梯度相关
     /// </summary>
     private readonly IRepository<Gradient, long> _gradientRepository;
-
     /// <summary>
     /// 报价审核表
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
-    
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
@@ -52,7 +50,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 构造函数
     /// </summary>
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-   
         AuditFlowAppService flowAppService,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
@@ -71,9 +68,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
       
     }
-
     /// <summary>
-    /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
+    /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品   ,特别注意，传入方案，方案中的moduleName不能一样
     /// </summary>
     /// <param name="analyseBoardSecondInputDto"></param>
     /// <returns></returns>
@@ -107,8 +103,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         return gradients;
     }
     
-    
-
     /// <summary>
     /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
     /// </summary>
@@ -119,7 +113,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
-
         try
         {
         return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond( auditFlowId,version);
@@ -140,10 +133,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <exception cref="UserFriendlyException"></exception>
     public async Task<GrossMarginSecondDto> PostGrossMarginForGradient( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
-
-       
             return await _analysisBoardSecondMethod.PostGrossMarginForGradient( yearProductBoardProcessSecondDto);
-       
         
     }
     /// <summary>
@@ -155,11 +145,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <exception cref="UserFriendlyException"></exception>
     public async Task<GrossMarginSecondDto> PostGrossMarginForactual( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
-
-       
         return await _analysisBoardSecondMethod.PostGrossMarginForactual( yearProductBoardProcessSecondDto);
-       
-        
     }
 
     /// <summary>
@@ -210,8 +196,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId)
     {
         CoreComponentAndNreDto coreComponentAndNreDto = new();
-
-
         return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId);
     }
 
