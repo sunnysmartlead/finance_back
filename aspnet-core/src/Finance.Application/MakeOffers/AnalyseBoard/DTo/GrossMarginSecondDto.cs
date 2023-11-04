@@ -36,6 +36,14 @@ public class GrossMarginSecondDto
     /// </summary>
     public decimal xssr { get; set; }
     /// <summary>
+    /// 客供销售收入
+    /// </summary>
+    public decimal kgxssr { get; set; }
+    /// <summary>
+    /// 客供销售收入
+    /// </summary>
+    public decimal ftxssr { get; set; }
+    /// <summary>
     /// 平均单价
     /// </summary>
     public decimal pjdj { get; set; }
@@ -44,9 +52,23 @@ public class GrossMarginSecondDto
     /// </summary>
     public decimal xsml { get; set; }
     /// <summary>
+    /// 客供销售毛利
+    /// </summary>
+    public decimal kgxsml { get; set; }
+    /// <summary>
+    /// 分摊销售毛利
+    /// </summary>
+    public decimal ftxsml { get; set; }
+    /// <summary>
     /// 佣金
     /// </summary>
     public decimal yj { get; set; }
+    
+    /// <summary>
+    /// 单价
+    /// </summary>
+    public decimal unitPrice { get; set; }
+
    
     
 }
