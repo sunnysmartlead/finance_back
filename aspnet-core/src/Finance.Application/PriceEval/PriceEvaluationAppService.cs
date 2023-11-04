@@ -1084,7 +1084,9 @@ namespace Finance.PriceEval
             var qualityCost = data.OtherCostItem.QualityCost;
 
             //其他成本
-            var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
+            //var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
+            var other = data.OtherCostItem2.Where(p => p.ItemName == "单颗成本").Sum(p => p.Total).GetValueOrDefault();
+
 
             var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
 
@@ -1095,7 +1097,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="制造成本", Proportion= manufacturingCost},
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
-                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other/sum},
+                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
             };
 
             var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);

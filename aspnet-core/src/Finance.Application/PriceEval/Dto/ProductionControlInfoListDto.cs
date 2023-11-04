@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,11 @@ namespace Finance.PriceEval.Dto
         /// 年份
         /// </summary>
         public string Year { get; set; }
+
+        /// <summary>
+        /// 年份类型
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 单pcs包装价格/元
