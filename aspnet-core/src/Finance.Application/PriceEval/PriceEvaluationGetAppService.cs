@@ -46,6 +46,7 @@ using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Policy;
 using System.Threading.Tasks;
 using test;
 
@@ -3074,6 +3075,8 @@ namespace Finance.PriceEval
 
         public async virtual Task<List<SolutionContrast>> GetSolutionContrast(GetSolutionContrastInput input)
         {
+            var list = new List<string> { "Sensor芯片", "串行芯片", "镜头" };
+
             var bom1 = await GetPriceEvaluationTable(new GetPriceEvaluationTableInput
             {
                 AuditFlowId = input.AuditFlowId,
@@ -3094,31 +3097,69 @@ namespace Finance.PriceEval
                 UpDown = input.UpDown,
             });
 
+            
+
+
+            var data = new List<SolutionContrast>();
+            foreach (var one in bom1.Material.Where(p => list.Contains(p.TypeName)))
+            {
+                Material two = null;
+
+                var sapBom = bom2.Material.FirstOrDefault(p => p.Sap == one.Sap);
+                var typeNameBom = bom2.Material.FirstOrDefault(p => p.TypeName == one.TypeName);
+                if (sapBom is not null)
+                {
+                    two = sapBom;
+                    bom2.Material.Remove(sapBom);
+                }
+                else if (typeNameBom is not null)
+                {
+                    two = typeNameBom;
+                    bom2.Material.Remove(typeNameBom);
+                }
+
+                data.Add(new SolutionContrast
+                {
+                    ItemName = $"{one.TypeName}：{one.MaterialName}",
+                    ItemName2 = two == null ? string.Empty : $"{two.TypeName}：{two.MaterialName}",
+
+                    Price_1 = one?.MaterialPrice,
+                    Count_1 = one?.AssemblyCount.To<decimal>(),
+                    Rate_1 = one?.ExchangeRate,
+                    Sum_1 = one?.TotalMoneyCynNoCustomerSupply,
+
+                    Price_2 = two?.MaterialPrice,
+                    Count_2 = two?.AssemblyCount.To<decimal>(),
+                    Rate_2 = two?.ExchangeRate,
+                    Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
+                });
+            }
+
             var result = new List<SolutionContrast>
             {
-                new SolutionContrast { ItemName="PCBA（除sensor芯片、串行芯片）",
+                new SolutionContrast { ItemName="PCBA（除sensor芯片、串行芯片）",ItemName2="PCBA（除sensor芯片、串行芯片）",
                     Price_1 = null,
-                    Count_1 = bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
+                    Count_1 = null,//bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
                     Rate_1 = null,
-                    Sum_1 =bom1.Material.Where(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                    Sum_1 =bom1.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
 
                     Price_2 = null,
-                    Count_2 = bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
+                    Count_2 = null,//bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
                     Rate_2 = null,
-                    Sum_2 =bom2.Material.Where(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                    Sum_2 =bom2.Material.Where(p => p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
                 },
-                new SolutionContrast { ItemName="结构件（除lens）",
+                new SolutionContrast { ItemName="结构件（除lens）",ItemName2="结构件（除lens）",
                     Price_1 = null,
-                    Count_1 = bom1.Material.Count(p=>p.SuperType == FinanceConsts.ElectronicName && p.TypeName != "镜头"),
+                    Count_1 = bom1.Material.Count(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头"),
                     Rate_1 = null,
-                    Sum_1 =bom1.Material.Where(p=>p.SuperType == FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                    Sum_1 =bom1.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
 
                     Price_2 = null,
-                    Count_2 = bom1.Material.Count(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头"),
+                    Count_2 = bom1.Material.Count(p=>p.SuperType != FinanceConsts.ElectronicName  && p.TypeName != "镜头"),
                     Rate_2 = null,
-                    Sum_2 =bom2.Material.Where(p=>p.Id.StartsWith(ElectronicBomName) && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
+                    Sum_2 =bom2.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName  && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
                 },
-                new SolutionContrast { ItemName="损耗成本",
+                new SolutionContrast { ItemName="损耗成本",ItemName2="损耗成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3129,7 +3170,7 @@ namespace Finance.PriceEval
                     Rate_2 = null,
                     Sum_2 =bom2.LossCost.Sum(p=>p.WastageCost),
                 },
-                new SolutionContrast { ItemName="制造成本",
+                new SolutionContrast { ItemName="制造成本",ItemName2="制造成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3141,7 +3182,7 @@ namespace Finance.PriceEval
                     Sum_2 = bom2.ManufacturingCost.FirstOrDefault(p=>p.CostType == CostType.Total).Subtotal
                 },
 
-                new SolutionContrast { ItemName="物流成本",
+                new SolutionContrast { ItemName="物流成本",ItemName2="物流成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3152,7 +3193,7 @@ namespace Finance.PriceEval
                     Rate_2 = null,
                     Sum_2 = bom2.OtherCostItem.LogisticsFee,
                 },
-                new SolutionContrast { ItemName="质量成本",
+                new SolutionContrast { ItemName="质量成本",ItemName2="质量成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3163,7 +3204,7 @@ namespace Finance.PriceEval
                     Rate_2 = null,
                     Sum_2 = bom2.OtherCostItem.QualityCost,
                 },
-                new SolutionContrast { ItemName="其他成本",
+                new SolutionContrast { ItemName="其他成本",ItemName2="其他成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3174,7 +3215,7 @@ namespace Finance.PriceEval
                     Rate_2 = null,
                     Sum_2 = bom2.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total,
                 },
-                new SolutionContrast { ItemName="总成本",
+                new SolutionContrast { ItemName="总成本",ItemName2="总成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
@@ -3187,27 +3228,9 @@ namespace Finance.PriceEval
                 },
             };
 
-            var list = new List<string> { "Sensor芯片", "串行芯片", "镜头" };
-
-            var data = from one in bom1.Material
-                       join two in bom2.Material on one.Sap equals two.Sap
-                       where list.Contains(one.TypeName)
-                       select new SolutionContrast
-                       {
-                           ItemName = $"{one.TypeName}：{one.MaterialName}",
-                           Price_1 = one?.MaterialPrice,
-                           Count_1 = one?.AssemblyCount.To<decimal>(),
-                           Rate_1 = one?.ExchangeRate,
-                           Sum_1 = one?.TotalMoneyCynNoCustomerSupply,
-
-                           Price_2 = two?.MaterialPrice,
-                           Count_2 = two?.AssemblyCount.To<decimal>(),
-                           Rate_2 = two?.ExchangeRate,
-                           Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
-                       };
             //result.AddRange(data);
             result.InsertRange(0, data);
-            result.ForEach(p => p.Change = p.Sum_2 - p.Sum_1);
+            result.ForEach(p => p.Change = p.Sum_2 == null ? null : p.Sum_2 - p.Sum_1);
 
             return result;
         }
@@ -3237,7 +3260,7 @@ namespace Finance.PriceEval
             var data = await GetSolutionContrast(input);
 
 
-            var dto = new SolutionContrastExcel { Name1 = solution1.ModuleName, Name2 = solution2.ModuleName, SolutionContrast = data };
+            var dto = new SolutionContrastExcel { Name1 = $"{solution1.ModuleName}-{solution1.SolutionName}", Name2 = $"{solution2.ModuleName}-{solution2.SolutionName}", SolutionContrast = data };
 
             var memoryStream = new MemoryStream();
 
