@@ -111,7 +111,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <summary>
     /// 报价毛利率测算-阶梯数量
     /// </summary>
-    private readonly IRepository<ActualUnitPriceOffer, long> _actualUnitPriceOffer;
+    private readonly IRepository<GradientGrossMarginCalculate, long> _actualUnitPriceOffer;
 
     /// <summary>
     /// 报价毛利率测算-实际数量
@@ -153,7 +153,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
         IRepository<ProjectBoardSecondOffers, long> resourceProjectBoardSecondOffers,
-        IRepository<ActualUnitPriceOffer, long> actualUnitPriceOffer,
+        IRepository<GradientGrossMarginCalculate, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         PriceEvaluationAppService priceEvaluationAppService,
         ElectronicBomAppService electronicBomAppService,
@@ -165,7 +165,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<Gradient, long> gradientRepository,
         IRepository<ProjectBoardOffers, long> resourceProjectBoardOffers,
         ProcessHoursEnterDeviceAppService processHoursEnterDeviceAppService,
-        IRepository<ProductInformation, long> productInformation,
         IRepository<DynamicUnitPriceOffers, long> dynamicUnitPriceOffers,
         NrePricingAppService nrePricingAppService,
         IRepository<GrossMarginForm, long> resourceGrossMarginForm,
@@ -356,8 +355,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
         //NRE
-        /*analyseBoardSecondDto.nres = await getNre(analyseBoardSecondInputDto.auditFlowId,
-            analyseBoardSecondInputDto.solutionTables);*/
+        analyseBoardSecondDto.nres = await getNre(analyseBoardSecondInputDto.auditFlowId,
+            analyseBoardSecondInputDto.solutionTables);
         //样品阶段
         analyseBoardSecondDto.SampleOffer = samples;
         //sop单价表
@@ -742,10 +741,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<CreateCarModelCountDto> createCarModelCountDtos = cardict.Value;
             QuotedGrossMarginActualModel quotedGrossMarginActualModel = new QuotedGrossMarginActualModel();
             quotedGrossMarginActualModel.project = "报价毛利率测算-实际数量-" + key;
-            decimal qtmbnbdj= 0;//目标价内部和客户单价
-            decimal qtmbkhdj= 0;
+            decimal qtmbnbdj = 0; //目标价内部和客户单价
+            decimal qtmbkhdj = 0;
 
-            decimal qtnbsr = 0;//内部客供毛利和客供收入，分摊收入分毛利
+            decimal qtnbsr = 0; //内部客供毛利和客供收入，分摊收入分毛利
             decimal qtnbml = 0;
             decimal qtnbkgsr = 0;
             decimal qtnbkgml = 0;
@@ -761,7 +760,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<QuotedGrossMarginActual> QuotedGrossMarginActualList = new();
             foreach (var solution in Solutions)
             {
-                var carnum=createCarModelCountDtos.FindFirst(p => p.CarModel.Equals(key)&&p.Product.Equals(solution.ModuleName)).SingleCarProductsQuantity;
+                var carnum = createCarModelCountDtos
+                    .FindFirst(p => p.CarModel.Equals(key) && p.Product.Equals(solution.ModuleName))
+                    .SingleCarProductsQuantity;
 
                 var modelCountDto = modelcoutnlist.FindFirst(p => p.Product.Equals(solution.ModuleName)); //获取第一年的数量
                 var modelCount = modelCountDto.ModelCountYearList.OrderBy(p => p.Year).ThenBy(p => p.UpDown).First();
@@ -791,7 +792,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                             UnitPrice = gradientqgs.InteriorPrice
                         }).ToList()
                 });
-          
+
                 var khj = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
                 {
                     AuditFlowId = auditFlowId,
@@ -811,7 +812,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     carModel = key,
                     AuditFlowId = auditFlowId,
                     carNum = carnum,
-                    SolutionId=solution.Id,
+                    SolutionId = solution.Id,
                     product = solution.ModuleName,
                     InteriorPrice = gradq.InteriorPrice,
                     InteriorGrossMargin = nmj.GrossMargin,
@@ -822,8 +823,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ClientClientGrossMargin = khj.ClientGrossMargin,
                     ClientNreGrossMargin = khj.NreGrossMargin
                 };
-                qtmbnbdj+= (carnum * gradq.InteriorPrice);
-                qtmbkhdj+= (carnum * gradq.ClientPrice);
+                qtmbnbdj += (carnum * gradq.InteriorPrice);
+                qtmbkhdj += (carnum * gradq.ClientPrice);
                 qtnbml += nmj.xsml;
                 qtnbsr += nmj.xssr;
                 qtnbkgsr += nmj.kgxssr;
@@ -837,29 +838,29 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 qtkhkgsr += khj.kgxssr;
                 qtkhftss += khj.ftxssr;
                 qtkhftml += khj.ftxsml;
-        
+
                 var crm = createCarModelCountDtos.FindFirst(p => p.Product.Equals(solution.ModuleName));
                 quotedGrossMarginActual.carNum = crm.SingleCarProductsQuantity;
 
                 QuotedGrossMarginActualList.Add(quotedGrossMarginActual);
             }
 
-           
+
             QuotedGrossMarginActual quotedGrossMarginActualqt = new QuotedGrossMarginActual()
             {
                 carModel = key,
                 AuditFlowId = auditFlowId,
                 product = "齐套",
                 InteriorPrice = qtmbnbdj,
-                InteriorGrossMargin = (qtnbml/qtnbsr)*100,
-                InteriorNreGrossMargin = (qtnbftml/qtnbftss)*100,
-                InteriorClientGrossMargin =(qtnbkgml/qtnbkgsr)*100,
+                InteriorGrossMargin = (qtnbml / qtnbsr) * 100,
+                InteriorNreGrossMargin = (qtnbftml / qtnbftss) * 100,
+                InteriorClientGrossMargin = (qtnbkgml / qtnbkgsr) * 100,
                 ClientPrice = qtmbkhdj,
-                ClientGrossMargin = (qtkhml/qtkhsr)*100,
-                ClientClientGrossMargin = (qtkhkgml/qtkhkgsr)*100,
-                ClientNreGrossMargin =(qtkhftml/qtkhftss)
+                ClientGrossMargin = (qtkhml / qtkhsr) * 100,
+                ClientClientGrossMargin = (qtkhkgml / qtkhkgsr) * 100,
+                ClientNreGrossMargin = (qtkhftml / qtkhftss)
             };
-            
+
             QuotedGrossMarginActualList.Add(quotedGrossMarginActualqt);
             quotedGrossMarginActualModel.QuotedGrossMarginActualList = QuotedGrossMarginActualList;
             quotedGrossMarginActualModels.Add(quotedGrossMarginActualModel);
@@ -884,11 +885,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             var mcyl = modelcoutnlist.FindFirst(p => p.Product.Equals(solution.ModuleName)).ModelCountYearList;
             mcyl = mcyl.OrderBy(p => p.Year).ThenBy(P => P.UpDown).ToList();
             var cym = mcyl.First();
-      
+
             var nmj = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = auditFlowId,
-               
+
                 SolutionId = solution.Id,
                 SoltionGradPrices = (from gradientqgs in gradientQuotedGrossMarginModels
                     select new SoltionGradPrice()
@@ -905,7 +906,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             var khj = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = auditFlowId,
-               
+
                 SolutionId = solution.Id,
                 SoltionGradPrices = (from gradientqgs in gradientQuotedGrossMarginModels
                     select new SoltionGradPrice()
@@ -925,7 +926,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 SolutionId = solution.Id,
                 AuditFlowId = auditFlowId,
                 InteriorPrice = nmj.unitPrice,
-                InteriorGrossMargin =nmj.GrossMargin,
+                InteriorGrossMargin = nmj.GrossMargin,
                 InteriorClientGrossMargin = nmj.ClientGrossMargin,
                 InteriorNreGrossMargin = nmj.NreGrossMargin,
                 ClientPrice = khj.unitPrice,
@@ -943,14 +944,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         analyseBoardSecondDto.QuotedGrossMargins = quotedGrossMarginActualModels;
 
-        
-        
+
         //项目看板-实际数量
-        BoardModel sj  = new()
+        BoardModel sj = new()
         {
             title = "实际数量"
         };
-       
+
         List<ProjectBoardSecondModel> projectBoardSecondModelssj = new();
         ProjectBoardSecondModel sjsl = new();
         sjsl.ProjectName = "数量";
@@ -975,7 +975,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         ProjectBoardSecondModel sjxssr = new();
         sjxssr.ProjectName = "销售收入";
-       sjxssr.InteriorTarget = Math.Round(sjnbxssr, 2);
+        sjxssr.InteriorTarget = Math.Round(sjnbxssr, 2);
         sjxssr.ClientTarget = Math.Round(sjkhxssr, 2);
 
         projectBoardSecondModelssj.Add(sjxssr);
@@ -1223,6 +1223,82 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
+    /// 实际数量下查询毛利率  用于齐套
+    /// </summary>
+    /// <returns></returns>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactualQt(
+        YearProductBoardProcessQtSecondDto yearProductBoardProcessSecondDto)
+    {
+        var AuditFlowId = yearProductBoardProcessSecondDto.AuditFlowId;
+
+        var solutionidscarnums = yearProductBoardProcessSecondDto.SolutionIdsAndcarNums;
+        var carModel = yearProductBoardProcessSecondDto.CarModel; //车型
+        var sgp = yearProductBoardProcessSecondDto.SoltionGradPrices;
+        
+        decimal unprice = 0;
+        decimal qtsl = 0;
+        decimal qtyj = 0;
+        decimal qtcb = 0;
+        decimal qtsr = 0;
+        decimal qtml = 0;
+        decimal qtkgsr = 0;
+        decimal qtkgml = 0;
+        decimal qtftss = 0;
+        decimal qtftml = 0;
+
+        foreach (var solutionidscarnum in solutionidscarnums)
+        {
+            GrossMarginSecondDto grossmarin = new();
+            if (carModel is not null)
+            {
+                 grossmarin = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
+                {
+                    AuditFlowId = AuditFlowId,
+                    SolutionId = solutionidscarnum.SolutionId,
+                    CarModel = carModel,
+                    SoltionGradPrices = sgp
+                });
+            }
+            else
+            {
+                grossmarin = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
+                {
+                    AuditFlowId = AuditFlowId,
+                    SolutionId = solutionidscarnum.SolutionId,
+                    SoltionGradPrices = sgp
+                });
+            }
+            
+          
+
+            unprice += solutionidscarnum.carNum * grossmarin.unitPrice;
+            qtsl+=grossmarin.sl;
+            qtml += grossmarin.xsml;
+            qtcb += grossmarin.xscb;
+            qtyj+= grossmarin.yj;
+            qtsr += grossmarin.xssr;
+            qtkgsr += grossmarin.kgxssr;
+            qtkgml += grossmarin.kgxsml;
+            qtftss += grossmarin.ftxssr;
+            qtftml += grossmarin.ftxsml;
+        }
+
+        GrossMarginSecondDto grossMarginSecondDto = new GrossMarginSecondDto()
+        {
+            unitPrice = unprice,
+            sl = qtsl,
+            yj=qtyj,
+            xscb = qtcb,
+            xssr=qtsr,
+            xsml=qtml,
+            GrossMargin = (qtml / qtsr) * 100,
+            ClientGrossMargin = (qtkgml / qtkgsr) * 100,
+            NreGrossMargin = (qtftml / qtftss) * 100
+        };
+        return grossMarginSecondDto;
+    }
+
+    /// <summary>
     /// 实际数量下查询毛利率
     /// </summary>
     /// <returns></returns>
@@ -1412,14 +1488,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             ftmar.value = ftrev.value - ftsell.value - ftcom.value; //销售收入-销售成本-佣金
             ftSalesMargin.Add(ftmar);
         }
-
         var total = numk.Sum(p => p.value); //总数量
-
         var xszcb = SellingCost.Sum(p => p.value); //销售总成本
-
-
         var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
-
         var xsml = SalesMargin.Sum(p => p.value); //销售毛利总和
 
         var yj = commission.Sum(p => p.value); //佣金
@@ -1445,12 +1516,191 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         grossMarginSecondDto.ClientGrossMargin = Math.Round((kgxsml / kgtotalsale) * 100, 2);
         grossMarginSecondDto.kgxsml = kgxsml;
         grossMarginSecondDto.kgxssr = kgtotalsale;
-        
+
         grossMarginSecondDto.NreGrossMargin = Math.Round((ftxsml / fttotalsale) * 100, 2);
         grossMarginSecondDto.ftxsml = ftxsml;
         grossMarginSecondDto.ftxssr = fttotalsale;
         grossMarginSecondDto.unitPrice = unprice;
         return grossMarginSecondDto;
+    }
+
+    /// <summary>
+    /// 查看年度对比（实际数量）用于齐套
+    /// </summary>
+    /// <returns></returns>
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactualQt(
+        YearProductBoardProcessQtSecondDto yearProductBoardProcessQtSecondDto)
+    {
+        var AuditFlowId = yearProductBoardProcessQtSecondDto.AuditFlowId;
+
+        var carModel = yearProductBoardProcessQtSecondDto.CarModel; //车型
+        var solutionidscarnums = yearProductBoardProcessQtSecondDto.SolutionIdsAndcarNums;
+        var sgp = yearProductBoardProcessQtSecondDto.SoltionGradPrices;
+
+
+        List<YearValue> numk = new List<YearValue>(); //数量K
+        List<YearValue> Prices = new List<YearValue>(); //单价
+        List<YearValue> SellingCost = new List<YearValue>(); //销售成本
+        List<YearValue> AverageCost = new List<YearValue>(); //单位平均成本
+        List<YearValue> SalesRevenue = new List<YearValue>(); //销售收入
+        List<YearValue> commission = new List<YearValue>(); //佣金
+        List<YearValue> SalesMargin = new List<YearValue>(); //销售毛利
+        List<YearValue> GrossMargin = new List<YearValue>(); //毛利率
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        var crms = priceEvaluationStartInputResult.Requirement;
+        
+        for (int i = 0; i < solutionidscarnums.Count; i++)
+        {
+            var solutionidscarnum = solutionidscarnums[i];
+            YearDimensionalityComparisonSecondDto nddb = new();
+            if (carModel is not null)
+            {
+                 nddb = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()
+                {
+                    AuditFlowId = AuditFlowId,
+                    SolutionId = solutionidscarnum.SolutionId,
+                    CarModel = carModel,
+                    SoltionGradPrices = sgp
+                });
+            }
+            else
+            {
+                nddb = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()
+                {
+                    AuditFlowId = AuditFlowId,
+                    SolutionId = solutionidscarnum.SolutionId,
+                   
+                    SoltionGradPrices = sgp
+                });
+            }
+           
+            var numknew = nddb.numk.Where(p => !p.key.Equals("全生命周期")).ToList();
+            var Pricsenew = nddb.Prices.Where(p => !p.key.Equals("全生命周期")).ToList();
+            var SellingCostnew = nddb.SellingCost.Where(p => !p.key.Equals("全生命周期")).ToList();
+            var  AverageCostnew = nddb.AverageCost.Where(p => !p.key.Equals("全生命周期")).ToList();
+           var SalesRevenuenew = nddb.SalesRevenue.Where(p => !p.key.Equals("全生命周期")).ToList();
+           var commissionnew = nddb.commission.Where(p => !p.key.Equals("全生命周期")).ToList();
+           var SalesMarginnew = nddb.SalesMargin.Where(p => !p.key.Equals("全生命周期")).ToList();
+            if (i == 0)
+            {
+                numk = numknew;
+                Prices = Pricsenew;
+                SellingCost = SellingCostnew;
+                AverageCost = AverageCostnew;
+                SalesRevenue = SalesRevenuenew;
+                commission =commissionnew;
+                SalesMargin = SalesMarginnew;
+            }
+            else
+            {
+                numk= hebing(numk, numknew);
+                Prices= hebing(Prices, Pricsenew);
+                SellingCost= hebing(SellingCost, SellingCostnew);
+                AverageCost= hebing(AverageCost, AverageCostnew);
+                SalesRevenue= hebing(SalesRevenue, SalesRevenuenew);
+                commission= hebing(commission, commissionnew);
+                SalesMargin= hebing(SalesMargin, SalesMarginnew);
+
+            }
+        }
+
+     Dictionary<string,YearValue> smdict=SalesMargin.ToDictionary(p => p.key, p => p);
+
+     foreach (var SalesRevenues in SalesRevenue)
+     {
+         //毛利率
+         YearValue gross = new();
+         gross.key = SalesRevenues.key;
+         gross.value = (smdict[SalesRevenues.key].value / SalesRevenues.value) * 100; //销售毛利/销售收入
+         GrossMargin.Add(gross);
+     }
+     
+     
+        var total = numk.Sum(p => p.value); //总数量
+        numk.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = total
+        });
+
+        var xszcb = SellingCost.Sum(p => p.value); //销售总成本
+        SellingCost.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = xszcb
+        });
+
+        AverageCost.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = xszcb / total //销售成本/数量
+        });
+        var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
+        SalesRevenue.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = totalsale
+        });
+        Prices.Add(new YearValue() //单价总和=销售收入总和/数量总和
+        {
+            key = "全生命周期",
+            value = totalsale / total
+        });
+        var yj = commission.Sum(p => p.value); //佣金总和
+        commission.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = yj
+        });
+        var xsml = SalesMargin.Sum(p => p.value); //销售毛利总和
+        SalesMargin.Add(new YearValue()
+        {
+            key = "全生命周期",
+            value = xsml
+        });
+        GrossMargin.Add(new YearValue() //销售毛利/销售收入
+        {
+            key = "全生命周期",
+            value = (xsml / totalsale) * 100
+        });
+
+        YearDimensionalityComparisonSecondDto yearDimensionalityComparisonSecondDto =
+            new YearDimensionalityComparisonSecondDto();
+
+        yearDimensionalityComparisonSecondDto.numk = numk;
+        yearDimensionalityComparisonSecondDto.Prices = Prices;
+        yearDimensionalityComparisonSecondDto.SellingCost = SellingCost;
+        yearDimensionalityComparisonSecondDto.AverageCost = AverageCost;
+        yearDimensionalityComparisonSecondDto.SalesRevenue = SalesRevenue;
+        yearDimensionalityComparisonSecondDto.commission = commission;
+        yearDimensionalityComparisonSecondDto.SalesMargin = SalesMargin;
+        yearDimensionalityComparisonSecondDto.GrossMargin = GrossMargin;
+        return yearDimensionalityComparisonSecondDto;
+    }
+
+    /// <summary>
+    /// List<YearValue>合并
+    /// </summary>
+    /// <returns></returns>
+    public List<YearValue> hebing(List<YearValue> olds, List<YearValue> news)
+    {
+        List<YearValue> ones = new();
+        Dictionary<String, YearValue> dict = news.ToDictionary(p => p.key, p => p);
+        foreach (var old in olds)
+        {
+          var key=  old.key;
+          var value = old.value;
+          value+=dict[key].value;
+          ones.Add(new YearValue()
+          {
+              key=key,
+              value = value
+          });
+        }
+
+        return ones;
     }
 
     /// <summary>
@@ -1629,7 +1879,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             key = "全生命周期",
             value = totalsale / total
         });
-        var yj = SalesRevenue.Sum(p => p.value); //佣金总和
+        var yj = commission.Sum(p => p.value); //佣金总和
         commission.Add(new YearValue()
         {
             key = "全生命周期",
@@ -1875,7 +2125,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         int time = 0;
         if (count == 0)
         {
-            time = 0;
+            time = 1;
         }
         else
         {
@@ -1885,17 +2135,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 throw new UserFriendlyException("本流程报价提交次数已经到顶");
             }
         }
-
-
-        await InsertSolution(solutions, version, time + 1);
-        //获取报价方案
-        List<SolutionQuotation> solutionQuotations =
-            await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.version == version);
-
+        await InsertSolution(solutions, version, time );
+        
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
-        InsertNre(nres, solutionQuotations);
+        InsertNre(nres, solutions);
         List<OnlySampleDto> onlySampleDtos = isOfferDto.SampleOffer;
-        InsertSample(onlySampleDtos, solutionQuotations);
+        InsertSample(onlySampleDtos, solutions);
 
         List<SopAnalysisModel> sops = isOfferDto.Sops;
         InsertSop(sops, version);
@@ -1904,9 +2149,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         List<BoardModel> projectBoardModels = isOfferDto.ProjectBoard;
         Insertboard(AuditFlowId, projectBoardModels, version);
-        List<GradientQuotedGrossMarginModel> jts = isOfferDto.GradientQuotedGrossMargins;
+        List<GradientGrossMarginCalculateModel> jts = isOfferDto.GradientQuotedGrossMargins;
         InsertGradientQuotedGrossMargin(AuditFlowId, jts, version);
-        List<QuotedGrossMarginProjectModel> models = isOfferDto.QuotedGrossMargins;
+        List<QuotedGrossMarginActualModel> models = isOfferDto.QuotedGrossMargins;
         InsertQuotedGrossMarginProject(AuditFlowId, models, version);
     }
 
@@ -1978,37 +2223,42 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     public async Task InsertQuotedGrossMarginProject(long AuditFlowId,
-        List<QuotedGrossMarginProjectModel> grossMarginProjectModels, int version)
+        List<QuotedGrossMarginActualModel> grossMarginProjectModels, int version)
     {
         var list = new List<DynamicUnitPriceOffers>();
         foreach (var grossMargin in grossMarginProjectModels)
         {
             var project = grossMargin.project;
-            var dys = (from gross in grossMargin.GrossMargins
+            var dys = (from gross in grossMargin.QuotedGrossMarginActualList
                 select new DynamicUnitPriceOffers()
                 {
                     version = version,
                     AuditFlowId = AuditFlowId,
                     ProductName = gross.product,
-                    InteriorTargetUnitPrice = gross.quotedGrossMarginSimple.Interior.Price,
-                    AllInteriorGrossMargin = gross.quotedGrossMarginSimple.Interior.GrossMargin,
-                    AllInteriorClientGrossMargin = gross.quotedGrossMarginSimple.Interior.ClientGrossMargin,
-                    AllInteriorNreGrossMargin = gross.quotedGrossMarginSimple.Interior.NreGrossMargin,
-                    ClientTargetUnitPrice = gross.quotedGrossMarginSimple.Client.Price,
-                    AllClientGrossMargin = gross.quotedGrossMarginSimple.Client.GrossMargin,
-                    AllClientClientGrossMargin = gross.quotedGrossMarginSimple.Client.ClientGrossMargin,
-                    AllClientNreGrossMargin = gross.quotedGrossMarginSimple.Client.NreGrossMargin,
-                    OfferUnitPrice = gross.quotedGrossMarginSimple.ThisQuotation.Price,
-                    OffeGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.GrossMargin,
-                    ClientGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.ClientGrossMargin,
-                    NreGrossMargin = gross.quotedGrossMarginSimple.ThisQuotation.NreGrossMargin
+                    Id=gross.Id,
+                    title=project,
+                    carModel = gross.carModel,
+                    carNum = gross.carNum,
+                    SolutionId = gross.SolutionId,
+                    InteriorTargetUnitPrice = gross.InteriorPrice,
+                    AllInteriorGrossMargin = gross.InteriorGrossMargin,
+                    AllInteriorClientGrossMargin = gross.InteriorClientGrossMargin,
+                    AllInteriorNreGrossMargin = gross.InteriorNreGrossMargin,
+                    ClientTargetUnitPrice = gross.ClientPrice,
+                    AllClientGrossMargin = gross.ClientGrossMargin,
+                    AllClientClientGrossMargin = gross.ClientClientGrossMargin,
+                    AllClientNreGrossMargin = gross.ClientNreGrossMargin,
+                    OfferUnitPrice = gross.ThisQuotationPrice,
+                    OffeGrossMargin = gross.ThisQuotationGrossMargin,
+                    ClientGrossMargin = gross.ThisQuotationClientGrossMargin,
+                    NreGrossMargin = gross.ThisQuotationNreGrossMargin
                 }).ToList();
             list.AddRange(dys);
         }
 
         foreach (var dynamicUnitPriceOffers in list)
         {
-            _dynamicUnitPriceOffers.InsertAsync(dynamicUnitPriceOffers);
+            _dynamicUnitPriceOffers.InsertOrUpdateAsync(dynamicUnitPriceOffers);
         }
     }
 
@@ -2018,11 +2268,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<List<GradientQuotedGrossMarginModel>> getGradientQuotedGrossMargin(long AuditFlowId, int version)
     {
-        List<ActualUnitPriceOffer> actualUnitPriceOffers = _actualUnitPriceOffer.GetAll()
-            .Where(p => p.AuditFlowId == AuditFlowId && p.version == version).ToList();
 
-        List<GradientQuotedGrossMarginModel> gradientQuotedGross = (from act in actualUnitPriceOffers
-            select new GradientQuotedGrossMarginModel()
+        List<GradientQuotedGrossMarginModel> gradientQuotedGross = new List<GradientQuotedGrossMarginModel>();
+            /*select new GradientQuotedGrossMarginModel()
             {
                 AuditFlowId = act.AuditFlowId,
                 version = act.version,
@@ -2034,7 +2282,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     Client = JsonConvert.DeserializeObject<TargetPrice>(act.ClientTarget),
                     ThisQuotation = JsonConvert.DeserializeObject<TargetPrice>(act.Offer)
                 }
-            }).ToList();
+            }).ToList();*/
         return gradientQuotedGross;
     }
 
@@ -2043,18 +2291,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     public async Task InsertGradientQuotedGrossMargin(long AuditFlowId,
-        List<GradientQuotedGrossMarginModel> gradientQuotedGross, int version)
+        List<GradientGrossMarginCalculateModel> gradientQuotedGross, int version)
     {
-        var list = (from grd in gradientQuotedGross
-            select new ActualUnitPriceOffer()
-            {
-                AuditFlowId = AuditFlowId,
-                version = version,
-                Kv = grd.gradient,
-                InteriorTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Interior),
-                ClientTarget = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.Client),
-                Offer = JsonConvert.SerializeObject(grd.QuotedGrossMarginSimple.ThisQuotation)
-            }).ToList();
+        
+        var list = ObjectMapper.Map<List<GradientGrossMarginCalculate>>(gradientQuotedGross);
+
+    
 
         foreach (var actual in list)
         {
@@ -2072,19 +2314,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             var projects = bord.ProjectBoardModels;
             var projectbords = (from board in projects
-                select new ProjectBoardOffers()
+                select new ProjectBoardSecondOffers()
                 {
                     AuditFlowId = AuditFlowId,
                     ProjectName = board.ProjectName,
                     version = version,
-                    InteriorTarget = JsonConvert.SerializeObject(board.InteriorTarget),
-                    ClientTarget = JsonConvert.SerializeObject(board.ClientTarget),
-                    Offer = JsonConvert.SerializeObject(board.Offer)
+                    InteriorTarget =board.InteriorTarget,
+                    ClientTarget = board.ClientTarget,
+                    Offer = board.Offer
                 }).ToList();
 
             foreach (var projectbord in projectbords)
             {
-                await _resourceProjectBoardOffers.InsertAsync(projectbord);
+                await _resourceProjectBoardSecondOffers.InsertOrUpdateAsync(projectbord);
             }
         }
     }
@@ -2137,6 +2379,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var polls = (from pool in pooledAnalysisModels
             select new PooledAnalysisOffers()
             {
+                Id=pool.Id,
                 AuditFlowId = AuditFlowId,
                 ProjectName = pool.ProjectName,
                 version = version,
@@ -2144,7 +2387,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
         foreach (var pool in polls)
         {
-            await _resourcePooledAnalysisOffers.InsertAsync(pool);
+            await _resourcePooledAnalysisOffers.InsertOrUpdateAsync(pool);
         }
     }
 
@@ -2200,15 +2443,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var unitPriceOffersList = (from unit in unitPriceModels
             select new UnitPriceOffers()
             {
+                Id=unit.Id,
                 AuditFlowId = unit.AuditFlowId,
                 ProductName = unit.Product,
+                GradientId = unit.GradientId,
                 GradientValue = unit.GradientValue,
                 version = version,
                 GrossMarginList = JsonConvert.SerializeObject(unit.GrossValues)
             }).ToList();
         foreach (var uns in unitPriceOffersList)
         {
-            _resourceUnitPriceOffers.InsertAsync(uns);
+            _resourceUnitPriceOffers.InsertOrUpdateAsync(uns);
         }
     }
 
@@ -2216,17 +2461,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 样品 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<SolutionQuotation> solutionQuotations)
+    public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<Solution> solutionQuotations)
     {
         foreach (var onlySampleDto in onlySampleDtos)
         {
-            var soltuion = solutionQuotations.Where(p => p.SolutionId == onlySampleDto.SolutionId).FirstOrDefault();
+            var soltuion = solutionQuotations.Where(p => p.Id == onlySampleDto.SolutionId).FirstOrDefault();
             List<SampleQuotation> sampleQuotations = onlySampleDto.OnlySampleModels;
 
             foreach (var sampleQuotation in sampleQuotations)
             {
                 sampleQuotation.SolutionId = soltuion.Id;
-                _sampleQuotation.InsertAsync(sampleQuotation);
+                _sampleQuotation.InsertOrUpdateAsync(sampleQuotation);
             }
         }
     }
@@ -2263,45 +2508,31 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task InsertSolution(List<Solution> solutions, int version, int time)
     {
-        List<SolutionQuotation> solutionQuotations = (from solution in solutions
-            select new SolutionQuotation()
-            {
-                SolutionId = solution.Id,
-                AuditFlowId = solution.AuditFlowId,
-                Productld = solution.Productld,
-                ModuleName = solution.ModuleName,
-                SolutionName = solution.SolutionName,
-                Product = solution.Product,
-                IsCOB = solution.IsCOB,
-                ElecEngineerId = solution.ElecEngineerId,
-                StructEngineerId = solution.StructEngineerId,
-                IsFirst = solution.IsFirst,
-                ntime = time,
-                version = version
-            }).ToList();
-        foreach (var solutionQuotation in solutionQuotations)
+        SolutionQuotation solutionQuotation = new()
         {
-            _solutionQutation.InsertAsync(solutionQuotation);
-        }
+            SolutionListJson = JsonConvert.SerializeObject(solutions),
+            ntime = time,
+            version = version
+        };
+        _solutionQutation.InsertAsync(solutionQuotation);
+       
+       
     }
 
     /// <summary>
     /// NRE 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertNre(List<AnalyseBoardNreDto> nres, List<SolutionQuotation> solutionQuotations)
+    public async Task InsertNre(List<AnalyseBoardNreDto> nres, List<Solution> solutionQuotations)
     {
         foreach (var nre in nres)
         {
             var solutionId = nre.SolutionId;
             if (solutionId is not null)
             {
-                var soltuion = solutionQuotations.Where(p => p.SolutionId == nre.SolutionId).FirstOrDefault();
+                var soltuion = _resourceSchemeTable.FirstOrDefault(p => p.Id== nre.SolutionId);
                 List<NreQuotation> nreQuotations = nre.models;
                 List<DeviceQuotation> deviceQuotations = nre.devices;
-                soltuion.numberLine = nre.numberLine;
-                soltuion.collinearAllocationRate = nre.collinearAllocationRate;
-                _solutionQutation.UpdateAsync(soltuion);
                 foreach (var nreQuotation in nreQuotations)
                 {
                     nreQuotation.SolutionId = soltuion.Id;
