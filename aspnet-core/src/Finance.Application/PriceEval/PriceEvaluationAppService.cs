@@ -5,6 +5,7 @@ using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Json;
 using Abp.Linq.Extensions;
+using Abp.Runtime.Caching;
 using AutoMapper;
 using Finance.Audit;
 using Finance.Audit.Dto;
@@ -56,7 +57,7 @@ namespace Finance.PriceEval
     {
         #region 类初始化
 
-
+        private readonly ICacheManager _cacheManager;
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
@@ -99,7 +100,7 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
-        public PriceEvaluationAppService(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
+        public PriceEvaluationAppService(ICacheManager cacheManager,IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
             IRepository<LossRateInfo, long> lossRateInfoRepository,
@@ -131,6 +132,7 @@ namespace Finance.PriceEval
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
                   processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository)
         {
+            _cacheManager = cacheManager;
             _nodeInstanceRepository = nodeInstanceRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _productInformationRepository = productInformationRepository;
@@ -195,6 +197,24 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+
+            #region 流程防抖
+
+            var cacheJson = JsonConvert.SerializeObject(input);
+            var code = cacheJson.GetHashCode().ToString();
+
+            var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+            if (cache is null)
+            {
+                await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+            }
+            else
+            {
+                throw new FriendlyException($"您重复提交了流程！");
+            }
+
+            #endregion
 
             #region 通用参数校验
             var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
@@ -1084,7 +1104,9 @@ namespace Finance.PriceEval
             var qualityCost = data.OtherCostItem.QualityCost;
 
             //其他成本
-            var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
+            //var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
+            var other = data.OtherCostItem2.Where(p => p.ItemName == "单颗成本").Sum(p => p.Total).GetValueOrDefault();
+
 
             var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
 
@@ -1095,7 +1117,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="制造成本", Proportion= manufacturingCost},
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
-                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other/sum},
+                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
             };
 
             var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);

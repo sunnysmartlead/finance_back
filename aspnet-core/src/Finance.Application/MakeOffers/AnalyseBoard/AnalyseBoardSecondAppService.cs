@@ -4,22 +4,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Abp.UI;
-using Abp.Authorization;
 using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
 using Finance.FinanceMaintain;
+using Finance.Infrastructure;
 using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
-using Finance.NrePricing.Dto;
 using Finance.PriceEval;
-using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace Finance.MakeOffers.AnalyseBoard;
@@ -30,131 +27,49 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 分析看板方法
     /// </summary>
     public readonly AnalysisBoardSecondMethod _analysisBoardSecondMethod;
-
-    /// <summary>
-    /// 报价审核表
-    /// </summary>
-    private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
-
     /// <summary>
     /// 核价梯度相关
     /// </summary>
     private readonly IRepository<Gradient, long> _gradientRepository;
-
-    protected readonly IRepository<ModelCount, long> _modelCountRepository;
-    protected readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
-
+    /// <summary>
+    /// 报价审核表
+    /// </summary>
+    private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
-
-    /// <summary>
-    /// 核价相关
-    /// </summary>
-    private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
-
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly NrePricingAppService _nrePricingAppService;
-
-    /// <summary>
-    /// Nre核价api
-    /// </summary>
-    public readonly ProcessHoursEnterLineAppService _processHoursEnterLineAppService;
-
-    public readonly PriceEvaluationAppService _priceEvaluationAppService;
-
-    /// <summary>
-    /// 归档文件列表实体类
-    /// </summary>
-    private readonly IRepository<DownloadListSave, long> _financeDownloadListSave;
-
-    /// <summary>
-    /// 报价分析看板中的 产品单价表 实体类
-    /// </summary>
-    private readonly IRepository<UnitPriceOffers, long> _resourceUnitPriceOffers;
-
-    private readonly IRepository<GradientModel, long> _gradientModelRepository;
-    private readonly IRepository<GradientModelYear, long> _gradientModelYearRepository;
-    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
-    private readonly IRepository<Sample, long> _sampleRepository;
-
-    /// <summary>
-    ///报价 项目看板实体类 实体类
-    /// </summary>
-    private readonly IRepository<ProjectBoardOffers, long> _resourceProjectBoardOffers;
-
-    /// <summary>
-    /// 报价分析看板中的 汇总分析表  实体类
-    /// </summary>
-    private readonly IRepository<PooledAnalysisOffers, long> _resourcePooledAnalysisOffers;
-
-    /// <summary>
-    ///  财务维护 毛利率方案
-    /// </summary>
-    private readonly IRepository<GrossMarginForm, long> _configGrossMarginForm;
-
-    /// <summary>
-    /// 报价分析看板中的 动态单价表 实体类
-    /// </summary>
-    private readonly IRepository<DynamicUnitPriceOffers, long> _resourceDynamicUnitPriceOffers;
-
+    
     /// <summary>
     /// 流程流转服务
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
+    private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
     /// <summary>
     /// 构造函数
     /// </summary>
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-        IRepository<Gradient, long> gradientRepository, IRepository<GradientModel, long> gradientModelRepository,
-        IRepository<UnitPriceOffers, long> unitPriceOffers,
-        NrePricingAppService nrePricingAppService,
-        PriceEvaluationAppService priceEvaluationAppService,
-        ProcessHoursEnterLineAppService processHoursEnterLineAppService,
-        IRepository<DynamicUnitPriceOffers, long> DynamicUnitPriceOffers,
-        IRepository<ProjectBoardOffers, long> projectBoardOffers,
         AuditFlowAppService flowAppService,
+        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<Sample, long> sampleRepository,
-        IRepository<PriceEvaluation, long> priceEvaluationRepository,
-        IRepository<PooledAnalysisOffers, long> pooledAnalysisOffers,
-        IRepository<GrossMarginForm, long> configGrossMarginForm,
-        IRepository<DownloadListSave, long> financeDownloadListSave,
-        IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository,
-        IRepository<GradientModelYear, long> gradientModelYearRepository,
+        IRepository<Gradient, long> gradientRepository,
+        
         IRepository<Solution, long> resourceSchemeTable)
     {
-        _priceEvaluationRepository = priceEvaluationRepository;
         _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDownloadListSave = financeDownloadListSave;
-
+        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-        _resourceDynamicUnitPriceOffers = DynamicUnitPriceOffers;
-        _resourceProjectBoardOffers = projectBoardOffers;
-        _processHoursEnterLineAppService = processHoursEnterLineAppService;
+       
         _flowAppService = flowAppService;
         _gradientRepository = gradientRepository;
+        _flowAppService = flowAppService;
         _resourceSchemeTable = resourceSchemeTable;
 
-        _resourceUnitPriceOffers = unitPriceOffers;
-        _resourcePooledAnalysisOffers = pooledAnalysisOffers;
-        _priceEvaluationAppService = priceEvaluationAppService;
-        _nrePricingAppService = nrePricingAppService;
-        _configGrossMarginForm = configGrossMarginForm;
-        _modelCountRepository = modelCountRepository;
-        _priceEvaluationGetAppService = priceEvaluationGetAppService;
-        _modelCountYearRepository = modelCountYearRepository;
-        _gradientModelRepository = gradientModelRepository;
-        _sampleRepository = sampleRepository;
-        _gradientModelYearRepository = gradientModelYearRepository;
+      
     }
-
     /// <summary>
-    /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
+    /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品   ,特别注意，传入方案，方案中的moduleName不能一样
     /// </summary>
     /// <param name="analyseBoardSecondInputDto"></param>
     /// <returns></returns>
@@ -172,7 +87,22 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return analyseBoardSecondDto;
         }
     }
-
+    /// <summary>
+    /// 用于调试接口
+    /// </summary>
+    /// <param name="analyseBoardSecondInputDto"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<List<Gradient>> getInterface(
+       long auid)
+    {
+        //获取梯度
+        List<Gradient> gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
+        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+        return gradients;
+    }
+    
     /// <summary>
     /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
     /// </summary>
@@ -183,7 +113,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
-
         try
         {
         return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond( auditFlowId,version);
@@ -194,7 +123,41 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return analyseBoardSecondDto;
         }
     }
-
+    
+    /// <summary>
+    /// 毛利率（阶梯数量）
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForGradient( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+            return await _analysisBoardSecondMethod.PostGrossMarginForGradient( yearProductBoardProcessSecondDto);
+        
+    }
+    /// <summary>
+    /// 毛利率（实际数量）
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactual( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    {
+        return await _analysisBoardSecondMethod.PostGrossMarginForactual( yearProductBoardProcessSecondDto);
+    }
+    /// <summary>
+    /// 毛利率（实际数量）齐套
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactualQt( YearProductBoardProcessQtSecondDto yearProductBoardProcessSecondDto)
+    {
+        return await _analysisBoardSecondMethod.PostGrossMarginForactualQt( yearProductBoardProcessSecondDto);
+    }
     /// <summary>
     /// 下载成本信息表二开
     /// </summary>
@@ -228,13 +191,22 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
-   /* public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+   public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
-    }*/
+    }
 
-
+    /// <summary>
+    /// 查看年度对比（实际数量）用于齐套
+    /// </summary>
+    /// <param name="yearProductBoardProcessDto"></param>
+    /// <returns></returns>
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactualQt(
+        YearProductBoardProcessQtSecondDto yearProductBoardProcessDto)
+    {
+        return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactualQt(yearProductBoardProcessDto);
+    }
     /// <summary>
     /// 查看 核心器件、Nre费用拆分
     /// </summary>
@@ -243,8 +215,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId)
     {
         CoreComponentAndNreDto coreComponentAndNreDto = new();
-
-
         return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId);
     }
 
@@ -359,7 +329,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     ///// <summary>
-    /// 报价分析看板 的保存
+    ///  审核的保存
     /// </summary>
     /// <param name="quotationListDto"></param>
     /// <returns></returns>
@@ -384,7 +354,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 报价接口
+    /// 报价分析看板 保存
     /// </summary>
     /// <param name="isOfferDto"></param>
     /// <returns></returns>

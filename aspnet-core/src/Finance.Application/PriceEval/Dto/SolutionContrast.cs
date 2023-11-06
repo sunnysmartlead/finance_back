@@ -50,10 +50,16 @@ namespace Finance.PriceEval.Dto
     public class SolutionContrast
     {
         /// <summary>
-        /// 项目名
+        /// 项目名（方案1）
         /// </summary>
         [ExcelColumn(Name = "项目名", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string ItemName { get; set; }
+
+        /// <summary>
+        /// 项目名（方案2）
+        /// </summary>
+        [ExcelColumn(Name = "方案2项目名", Width = FinanceConsts.ExcelColumnWidth)]
+        public virtual string ItemName2 { get; set; }
 
         /// <summary>
         /// 方案1：单价

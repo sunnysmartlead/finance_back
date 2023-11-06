@@ -42,16 +42,18 @@ public class IsOfferSecondDto
     /// <summary>
     /// 报价毛利率测算 实际数量
     /// </summary>
-    public List<QuotedGrossMarginProjectModel> QuotedGrossMargins { get; set; }
+    public List<QuotedGrossMarginActualModel> QuotedGrossMargins { get; set; }
+
     /// <summary>
     /// 报价毛利率测算阶梯数量
     /// </summary>
-    public List<GradientQuotedGrossMarginModel> GradientQuotedGrossMargins { get; set; }
+    public List<GradientGrossMarginCalculateModel> GradientQuotedGrossMargins { get; set; }
+
     /// <summary>
     /// 项目全生命周期汇总分析表-实际数量
     /// </summary>
-    public List<PooledAnalysisModel> FullLifeCycle{ get; set; }
-    
+    public List<PooledAnalysisModel> FullLifeCycle { get; set; }
+
     /// <summary>
     /// 报价方案
     /// </summary>

@@ -20,6 +20,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// </summary> 
         public long AuditFlowId { get; set; }
         /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+        /// <summary>
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
