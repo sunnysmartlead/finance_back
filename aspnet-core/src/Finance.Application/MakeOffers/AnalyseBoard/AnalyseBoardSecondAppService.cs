@@ -147,7 +147,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.PostGrossMarginForactual( yearProductBoardProcessSecondDto);
     }
-
+    /// <summary>
+    /// 毛利率（实际数量）齐套
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
+    /// <exception cref="UserFriendlyException"></exception>
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactualQt( YearProductBoardProcessQtSecondDto yearProductBoardProcessSecondDto)
+    {
+        return await _analysisBoardSecondMethod.PostGrossMarginForactualQt( yearProductBoardProcessSecondDto);
+    }
     /// <summary>
     /// 下载成本信息表二开
     /// </summary>
@@ -187,7 +197,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
     }
 
-
+    /// <summary>
+    /// 查看年度对比（实际数量）用于齐套
+    /// </summary>
+    /// <param name="yearProductBoardProcessDto"></param>
+    /// <returns></returns>
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactualQt(
+        YearProductBoardProcessQtSecondDto yearProductBoardProcessDto)
+    {
+        return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactualQt(yearProductBoardProcessDto);
+    }
     /// <summary>
     /// 查看 核心器件、Nre费用拆分
     /// </summary>
@@ -310,7 +329,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     ///// <summary>
-    /// 报价分析看板 的保存
+    ///  审核的保存
     /// </summary>
     /// <param name="quotationListDto"></param>
     /// <returns></returns>

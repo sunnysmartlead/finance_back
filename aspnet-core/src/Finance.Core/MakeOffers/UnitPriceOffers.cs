@@ -21,6 +21,10 @@ namespace Finance.MakeOffers
         /// </summary>
         public long ProductId { get; set; }
         /// <summary>
+        /// 梯度id
+        /// </summary>
+        public long GradientId { get; set; }
+        /// <summary>
         /// 产品名称
         /// </summary>
         public string ProductName { get; set; }
