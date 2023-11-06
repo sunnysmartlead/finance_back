@@ -4010,7 +4010,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return quotationListSecondDto;
     }
-
+    internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId)
+    {
+        List<ExternalQuotation> externalQuotations =
+           await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+        return externalQuotations.Select(p=>p.NumberOfQuotations).OrderBy(p=>p).ToList();
+    }
     internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
         long numberOfQuotations, List<ProductDto> productDtos, List<QuotationNreDto> quotationNreDtos)
     {
@@ -4086,7 +4091,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ExperimentalFees = a.sy,
                 RDExpenses = a.qt + a.cl + a.csrj,
             }).ToList();
-
             externalQuotationDto.AccountName = "浙江舜宇智领技术有限公司";
             externalQuotationDto.DutyParagraph = "91330281MA2816W038";
             externalQuotationDto.BankOfDeposit = "中国农业银行余姚市环城支行";

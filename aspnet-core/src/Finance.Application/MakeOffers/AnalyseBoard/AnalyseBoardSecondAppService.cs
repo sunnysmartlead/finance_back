@@ -18,6 +18,7 @@ using Finance.PriceEval;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 
 namespace Finance.MakeOffers.AnalyseBoard;
 
@@ -251,7 +252,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException(e.Message);
         }
     }
-
+    /// <summary>
+    /// 根据流程号查询对外报价单的版本号
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <returns></returns>
+    public async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId)
+    {
+        return await _analysisBoardSecondMethod.GetExternalQuotationNumberOfQuotations(auditFlowId);
+    }
     /// <summary>
     /// 对外报价单查询
     /// </summary>
@@ -260,12 +269,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
     {
         //暂时注释 等报价看板完成之后放开
-        //List<SolutionQuotation> solutionQuotations = await GeCatalogue(auditFlowId);
-        //solutionQuotations= solutionQuotations.Where(p=>p.Id == solutionId).ToList();
-        //if(solutionQuotations is null|| solutionQuotations.Count==0)
-        //{
-        //    throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
-        //}
+        List<SolutionQuotation> solutionQuotations = await GeCatalogue(auditFlowId);
+        solutionQuotations = solutionQuotations.Where(p => p.Id == solutionId).ToList();
+        if (solutionQuotations is null || solutionQuotations.Count == 0)
+        {
+            throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
+        }
         List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations);
         List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations);
 
@@ -279,12 +288,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
         //暂时注释 等报价看板完成之后放开
-        //List<SolutionQuotation> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
-        //solutionQuotations = solutionQuotations.Where(p => p.Id == externalQuotationDto.SolutionId).ToList();
-        //if (solutionQuotations is null || solutionQuotations.Count == 0)
-        //{
-        //    throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
-        //}
+        List<SolutionQuotation> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
+        solutionQuotations = solutionQuotations.Where(p => p.Id == externalQuotationDto.SolutionId).ToList();
+        if (solutionQuotations is null || solutionQuotations.Count == 0)
+        {
+            throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
+        }
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
 
