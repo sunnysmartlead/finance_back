@@ -1234,7 +1234,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var solutionidscarnums = yearProductBoardProcessSecondDto.SolutionIdsAndcarNums;
         var carModel = yearProductBoardProcessSecondDto.CarModel; //车型
         var sgp = yearProductBoardProcessSecondDto.SoltionGradPrices;
-        
+
         decimal unprice = 0;
         decimal qtsl = 0;
         decimal qtyj = 0;
@@ -1268,8 +1268,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     SoltionGradPrices = sgp
                 });
             }
-            
-          
+
+
 
             unprice += solutionidscarnum.carNum * grossmarin.unitPrice;
             qtsl+=grossmarin.sl;
@@ -1550,7 +1550,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
         var crms = priceEvaluationStartInputResult.Requirement;
-        
+
         for (int i = 0; i < solutionidscarnums.Count; i++)
         {
             var solutionidscarnum = solutionidscarnums[i];
@@ -1571,11 +1571,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 {
                     AuditFlowId = AuditFlowId,
                     SolutionId = solutionidscarnum.SolutionId,
-                   
+
                     SoltionGradPrices = sgp
                 });
             }
-           
+
             var numknew = nddb.numk.Where(p => !p.key.Equals("全生命周期")).ToList();
             var Pricsenew = nddb.Prices.Where(p => !p.key.Equals("全生命周期")).ToList();
             var SellingCostnew = nddb.SellingCost.Where(p => !p.key.Equals("全生命周期")).ToList();
@@ -1616,8 +1616,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
          gross.value = (smdict[SalesRevenues.key].value / SalesRevenues.value) * 100; //销售毛利/销售收入
          GrossMargin.Add(gross);
      }
-     
-     
+
+
         var total = numk.Sum(p => p.value); //总数量
         numk.Add(new YearValue()
         {
@@ -2136,7 +2136,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
         }
         await InsertSolution(solutions, version, time );
-        
+
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
         InsertNre(nres, solutions);
         List<OnlySampleDto> onlySampleDtos = isOfferDto.SampleOffer;
@@ -2293,10 +2293,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task InsertGradientQuotedGrossMargin(long AuditFlowId,
         List<GradientGrossMarginCalculateModel> gradientQuotedGross, int version)
     {
-        
+
         var list = ObjectMapper.Map<List<GradientGrossMarginCalculate>>(gradientQuotedGross);
 
-    
+
 
         foreach (var actual in list)
         {
@@ -2515,8 +2515,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             version = version
         };
         _solutionQutation.InsertAsync(solutionQuotation);
-       
-       
+
+
     }
 
     /// <summary>
