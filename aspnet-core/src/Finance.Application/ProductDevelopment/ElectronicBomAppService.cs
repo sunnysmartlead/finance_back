@@ -255,12 +255,26 @@ namespace Finance.ProductDevelopment
                     long AuditFlowId = dto.AuditFlowId;
                     long SolutionId = dto.SolutionId;
                     long ProductId = dto.ProductId;
+
+                    List<string> strList = new List<string>();
+
                     electronicBomDtos.ForEach(bomInfo =>
                     {
                         bomInfo.AuditFlowId = AuditFlowId;
                         bomInfo.SolutionId = SolutionId;
                         bomInfo.ProductId = ProductId;
+
+                        string str = bomInfo.CategoryName + bomInfo.TypeName + bomInfo.IsInvolveItem + bomInfo.SapItemName + bomInfo.SapItemNum;
+
+                        strList.Add(str);
                     });
+
+                    bool ifrRep = strList.GroupBy(i => i).Where(g => g.Count() > 1).Count() >=1 ;
+                    if (ifrRep)
+                    {
+                        throw new FriendlyException( "EXCLE中前五列相同，系统判定重复，请更新EXCLE!");
+                    }
+
 
                     //要保存的bom表list
                     var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
@@ -276,7 +290,7 @@ namespace Finance.ProductDevelopment
                     }
 
                     var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                    if (bomInfoByProductIds.Count == 0)
+                    if (bomInfoByProductIds.Count == 0 )
                     {
                         foreach (var item in electronicBomDtos)
                         {
@@ -294,23 +308,13 @@ namespace Finance.ProductDevelopment
                                 EncapsulationSize = item.EncapsulationSize,
                             };
 
-                            //根据前面7项检查出来是否存在
-                            var exsitBomInfos = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId
-                                                                                           && p.CategoryName == item.CategoryName && p.TypeName == item.TypeName
-                                                                                        && p.IsInvolveItem == item.IsInvolveItem && p.SapItemName == item.SapItemName
-                                                                                        && p.SapItemNum == item.SapItemNum);
-
-                            //如果不存在，则是一个新增
-                            if (exsitBomInfos.Count == 0)
-                            {
                                 await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
-                            }
-                            else
-                            {
-                                throw new FriendlyException("有重复零件，请检查后重新上传！");
-                            }
-
+                    
                         }
+                    }
+                    else 
+                    {
+
                     }
 
                     #region 录入完成之后
