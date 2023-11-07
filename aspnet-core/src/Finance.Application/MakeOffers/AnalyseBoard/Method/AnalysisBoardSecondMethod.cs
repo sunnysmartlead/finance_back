@@ -114,7 +114,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <summary>
     /// 报价毛利率测算-阶梯数量
     /// </summary>
-    private readonly IRepository<GradientGrossMarginCalculate, long> _actualUnitPriceOffer;
+    private readonly IRepository<GradientGrossCalculate, long> _actualUnitPriceOffer;
 
     /// <summary>
     /// 报价毛利率测算-实际数量
@@ -156,7 +156,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<SampleQuotation, long> sampleQuotation,
         IRepository<NreQuotation, long> nreQuotation,
         IRepository<ProjectBoardSecondOffers, long> resourceProjectBoardSecondOffers,
-        IRepository<GradientGrossMarginCalculate, long> actualUnitPriceOffer,
+        IRepository<GradientGrossCalculate, long> actualUnitPriceOffer,
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<ExchangeRate, long> exchangeRate,
         PriceEvaluationAppService priceEvaluationAppService,
@@ -2329,7 +2329,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task InsertGradientQuotedGrossMargin(long AuditFlowId,
         List<GradientGrossMarginCalculateModel> gradientQuotedGross, int version)
     {
-        var list = ObjectMapper.Map<List<GradientGrossMarginCalculate>>(gradientQuotedGross);
+        var list = ObjectMapper.Map<List<GradientGrossCalculate>>(gradientQuotedGross);
 
 
         foreach (var actual in list)

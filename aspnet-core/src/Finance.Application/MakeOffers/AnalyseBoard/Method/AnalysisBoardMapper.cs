@@ -33,8 +33,8 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             configuration.CreateMap<ProductQuotationListDto, ProductExternalQuotationMx>();
             configuration.CreateMap<NreQuotationList, NreQuotationListDto>();
             configuration.CreateMap<NreQuotationListDto, NreQuotationList>();
-            configuration.CreateMap<GradientGrossMarginCalculate, GradientGrossMarginCalculateModel>();
-            configuration.CreateMap<GradientGrossMarginCalculateModel, GradientGrossMarginCalculate>();
+            configuration.CreateMap<GradientGrossCalculate, GradientGrossMarginCalculateModel>();
+            configuration.CreateMap<GradientGrossMarginCalculateModel, GradientGrossCalculate>();
 
         }
     }
