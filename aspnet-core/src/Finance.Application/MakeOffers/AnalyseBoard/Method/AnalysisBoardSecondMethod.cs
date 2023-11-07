@@ -4175,7 +4175,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 MyPropMoldCosterty = a.moju,
                 CostOfToolingAndFixtures = a.gzyj,
                 ExperimentalFees = a.sy,
-                RDExpenses = a.qt + a.cl + a.csrj,
+                RDExpenses = a.qt + a.cl + a.csrj+a.jianju,
             }).ToList();
             externalQuotationDto.AccountName = "浙江舜宇智领技术有限公司";
             externalQuotationDto.DutyParagraph = "91330281MA2816W038";
