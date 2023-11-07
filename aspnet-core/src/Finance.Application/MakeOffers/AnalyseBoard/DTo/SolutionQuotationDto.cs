@@ -3,14 +3,12 @@ using Finance.DemandApplyAudit;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
 
-/// <summary>
-/// 报价分析看板输入实体类  交互类
-/// </summary>
-public class AnalyseBoardSecondInputDto
+public class SolutionQuotationDto
 {
-    public long auditFlowId { get; set; }
-    
-    public List<Solution> solutionTables { get; set; }
+    /// <summary>
+    /// 流程Id
+    /// </summary>
+    public virtual long AuditFlowId { get; set; }
     /// <summary>
     /// 版本
     /// </summary>
@@ -20,5 +18,9 @@ public class AnalyseBoardSecondInputDto
     /// 报价次数
     /// </summary>
     public int ntime { get; set; }
-  
+    
+    /// <summary>
+    /// 报价次数
+    /// </summary>
+    public List<Solution> solutionList { get; set; }
 }

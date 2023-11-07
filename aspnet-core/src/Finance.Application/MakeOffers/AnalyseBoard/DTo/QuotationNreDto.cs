@@ -40,6 +40,10 @@ public class QuotationNreDto
     /// </summary>
     public decimal cl { get; set; }
     /// <summary>
+    /// 检具费
+    /// </summary>
+    public decimal jianju { get; set; }
+    /// <summary>
     /// 其他费用
     /// </summary>
     public decimal qt { get; set; }

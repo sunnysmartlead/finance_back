@@ -44,4 +44,8 @@ public class NreQuotation: FullAuditedEntity<long>
     /// 共线分摊率
     /// </summary>
     public decimal collinearAllocationRate { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
 }

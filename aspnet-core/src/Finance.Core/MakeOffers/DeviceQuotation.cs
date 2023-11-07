@@ -31,4 +31,8 @@ public class DeviceQuotation: FullAuditedEntity<long>
     /// 设备金额
     /// </summary>
     public decimal equipmentMoney { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
 }
