@@ -167,7 +167,7 @@ namespace Finance.TradeCompliance
 
                 if (countries.Count > 0)
                 {
-                    rate = countries.FirstOrDefault().Rate;
+                    rate = countries.FirstOrDefault().Rate/100;
                 }
                 //取产品组成物料
                 tradeComplianceCheckDto.ProductMaterialInfos = new();
@@ -201,7 +201,7 @@ namespace Finance.TradeCompliance
                     if (MaterialIdPrefix.Equals(PriceEvaluationGetAppService.ElectronicBomName))
                     {
                         long elecId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
-                        //查询是否涉及
+                        //查询管制状态
                         EnteringElectronic enteringElectronic = await _enteringElectronicRepository.FirstOrDefaultAsync(p => p.ElectronicId.Equals(elecId) && p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
                         materialinfo.ControlStateType = enteringElectronic.MaterialControlStatus;
                     }
@@ -249,6 +249,7 @@ namespace Finance.TradeCompliance
         public virtual async Task<bool> IsProductsTradeComplianceOK(long flowId)
         {
             bool isOk = true;
+            bool lastResult = true;
             var solutionIdList = await _solutionTableRepository.GetAllListAsync(p => p.AuditFlowId == flowId);
             foreach (var solution in solutionIdList)
             {
@@ -262,8 +263,12 @@ namespace Finance.TradeCompliance
                 {
                     isOk = false;
                 }
+                if (!isOk)
+                {
+                    lastResult = false;
+                }
             }
-            return isOk;
+            return lastResult;
         }
 
         /// <summary>
@@ -325,7 +330,7 @@ namespace Finance.TradeCompliance
         public async Task<FileResult> PostExportOfTradeForm(TradeComplianceInputDto input)
         {
      
-            var TradeTable = await GetTradeComplianceCheckByCalc(input);
+            var TradeTable = await GetTradeComplianceCheckFromDateBase(input);
 
             //创建Workbook
             XSSFWorkbook workbook = new XSSFWorkbook();

@@ -14,6 +14,7 @@ using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
+using Finance.Nre;
 using Finance.PriceEval;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
@@ -28,24 +29,33 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 分析看板方法
     /// </summary>
     public readonly AnalysisBoardSecondMethod _analysisBoardSecondMethod;
+
     /// <summary>
     /// 核价梯度相关
     /// </summary>
     private readonly IRepository<Gradient, long> _gradientRepository;
+
     /// <summary>
     /// 报价审核表
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
+
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
     public readonly IRepository<Solution, long> _resourceSchemeTable;
-    
+
     /// <summary>
     /// 流程流转服务
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
+
     private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
+
+    /// <summary>
+    /// 报价Nre
+    /// </summary>
+    private readonly IRepository<NreQuotation, long> _nreQuotation;
 
     /// <summary>
     /// 构造函数
@@ -55,20 +65,19 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Gradient, long> gradientRepository,
-        
+        IRepository<NreQuotation, long> nreQuotation,
         IRepository<Solution, long> resourceSchemeTable)
     {
         _financeAuditQuotationList = financeAuditQuotationList;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-       
+        _nreQuotation = nreQuotation;
         _flowAppService = flowAppService;
         _gradientRepository = gradientRepository;
         _flowAppService = flowAppService;
         _resourceSchemeTable = resourceSchemeTable;
-
-      
     }
+
     /// <summary>
     /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品   ,特别注意，传入方案，方案中的moduleName不能一样
     /// </summary>
@@ -82,12 +91,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         try
         {
             return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             analyseBoardSecondDto.mes = e.Message;
             return analyseBoardSecondDto;
         }
     }
+
     /// <summary>
     /// 用于调试接口
     /// </summary>
@@ -95,7 +106,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
     public async Task<List<Gradient>> getInterface(
-       long auid)
+        long auid)
     {
         //获取梯度
         List<Gradient> gradients =
@@ -103,7 +114,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         gradients = gradients.OrderBy(p => p.GradientValue).ToList();
         return gradients;
     }
-    
+
     /// <summary>
     /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
     /// </summary>
@@ -116,7 +127,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
         {
-        return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond( auditFlowId,version);
+            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version);
         }
         catch (Exception e)
         {
@@ -124,7 +135,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             return analyseBoardSecondDto;
         }
     }
-    
+
     /// <summary>
     /// 毛利率（阶梯数量）
     /// </summary>
@@ -132,11 +143,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<GrossMarginSecondDto> PostGrossMarginForGradient( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    public async Task<GrossMarginSecondDto> PostGrossMarginForGradient(
+        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
-            return await _analysisBoardSecondMethod.PostGrossMarginForGradient( yearProductBoardProcessSecondDto);
-        
+        return await _analysisBoardSecondMethod.PostGrossMarginForGradient(yearProductBoardProcessSecondDto);
     }
+
     /// <summary>
     /// 毛利率（实际数量）
     /// </summary>
@@ -144,10 +156,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<GrossMarginSecondDto> PostGrossMarginForactual( YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactual(
+        YearProductBoardProcessSecondDto yearProductBoardProcessSecondDto)
     {
-        return await _analysisBoardSecondMethod.PostGrossMarginForactual( yearProductBoardProcessSecondDto);
+        return await _analysisBoardSecondMethod.PostGrossMarginForactual(yearProductBoardProcessSecondDto);
     }
+
     /// <summary>
     /// 毛利率（实际数量）齐套
     /// </summary>
@@ -155,10 +169,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<GrossMarginSecondDto> PostGrossMarginForactualQt( YearProductBoardProcessQtSecondDto yearProductBoardProcessSecondDto)
+    public async Task<GrossMarginSecondDto> PostGrossMarginForactualQt(
+        YearProductBoardProcessQtSecondDto yearProductBoardProcessSecondDto)
     {
-        return await _analysisBoardSecondMethod.PostGrossMarginForactualQt( yearProductBoardProcessSecondDto);
+        return await _analysisBoardSecondMethod.PostGrossMarginForactualQt(yearProductBoardProcessSecondDto);
     }
+
     /// <summary>
     /// 下载成本信息表二开
     /// </summary>
@@ -192,7 +208,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="yearProductBoardProcessDto"></param>
     /// <returns></returns>
-   public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
+    public async Task<YearDimensionalityComparisonSecondDto> PostYearDimensionalityComparisonForactual(
         YearProductBoardProcessSecondDto yearProductBoardProcessDto)
     {
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactual(yearProductBoardProcessDto);
@@ -208,15 +224,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.PostYearDimensionalityComparisonForactualQt(yearProductBoardProcessDto);
     }
+
     /// <summary>
     /// 查看 核心器件、Nre费用拆分
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId)
+    public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId,int version)
     {
         CoreComponentAndNreDto coreComponentAndNreDto = new();
-        return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId);
+        return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId,version);
     }
 
     /// <summary>
@@ -266,7 +283,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
+    public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
+        long numberOfQuotations)
     {
         //暂时注释 等报价看板完成之后放开
         List<SolutionQuotation> solutionQuotations = await GeCatalogue(auditFlowId);
@@ -278,8 +296,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations);
         List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations);
 
-        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
+        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations,
+            productDtos, quotationNreDtos);
     }
+
     /// <summary>
     /// 对外报价单保存/提交
     /// </summary>
@@ -302,19 +322,20 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<List<SolutionQuotation>> GeCatalogue(long auditFlowId)
+    public async Task<List<SolutionQuotationDto>> GeCatalogue(long auditFlowId)
     {
         return await _analysisBoardSecondMethod.GeCatalogue(auditFlowId);
     }
-      /// <summary>
-        ///  下载对外报价单
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        public async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
-        {
-            return await _analysisBoardSecondMethod.DownloadExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
-        }
+
+    /// <summary>
+    ///  下载对外报价单
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    public async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId, long numberOfQuotations)
+    {
+        return await _analysisBoardSecondMethod.DownloadExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
+    }
 
 
     /// <summary>
@@ -407,10 +428,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long auditFlowId)
+    public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long auditFlowId,int version)
     {
         ManagerApprovalOfferDto managerApprovalOfferDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId);
+            await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId,version);
 
         return managerApprovalOfferDto;
     }
@@ -420,10 +441,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long auditFlowId ,int version)
     {
         QuotationListSecondDto quotationListSecondDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
+            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId,version);
         return quotationListSecondDto;
     }
 
@@ -432,10 +453,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetQuotationApprovedMarketing(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetQuotationApprovedMarketing(long auditFlowId,int version )
 
     {
-        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId);
+        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId,version);
         ;
     }
 
@@ -444,10 +465,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> FinancialFiling(long auditFlowId)
+    public async Task<QuotationListSecondDto> FinancialFiling(long auditFlowId,int version 
+        )
 
     {
-        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId);
+        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId,version);
         ;
     }
 
@@ -456,12 +478,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId,int version)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version)
     {
-
-
-
-        return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId,version);
+        return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version);
     }
 
     /// <summary>
@@ -469,10 +488,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetAcceptanceBid(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetAcceptanceBid(long auditFlowId,int version)
     {
         QuotationListSecondDto quotationListSecondDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
+            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId,version);
         return quotationListSecondDto;
     }
 
@@ -481,10 +500,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetBidView(long auditFlowId)
+    public async Task<QuotationListSecondDto> GetBidView(long auditFlowId,int version)
     {
         QuotationListSecondDto quotationListSecondDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId);
+            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId,version);
         return quotationListSecondDto;
     }
 
@@ -505,22 +524,22 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         pigeonholeDownloadTableModels.Add(pg);
         return pigeonholeDownloadTableModels;
     }
+
     /// <summary>
     /// 用于对外报价产品清单
     /// <param name="auditFlowId"></param>
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<ProductDto>> GetProductList(long auditFlowId,int version)
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version)
     {
         List<ProductDto> productDtos = new List<ProductDto>();
         productDtos.Add(new ProductDto()
         {
-            ProductName="测试",
-            Motion=1,
-            Year="2023",
-            UntilPrice="12"
-
+            ProductName = "测试",
+            Motion = 1,
+            Year = "2023",
+            UntilPrice = "12"
         });
 
         return productDtos;
@@ -532,24 +551,32 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId,int version)
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version)
     {
         List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
-        productDtos.Add(new QuotationNreDto()
+
+        var nres = await _nreQuotation.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
+        var nresmap = nres.GroupBy(p => p.SolutionId).ToDictionary(r => r.Key, r => r.ToList());
+        foreach (var nremap in nresmap)
         {
-            Product="测试",
-            Pcs=1,
-            shouban=12,
-            moju=12,
-            gzyj=12,
-            sy=12,
-            csrj=123,
-            cl=122,
-            qt=12
-        });
-
-
+            long solutionid = nremap.Key.Value;
+            var nresList = nremap.Value;
+          var solution=  _resourceSchemeTable.FirstOrDefault(p => p.Id == solutionid);
+            productDtos.Add(new QuotationNreDto()
+                {
+                    Product = solution.ModuleName,
+                    Pcs = 1,
+                    shouban = nresList.Where(p=>p.FormName.Equals("手板件费")).Sum(p=>p.OfferMoney),
+                    moju = nresList.Where(p=>p.FormName.Equals("模具费")).Sum(p=>p.OfferMoney),
+                    gzyj = nresList.Where(p=>p.FormName.Equals("工装费")||p.FormName.Equals("治具费")).Sum(p=>p.OfferMoney),
+                    sy = nresList.Where(p=>p.FormName.Equals("实验费")).Sum(p=>p.OfferMoney),
+                    csrj = nresList.Where(p=>p.FormName.Equals("测试软件费")).Sum(p=>p.OfferMoney),
+                    cl = nresList.Where(p=>p.FormName.Equals("差旅费")).Sum(p=>p.OfferMoney),
+                    qt = nresList.Where(p=>p.FormName.Equals("其他费用")).Sum(p=>p.OfferMoney),
+                    jianju=nresList.Where(p=>p.FormName.Equals("检具费")).Sum(p=>p.OfferMoney)
+                }
+            );
+        }
         return productDtos;
     }
-
 }

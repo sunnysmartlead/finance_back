@@ -12,7 +12,10 @@ public class ProjectBoardSecondOffers: FullAuditedEntity<long>
     /// 项目名称
     /// </summary>
     public string ProjectName { get; set; }
-  
+    /// <summary>
+    /// 梯度Id
+    /// </summary>
+    public virtual long GradientId { get; set; }
     /// <summary>
     /// 目标价(内部) 
     /// </summary>
