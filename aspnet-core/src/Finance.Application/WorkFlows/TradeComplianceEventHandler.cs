@@ -95,7 +95,6 @@ namespace Finance.WorkFlows
                         try
                         {
 
-                            //var isOk = true;
                             var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
                             if (isOk)
                             {
