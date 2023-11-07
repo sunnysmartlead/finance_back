@@ -2520,9 +2520,13 @@ namespace Finance.PriceEval
             //全生命周期处理
             if (input.Year == PriceEvalConsts.AllYear)
             {
+
                 //获取总年数
-                var yearCount = await _gradientModelYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == gradientModel.Id)
+                var yearCount = await _gradientModelYearRepository.GetAll()
+                    .Where(p => p.AuditFlowId == input.AuditFlowId && p.GradientModelId == gradientModel.Id)
                         .OrderBy(p => p.Year).Select(p => new { p.Year, Quantity = p.Count, p.UpDown }).ToListAsync();
+
+
 
                 //var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld).ToListAsync();
 
@@ -2535,8 +2539,27 @@ namespace Finance.PriceEval
 
                 var otherCostItemtList = (await data.SelectAsync(async p => await GetQualityCostPrivate(p.dto, p.result, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal))).ToList();
 
+                if (isChange)
+                {
+
+                    //取得修改项（新增，解决质量成本计算错误）
+                    var updateItem = await _updateItemRepository
+                        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                        && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
+                        && p.SolutionId == input.SolutionId);
+                    var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
+                    if (qualityCostListDto is not null)
+                    {
+                        var dataIds = qualityCostListDto.UpdateItem.Select(p => p.EditId);
+                        foreach (var item in otherCostItemtList.Where(p => dataIds.Contains(p.EditId)))
+                        {
+                            ObjectMapper.Map(qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                        }
+                    }
+                }
+
                 var qualityCost = (from o in otherCostItemtList
-                                   join y in yearCount on o.Year equals y.Year
+                                   join y in yearCount on new { o.Year, o.UpDown } equals new { y.Year, y.UpDown }
                                    select o.QualityCost * y.Quantity).Sum();
 
                 return new QualityCostListDto
@@ -2664,6 +2687,7 @@ namespace Finance.PriceEval
             {
                 EditId = UpdateItemType.QualityCost.ToString(),
                 Year = input.Year,
+                UpDown = input.UpDown,
                 ProductCategory = productTypeName,
                 CostProportion = costProportion,
                 QualityCost = totalMaterialCost,

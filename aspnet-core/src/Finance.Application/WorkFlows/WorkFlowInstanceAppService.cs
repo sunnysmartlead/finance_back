@@ -317,7 +317,7 @@ namespace Finance.WorkFlows
 
             #region 核价看板流转逻辑
 
-            if (changeNode.Name == "核价看板")
+            if (changeNode.Name == "核价看板" && input.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Yes)
             {
                 var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == changeNode.WorkFlowInstanceId);
                 if (priceEvaluation is null || !priceEvaluation.TrProgramme.HasValue)
