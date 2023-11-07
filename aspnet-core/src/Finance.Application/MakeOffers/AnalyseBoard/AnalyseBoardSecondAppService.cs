@@ -381,11 +381,20 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task PostIsOfferSecond(IsOfferSecondDto isOfferDto)
     {
-        if (AbpSession.UserId is null)
+        /*if (AbpSession.UserId is null)
         {
             throw new FriendlyException("请先登录");
+        }*/
+        if (isOfferDto.IsOffer)
+        {
+            //进行报价
+            await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+            
         }
+       
 
+      
+        /*
         AuditFlowDetailDto flowDetailDto = new()
         {
             AuditFlowId = isOfferDto.AuditFlowId,
@@ -404,8 +413,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             flowDetailDto.Opinion = OPINIONTYPE.Reject;
             flowDetailDto.OpinionDescription = OpinionDescription.OD_QuotationCheck;
         }
+        */
 
-        ReturnDto returnDto = await _flowAppService.UpdateAuditFlowInfo(flowDetailDto);
     }
 
     public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
@@ -564,6 +573,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     csrj = nresList.Where(p=>p.FormName.Equals("测试软件费")).Sum(p=>p.OfferMoney),
                     cl = nresList.Where(p=>p.FormName.Equals("差旅费")).Sum(p=>p.OfferMoney),
                     qt = nresList.Where(p=>p.FormName.Equals("其他费用")).Sum(p=>p.OfferMoney),
+                    scsb=nresList.Where(p=>p.FormName.Equals("生产设备费")).Sum(p=>p.OfferMoney),
                     jianju=nresList.Where(p=>p.FormName.Equals("检具费")).Sum(p=>p.OfferMoney)
                 }
             );

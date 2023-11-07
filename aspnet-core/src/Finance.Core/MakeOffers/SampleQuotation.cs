@@ -44,4 +44,8 @@ public class SampleQuotation : FullAuditedEntity<long>
     /// 销售收入
     /// </summary>
     public decimal SalesRevenue { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
 }
