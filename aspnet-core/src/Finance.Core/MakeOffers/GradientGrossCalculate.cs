@@ -4,7 +4,7 @@ namespace Finance.MakeOffers;
 /// <summary>
 /// 报价毛利率测算-阶梯数量
 /// </summary> 
-public class GradientGrossMarginCalculate : FullAuditedEntity<long>
+public class GradientGrossCalculate : FullAuditedEntity<long>
 {
     /// <summary>
     /// 梯度
