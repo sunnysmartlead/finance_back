@@ -727,6 +727,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             projectBoardSecondModels.Add(mll);
             boardModel.ProjectBoardModels = projectBoardSecondModels;
+            boardModel.GradientId = gradient.Id;
             boardModel.title = gradient.GradientValue + "KV";
             boardModels.Add(boardModel);
         }
@@ -2353,6 +2354,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     AuditFlowId = AuditFlowId,
                     ProjectName = board.ProjectName,
                     version = version,
+                    GradientId =board.GradientId,
                     InteriorTarget = board.InteriorTarget,
                     ClientTarget = board.ClientTarget,
                     Offer = board.Offer
