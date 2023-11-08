@@ -117,10 +117,7 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<PostProductDevelopmentInputDto> PostProductDevelopmentInput(PostProductDevelopmentInputDto dto)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+           
                 //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
 
                 List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
@@ -150,11 +147,7 @@ namespace Finance.ProductDevelopment
                     result.PlaceOfDelivery = productInformation.FirstOrDefault()?.PlaceOfDelivery;
                 }
                 return result;
-            }
-            else
-            {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
         }
 
         /// <summary>
