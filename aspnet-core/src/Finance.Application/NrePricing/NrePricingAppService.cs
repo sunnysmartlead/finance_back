@@ -552,8 +552,26 @@ namespace Finance.NerPricing
         [AbpAuthorize]
         public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
+            bool IsAllNull = true;
+            List<SolutionModel> partModelsAll = await TotalSolution(auditFlowId);// 获总方案       
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
+            //循环每一个方案
+            foreach (SolutionModel part in partModelsAll)
+            {
+                MouldInventoryPartModel mouldInventoryPartModel = new();//  Nre核价 模组清单模型
+                mouldInventoryPartModel.SolutionId = part.SolutionId;//方案的 Id                              
+                List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));             
+                mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
+                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
+                var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
+                await _resourceMouldInventory.DeleteAsync(p => id.Contains(p.Id));
+                mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();
+                foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
+                {
+                    IsAllNull = false;                   
+                }                             
+            }
             //循环每一个方案
             foreach (SolutionModel part in partModels)
             {
@@ -589,7 +607,7 @@ namespace Finance.NerPricing
                 var id= mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p=>p.Id).ToList();
                 await _resourceMouldInventory.DeleteAsync(p=> id.Contains(p.Id));
 
-                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();
+                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();                
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
                     MouldInventory mouldInventory1 = mouldInventory.FirstOrDefault(p => p.StructuralId.Equals(item.StructuralId));
@@ -608,9 +626,10 @@ namespace Finance.NerPricing
                         if (user is not null) item.PeopleName = user.Name;//提交人名称
                     }
                 }
-                mouldInventoryPartModel.IsAllNull = await GetInitialResourcesManagementCount(auditFlowId)==0;
+                mouldInventoryPartModel.IsAllNull = IsAllNull;
                 mouldInventoryPartModels.Add(mouldInventoryPartModel);
             }
+           
             return mouldInventoryPartModels.FirstOrDefault();
         }
 
