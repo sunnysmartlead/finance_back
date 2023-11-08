@@ -607,8 +607,7 @@ namespace Finance.NerPricing
                 var id= mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p=>p.Id).ToList();
                 await _resourceMouldInventory.DeleteAsync(p=> id.Contains(p.Id));
 
-                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();
-                mouldInventoryPartModel.MouldInventoryModels = new();
+                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();                
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
                     MouldInventory mouldInventory1 = mouldInventory.FirstOrDefault(p => p.StructuralId.Equals(item.StructuralId));
