@@ -19,6 +19,9 @@ namespace Finance.NrePricing.Model
         ///  Nre核价 模组清单模型
         /// </summary>
         public List<MouldInventoryModel> MouldInventoryModels { get; set; }
-       
+        /// <summary>
+        /// 是否所有的方案数据都为空 如果是则为true 如果不是 则为flase
+        /// </summary>
+        public bool IsAllNull { get; set; }       
     }
 }
