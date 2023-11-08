@@ -9,11 +9,7 @@ public class QuotationFeedbackDto
     /// 流程号Id
     /// </summary>
     public long AuditFlowId { get; set; }
-   
-
-
-  
-
+    
     /// <summary>
     /// Nre相关
     /// </summary>

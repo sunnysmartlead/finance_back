@@ -552,8 +552,26 @@ namespace Finance.NerPricing
         [AbpAuthorize]
         public async Task<MouldInventoryPartModel> GetInitialResourcesManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
+            bool IsAllNull = true;
+            List<SolutionModel> partModelsAll = await TotalSolution(auditFlowId);// 获总方案       
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
+            //循环每一个方案
+            foreach (SolutionModel part in partModelsAll)
+            {
+                MouldInventoryPartModel mouldInventoryPartModel = new();//  Nre核价 模组清单模型
+                mouldInventoryPartModel.SolutionId = part.SolutionId;//方案的 Id                              
+                List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));             
+                mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
+                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
+                var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
+                await _resourceMouldInventory.DeleteAsync(p => id.Contains(p.Id));
+                mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();
+                foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
+                {
+                    IsAllNull = false;                   
+                }                             
+            }
             //循环每一个方案
             foreach (SolutionModel part in partModels)
             {
@@ -589,7 +607,7 @@ namespace Finance.NerPricing
                 var id= mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p=>p.Id).ToList();
                 await _resourceMouldInventory.DeleteAsync(p=> id.Contains(p.Id));
 
-                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();
+                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();                
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
                     MouldInventory mouldInventory1 = mouldInventory.FirstOrDefault(p => p.StructuralId.Equals(item.StructuralId));
@@ -608,8 +626,10 @@ namespace Finance.NerPricing
                         if (user is not null) item.PeopleName = user.Name;//提交人名称
                     }
                 }
+                mouldInventoryPartModel.IsAllNull = IsAllNull;
                 mouldInventoryPartModels.Add(mouldInventoryPartModel);
             }
+           
             return mouldInventoryPartModels.FirstOrDefault();
         }
 
@@ -1985,6 +2005,7 @@ namespace Finance.NerPricing
                                                 Uph = a.Uph,
                                                 Value = (decimal)a.Value,
                                                 Year = (int)b.Year,
+                                                UpDown=b.UpDown,
                                                 Description = a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
                                             }).ToList();
                 if (result.Count is not 0)
@@ -1999,26 +2020,26 @@ namespace Finance.NerPricing
                         if (gxftl.Select(x => x.Value).Distinct().Count() == 1)
                         {
                             //获取值最大年份的那一年
-                            var maxYear = gxftl.Max(p => p.Year);
-                            result = result.Where(p => p.Year.Equals(maxYear)).ToList();
+                            var maxYear = gxftl.OrderByDescending(p => p.Year).FirstOrDefault();
+                            result = result.Where(p => p.Year.Equals(maxYear.Year) && p.UpDown.Equals(maxYear.UpDown)).ToList();
                         }
                         else
                         {
                             //获取值最大的那年
                             var maxGxftl = gxftl.OrderByDescending(p => p.Value).FirstOrDefault();
-                            result = result.Where(p => p.Year.Equals(maxGxftl.Year)).ToList();
+                            result = result.Where(p => p.Year.Equals(maxGxftl.Year) && p.UpDown.Equals(maxGxftl.UpDown)).ToList();
                         }
                     }
                     else
                     {
                         //获取值最大的那年
                         var maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
-                        result = result.Where(p => p.Year.Equals(maxXtsl.Year)).ToList();
+                        result = result.Where(p => p.Year.Equals(maxXtsl.Year)&&p.UpDown.Equals(maxXtsl.UpDown)).ToList();
                     }
                 }
 
                 decimal NumberOfLines = result
-               .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.ToString()))?.Value ?? 0;
+               .FirstOrDefault(a => a.Uph.Equals(OperateTypeCode.xtsl.ToString()))?.Value ?? 1;
 
 
                 modify.UphAndValues = result;
@@ -2052,7 +2073,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) //* UphAndValuesd
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
@@ -2062,7 +2083,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
-                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) //* UphAndValuesd,
+                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd,
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
                 modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
@@ -2084,7 +2105,7 @@ namespace Finance.NerPricing
                          ToolingName = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Number = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) //* UphAndValuesd
+                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * NumberOfLines
                      }).ToList();
                 modify.FixtureCost = productionEquipmentCostModelsZj;
                 modify.FixtureCostTotal = modify.FixtureCost.Sum(p => p.Cost);
@@ -2170,14 +2191,14 @@ namespace Finance.NerPricing
                                                                             ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                         }).ToList();
                 ProcessHoursEnterTotalDto porp = await _processHoursEnterAppService.GetProcessHoursEnterTotal(new GetProcessHoursEntersInput() { AuditFlowId = auditFlowId, SolutionId = solutionId, MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
-                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice } } };
+                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice* UphAndValuesd } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
                
 
                 //测试软件费用=>追溯软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware* UphAndValuesd });
                 //测试软件费用=>开图软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp .SoftwarePrice});
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp .SoftwarePrice* UphAndValuesd });
                 modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p => p.Cost);
                 //差旅费
                 List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))

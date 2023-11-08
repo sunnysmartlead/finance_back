@@ -122,6 +122,8 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<PooledAnalysisOffers> PooledAnalysisOffers { set; get; }
         //报价 项目看板实体类 实体类
         public virtual DbSet<ProjectBoardOffers> ProjectBoardOffers { set; get; }
+        // 报价分析看板中的 阶梯数量表 实体类
+        public virtual DbSet<GradientGrossCalculate> GradientGrossCalculates { set; get; }
         //报价 项目看板实体类 实体类
         public virtual DbSet<ProjectBoardSecondOffers> ProjectBoardSecondOffers { set; get; }
         // 报价分析看板中的 产品单价表 实体类

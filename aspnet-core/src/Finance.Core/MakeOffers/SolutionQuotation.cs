@@ -1,4 +1,5 @@
-﻿using Abp.Domain.Entities.Auditing;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Abp.Domain.Entities.Auditing;
 
 namespace Finance.MakeOffers;
 /// <summary>
@@ -67,4 +68,10 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// 报价次数
     /// </summary>
     public int ntime { get; set; }
+    
+    /// <summary>
+    /// 方案list
+    /// </summary>
+    [Column(TypeName = "CLOB")]
+    public string SolutionListJson { get; set; }
 }

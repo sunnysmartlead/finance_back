@@ -4,9 +4,7 @@ using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
-using Castle.MicroKernel.Registration;
 using DynamicExpresso;
-using Finance.Audit.Dto;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
 using Finance.Ext;
@@ -15,17 +13,10 @@ using Finance.Infrastructure.Dto;
 using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
 using LinqKit;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using NPOI.SS.UserModel;
-using NUglify;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Finance.WorkFlows
@@ -271,7 +262,7 @@ namespace Finance.WorkFlows
         /// 流程节点提交（结束当前节点，开启下个节点）
         /// </summary>
         /// <returns></returns>
-        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input)
+        internal async virtual Task SubmitNodeInterfece(ISubmitNodeInput input, bool isCheck = true)
         {
             //退回意见必填校验
             var fd = new List<string> {
@@ -311,11 +302,6 @@ namespace Finance.WorkFlows
                 throw new FriendlyException($"必须填写退回原因！");
             }
 
-
-
-
-            //try
-            //{
             //获取全部的线和节点
             var workFlowInstanceId = await _nodeInstanceRepository.GetAll().Where(p => p.Id == input.NodeInstanceId).Select(p => p.WorkFlowInstanceId).FirstAsync();
             var nodeInstance = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == workFlowInstanceId);
@@ -324,14 +310,14 @@ namespace Finance.WorkFlows
             //将信息写入节点中
             var changeNode = nodeInstance.First(p => p.Id == input.NodeInstanceId);
 
-            if (changeNode.NodeInstanceStatus != NodeInstanceStatus.Current)
+            if (changeNode.NodeInstanceStatus != NodeInstanceStatus.Current && isCheck)
             {
                 throw new FriendlyException($"该节点已流转或尚未激活！");
             }
 
             #region 核价看板流转逻辑
 
-            if (changeNode.Name == "核价看板")
+            if (changeNode.Name == "核价看板" && input.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Yes)
             {
                 var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == changeNode.WorkFlowInstanceId);
                 if (priceEvaluation is null || !priceEvaluation.TrProgramme.HasValue)
@@ -487,14 +473,6 @@ namespace Finance.WorkFlows
                     }
                 }
             }
-
-            //}
-            //catch (Exception e)
-            //{
-
-            //    throw;
-            //}
-
         }
 
         /// <summary>
@@ -971,6 +949,62 @@ namespace Finance.WorkFlows
 
             //    throw;
             //}
+        }
+
+
+        /// <summary>
+        /// 核价看板专用流转接口
+        /// </summary>
+        /// <returns></returns>
+        public async Task PanelSubmitNode(PanelSubmitNodeInput input)
+        {
+            #region 参数校验
+
+            //如果审批意见有【同意】，且有存在【同意】以外的审批意见
+            if (input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Yes) && input.FinanceDictionaryDetailIds.Count > 1)
+            {
+                throw new FriendlyException($"不可同时选择【同意】和【退回】！");
+            }
+
+            //只要审批意见里存在不是【同意】意见的，且审批评论为空
+            if (input.FinanceDictionaryDetailIds.Any(p => p != FinanceConsts.HjkbSelect_Yes) && input.Comment.IsNullOrWhiteSpace())
+            {
+                throw new FriendlyException($"必须填写退回原因！");
+            }
+
+            #endregion
+
+            #region 同意
+
+            //审批意见集合有且仅有同意
+            if (input.FinanceDictionaryDetailIds.Count == 1 && input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Yes))
+            {
+                //正常调用流程流转接口
+                await SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    Comment = input.Comment,
+                    NodeInstanceId = input.NodeInstanceId,
+                    FinanceDictionaryDetailId = input.FinanceDictionaryDetailIds[0]
+                });
+            }
+
+
+            #endregion
+
+            #region 退回
+
+            foreach (var financeDictionaryDetailId in input.FinanceDictionaryDetailIds)
+            {
+                //正常调用流程流转接口
+                await SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    Comment = input.Comment,
+                    NodeInstanceId = input.NodeInstanceId,
+                    FinanceDictionaryDetailId = financeDictionaryDetailId
+                }, false);
+            }
+
+            #endregion
         }
     }
 }

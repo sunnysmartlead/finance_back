@@ -36,4 +36,16 @@ public class NreQuotation: FullAuditedEntity<long>
     /// 备注
     /// </summary>
     public string Remark { get; set; }
+    /// <summary>
+    /// 线体数量
+    /// </summary>
+    public decimal numberLine { get; set; }
+    /// <summary>
+    /// 共线分摊率
+    /// </summary>
+    public decimal collinearAllocationRate { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
 }

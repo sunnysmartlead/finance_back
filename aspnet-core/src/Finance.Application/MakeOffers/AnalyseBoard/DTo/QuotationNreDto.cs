@@ -23,6 +23,10 @@ public class QuotationNreDto
     /// </summary>
     public decimal moju { get; set; }
     /// <summary>
+    /// 生产设备费
+    /// </summary>
+    public decimal scsb { get; set; }
+    /// <summary>
     /// 工装治具费
     /// </summary>
     public decimal gzyj { get; set; }
@@ -39,6 +43,10 @@ public class QuotationNreDto
     /// 差旅费
     /// </summary>
     public decimal cl { get; set; }
+    /// <summary>
+    /// 检具费
+    /// </summary>
+    public decimal jianju { get; set; }
     /// <summary>
     /// 其他费用
     /// </summary>

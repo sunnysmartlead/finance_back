@@ -41,7 +41,7 @@ public class YearDimensionalityComparisonSecondDto
 public class YearValue
 {
     /// <summary>
-    /// 年份
+    /// 标题
     /// </summary>
     public string key { get; set; }
 

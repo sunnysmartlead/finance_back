@@ -2,6 +2,9 @@
 
 namespace Finance.MakeOffers.AnalyseBoard.Model;
 
+/// <summary>
+/// 报价分析看板二开返回实体类  
+/// </summary>
 public class QuotedGrossMarginProjectModel
 {
     /// <summary>

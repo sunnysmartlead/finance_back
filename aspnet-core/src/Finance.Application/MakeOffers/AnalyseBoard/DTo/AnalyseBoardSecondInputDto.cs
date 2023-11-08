@@ -11,6 +11,14 @@ public class AnalyseBoardSecondInputDto
     public long auditFlowId { get; set; }
     
     public List<Solution> solutionTables { get; set; }
-
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
+    
+    /// <summary>
+    /// 报价次数
+    /// </summary>
+    public int ntime { get; set; }
   
 }

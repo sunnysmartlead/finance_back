@@ -95,5 +95,23 @@ namespace Finance.MakeOffers
         /// 版本
         /// </summary>
         public int version { get; set; }  
+        /// <summary>
+        /// 标题
+        /// </summary>
+        public virtual string title { get; set; }
+        /// <summary>
+        /// 车型
+        /// </summary>
+        public string carModel { get; set; }
+
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 单车数量
+        /// </summary>
+        public int carNum { get; set; }
     }
 }
+

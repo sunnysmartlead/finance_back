@@ -611,11 +611,7 @@ namespace Finance.ProductDevelopment
         /// <returns></returns>
         public async Task<List<StructureBomInfo>> FindStructureBomByProcess(ProductDevelopmentInputDto dto)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-  
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+           
                 long AuditFlowId = dto.AuditFlowId;
                 long ProductId = dto.ProductId;
                 long SolutionId = dto.SolutionId;
@@ -636,11 +632,7 @@ namespace Finance.ProductDevelopment
                 }
 
                 return result;
-            }
-            else
-            {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
         }
 
 
