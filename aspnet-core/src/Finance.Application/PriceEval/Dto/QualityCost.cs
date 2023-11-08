@@ -27,6 +27,11 @@ namespace Finance.PriceEval.Dto
         internal virtual int Year { get; set; }
 
         /// <summary>
+        /// 年份类型
+        /// </summary>
+        internal virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 产品类别
         /// </summary>
         public virtual string ProductCategory { get; set; }

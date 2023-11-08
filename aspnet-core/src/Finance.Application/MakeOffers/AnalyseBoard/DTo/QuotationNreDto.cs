@@ -23,6 +23,10 @@ public class QuotationNreDto
     /// </summary>
     public decimal moju { get; set; }
     /// <summary>
+    /// 生产设备费
+    /// </summary>
+    public decimal scsb { get; set; }
+    /// <summary>
     /// 工装治具费
     /// </summary>
     public decimal gzyj { get; set; }

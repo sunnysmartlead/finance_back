@@ -100,7 +100,7 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
-        public PriceEvaluationAppService(ICacheManager cacheManager,IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
+        public PriceEvaluationAppService(ICacheManager cacheManager, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
             IRepository<LossRateInfo, long> lossRateInfoRepository,
@@ -227,12 +227,12 @@ namespace Finance.PriceEval
             var pcsMinYeay = input.Pcs?.SelectMany(p => p.PcsYearList).Min(p => p.Year);
             var requirementMinYeay = input?.Requirement.Min(p => p.Year);
 
-            
-                if ((modelMinYeay is not null && modelMinYeay < input.SopTime) || (pcsMinYeay is not null && pcsMinYeay < input.SopTime) || (requirementMinYeay is not null && requirementMinYeay < input.SopTime))
-                {
-                    throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
-                }
-            
+
+            if ((modelMinYeay is not null && modelMinYeay < input.SopTime) || (pcsMinYeay is not null && pcsMinYeay < input.SopTime) || (requirementMinYeay is not null && requirementMinYeay < input.SopTime))
+            {
+                throw new FriendlyException($"SOP年份和实际录入的模组数量、产品信息、PCS不吻合！");
+            }
+
 
             if (input.ModelCount.GroupBy(p => p.Product).Any(p => p.Count() > 1))
             {
@@ -326,17 +326,35 @@ namespace Finance.PriceEval
                 }
 
 
-                var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
-                                  join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
-                                  where d.Id == input.Country || c.NationalType == "2"
-                                  select new
-                                  {
-                                      c.Id,
-                                      c.NationalType,
-                                      DictionaryId = d.Id
-                                  }).ToListAsync();
-                var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
-                var countryLibraryId = myhggj == null ? myhg.FirstOrDefault().Id : myhggj.Id;
+                //var myhg = await (from d in _financeDictionaryDetailRepository.GetAll()
+                //                  join c in _countryLibraryRepository.GetAll() on d.DisplayName equals c.Country
+                //                  where d.Id == input.Country || c.NationalType == "2"
+                //                  select new
+                //                  {
+                //                      c.Id,
+                //                      c.NationalType,
+                //                      DictionaryId = d.Id
+                //                  }).ToListAsync();
+                //var myhggj = myhg.FirstOrDefault(p => p.DictionaryId == input.Country);
+
+                var country = await _countryLibraryRepository.FirstOrDefaultAsync(p => p.Country == input.Country);
+                var otherCountry = await _countryLibraryRepository.FirstOrDefaultAsync(p => p.Country == "其他国家");
+
+
+                long countryLibraryId;
+                if (country == null)
+                {
+                    if (otherCountry == null)
+                    {
+                        throw new FriendlyException($"国家库不存在此国家，也没有【其他国家】");
+                    }
+                    countryLibraryId = otherCountry.Id;
+                }
+                else
+                {
+                    countryLibraryId = country.Id;
+                }
+
 
                 long auditFlowId;
 

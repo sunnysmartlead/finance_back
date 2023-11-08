@@ -72,10 +72,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 财务维护 毛利率方案
     /// </summary>
     private readonly IRepository<GrossMarginForm, long> _resourceGrossMarginForm;
+
     /// <summary>
     /// 财务维护 汇率录入表
     /// </summary>
     private readonly IRepository<ExchangeRate, long> _exchangeRate;
+
     /// <summary>
     /// 报价设备
     /// </summary>
@@ -186,7 +188,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _priceEvaluationAppService = priceEvaluationAppService;
         _solutionQutation = solutionQutation;
-        _exchangeRate= exchangeRate;
+        _exchangeRate = exchangeRate;
         _gradientRepository = gradientRepository;
         _deviceQuotation = deviceQuotation;
         _actualUnitPriceOffer = actualUnitPriceOffer;
@@ -271,6 +273,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         await getSample(sampleDtos, totalcost);
                     onlySampleDto.SolutionName = Solution.Product;
                     onlySampleDto.SolutionId = Solution.Id;
+                    onlySampleDto.AuditFlowId = auditFlowId;
                     onlySampleDto.OnlySampleModels = onlySampleModels;
                     samples.Add(onlySampleDto);
                 }
@@ -1595,20 +1598,20 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 numk = numknew;
                 SellingCost = SellingCostnew;
-               
+
                 SalesRevenue = SalesRevenuenew;
                 commission = commissionnew;
                 SalesMargin = SalesMarginnew;
 
-                Pricsenew=    (from price in Pricsenew
+                Pricsenew = (from price in Pricsenew
                     select new YearValue()
                     {
                         key = price.key,
                         value = price.value * carnum
                     }).ToList();
                 Prices = Pricsenew;
-                
-                AverageCostnew=    (from price in AverageCostnew
+
+                AverageCostnew = (from price in AverageCostnew
                     select new YearValue()
                     {
                         key = price.key,
@@ -1620,18 +1623,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 numk = hebing(numk, numknew);
                 SellingCost = hebing(SellingCost, SellingCostnew);
-              
+
                 SalesRevenue = hebing(SalesRevenue, SalesRevenuenew);
                 commission = hebing(commission, commissionnew);
                 SalesMargin = hebing(SalesMargin, SalesMarginnew);
-                Pricsenew=    (from price in Pricsenew
+                Pricsenew = (from price in Pricsenew
                     select new YearValue()
                     {
                         key = price.key,
                         value = price.value * carnum
                     }).ToList();
                 Prices = hebing(Prices, Pricsenew);
-                AverageCostnew=    (from price in AverageCostnew
+                AverageCostnew = (from price in AverageCostnew
                     select new YearValue()
                     {
                         key = price.key,
@@ -1639,9 +1642,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     }).ToList();
                 AverageCost = hebing(AverageCost, AverageCostnew);
             }
-            
-            
-            
         }
 
         Dictionary<string, YearValue> smdict = SalesMargin.ToDictionary(p => p.key, p => p);
@@ -2164,26 +2164,24 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
         var count = _solutionQutation.GetAllList(p => p.AuditFlowId == AuditFlowId).Count; //报价提交次数
-        int time = 0;
+        int time = isOfferDto.ntime;
         if (count == 0)
         {
-            time = 1;
         }
         else
         {
-            time = _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId).Result.Max(p => p.ntime);
             if (time >= 3)
             {
-                throw new UserFriendlyException("本流程报价提交次数已经到顶");
+                throw new UserFriendlyException("本流程报价提交次数已经到顶3次");
             }
         }
 
         await InsertSolution(solutions, version, time);
 
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
-        InsertNre(nres, solutions);
+        InsertNre(nres, solutions, version);
         List<OnlySampleDto> onlySampleDtos = isOfferDto.SampleOffer;
-        InsertSample(onlySampleDtos, solutions);
+        InsertSample(onlySampleDtos, solutions, version);
 
         List<SopAnalysisModel> sops = isOfferDto.Sops;
         InsertSop(sops, version);
@@ -2340,6 +2338,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var actual in list)
         {
+            actual.version = version;
             _actualUnitPriceOffer.InsertAsync(actual);
         }
     }
@@ -2359,7 +2358,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     AuditFlowId = AuditFlowId,
                     ProjectName = board.ProjectName,
                     version = version,
-                    GradientId =board.GradientId,
+                    GradientId = board.GradientId,
                     InteriorTarget = board.InteriorTarget,
                     ClientTarget = board.ClientTarget,
                     Offer = board.Offer
@@ -2502,16 +2501,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 样品 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<Solution> solutionQuotations)
+    public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<Solution> solutionQuotations, int version)
     {
         foreach (var onlySampleDto in onlySampleDtos)
         {
-            var soltuion = solutionQuotations.Where(p => p.Id == onlySampleDto.SolutionId).FirstOrDefault();
+            var soltuion = solutionQuotations.FirstOrDefault(p => p.Id == onlySampleDto.SolutionId);
             List<SampleQuotation> sampleQuotations = onlySampleDto.OnlySampleModels;
 
             foreach (var sampleQuotation in sampleQuotations)
             {
                 sampleQuotation.SolutionId = soltuion.Id;
+                sampleQuotation.version = version;
+                sampleQuotation.AuditFlowId = onlySampleDto.AuditFlowId;
                 _sampleQuotation.InsertOrUpdateAsync(sampleQuotation);
             }
         }
@@ -2562,27 +2563,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// NRE 保存  接口
     /// </summary>
     /// <returns></returns>
-    public async Task InsertNre(List<AnalyseBoardNreDto> nres, List<Solution> solutionQuotations)
+    public async Task InsertNre(List<AnalyseBoardNreDto> nres, List<Solution> solutionQuotations, int version)
     {
         foreach (var nre in nres)
         {
-            var solutionId = nre.SolutionId;
-            if (solutionId is not null)
+            List<NreQuotation> nreQuotations = nre.models;
+            List<DeviceQuotation> deviceQuotations = nre.devices;
+            foreach (var nreQuotation in nreQuotations)
             {
-                var soltuion = _resourceSchemeTable.FirstOrDefault(p => p.Id == nre.SolutionId);
-                List<NreQuotation> nreQuotations = nre.models;
-                List<DeviceQuotation> deviceQuotations = nre.devices;
-                foreach (var nreQuotation in nreQuotations)
-                {
-                    nreQuotation.SolutionId = soltuion.Id;
-                    _nreQuotation.InsertAsync(nreQuotation);
-                }
+                nreQuotation.version = version;
 
-                foreach (var deviceQuotation in deviceQuotations)
-                {
-                    deviceQuotation.SolutionId = soltuion.Id;
-                    _deviceQuotation.InsertAsync(deviceQuotation);
-                }
+                _nreQuotation.InsertAsync(nreQuotation);
+            }
+
+            foreach (var deviceQuotation in deviceQuotations)
+            {
+                deviceQuotation.version = version;
+                _deviceQuotation.InsertAsync(deviceQuotation);
             }
         }
     }
@@ -3390,6 +3387,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             select new SolutionQuotationDto()
             {
                 version = sol.version,
+                Id = sol.Id,
                 ntime = sol.ntime,
                 AuditFlowId = auditFlowId,
                 solutionList = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson)
@@ -3414,41 +3412,41 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <summary>
     /// 查看 营销部报价审核表
     /// </summary>
-    public async Task<QuotationListSecondDto> QuotationListSecond(long processId,int version )
+    public async Task<QuotationListSecondDto> QuotationListSecond(long processId, int version)
     {
-       var sol =
+        var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
-            List<Solution> solutions = ObjectMapper.Map<List<Solution>>(sol.SolutionListJson);
-            
+        List<Solution> solutions = ObjectMapper.Map<List<Solution>>(sol.SolutionListJson);
+
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
-       var customprice= priceEvaluationStartInputResult.CustomerTargetPrice;
-       string bz = "";
-       decimal hl= 0;
+        var customprice = priceEvaluationStartInputResult.CustomerTargetPrice;
+        string bz = "";
+        decimal hl = 0;
         if (customprice is not null)
         {
-            hl=  customprice[0].ExchangeRate;
-            bz=     _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
+            hl = customprice[0].ExchangeRate;
+            bz = _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
         }
+
         QuotationListSecondDto pp = new QuotationListSecondDto
         {
             Date = DateTime.Now, //查询日期
             RecordNumber = priceEvaluationStartInputResult.Number, // 单据编号
             Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
-            SampleQuotationType="",//样品报价类型
-            //  OfferForm = priceEvaluationStartInputResult.DisplayName, //报价形式
+            OfferForm = priceEvaluationStartInputResult.PriceEvalType, //报价形式
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
-            // ClientNature = priceEvaluationStartInputResult.DisplayName, //客户性质
+            ClientNature = priceEvaluationStartInputResult.CustomerNature, //客户性质
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            // TerminalClientNature = priceEvaluationStartInputResult.DisplayName, //终端客户性质
+            TerminalClientNature = priceEvaluationStartInputResult.TerminalNature, //终端客户性质
             //开发计划 手工录入
             SopTime = priceEvaluationStartInputResult.SopTime, //Sop时间
             ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目周期
             ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
             modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
             PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
-            // QuoteCurrency = priceEvaluationStartInputResult.ExchangeRateKind, //报价币种
-              ExchangeRate =hl, //汇率
+            QuoteCurrency = bz, //报价币种
+            ExchangeRate = hl, //汇率
             ProjectName = priceEvaluationStartInputResult.ProjectName, //项目名称
         };
         pp.nres = await getNre(processId, solutions);
@@ -3488,39 +3486,35 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-     var crms=  priceEvaluationStartInputResult.Requirement;
-     MotionMessageModel njl = new MotionMessageModel()
-     {
-         MessageName = "年降率(%)"
-     };
-     List<SopOrValueMode> njls = new();
-     MotionMessageModel flyq = new MotionMessageModel()
-     {
-         MessageName = "年度返利要求(%)"
-     };
-     List<SopOrValueMode> flyqs = new();
-     MotionMessageModel zrl = new MotionMessageModel()
-     {
-         MessageName = "一次性折让率(%)"
-     };
-     List<SopOrValueMode> zrls = new();
-     MotionMessageModel yjbl = new MotionMessageModel()
-     {
-         MessageName = "佣金比例"
-     };
-     List<SopOrValueMode> yjbls = new();
-     foreach (var crm in crms)
-     {
-         njls.Add(new SopOrValueMode()
-         {
-             
-         } );
-         
-     }
-        
-        
-        
-        
+        var crms = priceEvaluationStartInputResult.Requirement;
+        MotionMessageModel njl = new MotionMessageModel()
+        {
+            MessageName = "年降率(%)"
+        };
+        List<SopOrValueMode> njls = new();
+        MotionMessageModel flyq = new MotionMessageModel()
+        {
+            MessageName = "年度返利要求(%)"
+        };
+        List<SopOrValueMode> flyqs = new();
+        MotionMessageModel zrl = new MotionMessageModel()
+        {
+            MessageName = "一次性折让率(%)"
+        };
+        List<SopOrValueMode> zrls = new();
+        MotionMessageModel yjbl = new MotionMessageModel()
+        {
+            MessageName = "佣金比例"
+        };
+        List<SopOrValueMode> yjbls = new();
+        foreach (var crm in crms)
+        {
+            njls.Add(new SopOrValueMode()
+            {
+            });
+        }
+
+
         pp.MotionMessage = messageModels;
 
         //核心组件
@@ -3714,7 +3708,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return pp;
     }
 
-    public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long processId,int version)
+    public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long processId, int version)
     {
         ManagerApprovalOfferDto managerApprovalOfferDto = new();
         var priceEvaluationStartInputResult =
@@ -3806,7 +3800,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return managerApprovalOfferDto;
     }
 
-    public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long processId,int version)
+    public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long processId, int version)
     {
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(processId);
@@ -4267,7 +4261,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             { FileDownloadName = "报价单下载.xlsx" };
     }
 
-    public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId,int version)
+    public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId, int version)
     {
         CoreComponentAndNreDto coreComponentAndNreDto = new();
         //获取核价营销相关数据

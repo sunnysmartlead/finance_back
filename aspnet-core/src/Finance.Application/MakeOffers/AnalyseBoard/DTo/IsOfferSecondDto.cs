@@ -62,5 +62,9 @@ public class IsOfferSecondDto
     /// 版本
     /// </summary>
     public int version{ get; set; }
+    /// <summary>
+    /// 报价次数
+    /// </summary>
+    public int ntime { get; set; }
     
 }
