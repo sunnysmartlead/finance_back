@@ -20,6 +20,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// </summary> 
         public long AuditFlowId { get; set; }
         /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
+        /// <summary>
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
@@ -48,6 +52,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 标题
         /// </summary>
         public string title { get; set; }
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
         public List<ProjectBoardSecondModel> ProjectBoardModels { get; set; }
     }
 
@@ -57,6 +65,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 版本
         /// </summary>
         public int version { get; set; }
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        public virtual long GradientId { get; set; }
         /// <summary>
         /// 流程号Id
         /// </summary> 
@@ -85,5 +97,9 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 之前几轮的 本次报价的值
         /// </summary>
         public List<decimal> OldOffer { get; set; }
+        
+        
+        
+        
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities;
+using Abp.Domain.Entities.Auditing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,12 +11,12 @@ namespace Finance.WorkFlows
     /// <summary>
     /// 任务重置表
     /// </summary>
-    public class TaskReset : Entity<long>
+    public class TaskReset : CreationAuditedEntity<long>
     {
         /// <summary>
         /// 工作流节点实例Id
         /// </summary>
-        public virtual string NodeInstanceId { get; set; }
+        public virtual long NodeInstanceId { get; set; }
 
         /// <summary>
         /// 重置用户Id
@@ -27,5 +28,9 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual long TargetUserId { get; set; }
 
+        /// <summary>
+        /// 是否激活
+        /// </summary>
+        public virtual bool IsActive { get; set; }
     }
 }
