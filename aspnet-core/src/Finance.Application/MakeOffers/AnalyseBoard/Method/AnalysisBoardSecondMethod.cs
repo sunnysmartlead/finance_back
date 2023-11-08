@@ -3532,7 +3532,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                                              Number = 1,
                                              Price = 100,
                                              ExchangeRate = 1,
-                                             nsum = 12
+                                             //nsum = 12
                                          }).ToList()
                 });
             }

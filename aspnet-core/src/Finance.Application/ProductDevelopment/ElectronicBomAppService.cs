@@ -624,10 +624,7 @@ namespace Finance.ProductDevelopment
          [AbpAuthorize]
         public async Task<List<ElectronicBomInfo>> FindElectronicBomByProcess(ProductDevelopmentInputDto dto)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+          
                 long AuditFlowId = dto.AuditFlowId;
                 long SolutionId = dto.SolutionId;
                 var dataBak = _electronicBomInfoBakRepository.GetAll()
@@ -646,11 +643,7 @@ namespace Finance.ProductDevelopment
                 }
 
                 return result;
-            }
-            else
-            {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
             
         }
 
@@ -670,18 +663,11 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<List<BoardDto>> GetBoardInfomation(long auditFlowId, long SolutionId)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.Id == SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+          
                 var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
                 List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
                 return boardDto;
-            }
-            else
-            {
-                throw new FriendlyException(SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
         }
 
     }

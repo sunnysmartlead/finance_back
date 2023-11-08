@@ -15,6 +15,7 @@ using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
 using Finance.PriceEval;
+using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -45,24 +46,27 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
     /// <summary>
-    /// 构造函数
+    /// 核价看板服务
     /// </summary>
-    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-   
-        AuditFlowAppService flowAppService,
-        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-        IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        IRepository<Solution, long> resourceSchemeTable)
-    {
-        _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
-        _analysisBoardSecondMethod = analysisBoardSecondMethod;
-       
-        _flowAppService = flowAppService;
-        _resourceSchemeTable = resourceSchemeTable;
+    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
 
-      
+    /// <summary>
+    /// NRE录入服务
+    /// </summary>
+    private readonly NrePricingAppService _nrePricingAppService;
+
+    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, PriceEvaluationGetAppService priceEvaluationGetAppService, NrePricingAppService nrePricingAppService)
+    {
+        _analysisBoardSecondMethod = analysisBoardSecondMethod;
+        _financeAuditQuotationList = financeAuditQuotationList;
+        _resourceSchemeTable = resourceSchemeTable;
+        _flowAppService = flowAppService;
+        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
+        _priceEvaluationGetAppService = priceEvaluationGetAppService;
+        _nrePricingAppService = nrePricingAppService;
     }
+
+
 
     /// <summary>
     /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
@@ -197,13 +201,20 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId)
-    {
-        CoreComponentAndNreDto coreComponentAndNreDto = new();
+    //public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(GetBomCostInput input)
+    //{
+   
+    //    List<Material> malist = await _priceEvaluationGetAppService.GetBomCost(input);
+
+    //    var 
 
 
-        return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId);
-    }
+    //    CoreComponentAndNreDto coreComponentAndNreDto = new();
+
+    //    var BomMaterials=
+
+    //    return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId);
+    //}
 
     /// <summary>
     /// 下载核心器件、Nre费用拆分

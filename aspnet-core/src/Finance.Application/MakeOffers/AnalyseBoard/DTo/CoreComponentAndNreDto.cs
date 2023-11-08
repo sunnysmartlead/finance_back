@@ -62,7 +62,7 @@ public class SolutionAndprice
     /// <summary>
     /// 合计
     /// </summary>
-    public decimal nsum { get; set; }
+    public decimal Nsum { get; set; }
 }
 
 public class NreExpense
