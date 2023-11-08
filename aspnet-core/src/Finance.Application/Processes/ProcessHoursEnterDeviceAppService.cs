@@ -75,7 +75,7 @@ namespace Finance.Processes
             //数据转换
             foreach (var item in list)
             {
-                var processHoursEnterDevicr = this._processHoursEnterDeviceRepository.GetAll().Where(u => u.ProcessHoursEnterId == item.Id && u.DeviceStatus.Equals("专用")).ToList();
+                var processHoursEnterDevicr = this._processHoursEnterDeviceRepository.GetAll().Where(u => u.ProcessHoursEnterId == item.Id && u.DeviceStatus.Equals("Sbzt_Zy")).ToList();
                 foreach (var item1 in processHoursEnterDevicr)
                 {
                     ProcessHoursEnterDeviceDto p = new ProcessHoursEnterDeviceDto();
