@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Authorization;
+using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Json;
@@ -1636,7 +1637,7 @@ namespace Finance.PriceEval
                 var dtoList = new List<ManufacturingCost>();
                 yearCount.ForEach(p =>
                 {
-                    var dto = GetGroupTest(p.Year, p.UpDown, input, gradient, solution.Productld).Result;
+                    var dto = GetGroupTest(p.Year, p.UpDown, input, gradient, solution.Productld, isChange).Result;
                     if (dto != null)
                         dtoList.Add(dto);
                 });
@@ -1688,88 +1689,88 @@ namespace Finance.PriceEval
                 #region SMT和COB 其他
 
                 //COB、其他
-                List<ManufacturingCost> entity = await GetDbCost(input);
+                List<ManufacturingCost> entity = await GetDbCost(input, isChange);
                 entity.Add(dto);
 
                 //SMT 暂时为0，待需求确定后补充
-                ManufacturingCost allYearSmt = new();
-                allYearSmt =
-                    new ManufacturingCost
-                    {
-                        EditId = CostType.SMT.ToString(),
-                        Id = input.Year,
-                        CostType = CostType.SMT,
-                        GradientKy = 0,
-                        MonthlyDemand = 0,
-                        ManufacturingCostDirect = new ManufacturingCostDirect
-                        {
-                            Id = input.Year,
-                            DirectLabor = 0,
-                            EquipmentDepreciation = 0,
-                            LineChangeCost = 0,
-                            ManufacturingExpenses = 0,
-                            Subtotal = 0,
-                        },
-                        ManufacturingCostIndirect = new ManufacturingCostIndirect
-                        {
-                            Id = input.Year,
-                            DirectLabor = 0,
-                            EquipmentDepreciation = 0,
-                            ManufacturingExpenses = 0,
-                            Subtotal = 0
-                        },
-                        Subtotal = 0
-                    };
+                //ManufacturingCost allYearSmt = new();
+                //allYearSmt =
+                //    new ManufacturingCost
+                //    {
+                //        EditId = CostType.SMT.ToString(),
+                //        Id = input.Year,
+                //        CostType = CostType.SMT,
+                //        GradientKy = 0,
+                //        MonthlyDemand = 0,
+                //        ManufacturingCostDirect = new ManufacturingCostDirect
+                //        {
+                //            Id = input.Year,
+                //            DirectLabor = 0,
+                //            EquipmentDepreciation = 0,
+                //            LineChangeCost = 0,
+                //            ManufacturingExpenses = 0,
+                //            Subtotal = 0,
+                //        },
+                //        ManufacturingCostIndirect = new ManufacturingCostIndirect
+                //        {
+                //            Id = input.Year,
+                //            DirectLabor = 0,
+                //            EquipmentDepreciation = 0,
+                //            ManufacturingExpenses = 0,
+                //            Subtotal = 0
+                //        },
+                //        Subtotal = 0
+                //    };
 
-                if (isChange)
-                {
-                    //取得修改项
-                    var updateItem = await _updateItemRepository
-                        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                        && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
-                        && p.SolutionId == input.SolutionId
-                        && p.Year == input.Year);
+                //if (isChange)
+                //{
+                //    //取得修改项
+                //    var updateItem = await _updateItemRepository
+                //        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                //        && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
+                //        && p.SolutionId == input.SolutionId
+                //        && p.Year == input.Year);
 
-                    var smtManufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
-                    if (smtManufacturingCostEdit is not null)
-                    {
-                        var smtEdit = smtManufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.SMT.ToString());
-                        if (smtEdit is not null)
-                        {
-                            entity.Add(smtEdit);
-                        }
-                        else
-                        {
-                            allYearSmt = new ManufacturingCost
-                            {
-                                Id = input.Year,
-                                CostType = CostType.SMT,
-                                GradientKy = 0,
-                                MonthlyDemand = 0,
-                                ManufacturingCostDirect = new ManufacturingCostDirect
-                                {
-                                    Id = input.Year,
-                                    DirectLabor = 0,
-                                    EquipmentDepreciation = 0,
-                                    LineChangeCost = 0,
-                                    ManufacturingExpenses = 0,
-                                    Subtotal = 0,
-                                },
-                                ManufacturingCostIndirect = new ManufacturingCostIndirect
-                                {
-                                    Id = input.Year,
-                                    DirectLabor = 0,
-                                    EquipmentDepreciation = 0,
-                                    ManufacturingExpenses = 0,
-                                    Subtotal = 0
-                                },
-                                Subtotal = 0
-                            };
-                        }
-                    }
-                }
+                //    var smtManufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+                //    if (smtManufacturingCostEdit is not null)
+                //    {
+                //        var smtEdit = smtManufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.SMT.ToString());
+                //        if (smtEdit is not null)
+                //        {
+                //            entity.Add(smtEdit);
+                //        }
+                //        else
+                //        {
+                //            allYearSmt = new ManufacturingCost
+                //            {
+                //                Id = input.Year,
+                //                CostType = CostType.SMT,
+                //                GradientKy = 0,
+                //                MonthlyDemand = 0,
+                //                ManufacturingCostDirect = new ManufacturingCostDirect
+                //                {
+                //                    Id = input.Year,
+                //                    DirectLabor = 0,
+                //                    EquipmentDepreciation = 0,
+                //                    LineChangeCost = 0,
+                //                    ManufacturingExpenses = 0,
+                //                    Subtotal = 0,
+                //                },
+                //                ManufacturingCostIndirect = new ManufacturingCostIndirect
+                //                {
+                //                    Id = input.Year,
+                //                    DirectLabor = 0,
+                //                    EquipmentDepreciation = 0,
+                //                    ManufacturingExpenses = 0,
+                //                    Subtotal = 0
+                //                },
+                //                Subtotal = 0
+                //            };
+                //        }
+                //    }
+                //}
 
-                entity.Add(allYearSmt);
+                //entity.Add(allYearSmt);
 
 
                 //entity.Insert(2, dto);
@@ -1799,7 +1800,7 @@ namespace Finance.PriceEval
             }
             else
             {
-                var entity = await GetData(input, gradient, solution.Productld);
+                var entity = await GetData(input, gradient, solution.Productld, isChange);
 
 
                 entity.ForEach(p =>
@@ -1822,16 +1823,16 @@ namespace Finance.PriceEval
 
 
         }
-        async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld)
+        async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
             #region 获取组测
 
-            var dto = await GetGroupTest(input.Year, input.UpDown, input, gradient, sProductld);
+            var dto = await GetGroupTest(input.Year, input.UpDown, input, gradient, sProductld, isChange);
 
             #endregion
 
             #region SMT和COB 其他
-            List<ManufacturingCost> entity = await GetDbCost(input);
+            List<ManufacturingCost> entity = await GetDbCost(input, isChange);
             //if (dto != null)
             //{
 
@@ -1841,32 +1842,32 @@ namespace Finance.PriceEval
             //entity.Insert(2, dto);
 
             //SMT 暂时为0，待需求确定后补充
-            entity.Add(new ManufacturingCost
-            {
-                EditId = CostType.SMT.ToString(),
-                Id = input.Year,
-                CostType = CostType.SMT,
-                GradientKy = 0,
-                MonthlyDemand = 0,
-                ManufacturingCostDirect = new ManufacturingCostDirect
-                {
-                    Id = input.Year,
-                    DirectLabor = 0,
-                    EquipmentDepreciation = 0,
-                    LineChangeCost = 0,
-                    ManufacturingExpenses = 0,
-                    Subtotal = 0,
-                },
-                ManufacturingCostIndirect = new ManufacturingCostIndirect
-                {
-                    Id = input.Year,
-                    DirectLabor = 0,
-                    EquipmentDepreciation = 0,
-                    ManufacturingExpenses = 0,
-                    Subtotal = 0
-                },
-                Subtotal = 0
-            });
+            //entity.Add(new ManufacturingCost
+            //{
+            //    EditId = CostType.SMT.ToString(),
+            //    Id = input.Year,
+            //    CostType = CostType.SMT,
+            //    GradientKy = 0,
+            //    MonthlyDemand = 0,
+            //    ManufacturingCostDirect = new ManufacturingCostDirect
+            //    {
+            //        Id = input.Year,
+            //        DirectLabor = 0,
+            //        EquipmentDepreciation = 0,
+            //        LineChangeCost = 0,
+            //        ManufacturingExpenses = 0,
+            //        Subtotal = 0,
+            //    },
+            //    ManufacturingCostIndirect = new ManufacturingCostIndirect
+            //    {
+            //        Id = input.Year,
+            //        DirectLabor = 0,
+            //        EquipmentDepreciation = 0,
+            //        ManufacturingExpenses = 0,
+            //        Subtotal = 0
+            //    },
+            //    Subtotal = 0
+            //});
 
             #endregion
 
@@ -1880,7 +1881,7 @@ namespace Finance.PriceEval
 
         #region 获取数据库中存储的制造成本
 
-        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput inputDto)
+        async Task<List<ManufacturingCost>> GetDbCost(GetManufacturingCostInput inputDto, bool isChange = true)
         {
             var data = new List<ManufacturingCost>();
 
@@ -1960,6 +1961,34 @@ namespace Finance.PriceEval
                     data.Add(other);
 
                 }
+
+                //SMT 暂时为0，待需求确定后补充
+                data.Add(new ManufacturingCost
+                {
+                    EditId = CostType.SMT.ToString(),
+                    Id = inputDto.Year,
+                    CostType = CostType.SMT,
+                    GradientKy = 0,
+                    MonthlyDemand = 0,
+                    ManufacturingCostDirect = new ManufacturingCostDirect
+                    {
+                        Id = inputDto.Year,
+                        DirectLabor = 0,
+                        EquipmentDepreciation = 0,
+                        LineChangeCost = 0,
+                        ManufacturingExpenses = 0,
+                        Subtotal = 0,
+                    },
+                    ManufacturingCostIndirect = new ManufacturingCostIndirect
+                    {
+                        Id = inputDto.Year,
+                        DirectLabor = 0,
+                        EquipmentDepreciation = 0,
+                        ManufacturingExpenses = 0,
+                        Subtotal = 0
+                    },
+                    Subtotal = 0
+                });
             }
             else
             {
@@ -2040,6 +2069,34 @@ namespace Finance.PriceEval
 
                 }
 
+                //SMT 暂时为0，待需求确定后补充
+                data.Add(new ManufacturingCost
+                {
+                    EditId = CostType.SMT.ToString(),
+                    Id = inputDto.Year,
+                    CostType = CostType.SMT,
+                    GradientKy = 0,
+                    MonthlyDemand = 0,
+                    ManufacturingCostDirect = new ManufacturingCostDirect
+                    {
+                        Id = inputDto.Year,
+                        DirectLabor = 0,
+                        EquipmentDepreciation = 0,
+                        LineChangeCost = 0,
+                        ManufacturingExpenses = 0,
+                        Subtotal = 0,
+                    },
+                    ManufacturingCostIndirect = new ManufacturingCostIndirect
+                    {
+                        Id = inputDto.Year,
+                        DirectLabor = 0,
+                        EquipmentDepreciation = 0,
+                        ManufacturingExpenses = 0,
+                        Subtotal = 0
+                    },
+                    Subtotal = 0
+                });
+
             }
 
             data.ForEach(p =>
@@ -2056,22 +2113,24 @@ namespace Finance.PriceEval
                 };
             });
 
-
-            //取得修改项
-            var updateItem = await _updateItemRepository
-                .FirstOrDefaultAsync(p => p.AuditFlowId == inputDto.AuditFlowId
-                && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == inputDto.GradientId
-                && p.SolutionId == inputDto.SolutionId
-                && p.Year == inputDto.Year);
-
-            var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
-            if (manufacturingCostEdit is not null)
+            if (isChange)
             {
-                var dataIds = manufacturingCostEdit.UpdateItem.Select(p => p.EditId);
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == inputDto.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == inputDto.GradientId
+                    && p.SolutionId == inputDto.SolutionId
+                    && p.Year == inputDto.Year);
 
-                foreach (var item in data.Where(p => dataIds.Contains(p.EditId)))
+                var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+                if (manufacturingCostEdit is not null)
                 {
-                    ObjectMapper.Map(manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                    var dataIds = manufacturingCostEdit.UpdateItem.Select(p => p.EditId);
+
+                    foreach (var item in data.Where(p => dataIds.Contains(p.EditId)))
+                    {
+                        ObjectMapper.Map(manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                    }
                 }
             }
 
@@ -2082,24 +2141,26 @@ namespace Finance.PriceEval
 
         #region 组测
 
-        async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld)
+        async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
-
-            //取得修改项
-            var updateItem = await _updateItemRepository
-                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
-                && p.SolutionId == input.SolutionId
-                && p.Year == year && p.UpDown == upDown);
-
-            var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
-            if (manufacturingCostEdit is not null)
+            if (isChange)
             {
-                var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == year && p.UpDown == upDown);
 
-                if (zf is not null)
+                var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
+                if (manufacturingCostEdit is not null)
                 {
-                    return zf;
+                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
+
+                    if (zf is not null)
+                    {
+                        return zf;
+                    }
                 }
             }
 
@@ -2361,7 +2422,6 @@ namespace Finance.PriceEval
         /// <summary>
         /// 获取 物流成本汇总表
         /// </summary>
-        /// <param name="input"></param>
         /// <returns></returns>
         private async Task<List<ProductionControlInfoListDto>> GetLogisticsCostPrivate(GetLogisticsCostInput input, bool isChange = true)
         {
@@ -2486,7 +2546,14 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<QualityCostListDto> GetQualityCostNoChange(GetOtherCostItemInput input)
         {
-            return await GetQualityCostPrivate(input, false);
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                return await GetQualityCostPrivate(input);
+            }
+            else
+            {
+                return await GetQualityCostPrivate(input, false);
+            }
         }
 
         /// <summary>
@@ -2537,37 +2604,38 @@ namespace Finance.PriceEval
                     return (dto, result);
                 });
 
-                var otherCostItemtList = (await data.SelectAsync(async p => await GetQualityCostPrivate(p.dto, p.result, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal))).ToList();
+                var otherCostItemtList = (await data.SelectAsync(async p => await GetQualityCostPrivate(p.dto, p.result, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal, isChange))).ToList();
 
-                if (isChange)
-                {
+                //if (isChange)
+                //{
 
-                    //取得修改项（新增，解决质量成本计算错误）
-                    var updateItem = await _updateItemRepository
-                        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                        && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
-                        && p.SolutionId == input.SolutionId);
-                    var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
-                    if (qualityCostListDto is not null)
-                    {
-                        var dataIds = qualityCostListDto.UpdateItem.Select(p => p.EditId);
-                        foreach (var item in otherCostItemtList.Where(p => dataIds.Contains(p.EditId)))
-                        {
-                            ObjectMapper.Map(qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
-                        }
-                    }
-                }
+                //    //取得修改项（新增，解决质量成本计算错误）
+                //    var updateItem = await _updateItemRepository
+                //        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                //        && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
+                //        && p.SolutionId == input.SolutionId);
+                //    var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
+                //    if (qualityCostListDto is not null)
+                //    {
+                //        var dataIds = qualityCostListDto.UpdateItem.Select(p => p.EditId);
+                //        foreach (var item in otherCostItemtList.Where(p => dataIds.Contains(p.EditId)))
+                //        {
+                //            ObjectMapper.Map(qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == item.EditId), item);
+                //        }
+                //    }
+                //}
 
                 var qualityCost = (from o in otherCostItemtList
                                    join y in yearCount on new { o.Year, o.UpDown } equals new { y.Year, y.UpDown }
                                    select o.QualityCost * y.Quantity).Sum();
 
-                return new QualityCostListDto
+                var result = new QualityCostListDto
                 {
                     ProductCategory = otherCostItemtList.FirstOrDefault().ProductCategory,
                     CostProportion = otherCostItemtList.Sum(p => p.CostProportion),
                     QualityCost = qualityCost / yearCount.Sum(p => p.Quantity),
                 };
+                return result;
             }
             else
             {
@@ -2575,25 +2643,25 @@ namespace Finance.PriceEval
 
                 //物料成本
                 var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-                var dto = await this.GetQualityCostPrivate(input, electronicAndStructureList, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal);
+                var dto = await this.GetQualityCostPrivate(input, electronicAndStructureList, logisticsFee, manufacturingCost.FirstOrDefault(p => p.CostType == CostType.Total).Subtotal, isChange);
 
 
-                //取得修改项
-                var updateItem = await _updateItemRepository
-                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                    && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
-                    && p.SolutionId == input.SolutionId
-                    && p.Year == input.Year && p.UpDown == input.UpDown);
+                ////取得修改项
+                //var updateItem = await _updateItemRepository
+                //    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                //    && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
+                //    && p.SolutionId == input.SolutionId
+                //    && p.Year == input.Year && p.UpDown == input.UpDown);
 
-                var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
-                if (qualityCostListDto is not null)
-                {
-                    var q = qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == dto.EditId);
-                    if (q is not null)
-                    {
-                        return q;
-                    }
-                }
+                //var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
+                //if (qualityCostListDto is not null)
+                //{
+                //    var q = qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == dto.EditId);
+                //    if (q is not null)
+                //    {
+                //        return q;
+                //    }
+                //}
                 return dto;
             }
         }
@@ -2618,14 +2686,33 @@ namespace Finance.PriceEval
         /// <summary>
         /// 获取 质量成本(内部使用)（单年份）
         /// </summary>
-        /// <param name="input"></param>
-        /// <param name="electronicAndStructureList"></param>
-        /// <param name="logisticsFee"></param>
-        /// <param name="manufacturingCostSubtotal"></param>
         /// <returns></returns>
         private async Task<QualityCostListDto> GetQualityCostPrivate(GetOtherCostItemInput input, List<Material> electronicAndStructureList
-         , decimal logisticsFee, decimal manufacturingCostSubtotal)
+         , decimal logisticsFee, decimal manufacturingCostSubtotal, bool isChange = true)
         {
+            if (isChange)
+            {
+                //取得修改项
+                var updateItem = await _updateItemRepository
+                    .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.UpdateItemType == UpdateItemType.QualityCost && p.GradientId == input.GradientId
+                    && p.SolutionId == input.SolutionId
+                    && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                var qualityCostListDto = ObjectMapper.Map<SetUpdateItemInput<List<QualityCostListDto>>>(updateItem);
+                if (qualityCostListDto is not null)
+                {
+                    var q = qualityCostListDto.UpdateItem.FirstOrDefault(p => p.EditId == UpdateItemType.QualityCost.ToString());
+                    if (q is not null)
+                    {
+                        q.Year = input.Year;
+                        q.UpDown = input.UpDown;
+                        return q;
+                    }
+                }
+            }
+
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
 
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
@@ -3078,8 +3165,28 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task<PagedResultDto<GradientListDto>> GetGradient(long auditFlowId)
         {
-            var entity = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            //var entity = await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            //return new PagedResultDto<GradientListDto>(entity.Count, ObjectMapper.Map<List<GradientListDto>>(entity));
+
+            var data = from g in _gradientRepository.GetAll()
+                       join gm in _gradientModelRepository.GetAll() on g.Id equals gm.GradientId
+                       join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                       where g.AuditFlowId == auditFlowId
+                       select new GradientListDto
+                       {
+                           Id = g.Id,
+                           AuditFlowId = auditFlowId,
+                           GradientValue = g.GradientValue,
+                           Index = g.Index,
+                           PriceEvaluationId = gm.PriceEvaluationId,
+                           Year = gmy.Year,
+                           UpDown = gmy.UpDown
+                       };
+            var entity = await data.ToListAsync();
             return new PagedResultDto<GradientListDto>(entity.Count, ObjectMapper.Map<List<GradientListDto>>(entity));
+
+
+
         }
 
         ///// <summary>
