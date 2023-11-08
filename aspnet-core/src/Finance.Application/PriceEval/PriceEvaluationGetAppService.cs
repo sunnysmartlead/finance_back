@@ -3182,7 +3182,8 @@ namespace Finance.PriceEval
                            Year = gmy.Year,
                            UpDown = gmy.UpDown
                        };
-            var entity = await data.ToListAsync();
+            var entity = data.ToList().DistinctBy(p => p.Id).ToList();
+
             return new PagedResultDto<GradientListDto>(entity.Count, ObjectMapper.Map<List<GradientListDto>>(entity));
 
 
