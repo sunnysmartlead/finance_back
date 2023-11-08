@@ -6,6 +6,10 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 public class SolutionQuotationDto
 {
     /// <summary>
+    /// 方案组合id
+    /// </summary>
+    public virtual long Id { get; set; }
+    /// <summary>
     /// 流程Id
     /// </summary>
     public virtual long AuditFlowId { get; set; }
