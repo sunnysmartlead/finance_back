@@ -1,6 +1,8 @@
 ﻿using Finance.NrePricing.Model;
+using Finance.PriceEval;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Finance.NrePricing.Dto
@@ -193,5 +195,9 @@ namespace Finance.NrePricing.Dto
         /// 年份
         /// </summary>
         public int Year { get; set; }
+        /// <summary>
+        /// 年份类型
+        /// </summary>       
+        public virtual YearType UpDown { get; set; }
     }
 }
