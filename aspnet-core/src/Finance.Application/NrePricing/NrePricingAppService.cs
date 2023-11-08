@@ -608,6 +608,7 @@ namespace Finance.NerPricing
                         if (user is not null) item.PeopleName = user.Name;//提交人名称
                     }
                 }
+                mouldInventoryPartModel.IsAllNull = await GetInitialResourcesManagementCount(auditFlowId)==0;
                 mouldInventoryPartModels.Add(mouldInventoryPartModel);
             }
             return mouldInventoryPartModels.FirstOrDefault();
