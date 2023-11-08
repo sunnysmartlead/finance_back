@@ -265,7 +265,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="结构BOM单价审核",
                     FinanceDictionaryId = FinanceConsts.StructBomEvalSelect,
-                    Activation = $"{MainFlowId}_定制结构件_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_结构BOM匹配修改_{MainFlowId}_结构BOM单价审核",
+                    Activation = $"{MainFlowId}_定制结构件_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_结构BOM匹配修改_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_核价看板_{MainFlowId}_结构BOM单价审核",
                     RoleId = structuralPriceAuditor.Id.ToString(),
                     ProcessIdentifier = "StructureUnitPriceEntryToExamine",
                 },
@@ -273,7 +273,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="电子BOM单价审核",
                     FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect,
-                    Activation = $"{MainFlowId}_电子BOM匹配修改_{MainFlowId}_电子BOM单价审核",
+                    Activation = $"{MainFlowId}_电子BOM匹配修改_{MainFlowId}_电子BOM单价审核 && {MainFlowId}_核价看板_{MainFlowId}_电子BOM单价审核",
                     RoleId = electronicsPriceAuditor.Id.ToString(),
                     ProcessIdentifier = "ElectronicUnitPriceEntryToExamine",
                 },
@@ -1144,6 +1144,24 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "NRE_EMC实验费录入",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Nreemcsyflr,
+                    LineType = LineType.Reset,
+                },
+
+                new Line
+                {
+                    SoureNodeId = "核价看板",
+                    TargetNodeId = "结构BOM单价审核",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Jgbomdjsh,
+                    LineType = LineType.Reset,
+                },
+
+                new Line
+                {
+                    SoureNodeId = "核价看板",
+                    TargetNodeId = "电子BOM单价审核",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Dzbomdjsh,
                     LineType = LineType.Reset,
                 },
 
