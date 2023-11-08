@@ -2005,6 +2005,7 @@ namespace Finance.NerPricing
                                                 Uph = a.Uph,
                                                 Value = (decimal)a.Value,
                                                 Year = (int)b.Year,
+                                                UpDown=b.UpDown,
                                                 Description = a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
                                             }).ToList();
                 if (result.Count is not 0)
@@ -2019,21 +2020,21 @@ namespace Finance.NerPricing
                         if (gxftl.Select(x => x.Value).Distinct().Count() == 1)
                         {
                             //获取值最大年份的那一年
-                            var maxYear = gxftl.Max(p => p.Year);
-                            result = result.Where(p => p.Year.Equals(maxYear)).ToList();
+                            var maxYear = gxftl.OrderByDescending(p => p.Year).FirstOrDefault();
+                            result = result.Where(p => p.Year.Equals(maxYear.Year) && p.UpDown.Equals(maxYear.UpDown)).ToList();
                         }
                         else
                         {
                             //获取值最大的那年
                             var maxGxftl = gxftl.OrderByDescending(p => p.Value).FirstOrDefault();
-                            result = result.Where(p => p.Year.Equals(maxGxftl.Year)).ToList();
+                            result = result.Where(p => p.Year.Equals(maxGxftl.Year) && p.UpDown.Equals(maxGxftl.UpDown)).ToList();
                         }
                     }
                     else
                     {
                         //获取值最大的那年
                         var maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
-                        result = result.Where(p => p.Year.Equals(maxXtsl.Year)).ToList();
+                        result = result.Where(p => p.Year.Equals(maxXtsl.Year)&&p.UpDown.Equals(maxXtsl.UpDown)).ToList();
                     }
                 }
 
