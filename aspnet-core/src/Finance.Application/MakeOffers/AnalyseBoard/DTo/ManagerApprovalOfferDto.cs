@@ -20,6 +20,10 @@ public class ManagerApprovalOfferDto
     /// 报价毛利率测算-实际数量
     /// </summary>
     public List<ManagerApprovalOfferNre> ManagerApprovalOfferNres{ get; set; }
+    /// <summary>
+    /// NRE
+    /// </summary>
+    public  AnalyseBoardNreDto nre{get; set;}
 }
 /// <summary>
 /// 总经理报价审批
