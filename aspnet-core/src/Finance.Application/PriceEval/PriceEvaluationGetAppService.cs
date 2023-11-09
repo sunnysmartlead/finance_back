@@ -2626,6 +2626,8 @@ namespace Finance.PriceEval
                 //    }
                 //}
 
+                var bom = await GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = 0, UpDown = YearType.Year, InputCount = 0 });
+
                 var qualityCost = (from o in otherCostItemtList
                                    join y in yearCount on new { o.Year, o.UpDown } equals new { y.Year, y.UpDown }
                                    select o.QualityCost * y.Quantity).Sum();
@@ -2633,9 +2635,12 @@ namespace Finance.PriceEval
                 var result = new QualityCostListDto
                 {
                     ProductCategory = otherCostItemtList.FirstOrDefault().ProductCategory,
-                    CostProportion = otherCostItemtList.Sum(p => p.CostProportion),
+                    //CostProportion = otherCostItemtList.Sum(p => p.CostProportion),
                     QualityCost = qualityCost / yearCount.Sum(p => p.Quantity),
                 };
+
+                result.CostProportion = result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+
                 return result;
             }
             else
@@ -2762,7 +2767,7 @@ namespace Finance.PriceEval
             //var totalMaterialCost = (electronicAndStructureList.Sum(p => p.MaterialCost) + electronicAndStructureList.Sum(p => p.MoqShareCount)
             //    + logisticsFee + manufacturingCostSubtotal) / grossProfitMargin * costProportion;
 
-            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) * costProportion / 100;
+            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) * costProportion / 100;
 
 
             //产品小类名称
