@@ -1546,7 +1546,8 @@ namespace Finance.PriceEval
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
 
-                        item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
+                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                        item.IsCustomerSupply = (bomIsCustomerSupply == null || bomIsCustomerSupplyFirst == null) ? false : bomIsCustomerSupplyFirst.IsCustomerSupply;
                         item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
 
 
@@ -3156,8 +3157,21 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task SetIsCustomerSupply(SetIsCustomerSupplyInput input)
         {
-            var pe = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-            pe.BomIsCustomerSupplyJson = input.BomIsCustomerSupplyList.ToJsonString();
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+
+            var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
+            foreach (var item in input.BomIsCustomerSupplyList)
+            {
+                var db = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                if (db is not null)
+                {
+                    bomIsCustomerSupply.Remove(db);
+
+                }
+                bomIsCustomerSupply.Add(item);
+            }
+
+            priceEvaluation.BomIsCustomerSupplyJson = bomIsCustomerSupply.ToJsonString();
         }
 
         /// <summary>
