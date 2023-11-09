@@ -1107,7 +1107,7 @@ namespace Finance.PriceEval
             var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = 0, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
-            var bomCost = data.Material.Sum(p => p.TotalMoneyCyn);
+            var bomCost = data.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
 
             //损耗成本
             var costItemAll = data.Material.Sum(p => p.Loss);

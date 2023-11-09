@@ -549,7 +549,7 @@ namespace Finance.PriceEval
                     LossCost = costItem,
                     OtherCostItem = otherCostItem,
                     OtherCostItem2 = getOtherCostItem2,
-                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
+                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
 
                     PreparedDate = DateTime.Now,//编制日期
                     AuditDate = DateTime.Now, //工作流取    审核日期
@@ -630,7 +630,7 @@ namespace Finance.PriceEval
                     LossCost = costItem,
                     OtherCostItem = otherCostItem,
                     OtherCostItem2 = getOtherCostItem2,
-                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
+                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
                     PreparedDate = DateTime.Now,//编制日期
                     AuditDate = DateTime.Now,//工作流取    审核日期
                     ApprovalDate = DateTime.Now,//工作流取  批准日期
@@ -2927,7 +2927,7 @@ namespace Finance.PriceEval
             var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
-            var bomCost = data.Material.Sum(p => p.TotalMoneyCyn);
+            var bomCost = data.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
 
             //损耗成本
             var costItemAll = data.Material.Sum(p => p.Loss);
@@ -3104,7 +3104,7 @@ namespace Finance.PriceEval
                 Subtotal1 = p.CostType == CostType.Other ? null : p.ManufacturingCostDirect.Subtotal,
                 DirectLabor2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.DirectLabor,
                 EquipmentDepreciation2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.EquipmentDepreciation,
-                ManufacturingExpenses2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.ManufacturingExpenses,
+                ManufacturingExpenses2 = p.ManufacturingCostIndirect.ManufacturingExpenses,
                 Subtotal2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.Subtotal,
 
                 Subtotal = p.Subtotal,
@@ -3140,6 +3140,8 @@ namespace Finance.PriceEval
 
 
             dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCyn);
+            dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+
             dtoAll.LossCount = dtoAll.Material.Sum(p => p.Loss);
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
 
