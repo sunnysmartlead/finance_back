@@ -153,97 +153,110 @@ namespace Finance.TradeCompliance
                     GradientId = await GetMinGradient(input.AuditFlowId),
                     UpDown = sopYear.Item2
                 };
-                var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
-                tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;//产品公允价=核价表成本合计*1.1
 
 
-                var countryIdList = (from a in await _priceEvalRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
-                                   join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
-                                   select b.Id).ToList();
-                tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId = countryIdList.Count > 0 ? countryIdList.FirstOrDefault() : 0;
-
-                var countries = await _countryLibraryRepository.GetAllListAsync(p => p.Id.Equals(tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId));
-                decimal rate = 0;//取国家库的比例
-
-                if (countries.Count > 0)
+                try
                 {
-                    rate = countries.FirstOrDefault().Rate/100;
-                }
-                //取产品组成物料
-                tradeComplianceCheckDto.ProductMaterialInfos = new();
-                foreach (var material in priceTable.Material)
-                {
-                    ProductMaterialInfo materialinfo;
-                    var materialList = await _productMaterialInfoRepository.GetAllListAsync(p => p.TradeComplianceCheckId == tradeComplianceCheckId && p.MaterialCode == material.Sap && p.MaterialName == material.TypeName);
-                    if (materialList.Count > 0)
+                    var priceTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(priceTableByPart);//取核价表数据
+                    tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue = priceTable.TotalCost * 1.1m;//产品公允价=核价表成本合计*1.1
+
+
+                    var countryIdList = (from a in await _priceEvalRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
+                                         join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
+                                         select b.Id).ToList();
+                    tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId = countryIdList.Count > 0 ? countryIdList.FirstOrDefault() : 0;
+
+                    var countries = await _countryLibraryRepository.GetAllListAsync(p => p.Id.Equals(tradeComplianceCheckDto.TradeComplianceCheck.CountryLibraryId));
+                    decimal rate = 0;//取国家库的比例
+
+                    if (countries.Count > 0)
                     {
-                        materialinfo = materialList.FirstOrDefault();
+                        rate = countries.FirstOrDefault().Rate / 100;
+                    }
+                    //取产品组成物料
+                    tradeComplianceCheckDto.ProductMaterialInfos = new();
+                    foreach (var material in priceTable.Material)
+                    {
+                        ProductMaterialInfo materialinfo;
+                        var materialList = await _productMaterialInfoRepository.GetAllListAsync(p => p.TradeComplianceCheckId == tradeComplianceCheckId && p.MaterialCode == material.Sap && p.MaterialName == material.TypeName);
+                        if (materialList.Count > 0)
+                        {
+                            materialinfo = materialList.FirstOrDefault();
+                        }
+                        else
+                        {
+                            materialinfo = new();
+                            materialinfo.AuditFlowId = input.AuditFlowId;
+                            materialinfo.TradeComplianceCheckId = tradeComplianceCheckId;
+
+                            materialinfo.MaterialCode = material.Sap;
+                            materialinfo.MaterialName = material.TypeName;
+                        }
+                        materialinfo.MaterialIdInBom = material.Id;
+                        materialinfo.MaterialDetailName = material.MaterialName;
+
+                        materialinfo.Count = material.AssemblyCount;
+                        materialinfo.UnitPrice = material.MaterialPriceCyn;
+                        materialinfo.Amount = material.TotalMoneyCynNoCustomerSupply;
+
+                        tradeComplianceCheckDto.ProductMaterialInfos.Add(materialinfo);
+
+                        string MaterialIdPrefix = materialinfo.MaterialIdInBom[..1];
+                        if (MaterialIdPrefix.Equals(PriceEvaluationGetAppService.ElectronicBomName))
+                        {
+                            long elecId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
+                            //查询管制状态
+                            EnteringElectronic enteringElectronic = await _enteringElectronicRepository.FirstOrDefaultAsync(p => p.ElectronicId.Equals(elecId) && p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
+                            materialinfo.ControlStateType = enteringElectronic.MaterialControlStatus;
+                        }
+                        else
+                        {
+                            long structId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
+                            StructureElectronic structureElectronic = await _structureElectronicRepository.FirstOrDefaultAsync(p => p.StructureId.Equals(structId) && p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
+                            materialinfo.ControlStateType = structureElectronic.MaterialControlStatus;
+                        }
+
+
+
+                        if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Eccn || (rate == (decimal)0.1 && materialinfo.ControlStateType == FinanceConsts.EccnCode_Ear99))
+                        {
+                            sumEccns += materialinfo.Amount;
+                        }
+                        if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Pending)
+                        {
+                            sumPending += materialinfo.Amount;
+                        }
+                        await _productMaterialInfoRepository.InsertOrUpdateAsync(materialinfo);
+                    }
+
+                    tradeComplianceCheckDto.TradeComplianceCheck.EccnPricePercent = sumEccns / tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue;
+                    tradeComplianceCheckDto.TradeComplianceCheck.PendingPricePercent = sumPending / tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue;
+                    tradeComplianceCheckDto.TradeComplianceCheck.AmountPricePercent = tradeComplianceCheckDto.TradeComplianceCheck.EccnPricePercent + tradeComplianceCheckDto.TradeComplianceCheck.PendingPricePercent;
+
+
+                    if (tradeComplianceCheckDto.TradeComplianceCheck.AmountPricePercent > rate)
+                    {
+                        tradeComplianceCheckDto.TradeComplianceCheck.AnalysisConclusion = GeneralDefinition.TRADE_COMPLIANCE_NOT_OK;
                     }
                     else
                     {
-                        materialinfo = new();
-                        materialinfo.AuditFlowId = input.AuditFlowId;
-                        materialinfo.TradeComplianceCheckId = tradeComplianceCheckId;
-
-                        materialinfo.MaterialCode = material.Sap;
-                        materialinfo.MaterialName = material.TypeName;
+                        tradeComplianceCheckDto.TradeComplianceCheck.AnalysisConclusion = GeneralDefinition.TRADE_COMPLIANCE_OK;
                     }
-                    materialinfo.MaterialIdInBom = material.Id;
-                    materialinfo.MaterialDetailName = material.MaterialName;
+                    await _tradeComplianceCheckRepository.InsertOrUpdateAsync(tradeComplianceCheckDto.TradeComplianceCheck);
 
-                    materialinfo.Count = material.AssemblyCount;
-                    materialinfo.UnitPrice = material.MaterialPriceCyn;
-                    materialinfo.Amount = material.TotalMoneyCyn;
-
-                    tradeComplianceCheckDto.ProductMaterialInfos.Add(materialinfo);
-
-                    string MaterialIdPrefix = materialinfo.MaterialIdInBom[..1];
-                    if (MaterialIdPrefix.Equals(PriceEvaluationGetAppService.ElectronicBomName))
-                    {
-                        long elecId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
-                        //查询管制状态
-                        EnteringElectronic enteringElectronic = await _enteringElectronicRepository.FirstOrDefaultAsync(p => p.ElectronicId.Equals(elecId) && p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
-                        materialinfo.ControlStateType = enteringElectronic.MaterialControlStatus;
-                    }
-                    else
-                    {
-                        long structId = long.Parse(materialinfo.MaterialIdInBom.Remove(0, 1));
-                        StructureElectronic structureElectronic = await _structureElectronicRepository.FirstOrDefaultAsync(p => p.StructureId.Equals(structId) && p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
-                        materialinfo.ControlStateType = structureElectronic.MaterialControlStatus;
-                    }
-
-
-
-                    if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Eccn || (rate == (decimal)0.1 && materialinfo.ControlStateType == FinanceConsts.EccnCode_Ear99))
-                    {
-                        sumEccns += materialinfo.Amount;
-                    }
-                    if (materialinfo.ControlStateType == FinanceConsts.EccnCode_Pending)
-                    {
-                        sumPending += materialinfo.Amount;
-                    }
-                    await _productMaterialInfoRepository.InsertOrUpdateAsync(materialinfo);
                 }
-                tradeComplianceCheckDto.TradeComplianceCheck.EccnPricePercent = sumEccns / tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue;
-                tradeComplianceCheckDto.TradeComplianceCheck.PendingPricePercent = sumPending / tradeComplianceCheckDto.TradeComplianceCheck.ProductFairValue;
-                tradeComplianceCheckDto.TradeComplianceCheck.AmountPricePercent = tradeComplianceCheckDto.TradeComplianceCheck.EccnPricePercent + tradeComplianceCheckDto.TradeComplianceCheck.PendingPricePercent;
-
-
-                if (tradeComplianceCheckDto.TradeComplianceCheck.AmountPricePercent > rate)
-                {
-                    tradeComplianceCheckDto.TradeComplianceCheck.AnalysisConclusion = GeneralDefinition.TRADE_COMPLIANCE_NOT_OK;
+                catch {
+                    throw new FriendlyException("核价看板相关数据未取到！流程号："+ priceTableByPart.AuditFlowId + ",方案号："+ priceTableByPart.SolutionId+ ",InputCount = 0,Year:"+ priceTableByPart.Year+ ",GradientId:"+ priceTableByPart.GradientId+ ",UpDown:"+ priceTableByPart.UpDown);
                 }
-                else
-                {
-                    tradeComplianceCheckDto.TradeComplianceCheck.AnalysisConclusion = GeneralDefinition.TRADE_COMPLIANCE_OK;
+
                 }
-                await _tradeComplianceCheckRepository.InsertOrUpdateAsync(tradeComplianceCheckDto.TradeComplianceCheck);
-            }
             else
-            {
-                throw new FriendlyException("获取零件信息失败，请检查零件信息");
-            }
+                {
+                    throw new FriendlyException("获取零件信息失败，请检查零件信息");
+                }
+           
             return tradeComplianceCheckDto;
+        
         }
 
         public virtual async Task<bool> IsProductsTradeComplianceOK(long flowId)
