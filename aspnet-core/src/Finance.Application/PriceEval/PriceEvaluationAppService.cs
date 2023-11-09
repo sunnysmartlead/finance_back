@@ -1138,8 +1138,26 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
             };
 
-            var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = customerTargetPrice.CustomerTargetPrice - sum });
+            //var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+
+            var solution = await _solutionRepository.FirstOrDefaultAsync(p => p.Id == input.SolutionId);
+            var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == input.GradientId);
+
+            var customerTargetPrice = await _customerTargetPriceRepository
+                .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld && p.Kv == gradient.GradientValue);
+
+            decimal targetPrice;
+            try
+            {
+                targetPrice = Convert.ToDecimal(customerTargetPrice.TargetPrice);
+            }
+            catch (Exception)
+            {
+                throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
+
+            }
+
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = (targetPrice * customerTargetPrice.ExchangeRate) - sum });
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
 
