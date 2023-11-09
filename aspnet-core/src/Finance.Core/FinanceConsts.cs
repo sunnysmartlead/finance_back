@@ -853,6 +853,16 @@ namespace Finance
         /// </summary>
         public const string HjkbSelect_Nreemcsyflr = "HjkbSelect_Nreemcsyflr";
 
+        /// <summary>
+        /// 核价看板选项 退回到【结构BOM单价审核】
+        /// </summary>
+        public const string HjkbSelect_Jgbomdjsh = "HjkbSelect_Nreemcsyflr";
+
+        /// <summary>
+        /// 核价看板选项 退回到【电子BOM单价审核】
+        /// </summary>
+        public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Nreemcsyflr";
+
         #endregion
 
 

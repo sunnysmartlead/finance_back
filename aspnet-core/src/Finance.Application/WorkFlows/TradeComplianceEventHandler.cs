@@ -154,17 +154,18 @@ namespace Finance.WorkFlows
                     //如果是流转到主流程_电子BOM匹配修改
                     if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                     {
-                        await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
-
                         await _resourceEnteringAppService.ElectronicBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+
+                        //await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
                     //如果是流转到主流程_结构BOM匹配修改
                     if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
                     {
                         await _resourceEnteringAppService.StructureBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
-                        await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
 
+
+                        //await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
                     //如果是流转到主流程_核价看板
