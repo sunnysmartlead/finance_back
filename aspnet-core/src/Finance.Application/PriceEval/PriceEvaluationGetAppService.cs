@@ -3117,7 +3117,7 @@ namespace Finance.PriceEval
             dtoAll.LogisticsFee = dtoAll.OtherCostItem.LogisticsFee;
             dtoAll.ProductCategory = dtoAll.OtherCostItem.ProductCategory;
             dtoAll.CostProportion = dtoAll.OtherCostItem.CostProportion;
-            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion * 100}%";
+            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion}%";
             dtoAll.QualityCost = dtoAll.OtherCostItem.QualityCost;
             dtoAll.AccountingPeriod = dtoAll.OtherCostItem.AccountingPeriod;
             dtoAll.CapitalCostRate = dtoAll.OtherCostItem.CapitalCostRate;
