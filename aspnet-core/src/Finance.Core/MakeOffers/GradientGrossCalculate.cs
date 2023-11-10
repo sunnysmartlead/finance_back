@@ -22,10 +22,7 @@ public class GradientGrossCalculate : FullAuditedEntity<long>
     /// 产品
     /// </summary>
     public string product { get; set; }
-    /// <summary>
-    /// 数据id
-    /// </summary>
-    public long Id{ get; set; }
+ 
     /// <summary>
     /// 版本
     /// </summary>
@@ -67,4 +64,21 @@ public class GradientGrossCalculate : FullAuditedEntity<long>
     /// 目标价（客户）剔除分摊费用毛利率
     /// </summary>
     public decimal ClientNreGrossMargin{ get; set; }
+    /// <summary>
+    /// 本次报价-单价
+    /// </summary>
+    public decimal OfferUnitPrice { get; set; }
+    /// <summary>
+    /// 本次报价-毛利率
+    /// </summary>
+    public decimal OfferGrossMargin { get; set; }
+    /// <summary>
+    /// (本次报价增加客供料毛利率
+    /// </summary>
+    public decimal OfferClientGrossMargin { get; set; }
+    /// <summary>
+    /// 本次报价剔除NRE分摊费用毛利率
+    /// </summary>
+    public decimal OfferNreGrossMargin { get; set; }
+
 }

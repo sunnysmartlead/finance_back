@@ -138,6 +138,11 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         public virtual decimal TotalMoneyCynCount { get; set; }
 
+        /// <summary>
+        /// 合计金额（人民币）不含客供
+        /// </summary>
+        public virtual decimal TotalMoneyCynNoCustomerSupply { get; set; }
+
 
         /// <summary>
         /// 损耗 合计
