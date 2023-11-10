@@ -51,23 +51,22 @@ namespace Finance.WorkFlows
                     //}
 
                     //如果是流转到主流程_电子BOM匹配修改
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_电子BOM匹配修改")
+                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_电子BOM匹配修改" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_电子BOM匹配修改")
                     {
                         await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
                     //如果是流转到主流程_结构BOM匹配修改
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_结构BOM匹配修改")
+                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_结构BOM匹配修改" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_结构BOM匹配修改")
                     {
                         await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
                     //如果是流转到主流程_NRE模具费录入
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_NRE模具费录入")
+                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_NRE模具费录入" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_NRE模具费录入")
                     {
                         await _nrePricingAppService.GetResourcesManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
-
                 }
                 uow.Complete();
             }
