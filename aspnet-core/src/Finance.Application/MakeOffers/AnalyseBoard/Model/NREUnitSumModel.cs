@@ -9,6 +9,12 @@ public class NREUnitSumModel
     /// </summary>
     public string Product { get; set; }    
     
-    
-    public List<SolutuionAndValue>  solutuionAndValues{ get; set; }   
+    /// <summary>
+    /// 核价成本
+    /// </summary>
+    public decimal cost{ get; set; }  
+    /// <summary>
+    /// 报价金额
+    /// </summary>
+    public decimal number{ get; set; }  
 }

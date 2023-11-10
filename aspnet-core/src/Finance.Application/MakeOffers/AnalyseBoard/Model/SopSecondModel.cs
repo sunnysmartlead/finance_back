@@ -12,7 +12,7 @@ public class SopSecondModel
     /// <summary>
     /// 年份
     /// </summary>
-    public int Year { get; set; }
+    public string Year { get; set; }
     /// <summary>
     /// 走量
     /// </summary>
