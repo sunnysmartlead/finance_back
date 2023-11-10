@@ -549,7 +549,7 @@ namespace Finance.PriceEval
                     LossCost = costItem,
                     OtherCostItem = otherCostItem,
                     OtherCostItem2 = getOtherCostItem2,
-                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
+                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
 
                     PreparedDate = DateTime.Now,//编制日期
                     AuditDate = DateTime.Now, //工作流取    审核日期
@@ -630,7 +630,7 @@ namespace Finance.PriceEval
                     LossCost = costItem,
                     OtherCostItem = otherCostItem,
                     OtherCostItem2 = getOtherCostItem2,
-                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
+                    TotalCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) + manufacturingAllCost + costItem.Sum(p => p.WastageCost) + costItem.Sum(p => p.MoqShareCount) + otherCostItem.Total + getOtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault(),
                     PreparedDate = DateTime.Now,//编制日期
                     AuditDate = DateTime.Now,//工作流取    审核日期
                     ApprovalDate = DateTime.Now,//工作流取  批准日期
@@ -1546,7 +1546,8 @@ namespace Finance.PriceEval
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
 
-                        item.IsCustomerSupply = bomIsCustomerSupply == null ? false : bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id).IsCustomerSupply;
+                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                        item.IsCustomerSupply = (bomIsCustomerSupply == null || bomIsCustomerSupplyFirst == null) ? false : bomIsCustomerSupplyFirst.IsCustomerSupply;
                         item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
 
 
@@ -2625,6 +2626,8 @@ namespace Finance.PriceEval
                 //    }
                 //}
 
+                var bom = await GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = 0, UpDown = YearType.Year, InputCount = 0 });
+
                 var qualityCost = (from o in otherCostItemtList
                                    join y in yearCount on new { o.Year, o.UpDown } equals new { y.Year, y.UpDown }
                                    select o.QualityCost * y.Quantity).Sum();
@@ -2632,9 +2635,12 @@ namespace Finance.PriceEval
                 var result = new QualityCostListDto
                 {
                     ProductCategory = otherCostItemtList.FirstOrDefault().ProductCategory,
-                    CostProportion = otherCostItemtList.Sum(p => p.CostProportion),
+                    //CostProportion = otherCostItemtList.Sum(p => p.CostProportion),
                     QualityCost = qualityCost / yearCount.Sum(p => p.Quantity),
                 };
+
+                result.CostProportion = result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+
                 return result;
             }
             else
@@ -2761,7 +2767,7 @@ namespace Finance.PriceEval
             //var totalMaterialCost = (electronicAndStructureList.Sum(p => p.MaterialCost) + electronicAndStructureList.Sum(p => p.MoqShareCount)
             //    + logisticsFee + manufacturingCostSubtotal) / grossProfitMargin * costProportion;
 
-            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCyn) * costProportion / 100;
+            var totalMaterialCost = electronicAndStructureList.Sum(p => p.TotalMoneyCynNoCustomerSupply) * costProportion / 100;
 
 
             //产品小类名称
@@ -2927,7 +2933,7 @@ namespace Finance.PriceEval
             var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
-            var bomCost = data.Material.Sum(p => p.TotalMoneyCyn);
+            var bomCost = data.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
 
             //损耗成本
             var costItemAll = data.Material.Sum(p => p.Loss);
@@ -3104,7 +3110,7 @@ namespace Finance.PriceEval
                 Subtotal1 = p.CostType == CostType.Other ? null : p.ManufacturingCostDirect.Subtotal,
                 DirectLabor2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.DirectLabor,
                 EquipmentDepreciation2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.EquipmentDepreciation,
-                ManufacturingExpenses2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.ManufacturingExpenses,
+                ManufacturingExpenses2 = p.ManufacturingCostIndirect.ManufacturingExpenses,
                 Subtotal2 = p.CostType == CostType.Other ? null : p.ManufacturingCostIndirect.Subtotal,
 
                 Subtotal = p.Subtotal,
@@ -3116,7 +3122,7 @@ namespace Finance.PriceEval
             dtoAll.LogisticsFee = dtoAll.OtherCostItem.LogisticsFee;
             dtoAll.ProductCategory = dtoAll.OtherCostItem.ProductCategory;
             dtoAll.CostProportion = dtoAll.OtherCostItem.CostProportion;
-            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion * 100}%";
+            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion}%";
             dtoAll.QualityCost = dtoAll.OtherCostItem.QualityCost;
             dtoAll.AccountingPeriod = dtoAll.OtherCostItem.AccountingPeriod;
             dtoAll.CapitalCostRate = dtoAll.OtherCostItem.CapitalCostRate;
@@ -3140,6 +3146,8 @@ namespace Finance.PriceEval
 
 
             dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCyn);
+            dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+
             dtoAll.LossCount = dtoAll.Material.Sum(p => p.Loss);
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
 
@@ -3154,8 +3162,21 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task SetIsCustomerSupply(SetIsCustomerSupplyInput input)
         {
-            var pe = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
-            pe.BomIsCustomerSupplyJson = input.BomIsCustomerSupplyList.ToJsonString();
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
+
+            var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
+            foreach (var item in input.BomIsCustomerSupplyList)
+            {
+                var db = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                if (db is not null)
+                {
+                    bomIsCustomerSupply.Remove(db);
+
+                }
+                bomIsCustomerSupply.Add(item);
+            }
+
+            priceEvaluation.BomIsCustomerSupplyJson = bomIsCustomerSupply.ToJsonString();
         }
 
         /// <summary>
