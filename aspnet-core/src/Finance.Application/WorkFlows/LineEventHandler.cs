@@ -3,6 +3,7 @@ using Abp.Domain.Uow;
 using Abp.Events.Bus.Entities;
 using Abp.Events.Bus.Handlers;
 using Finance.Entering;
+using Finance.NerPricing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +19,18 @@ namespace Finance.WorkFlows
     {
         private readonly ResourceEnteringAppService _resourceEnteringAppService;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly NrePricingAppService _nrePricingAppService;
 
-        public LineEventHandler(ResourceEnteringAppService resourceEnteringAppService, IUnitOfWorkManager unitOfWorkManager)
+        public LineEventHandler(ResourceEnteringAppService resourceEnteringAppService, IUnitOfWorkManager unitOfWorkManager, NrePricingAppService nrePricingAppService)
         {
             _resourceEnteringAppService = resourceEnteringAppService;
             _unitOfWorkManager = unitOfWorkManager;
+            _nrePricingAppService = nrePricingAppService;
         }
+
+
+
+
 
 
         /// <summary>
@@ -53,6 +60,12 @@ namespace Finance.WorkFlows
                     if (eventData.Entity.LineId == "主流程_核价看板_主流程_结构BOM匹配修改")
                     {
                         await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                    }
+
+                    //如果是流转到主流程_NRE模具费录入
+                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_NRE模具费录入")
+                    {
+                        await _nrePricingAppService.GetResourcesManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
                 }
