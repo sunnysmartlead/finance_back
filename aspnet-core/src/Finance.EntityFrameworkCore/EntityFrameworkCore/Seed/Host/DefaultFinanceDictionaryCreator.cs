@@ -268,6 +268,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Jgbomdjsh, DisplayName="结构BOM单价审核",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Dzbomdjsh, DisplayName="电子BOM单价审核",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Hjsplr, DisplayName="核价审批录入",},
 
 
 

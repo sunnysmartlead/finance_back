@@ -789,6 +789,11 @@ namespace Finance
         public const string HjkbSelect_Yes = "HjkbSelect_Yes";
 
         /// <summary>
+        /// 核价看板选项 【不合规是否退回】
+        /// </summary>
+        public const string HjkbSelect_Bhg = "HjkbSelect_Bhg";
+
+        /// <summary>
         /// 核价看板选项 【退回到核价需求录入】
         /// </summary>
         public const string HjkbSelect_Input = "HjkbSelect_Input";
@@ -862,6 +867,11 @@ namespace Finance
         /// 核价看板选项 退回到【电子BOM单价审核】
         /// </summary>
         public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Nreemcsyflr";
+
+        /// <summary>
+        /// 核价看板选项 退回到【核价审批录入】
+        /// </summary>
+        public const string HjkbSelect_Hjsplr = "HjkbSelect_Hjsplr";
 
         #endregion
 
