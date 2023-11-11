@@ -45,5 +45,10 @@ namespace Finance.MakeOffers
         /// 含佣金的毛利率
         /// </summary>
         public decimal GrossMarginCommission { get; set; }
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
+
     }
 }
