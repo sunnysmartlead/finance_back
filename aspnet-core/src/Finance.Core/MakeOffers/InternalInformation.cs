@@ -53,5 +53,9 @@ namespace Finance.MakeOffers
         /// 总成本
         /// </summary>
         public string Remark { get; set; }
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
     }
 }

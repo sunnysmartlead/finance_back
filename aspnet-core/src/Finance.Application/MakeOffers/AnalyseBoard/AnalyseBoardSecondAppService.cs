@@ -107,11 +107,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <exception cref="UserFriendlyException"></exception>
     public async Task<List<Gradient>> getInterface(
         long auid)
-    {
-        //获取梯度
-        List<Gradient> gradients =
-            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
-        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+    {//获取梯度
+             List<Gradient> gradients =
+                 await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
+             gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+        
         return gradients;
     }
 

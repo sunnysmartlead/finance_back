@@ -39,9 +39,37 @@ public class ManagerApprovalOfferNre
     /// </summary>
     public long SolutionId { get; set; }
     /// <summary>
-    /// Nre相关
+    /// 本次报价-单价
     /// </summary>
-    public AnalyseBoardNreDto analyseBoardNreDto{ get; set; }
+    public decimal OfferUnitPrice { get; set; }
+    /// <summary>
+    /// 本次报价-毛利率
+    /// </summary>
+    public decimal OfferGrossMargin { get; set; }
+    /// <summary>
+    /// (本次报价增加客供料毛利率
+    /// </summary>
+    public decimal OfferClientGrossMargin { get; set; }
+    /// <summary>
+    /// 本次报价剔除NRE分摊费用毛利率
+    /// </summary>
+    public decimal OfferNreGrossMargin { get; set; }
+    /// <summary>
+    /// 销售收入
+    /// </summary>
+    public decimal SalesRevenue { get; set; }
 
-    public List<ManagerApprovalOfferModel> ManagerApprovalOfferModels{ get; set; }
+    /// <summary>
+    /// 销售成本
+    /// </summary>
+    public decimal SellingCost { get; set; }
+    /// <summary>
+    /// SOP成本
+    /// </summary>
+    public decimal SopCost { get; set; }
+    /// <summary>
+    /// 全生命周期成本
+    /// </summary>
+    public decimal fullCost { get; set; }
+  
 }
