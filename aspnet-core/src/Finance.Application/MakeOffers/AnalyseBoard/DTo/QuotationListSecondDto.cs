@@ -117,21 +117,26 @@ public class QuotationListSecondDto
     /// <summary>
     /// 核心部件
     /// </summary>
-    public List<ComponenSocondModel> componenSocondModels { get; set; }
+    public List<PartsSecondModel> componenSocondModels { get; set; }
 
     /// <summary>
     /// 内部核价信息
     /// </summary>
-    public List<PricingMessageSecondModel> pricingMessageSecondModels { get; set; }
+    public List<PricingSecondModel> pricingMessageSecondModels { get; set; }
 
     /// <summary>
     /// 报价策略
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModels { get; set; }
+    /// <summary>
+    /// 报价策略梯度
+    /// </summary>
+
+    public List<BiddingStrategySecondModel> BiddingStrategySecondModelsGradent { get; set; }
 
     /// <summary>
-    /// 报价策略实际数量
+    /// 报价策略实际数量（合计）
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct { get; set; }
@@ -148,7 +153,7 @@ public class BiddingStrategySecondModel
     public virtual long GradientId { get; set; }
 
     /// <summary>
-    /// 梯度Id
+    /// 梯度
     /// </summary>
     public virtual string gradient { get; set; }
 
