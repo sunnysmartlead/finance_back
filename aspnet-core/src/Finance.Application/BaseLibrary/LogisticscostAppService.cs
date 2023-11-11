@@ -157,13 +157,14 @@ namespace Finance.BaseLibrary
                         dtosItem1.Year = entitySolution.Year.ToString();
                         dtosItem1.Moon = 12;
                     }
-                    List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId)
-                                           join b in await _gradientModelRepository.GetAllListAsync(u => u.ProductId == entity.Productld) on a.Id equals b.GradientId
-                                           join c in await _gradientModelYearRepository.GetAllListAsync(h => h.Year == entitySolution.Year && h.UpDown == entitySolution.UpDown) on b.Id equals c.GradientModelId
-                                           select new GradientModelYear
-                                           {
-                                               Count = c.Count
-                                           }).ToList();
+                    decimal A = decimal.Parse(item);
+                    List<GradientModelYear> GradientModelYearList = (from a in await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientValue == A )
+                                                                     join b in await _gradientModelRepository.GetAllListAsync(u => u.ProductId == entity.Productld) on a.Id equals b.GradientId
+                                                                     join c in await _gradientModelYearRepository.GetAllListAsync(h => h.Year == entitySolution.Year && h.UpDown == entitySolution.UpDown) on b.Id equals c.GradientModelId
+                                                                     select new GradientModelYear
+                                                                     {
+                                                                         Count = c.Count
+                                                                     }).ToList();
                     if (GradientModelYearList.Count > 0)
                     {
                         dtosItem1.YearMountCount = GradientModelYearList[0].Count;
