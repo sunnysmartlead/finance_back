@@ -2073,7 +2073,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd/100
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
@@ -2083,7 +2083,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
-                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd,
+                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd/100,
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
                 modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
@@ -2191,14 +2191,14 @@ namespace Finance.NerPricing
                                                                             ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                         }).ToList();
                 ProcessHoursEnterTotalDto porp = await _processHoursEnterAppService.GetProcessHoursEnterTotal(new GetProcessHoursEntersInput() { AuditFlowId = auditFlowId, SolutionId = solutionId, MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
-                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice* UphAndValuesd } } };
+                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice* UphAndValuesd/100 } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
                
 
                 //测试软件费用=>追溯软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware* UphAndValuesd });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware* UphAndValuesd/100 });
                 //测试软件费用=>开图软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp .SoftwarePrice* UphAndValuesd });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp .SoftwarePrice* UphAndValuesd/100 });
                 modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p => p.Cost);
                 //差旅费
                 List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))
