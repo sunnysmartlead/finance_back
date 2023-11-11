@@ -171,10 +171,41 @@ namespace Finance.WorkFlows
                     //如果是流转到主流程_核价看板
                     if (eventData.Entity.NodeId == "主流程_核价看板")
                     {
-                        await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
-                        await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                        #region  流转到核价看板前判断贸易合规
+                        try
+                        {
 
-                        await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                            if (isOk)
+                            {
+                                await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                                await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+
+                                await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            }
+                            else
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                    Comment = "系统判断不合规"
+                                });
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                Comment = "系统判断不合规"
+                            });
+                        }
+
+                        #endregion
+
+
                     }
 
                     //如果流转到核价看板之后，就缓存核价看板的全部信息
