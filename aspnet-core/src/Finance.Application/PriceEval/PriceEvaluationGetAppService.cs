@@ -1546,7 +1546,7 @@ namespace Finance.PriceEval
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
 
-                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply?.FirstOrDefault(p => p.Id == item.Id);
                         item.IsCustomerSupply = (bomIsCustomerSupply == null || bomIsCustomerSupplyFirst == null) ? false : bomIsCustomerSupplyFirst.IsCustomerSupply;
                         item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
 
