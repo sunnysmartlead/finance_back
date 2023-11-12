@@ -9,6 +9,15 @@ public class PricingSecondModel
     /// </summary>
     public string SolutionName { get; set; }
     /// <summary>
+    /// 梯度数量主键 若无需获取对应梯度
+    /// 此行不传
+    /// </summary>
+    public long GradientId { get; set; }
+    /// <summary>
+    /// 方案表ID 实际数量和阶梯数量必传
+    /// </summary>
+    public long SolutionId { get; set; }
+    /// <summary>
     /// 梯度
     /// </summary>
     public string Gradient { get; set; }
