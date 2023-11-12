@@ -23,7 +23,15 @@ public class QuotationListSecondDto
     /// 版本
     /// </summary>
     public int Versions { get; set; }
-
+    /// <summary>
+    /// 方案版本
+    /// </summary>
+    public int version { get; set; }
+    
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
     /// <summary>
     /// 报价形式
     /// </summary>
@@ -125,18 +133,18 @@ public class QuotationListSecondDto
     public List<PricingSecondModel> pricingMessageSecondModels { get; set; }
 
     /// <summary>
-    /// 报价策略
+    /// 报价策略 营销部审批、总经理审批一用
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModels { get; set; }
     /// <summary>
-    /// 报价策略梯度
+    /// 报价策略梯度  总经理审批二用
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModelsGradent { get; set; }
 
     /// <summary>
-    /// 报价策略实际数量（合计）
+    /// 报价策略实际数量（合计） 总经理审批二用
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct { get; set; }
