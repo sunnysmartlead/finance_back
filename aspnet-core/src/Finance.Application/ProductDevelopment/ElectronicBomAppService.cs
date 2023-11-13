@@ -239,7 +239,7 @@ namespace Finance.ProductDevelopment
         {
             long PeopleId = AbpSession.GetUserId();//获取登录人ID
             var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
+            if (solution.ElecEngineerId == PeopleId)
             {
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 if (productIsSubmits.Count is not 0)

@@ -39,7 +39,7 @@ namespace Finance.EngineeringDepartment
        
             var exsitBomInfos = await _followLineTangentRepository.GetAllListAsync(p => p.Year == input.Year );
 
-            if (null != exsitBomInfos) {
+            if (exsitBomInfos.Count != 0) {
                 throw new FriendlyException("年份已经存在！");
             }
 
