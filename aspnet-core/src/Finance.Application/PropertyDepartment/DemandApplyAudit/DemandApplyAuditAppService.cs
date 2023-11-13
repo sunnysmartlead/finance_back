@@ -86,9 +86,49 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _workflowInstanceAppService = workflowInstanceAppService;
             _fileCommonService = fileCommonService;
         }
-
-
-
+        #region 快速核报价内容
+        public async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId,long QuoteAuditFlowId)
+        {
+            List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds = new();
+            AuditEntering auditEntering = await AuditExport(QuoteAuditFlowId);
+            //判断项目设计方案和方案是否一对一 如果不 则全段传值错误
+            bool exists = auditEntering.SolutionTableList.All(a => auditEntering.DesignSolutionList.Any(b => b.SolutionName == a.Product));
+            if (!exists)
+            {
+                throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
+            }
+            //方案表
+            await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+            //设计方案
+            await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+            // 核价团队  其中包含(核价人员以及对应完成时间)
+            PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
+            pricingTeam.AuditFlowId = AuditFlowId;
+            await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
+            #region 方案表
+            // 营销部审核 方案表
+            List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
+            schemeTables.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
+            schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);          
+            #endregion
+            #region 设计方案
+            foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
+            {
+                Solution solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
+                if (solution != null)
+                {
+                    solutionIdAndQuoteSolutionIds.Add(new SolutionIdAndQuoteSolutionId() { SolutionId= solution.Id , QuoteSolutionId= design.SolutionId });
+                    design.SolutionId = solution.Id;
+                }
+            }
+            // 营销部审核中项目设计方案
+            List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
+            designSchemes.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
+            designSchemes = await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
+            #endregion
+            return solutionIdAndQuoteSolutionIds;
+        }
+        #endregion
         /// <summary>
         /// 营销部审核录入
         /// </summary>
