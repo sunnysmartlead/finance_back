@@ -2792,7 +2792,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 var Allfull = Bomfull + Scfull + Lsfull + Yffull + Moqfull + Qufull + Ftfull;
                 PricingSecondModel p = new PricingSecondModel()
                 {
-                    SolutionName = solution.ModuleName,
+                    SolutionName = solution.Product,
                     SolutionId = solution.Id,
                     GradientId = gradient.Id,
                     Gradient = gradient.GradientValue.ToString(),
@@ -2849,7 +2849,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             var productInformation = productList.FindFirst(p => p.Product.Equals(solution.ModuleName));
             partsModels.Add(new PartsSecondModel()
             {
-                SolutionName = "核心部件: " + solution.ModuleName,
+                SolutionName = "核心部件: " + solution.Product,
                 PartsName = "核心部件",
                 Model = "型号",
                 Type = "类型",
@@ -3011,7 +3011,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 await _nrePricingAppService.GetPricingFormDownload(auditFlowId, solution.Id);
             NRESecondModel nreSecondModel = new()
             {
-                SolutionName = solution.ModuleName,
+                SolutionName = solution.Product,
                 shouban = pricingFormDto.HandPieceCostTotal,
                 moju = pricingFormDto.MouldInventoryTotal,
                 scsb = pricingFormDto.ProductionEquipmentCostTotal,
@@ -3049,11 +3049,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
                 DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
                 TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-                OfferForm = priceEvaluationStartInputResult.PriceEvalType, //报价形式
+                OfferForm = _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.PriceEvalType)).DisplayName , //报价形式
                 SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
                 ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
-                ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
-                modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
+                ForSale =  _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.SalesType)).DisplayName , //销售类型
+                modeOfTrade =  _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.TradeMode)).DisplayName , //贸易方式
                 PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
                 ExchangeRate = hl, //汇率
                 Sop = Sop,
@@ -3525,16 +3525,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             Date = DateTime.Now, //查询日期
             RecordNumber = priceEvaluationStartInputResult.Number, // 单据编号
             Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
-            OfferForm = priceEvaluationStartInputResult.PriceEvalType, //报价形式
+            OfferForm = _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             ClientNature = priceEvaluationStartInputResult.CustomerNature, //客户性质
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            TerminalClientNature = priceEvaluationStartInputResult.TerminalNature, //终端客户性质
+            TerminalClientNature = _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.TerminalNature)).DisplayName , //终端客户性质
             //开发计划 手工录入
             SopTime = priceEvaluationStartInputResult.SopTime, //Sop时间
             ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目周期
-            ForSale = priceEvaluationStartInputResult.SalesType, //销售类型
-            modeOfTrade = priceEvaluationStartInputResult.TradeMode, //贸易方式
+            ForSale = _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
+            modeOfTrade = _financeDictionaryDetailRepository.FirstOrDefault(p=>p.Id.Equals( priceEvaluationStartInputResult.TradeMode)).DisplayName , //贸易方式
             PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
             QuoteCurrency = bz, //报价币种
             ExchangeRate = hl, //汇率
