@@ -39,7 +39,7 @@ namespace Finance.WorkFlows
         public virtual WorkflowState WorkflowState { get; set; }
     }
 
-    public enum WorkflowState : byte 
+    public enum WorkflowState : byte
     {
         /// <summary>
         /// 执行中
@@ -166,7 +166,13 @@ namespace Finance.WorkFlows
         /// 已重置
         /// </summary>
         [Description("已重置")]
-        Reset
+        Reset,
+
+        /// <summary>
+        /// 已结束（表示已经被强行结束）
+        /// </summary>
+        [Description("已重置")]
+        Over,
     }
 
     /// <summary>

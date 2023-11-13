@@ -1048,6 +1048,12 @@ namespace Finance.WorkFlows
 
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name == "主流程_归档");
             node.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            foreach (var item in nodes)
+            {
+                item.NodeInstanceStatus = NodeInstanceStatus.Over;
+            }
         }
     }
 }
