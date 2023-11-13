@@ -16,6 +16,7 @@ using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
 using Finance.Nre;
 using Finance.PriceEval;
+using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -50,6 +51,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
 
+    /// <summary>
+    /// 核价部分服务
+    /// </summary>
+    public readonly PriceEvaluationAppService _priceEvaluationAppService;
+
     private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
 
     /// <summary>
@@ -60,23 +66,27 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <summary>
     /// 构造函数
     /// </summary>
-    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-        AuditFlowAppService flowAppService,
-        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-        IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        IRepository<Gradient, long> gradientRepository,
-        IRepository<NreQuotation, long> nreQuotation,
-        IRepository<Solution, long> resourceSchemeTable)
+    /// <param name="analysisBoardSecondMethod"></param>
+    /// <param name="gradientRepository"></param>
+    /// <param name="financeAuditQuotationList"></param>
+    /// <param name="resourceSchemeTable"></param>
+    /// <param name="flowAppService"></param>
+    /// <param name="priceEvaluationAppService"></param>
+    /// <param name="financeDictionaryDetailRepository"></param>
+    /// <param name="nreQuotation"></param>
+    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<NreQuotation, long> nreQuotation)
     {
-        _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
-        _nreQuotation = nreQuotation;
-        _flowAppService = flowAppService;
         _gradientRepository = gradientRepository;
-        _flowAppService = flowAppService;
+        _financeAuditQuotationList = financeAuditQuotationList;
         _resourceSchemeTable = resourceSchemeTable;
+        _flowAppService = flowAppService;
+        _priceEvaluationAppService = priceEvaluationAppService;
+        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
+        _nreQuotation = nreQuotation;
     }
+
+
 
     /// <summary>
     /// 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品   ,特别注意，传入方案，方案中的moduleName不能一样
@@ -230,11 +240,37 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async virtual Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long auditFlowId,int version)
+    public async virtual Task<List<CoreDevice>> PostCoreComponentAndNreList(GetPriceEvaluationTableInput input)
     {
-        CoreComponentAndNreDto coreComponentAndNreDto = new();
-        return await _analysisBoardSecondMethod.GetCoreComponentAndNreList(auditFlowId,version);
+        //物料成本
+        var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
+
+        List<CoreDevice> CoreDeviclist = new List<CoreDevice>();
+        foreach (var material in electronicAndStructureList)
+        {
+            if (material.SuperType.Equals("电子料")&&material.TypeName.Equals("Sensor芯片")
+                || material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片")
+                || material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头")
+                || material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") && !material.TypeName.Equals("串行芯片")
+                || !material.SuperType.Equals("电子料") && !material.TypeName.Equals("镜头")
+                ) {
+                CoreDevice CoreDevice = new CoreDevice();
+                CoreDevice.ProjectName = material.MaterialName;
+                CoreDevice.UnitPrice = material.MaterialPrice;
+                CoreDevice.Number = material.AssemblyCount;
+                CoreDevice.Rate = material.ExchangeRate;
+                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
+
+                CoreDeviclist.Add(CoreDevice);
+
+            }
+           
+        }
+        return CoreDeviclist;
+
     }
+
+    //质量成本、损坏成本、制造成本、物流费用、
 
     /// <summary>
     /// 下载核心器件、Nre费用拆分

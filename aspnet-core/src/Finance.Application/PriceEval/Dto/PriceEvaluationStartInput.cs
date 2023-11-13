@@ -1,4 +1,5 @@
 ﻿using Finance.Dto;
+using Finance.Ext;
 using Finance.ProjectManagement.Dto;
 using System;
 using System.Collections.Generic;
@@ -416,5 +417,13 @@ namespace Finance.PriceEval.Dto
         /// 核价原因
         /// </summary>
         public virtual string Reason { get; set; }
+    }
+    public class PriceEvaluationStartInputQuoteFlow : PriceEvaluationStartInput
+    {
+        /// <summary>
+        /// 引用流程的ID
+        /// </summary>
+        [FriendlyRequired("引用流程的ID")]
+        public virtual long QuoteAuditFlowId { get; set; }
     }
 }
