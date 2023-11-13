@@ -107,11 +107,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <exception cref="UserFriendlyException"></exception>
     public async Task<List<Gradient>> getInterface(
         long auid)
-    {
-        //获取梯度
-        List<Gradient> gradients =
-            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
-        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+    {//获取梯度
+             List<Gradient> gradients =
+                 await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
+             gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+        
         return gradients;
     }
 
@@ -439,10 +439,38 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<ManagerApprovalOfferDto> GetManagerApprovalOfferOne(long auditFlowId,int version)
     {
-        ManagerApprovalOfferDto managerApprovalOfferDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId,version);
-
-        return managerApprovalOfferDto;
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId,version,2);
+        if (au is null)
+        {
+            return  await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId,version);
+        }
+        else
+        {
+            return JsonConvert.DeserializeObject<ManagerApprovalOfferDto>(au.AuditQuotationListJson);
+        }
+        
+    }
+      /// <summary>
+    /// 总经理报价审批界面一保存/修改
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task PostManagerApprovalOfferOneSave(QuotationListSecondDto quotationListSecondDto )
+    {
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(quotationListSecondDto.AuditFlowId,quotationListSecondDto.version,2);
+        if (au is not null)
+        {
+            string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+            await _analysisBoardSecondMethod.UpadatefinanceAuditQuotationList(content, quotationListSecondDto.AuditFlowId,
+                quotationListSecondDto.version, 2);
+        }
+        else
+        {
+            string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+            await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
+                quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 2);
+        }
     }
 
     /// <summary>
@@ -452,11 +480,41 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long auditFlowId ,int version)
     {
-        QuotationListSecondDto quotationListSecondDto =
-            await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId,version);
-        return quotationListSecondDto;
+        
+        
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId,version,3);
+        if (au is null)
+        {
+            return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId,version);
+        }
+        else
+        {
+            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
+            
+        }
     }
-
+    /// <summary>
+    /// 总经理报价审批界面二保存/修改
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task PostManagerApprovalOfferTwoSave(QuotationListSecondDto quotationListSecondDto )
+    {
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(quotationListSecondDto.AuditFlowId,quotationListSecondDto.version,2);
+        if (au is not null)
+        {
+            string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+            await _analysisBoardSecondMethod.UpadatefinanceAuditQuotationList(content, quotationListSecondDto.AuditFlowId,
+                quotationListSecondDto.version, 3);
+        }
+        else
+        {
+            string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+            await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
+                quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 3);
+        }
+    }
     /// <summary>
     /// 营销部报价审批
     /// </summary>
@@ -465,10 +523,47 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<QuotationListSecondDto> GetQuotationApprovedMarketing(long auditFlowId,int version )
 
     {
-        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId,version);
-        ;
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId,version,1);
+        if (au is null)
+        {
+            return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId,version);
+
+        }
+        else
+        {
+           return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
+            
+        }
+        
+    }
+    /// <summary>
+    /// 营销部报价保存/修改
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task PostQuotationApprovedMarketingSave(QuotationListSecondDto quotationListSecondDto )
+
+    {
+        
+        
+        var au= await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(quotationListSecondDto.AuditFlowId,quotationListSecondDto.version,1);
+        if (au is not null)
+        {
+          string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+          await _analysisBoardSecondMethod.UpadatefinanceAuditQuotationList(content, quotationListSecondDto.AuditFlowId,
+              quotationListSecondDto.version, 1);
+        }
+        else
+        {
+            string content=  JsonConvert.SerializeObject(quotationListSecondDto);
+            await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
+                quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 1);
+        }
     }
 
+    
+    
     /// <summary>
     /// 财务归档
     /// </summary>

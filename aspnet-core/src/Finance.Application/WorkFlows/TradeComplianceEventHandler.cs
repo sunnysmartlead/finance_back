@@ -41,6 +41,7 @@ namespace Finance.WorkFlows
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
         private readonly NrePricingAppService _nrePricingAppService;
+        private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
 
         /// <summary>
         /// 构造函数
@@ -58,7 +59,8 @@ namespace Finance.WorkFlows
         /// <param name="panelJsonRepository"></param>
         /// <param name="priceEvaluationStartDataRepository"></param>
         /// <param name="nrePricingAppService"></param>
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService)
+        /// <param name="workflowInstanceRepository"></param>
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -73,7 +75,9 @@ namespace Finance.WorkFlows
             _panelJsonRepository = panelJsonRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _nrePricingAppService = nrePricingAppService;
+            _workflowInstanceRepository = workflowInstanceRepository;
         }
+
 
         /// <summary>
         /// 贸易合规等节点被激活时触发
@@ -171,10 +175,41 @@ namespace Finance.WorkFlows
                     //如果是流转到主流程_核价看板
                     if (eventData.Entity.NodeId == "主流程_核价看板")
                     {
-                        await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
-                        await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                        #region  流转到核价看板前判断贸易合规
+                        try
+                        {
 
-                        await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                            if (isOk)
+                            {
+                                await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                                await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+
+                                await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            }
+                            else
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                    Comment = "系统判断不合规"
+                                });
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                Comment = "系统判断不合规"
+                            });
+                        }
+
+                        #endregion
+
+
                     }
 
                     //如果流转到核价看板之后，就缓存核价看板的全部信息
@@ -238,7 +273,12 @@ namespace Finance.WorkFlows
                     if (eventData.Entity.NodeId == "主流程_NRE_EMC实验费录入")
                     {
                         await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                    }
 
+                    if (eventData.Entity.NodeId == "主流程_归档")
+                    {
+                        var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
+                        wf.WorkflowState = WorkflowState.Ended;
                     }
                 }
 

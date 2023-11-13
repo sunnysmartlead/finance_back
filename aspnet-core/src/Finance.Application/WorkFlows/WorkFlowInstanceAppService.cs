@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace Finance.WorkFlows
@@ -1005,6 +1006,35 @@ namespace Finance.WorkFlows
             }
 
             #endregion
+        }
+
+
+        /// <summary>
+        /// 获取普通核报价归档流程
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<PagedResultDto<WorkflowInstance>> GetWorkflowOvered(GetWorkflowOveredInput input)
+        {
+            //普通流程的核价原因
+            var hjyy = new List<string> { FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Nj };
+
+            var data = (from w in _workflowInstanceRepository.GetAll()
+                        join h in _instanceHistoryRepository.GetAll() on w.Id equals h.WorkFlowInstanceId
+                        where h.NodeId == "主流程_核价需求录入" && hjyy.Contains(h.FinanceDictionaryDetailId)
+                        && w.WorkflowState == WorkflowState.Ended
+                        select w)
+                        .Distinct()
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+
+            var count = await data.CountAsync();
+
+            var paged = data.PageBy(input);
+
+            var result = await paged.ToListAsync();
+
+            return new PagedResultDto<WorkflowInstance>(count, result);
         }
     }
 }

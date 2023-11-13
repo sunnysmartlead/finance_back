@@ -97,7 +97,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="核价审批录入",
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
-                    Activation = $"{MainFlowId}_核价需求录入_{MainFlowId}_核价审批录入 || {MainFlowId}_TR审核_{MainFlowId}_核价审批录入",
+                    Activation = $"{MainFlowId}_核价需求录入_{MainFlowId}_核价审批录入 || {MainFlowId}_TR审核_{MainFlowId}_核价审批录入 || {MainFlowId}_核价看板_{MainFlowId}_核价审批录入",
                     RoleId = $"{projectManager.Id},{marketProjectManager.Id}",
                     ProcessIdentifier = FinanceConsts.PriceDemandReview,
                 },
@@ -281,7 +281,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="不合规是否退回",
                     FinanceDictionaryId = FinanceConsts.MybhgSelect,
-                    Activation = $"{MainFlowId}_贸易合规_{MainFlowId}_不合规是否退回",
+                    Activation = $"{MainFlowId}_贸易合规_{MainFlowId}_不合规是否退回 || {MainFlowId}_核价看板_{MainFlowId}_不合规是否退回",
                     RoleId = tradeComplianceAuditor.Id.ToString(),//和 贸易合规 相同
                     ProcessIdentifier = "NotTradeCompliance",
                 },
@@ -730,6 +730,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 },
                 new Line
                 {
+                    SoureNodeId = "核价看板",
+                    TargetNodeId = "不合规是否退回",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                },
+                new Line
+                {
                     SoureNodeId = "项目部课长审核",
                     TargetNodeId = "核价看板",
                     Index = 0,
@@ -1162,6 +1169,15 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "电子BOM单价审核",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Dzbomdjsh,
+                    LineType = LineType.Reset,
+                },
+
+                new Line
+                {
+                    SoureNodeId = "核价看板",
+                    TargetNodeId = "核价审批录入",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Hjsplr,
                     LineType = LineType.Reset,
                 },
 
