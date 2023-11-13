@@ -1153,11 +1153,24 @@ namespace Finance.PriceEval
             }
             catch (Exception)
             {
-                throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
-
+                //如果未填，或格式不正确，就设置为0
+                targetPrice = 0;
+                //throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
             }
 
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = (targetPrice * customerTargetPrice.ExchangeRate) - sum });
+            decimal jq;
+            if (customerTargetPrice.ExchangeRate is null)
+            {
+                jq = 0;
+            }
+            else
+            {
+                jq = targetPrice * customerTargetPrice.ExchangeRate.Value;
+            }
+
+
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = jq - sum });
+
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
 
