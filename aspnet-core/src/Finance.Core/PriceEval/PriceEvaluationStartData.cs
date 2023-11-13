@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Entities;
+using Abp.Domain.Entities.Auditing;
 using Castle.MicroKernel.SubSystems.Conversion;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Finance.PriceEval
     /// 核价开始数据
     /// </summary>
     [Table("Pe_PriceEvaluationStartData")]
-    public class PriceEvaluationStartData : Entity<long>
+    public class PriceEvaluationStartData : CreationAuditedEntity<long>
     {
         /// <summary>
         /// 审批流程主表Id

@@ -946,6 +946,11 @@ namespace Finance
         /// </summary>
         public const string QuoteAnalysis = "QuoteAnalysis";
 
+        /// <summary>
+        /// 核价需求录入
+        /// </summary>
+        public const string PricingDemandInput = "PricingDemandInput";
+
         #endregion
 
 
