@@ -1036,5 +1036,18 @@ namespace Finance.WorkFlows
 
             return new PagedResultDto<WorkflowInstance>(count, result);
         }
+
+        /// <summary>
+        /// 结束流程
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task OverWorkflow(OverWorkflowInput input)
+        {
+            var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
+            wf.WorkflowState = WorkflowState.Ended;
+
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name == "主流程_归档");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+        }
     }
 }
