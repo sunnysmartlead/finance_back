@@ -271,37 +271,43 @@ namespace Finance.WorkFlows
 
 #if !DEBUG
 
+                        SendEmail email = new SendEmail();
+                        string loginIp = email.GetLoginAddr();
 
-                        var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfos();
-                        var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
-                        foreach (var task in tasks)
+                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                         {
-                            foreach (var item in task.AuditFlowRightDetailList)
+
+                            var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfos();
+                            var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
+                            foreach (var task in tasks)
                             {
-                                //foreach (var userId in item.TaskUserIds)
-                                //{
-                                //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-                                var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
-
-                                if (userInfo != null)
+                                foreach (var item in task.AuditFlowRightDetailList)
                                 {
-                                    string emailAddr = userInfo.EmailAddress;
+                                    //foreach (var userId in item.TaskUserIds)
+                                    //{
+                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
 
-                                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-                                    SendEmail email = new SendEmail();
-                                    string loginIp = email.GetLoginAddr();
-                                    string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                    string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    Task.Run(async () =>
+                                    if (userInfo != null)
                                     {
-                                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                    });
+                                        string emailAddr = userInfo.EmailAddress;
+
+                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+                                        
+                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                        string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                        Task.Run(async () =>
+                                        {
+                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        });
 #pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                    }
+                                    //}
                                 }
-                                //}
                             }
                         }
+
 #endif
 
                         #endregion
