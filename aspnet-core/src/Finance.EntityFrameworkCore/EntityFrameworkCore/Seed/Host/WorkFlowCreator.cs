@@ -255,7 +255,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 },
                 new Node
                 {
-                    Name="BOM成本审核",
+                    Name=FinanceConsts.Bomcbsh,//"BOM成本审核",
                     FinanceDictionaryId = FinanceConsts.BomEvalSelect,
                     Activation = $"{MainFlowId}_结构BOM单价审核_{MainFlowId}_BOM成本审核 && {MainFlowId}_电子BOM单价审核_{MainFlowId}_BOM成本审核",
                     RoleId = bomInput.Id.ToString(),
@@ -784,7 +784,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
                 },
-                
+
                 new Line
                 {
                     SoureNodeId = "财务审核",
