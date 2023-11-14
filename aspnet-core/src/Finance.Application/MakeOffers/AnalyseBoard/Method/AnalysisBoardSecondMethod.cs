@@ -2988,7 +2988,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
 
             sop.Year = key;
-            sop.Motion = yearDtos.Where(p => p.Year == crm.Year && p.UpDown.Equals(YearType.SecondHalf))
+            sop.Motion = yearDtos.Where(p => p.Year == crm.Year && p.UpDown.Equals(crm.UpDown))
                 .Sum(p => p.Quantity);
             sop.AnnualDeclineRate = crm.AnnualDeclineRate; //年将率
             sop.AnnualRebateRequirements = crm.AnnualRebateRequirements; // 年度返利要求
