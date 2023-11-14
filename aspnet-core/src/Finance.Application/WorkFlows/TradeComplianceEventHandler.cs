@@ -48,6 +48,28 @@ namespace Finance.WorkFlows
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
 
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository)
+        {
+            _tradeComplianceAppService = tradeComplianceAppService;
+            _workflowInstanceAppService = workflowInstanceAppService;
+            _unitOfWorkManager = unitOfWorkManager;
+            _electronicBomAppService = electronicBomAppService;
+            _structionBomAppService = structionBomAppService;
+            _resourceEnteringAppService = resourceEnteringAppService;
+            _priceEvaluationGetAppService = priceEvaluationGetAppService;
+            _modelCountYearRepository = modelCountYearRepository;
+            _gradientRepository = gradientRepository;
+            _solutionRepository = solutionRepository;
+            _panelJsonRepository = panelJsonRepository;
+            _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
+            _nrePricingAppService = nrePricingAppService;
+            _workflowInstanceRepository = workflowInstanceRepository;
+            _auditFlowAppService = auditFlowAppService;
+            _sendEmail = sendEmail;
+            _noticeEmailInfoRepository = noticeEmailInfoRepository;
+            _userRepository = userRepository;
+        }
+
 
 
 
