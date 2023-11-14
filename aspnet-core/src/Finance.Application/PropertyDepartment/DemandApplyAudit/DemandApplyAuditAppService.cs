@@ -108,8 +108,8 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             #region 方案表
             // 营销部审核 方案表
             List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
-            schemeTables.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
-            schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);          
+            schemeTables.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; return p; }).ToList();
+            schemeTables = await _resourceSchemeTable.BulkInsertAsync(schemeTables);          
             #endregion
             #region 设计方案
             foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
@@ -123,8 +123,8 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             }
             // 营销部审核中项目设计方案
             List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
-            designSchemes.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
-            designSchemes = await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
+            designSchemes.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; return p; }).ToList();
+            designSchemes = await _resourceDesignScheme.BulkInsertAsync(designSchemes);
             #endregion
             return solutionIdAndQuoteSolutionIds;
         }

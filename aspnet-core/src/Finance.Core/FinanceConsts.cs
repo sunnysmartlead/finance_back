@@ -642,6 +642,10 @@ namespace Finance
         /// </summary>
         public const string EvalFeedback_Bjxysp = "EvalFeedback_Bjxysp";
 
+        /// <summary>
+        /// BOM成本审核名称
+        /// </summary>
+        public const string Bomcbsh = "BOM成本审核";
 
         /// <summary>
         /// 结构BOM单价审核选项

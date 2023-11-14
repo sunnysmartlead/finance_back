@@ -10,6 +10,7 @@ namespace Finance.Users.Dto
         /// 用户名/名称
         /// </summary>
         public string Keyword { get; set; }
+
         /// <summary>
         /// 是否启用
         /// </summary>

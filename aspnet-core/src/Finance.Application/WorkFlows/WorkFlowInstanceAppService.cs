@@ -658,6 +658,7 @@ namespace Finance.WorkFlows
                 Title = p.Title,
                 WorkFlowName = p.WorkFlowName,
                 TaskUser = string.Join(",", p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Name)).Distinct()),
+                TaskUserIds = p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Id)).Distinct().ToList(),
                 WorkflowState = p.WorkflowState,
                 WorkFlowInstanceId = p.WorkFlowInstanceId,
                 ProcessIdentifier = p.ProcessIdentifier,
