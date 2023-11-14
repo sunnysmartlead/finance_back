@@ -1291,7 +1291,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             ExchangeRate ExchangeRateKind = customer is null ? null : await _configExchangeRate.FirstOrDefaultAsync(p => p.Id.Equals(customer.Currency));
             if (customer is not null && customer.ExchangeRate is not 0M && ExchangeRateKind is not null && ExchangeRateKind.ExchangeRateKind == Currency)
             {
-                return customer.ExchangeRate;
+                return customer.ExchangeRate == null ? 0 : customer.ExchangeRate.Value;
             }
             else
             {

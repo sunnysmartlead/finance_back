@@ -91,7 +91,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.EvalReason,
                     Activation = $"{MainFlowId}_核价审批录入_{MainFlowId}_核价需求录入 || {MainFlowId}_开始_{MainFlowId}_核价需求录入",
                     RoleId = salesMan.Id.ToString(),
-                    ProcessIdentifier = "PricingDemandInput",
+                    ProcessIdentifier = FinanceConsts.PricingDemandInput,
                 },
                 new Node
                 {
