@@ -420,7 +420,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 报价分析看板 保存
+    /// 报价分析看板 仅保存
     /// </summary>
     /// <param name="isOfferDto"></param>
     /// <returns></returns>
