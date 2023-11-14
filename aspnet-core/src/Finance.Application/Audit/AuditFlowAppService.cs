@@ -285,6 +285,7 @@ namespace Finance.Audit
                     IsRetype = o.IsBack,
                     JumpDescription = o.Comment,
                     IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());
