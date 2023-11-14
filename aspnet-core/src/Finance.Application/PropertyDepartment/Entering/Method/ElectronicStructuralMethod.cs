@@ -155,7 +155,7 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<UInitPriceForm, long> uInitPriceForm,
             IRepository<ExchangeRate, long> exchangeRate,
             IRepository<EnteringElectronic, long> enteringElectronic,
-            UserManager userManager,           
+            UserManager userManager,
             IRepository<StructureElectronic, long> structureElectronic,
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
@@ -294,7 +294,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     foreach (ElectronicBomInfo BomInfo in electronicBomInfo)
                     {
                         //重新计算装配数量  SAP相同的料号装配数量需要相加
-                        var  AssemblyQuantity = electronicBomInfoCopy.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
+                        var AssemblyQuantity = electronicBomInfoCopy.Where(p => p.SapItemNum.Equals(BomInfo.SapItemNum)).Sum(p => p.AssemblyQuantity);
                         ElectronicDto electronicDto = new();
                         //将电子料BOM映射到ElectronicDto
                         electronicDto = ObjectMapper.Map<ElectronicDto>(BomInfo);
@@ -329,7 +329,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 decimal sharedMaterialWarehousesModeCount = sharedMaterialWarehouses
                                     .SelectMany(sharedMaterial => JsonConvert.DeserializeObject<List<YearOrValueModeCanNull>>(sharedMaterial.ModuleThroughputs)
                                     .Where(p => p.Year.Equals(modelCountYear.Year))
-                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType .Year? (yearOrValueModeCanNull.Value ?? 0)/2: yearOrValueModeCanNull.Value ?? 0)))
+                                    .Select(yearOrValueModeCanNull => sharedMaterial.AssemblyQuantity * (modelCountYear.UpDown != YearType.Year ? (yearOrValueModeCanNull.Value ?? 0) / 2 : yearOrValueModeCanNull.Value ?? 0)))
                                     .Sum();
                                 decimal bomAssemblyQuantity = (decimal)AssemblyQuantity;
                                 List<GradientModelYear> gradientModels = gradientModelYears.Where(p => p.ProductId.Equals(item.ProductId) && p.Year.Equals(modelCountYear.Year) && p.UpDown.Equals(modelCountYear.UpDown)).ToList();
@@ -376,7 +376,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     //        }
                     //    }
                     //}
-                }     
+                }
                 return electronicBomList;
             }
             catch (Exception ex)
@@ -664,7 +664,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.IsEntering = structureElectronic.IsEntering;//是否录入
                             construction.MOQ = structureElectronic.MOQ;//MOQ
                             construction.Remark = structureElectronic.Remark;//备注
-                            construction.IsSystemiginal= structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                         
+                            construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                         
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
                             int countUp = structureBOMIdModify.Where(p => p.Equals(construction.StructureId)).Count();//如果修改了,重置参数
                             if (countUp != 0)
@@ -678,7 +678,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                                 construction.MaterialControlStatus = MaterialControlStatus;//物料管制状态     
                                 construction.IsEntering = false;//确认重置
                                 construction.IsSubmit = false;//提交重置
-                                construction.IsSystemiginal= IsAllNullOrZero(construction.StandardMoney.SelectMany(p => p.YearOrValueModes).ToList(), p => p.Value);
+                                construction.IsSystemiginal = IsAllNullOrZero(construction.StandardMoney.SelectMany(p => p.YearOrValueModes).ToList(), p => p.Value);
                                 continue;//直接进行下一个循环
                             }
                             continue;//直接进行下一个循环
@@ -697,7 +697,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         construction.SolutionId = item.SolutionId;//方案ID
                         construction.IsSystemiginal = construction.IsEntering;
                     }
-                    
+
 
                     //将项目物料使用量 SAP相同的料号项目物料使用量需要相加
                     //List<ConstructionModel> constructionprop = constructionModels.DeepClone();
@@ -822,7 +822,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.Remark = structureElectronic.Remark;//备注
                             construction.SolutionId = item.SolutionId;//方案ID
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                          
-                            construction.PeopleName =await GetUserName(structureElectronic.PeopleId);
+                            construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
                             continue;//直接进行下一个循环
                         }
                         else
@@ -1521,60 +1521,90 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 电子单价录入计算
         /// </summary>
         /// <param name="electronicDto"></param>
+        /// <param name="isType"></param>
         /// <returns></returns>
-        internal async Task<ElectronicDto> ElectronicMaterialUnitPriceInputCalculation(ElectronicDto electronicDto)
+        internal async Task<ElectronicDto> ElectronicMaterialUnitPriceInputCalculation(ElectronicDto electronicDto, IsType isType)
         {
             //取基础单价库  查询条件 物料编码 冻结状态  有效结束日期
             List<UInitPriceForm> uInitPriceForms = await _configUInitPriceForm.GetAllListAsync(p => p.MaterialCode.Equals(electronicDto.SapItemNum) && p.FreezeOrNot.Equals(FreezeOrNot.Thaw) && p.EffectiveDate < DateTime.Now && p.ExpirationDate > DateTime.Now);
             //通过优先级筛选
             List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
             List<UInitPriceForm> uInitPrice = uInitPriceFormsPriority.Count > 0 ? uInitPriceFormsPriority : uInitPriceForms;
-            electronicDto.StandardMoney = await CalculateStandardMoney(electronicDto);//本位币
-            //如果单价库没有取到值直接跳过
-            if (uInitPrice.Count > 0) electronicDto.RebateMoney = await CalculateMaterialRebateAmount(electronicDto, uInitPrice);//物料返利金额
-            foreach (YearOrValueKvMode inTheRate in electronicDto.InTheRate)
+            if (isType.Equals(IsType.OriginalCurrency))
             {
-                List<YearOrValueMode> yearOrValueKvModes = electronicDto.SystemiginalCurrency.FirstOrDefault(p => p.Kv.Equals(inTheRate.Kv)).YearOrValueModes;
-                //第一年的年降不需要,默认为0
-                inTheRate.YearOrValueModes[0].Value = 0;
-                for (int i = 1; i < inTheRate.YearOrValueModes.Count; i++)
+                foreach (YearOrValueKvMode inTheRate in electronicDto.InTheRate)
                 {
-                    if (yearOrValueKvModes[i - 1].Value != 0)
+                    List<YearOrValueMode> yearOrValueKvModes = electronicDto.SystemiginalCurrency.FirstOrDefault(p => p.Kv.Equals(inTheRate.Kv)).YearOrValueModes;
+                    //第一年的年降不需要,默认为0
+                    inTheRate.YearOrValueModes[0].Value = 0;
+                    for (int i = 1; i < inTheRate.YearOrValueModes.Count; i++)
                     {
-                        inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value) * 100;
+                        if (yearOrValueKvModes[i - 1].Value != 0)
+                        {
+                            inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value) * 100;
+                        }
                     }
                 }
             }
+            if (isType.Equals(IsType.AnnualDecline))
+            {
+                foreach (YearOrValueKvMode sysCurr in electronicDto.SystemiginalCurrency)
+                {
+                    List<YearOrValueMode> yearOrValueKvModes = electronicDto.InTheRate.FirstOrDefault(p => p.Kv.Equals(sysCurr.Kv)).YearOrValueModes;
+                    for (int i = 1; i < sysCurr.YearOrValueModes.Count; i++)
+                    {
+                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value);
+                    }
+                }
+            }
+            electronicDto.StandardMoney = await CalculateStandardMoney(electronicDto);//本位币
+            //如果单价库没有取到值直接跳过
+            if (uInitPrice.Count > 0) electronicDto.RebateMoney = await CalculateMaterialRebateAmount(electronicDto, uInitPrice);//物料返利金额
             return electronicDto;
         }
         /// <summary>
         /// 结构单价录入计算
         /// </summary>
         /// <param name="structural"></param>
+        /// <param name="isType"></param>
         /// <returns></returns>
-        internal async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
+        internal async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural, IsType isType)
         {
             //取基础单价库  查询条件 物料编码 冻结状态  有效结束日期
             List<UInitPriceForm> uInitPriceForms = await _configUInitPriceForm.GetAllListAsync(p => p.MaterialCode.Equals(structural.SapItemNum) && p.FreezeOrNot.Equals(FreezeOrNot.Thaw) && p.EffectiveDate < DateTime.Now && p.ExpirationDate > DateTime.Now);
             //通过优先级筛选
             List<UInitPriceForm> uInitPriceFormsPriority = uInitPriceForms.Where(p => p.SupplierPriority.Equals(SupplierPriority.Core)).ToList();
             List<UInitPriceForm> uInitPrice = uInitPriceFormsPriority.Count > 0 ? uInitPriceFormsPriority : uInitPriceForms;
-            structural.StandardMoney = await CalculateStandardMoney(structural);//本位币   
-            //如果单价库没有取到值直接跳过
-            if (uInitPrice.Count > 0) structural.RebateMoney = await CalculateMaterialRebateAmount(structural, uInitPrice);//物料返利金额
-            foreach (YearOrValueKvMode inTheRate in structural.InTheRate)
+            if (isType.Equals(IsType.OriginalCurrency))
             {
-                List<YearOrValueMode> yearOrValueKvModes = structural.SystemiginalCurrency.FirstOrDefault(p => p.Kv.Equals(inTheRate.Kv)).YearOrValueModes;
-                //第一年的年降不需要,默认为0
-                inTheRate.YearOrValueModes[0].Value = 0;
-                for (int i = 1; i < inTheRate.YearOrValueModes.Count; i++)
+                foreach (YearOrValueKvMode inTheRate in structural.InTheRate)
                 {
-                    if (yearOrValueKvModes[i - 1].Value != 0)
+                    List<YearOrValueMode> yearOrValueKvModes = structural.SystemiginalCurrency.FirstOrDefault(p => p.Kv.Equals(inTheRate.Kv)).YearOrValueModes;
+                    //第一年的年降不需要,默认为0
+                    inTheRate.YearOrValueModes[0].Value = 0;
+                    for (int i = 1; i < inTheRate.YearOrValueModes.Count; i++)
                     {
-                        inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value) * 100;
+                        if (yearOrValueKvModes[i - 1].Value != 0)
+                        {
+                            inTheRate.YearOrValueModes[i].Value = (1 - yearOrValueKvModes[i].Value / yearOrValueKvModes[i - 1].Value) * 100;
+                        }
                     }
                 }
             }
+            if (isType.Equals(IsType.AnnualDecline))
+            {
+                foreach (YearOrValueKvMode sysCurr in structural.SystemiginalCurrency)
+                {
+                    List<YearOrValueMode> yearOrValueKvModes = structural.InTheRate.FirstOrDefault(p => p.Kv.Equals(sysCurr.Kv)).YearOrValueModes;
+                    for (int i = 1; i < sysCurr.YearOrValueModes.Count; i++)
+                    {
+                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value);
+                    }
+                }
+            }
+            structural.StandardMoney = await CalculateStandardMoney(structural);//本位币   
+            //如果单价库没有取到值直接跳过
+            if (uInitPrice.Count > 0) structural.RebateMoney = await CalculateMaterialRebateAmount(structural, uInitPrice);//物料返利金额
             return structural;
         }
         /// <summary>
