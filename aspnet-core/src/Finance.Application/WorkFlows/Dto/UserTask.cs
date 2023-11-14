@@ -46,6 +46,11 @@ namespace Finance.WorkFlows.Dto
         public virtual string TaskUser { get; set; }
 
         /// <summary>
+        /// 操作用户Id列表
+        /// </summary>
+        public virtual List<int> TaskUserIds { get; set; }
+
+        /// <summary>
         /// 工作流状态
         /// </summary>
         public virtual WorkflowState WorkflowState { get; set; }

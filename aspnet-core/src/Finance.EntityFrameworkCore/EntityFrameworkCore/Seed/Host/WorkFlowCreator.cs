@@ -255,7 +255,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 },
                 new Node
                 {
-                    Name="BOM成本审核",
+                    Name=FinanceConsts.Bomcbsh,//"BOM成本审核",
                     FinanceDictionaryId = FinanceConsts.BomEvalSelect,
                     Activation = $"{MainFlowId}_结构BOM单价审核_{MainFlowId}_BOM成本审核 && {MainFlowId}_电子BOM单价审核_{MainFlowId}_BOM成本审核",
                     RoleId = bomInput.Id.ToString(),
@@ -265,7 +265,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="结构BOM单价审核",
                     FinanceDictionaryId = FinanceConsts.StructBomEvalSelect,
-                    Activation = $"{MainFlowId}_定制结构件_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_结构BOM匹配修改_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_核价看板_{MainFlowId}_结构BOM单价审核",
+                    Activation = $"({MainFlowId}_定制结构件_{MainFlowId}_结构BOM单价审核 && {MainFlowId}_结构BOM匹配修改_{MainFlowId}_结构BOM单价审核) || {MainFlowId}_核价看板_{MainFlowId}_结构BOM单价审核",
                     RoleId = structuralPriceAuditor.Id.ToString(),
                     ProcessIdentifier = "StructureUnitPriceEntryToExamine",
                 },
@@ -273,7 +273,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="电子BOM单价审核",
                     FinanceDictionaryId = FinanceConsts.ElectronicBomEvalSelect,
-                    Activation = $"{MainFlowId}_电子BOM匹配修改_{MainFlowId}_电子BOM单价审核 && {MainFlowId}_核价看板_{MainFlowId}_电子BOM单价审核",
+                    Activation = $"{MainFlowId}_电子BOM匹配修改_{MainFlowId}_电子BOM单价审核 || {MainFlowId}_核价看板_{MainFlowId}_电子BOM单价审核",
                     RoleId = electronicsPriceAuditor.Id.ToString(),
                     ProcessIdentifier = "ElectronicUnitPriceEntryToExamine",
                 },
@@ -784,7 +784,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
                 },
-                
+
                 new Line
                 {
                     SoureNodeId = "财务审核",

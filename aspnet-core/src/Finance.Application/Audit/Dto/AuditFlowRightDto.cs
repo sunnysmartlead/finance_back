@@ -68,6 +68,11 @@ namespace Finance.Audit.Dto
         /// 流转说明
         /// </summary>
         public string JumpDescription { get; set; }
+
+        /// <summary>
+        /// 操作用户Id列表
+        /// </summary>
+        public virtual List<int> TaskUserIds { get; set; }
     }
 
     /// <summary>
