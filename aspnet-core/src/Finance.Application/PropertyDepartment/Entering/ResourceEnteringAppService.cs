@@ -541,18 +541,18 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="electronicDto"></param>
         /// <returns></returns>
-        public async Task<ElectronicDto> ElectronicMaterialUnitPriceInputCalculation(ElectronicDto electronicDto)
+        public async Task<ElectronicDto> ElectronicMaterialUnitPriceInputCalculation(CalculationElectronicDto electronicDto)
         {
-            return await _resourceElectronicStructuralMethod.ElectronicMaterialUnitPriceInputCalculation(electronicDto);
+            return await _resourceElectronicStructuralMethod.ElectronicMaterialUnitPriceInputCalculation(electronicDto, electronicDto.Type);
         }
         /// <summary>
         /// 结构单价录入计算
         /// </summary>
         /// <param name="structural"></param>
         /// <returns></returns>
-        public async Task<ConstructionModel> CalculationOfStructuralMaterials(ConstructionModel structural)
+        public async Task<ConstructionModel> CalculationOfStructuralMaterials(CalculationConstructionModel structural)
         {
-            return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural);
+            return await _resourceElectronicStructuralMethod.CalculationOfStructuralMaterials(structural, structural.Type);
         }
         /// <summary>
         /// 获取电子单价物料返利金额
