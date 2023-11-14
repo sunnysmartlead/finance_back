@@ -424,6 +424,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="isOfferDto"></param>
     /// <returns></returns>
+    public async Task PostIsOfferSecondOnlySave(IsOfferSecondDto isOfferDto)
+    {
+        //进行报价
+        await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+    }
+    
+    /// <summary>
+    /// 报价分析看板 保存
+    /// </summary>
+    /// <param name="isOfferDto"></param>
+    /// <returns></returns>
     public async Task PostIsOfferSecond(IsOfferSecondDto isOfferDto)
     {
         /*if (AbpSession.UserId is null)
