@@ -2939,6 +2939,45 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
+    /// 营销部报价审批    报价审核表 下载
+    /// </summary>
+    /// <param name="analyseBoardSecondInputDto"></param>
+    /// <param name="fileName"></param>
+    /// <returns></returns>
+    public async Task<IActionResult> DownloadAuditQuotationList(long auditFlowId,int version)
+    {
+        string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\新报价审批表模板.xlsx";
+        var au= await GetfinanceAuditQuotationList(auditFlowId,version,1);
+        QuotationListSecondDto value = new QuotationListSecondDto();
+        if (au is null)
+        {
+            value=   await QuotationListSecond(auditFlowId,version);
+
+        }
+        else
+        {
+            value= JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
+            
+        }
+        try
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/新报价审批模板.xlsx", value);
+                return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+                {
+                    FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+                };
+            }
+        }
+        catch (Exception e)
+        {
+            throw new FriendlyException(e.Message);
+        }
+        
+        
+    }
+    /// <summary>
     /// 下载成本信息表二开
     /// </summary>
     /// <param name="analyseBoardSecondInputDto"></param>
