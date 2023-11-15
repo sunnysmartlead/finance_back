@@ -11,6 +11,7 @@ using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment;
 using Finance.ProductDevelopment.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
@@ -114,7 +115,40 @@ namespace Finance.Entering
             _workflowInstanceAppService = workflowInstanceAppService;
             _userRepository = user;
         }
-
+        #region 快速核报价
+        /// <summary>
+        /// 电子单价录入快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostElectronicMaterialEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<EnteringElectronic> enteringElectronics= await _configEnteringElectronic.GetAllListAsync(p=>p.AuditFlowId.Equals(QuoteAuditFlowId)&&p.SolutionId.Equals(item.QuoteSolutionId));
+                enteringElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                await _configEnteringElectronic.BulkInsertAsync(enteringElectronics);
+            }           
+        }
+        /// <summary>
+        /// 结构单价录入快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostStructuralMemberEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<StructureElectronic> structureElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                structureElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                await _configStructureElectronic.BulkInsertAsync(structureElectronics);
+            }
+        }
+        #endregion
         /// <summary>
         /// 资源部输入时,电子料初始值数量
         /// </summary>
