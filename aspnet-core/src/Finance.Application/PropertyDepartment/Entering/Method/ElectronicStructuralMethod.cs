@@ -1556,7 +1556,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value);
                     }
                 }
-            }           
+            }
             electronicDto.StandardMoney = await CalculateStandardMoney(electronicDto);//本位币
             //如果单价库没有取到值直接跳过
             if (uInitPrice.Count > 0) electronicDto.RebateMoney = await CalculateMaterialRebateAmount(electronicDto, uInitPrice);//物料返利金额

@@ -19,6 +19,7 @@ using Finance.PriceEval.Dto;
 using Microsoft.EntityFrameworkCore;
 using Abp.Json;
 using Finance.NerPricing;
+using Finance.Authorization.Users;
 
 namespace Finance.WorkFlows
 {
@@ -42,25 +43,12 @@ namespace Finance.WorkFlows
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
         private readonly NrePricingAppService _nrePricingAppService;
         private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
+        private readonly AuditFlowAppService _auditFlowAppService;
+        private readonly SendEmail _sendEmail;
+        private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
+        private readonly IRepository<User, long> _userRepository;
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="tradeComplianceAppService"></param>
-        /// <param name="workflowInstanceAppService"></param>
-        /// <param name="unitOfWorkManager"></param>
-        /// <param name="electronicBomAppService"></param>
-        /// <param name="structionBomAppService"></param>
-        /// <param name="resourceEnteringAppService"></param>
-        /// <param name="priceEvaluationGetAppService"></param>
-        /// <param name="modelCountYearRepository"></param>
-        /// <param name="gradientRepository"></param>
-        /// <param name="solutionRepository"></param>
-        /// <param name="panelJsonRepository"></param>
-        /// <param name="priceEvaluationStartDataRepository"></param>
-        /// <param name="nrePricingAppService"></param>
-        /// <param name="workflowInstanceRepository"></param>
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -76,7 +64,15 @@ namespace Finance.WorkFlows
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
             _nrePricingAppService = nrePricingAppService;
             _workflowInstanceRepository = workflowInstanceRepository;
+            _auditFlowAppService = auditFlowAppService;
+            _sendEmail = sendEmail;
+            _noticeEmailInfoRepository = noticeEmailInfoRepository;
+            _userRepository = userRepository;
         }
+
+
+
+
 
 
         /// <summary>
@@ -90,26 +86,34 @@ namespace Finance.WorkFlows
                 using (_unitOfWorkManager.Current.SetTenantId(1))
                 {
                     //必须被激活才能执行
-                    if (eventData.Entity.NodeInstanceStatus != NodeInstanceStatus.Current)
+                    if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Current)
                     {
-                        return;
-                    }
-                    if (eventData.Entity.NodeId == "主流程_贸易合规")
-                    {
-                        try
+                        if (eventData.Entity.NodeId == "主流程_贸易合规")
                         {
-
-                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
-                            if (isOk)
+                            try
                             {
-                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+
+                                var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                                if (isOk)
                                 {
-                                    NodeInstanceId = eventData.Entity.Id,
-                                    FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
-                                    Comment = "系统判断合规"
-                                });
+                                    await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                    {
+                                        NodeInstanceId = eventData.Entity.Id,
+                                        FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
+                                        Comment = "系统判断合规"
+                                    });
+                                }
+                                else
+                                {
+                                    await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                    {
+                                        NodeInstanceId = eventData.Entity.Id,
+                                        FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                                        Comment = "系统判断不合规"
+                                    });
+                                }
                             }
-                            else
+                            catch (Exception)
                             {
                                 await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                                 {
@@ -119,75 +123,66 @@ namespace Finance.WorkFlows
                                 });
                             }
                         }
-                        catch (Exception)
+
+                        //如果是自动生成相关的流转页面
+                        var autoFlows = new List<string> { "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
+                        if (autoFlows.Contains(eventData.Entity.NodeId))
                         {
                             await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                             {
                                 NodeInstanceId = eventData.Entity.Id,
-                                FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
-                                Comment = "系统判断不合规"
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
                             });
                         }
-                    }
 
-                    //如果是自动生成相关的流转页面
-                    var autoFlows = new List<string> { "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
-                    if (autoFlows.Contains(eventData.Entity.NodeId))
-                    {
-                        await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                        //如果是流转到电子BOM退回页面的
+                        if (eventData.Entity.NodeId == "主流程_上传电子BOM")
                         {
-                            NodeInstanceId = eventData.Entity.Id,
-                            FinanceDictionaryDetailId = FinanceConsts.Done,
-                            Comment = "系统自动流转"
-                        });
-                    }
+                            await _electronicBomAppService.ClearElecBomImportState(eventData.Entity.WorkFlowInstanceId);
+                        }
 
-                    //如果是流转到电子BOM退回页面的
-                    if (eventData.Entity.NodeId == "主流程_上传电子BOM")
-                    {
-                        await _electronicBomAppService.ClearElecBomImportState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    //如果是流转到结构BOM退回页面的
-                    if (eventData.Entity.NodeId == "主流程_上传结构BOM")
-                    {
-                        await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-
-                    //如果是流转到主流程_电子BOM匹配修改
-                    if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
-                    {
-                        await _resourceEnteringAppService.ElectronicBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
-
-                        //await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    //如果是流转到主流程_结构BOM匹配修改
-                    if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
-                    {
-                        await _resourceEnteringAppService.StructureBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
-
-
-                        //await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    //如果是流转到主流程_核价看板
-                    if (eventData.Entity.NodeId == "主流程_核价看板")
-                    {
-                        #region  流转到核价看板前判断贸易合规
-                        try
+                        //如果是流转到结构BOM退回页面的
+                        if (eventData.Entity.NodeId == "主流程_上传结构BOM")
                         {
+                            await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
+                        }
 
-                            var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
-                            if (isOk)
+
+                        ////如果是流转到主流程_电子BOM匹配修改
+                        //if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
+                        //{
+                        //    await _resourceEnteringAppService.ElectronicBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+                        //}
+
+                        ////如果是流转到主流程_结构BOM匹配修改
+                        //if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
+                        //{
+                        //    await _resourceEnteringAppService.StructureBOMUnitPriceEliminate(eventData.Entity.WorkFlowInstanceId);
+                        //}
+
+                        //如果是流转到主流程_核价看板
+                        if (eventData.Entity.NodeId == "主流程_核价看板")
+                        {
+                            #region  流转到核价看板前判断贸易合规
+                            try
                             {
-                                await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
-                                await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
-
-                                await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                                if (isOk)
+                                {
+                                    await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                }
+                                else
+                                {
+                                    await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                    {
+                                        NodeInstanceId = eventData.Entity.Id,
+                                        FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                        Comment = "系统判断不合规"
+                                    });
+                                }
                             }
-                            else
+                            catch (Exception)
                             {
                                 await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                                 {
@@ -196,89 +191,141 @@ namespace Finance.WorkFlows
                                     Comment = "系统判断不合规"
                                 });
                             }
+
+                            #endregion
+
+
                         }
-                        catch (Exception)
+
+                        //如果流转到核价看板之后，就缓存核价看板的全部信息
+                        if (eventData.Entity.NodeId == "主流程_项目部课长审核")
                         {
-                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            var data = from g in _gradientRepository.GetAll()
+                                       from s in _solutionRepository.GetAll()
+                                       from y in _modelCountYearRepository.GetAll()
+                                       where g.AuditFlowId == eventData.Entity.WorkFlowInstanceId
+                                       && s.AuditFlowId == eventData.Entity.WorkFlowInstanceId
+                                       && y.AuditFlowId == eventData.Entity.WorkFlowInstanceId
+                                       select new GetPriceEvaluationTableInput
+                                       {
+                                           AuditFlowId = eventData.Entity.WorkFlowInstanceId,
+                                           GradientId = g.Id,
+                                           InputCount = 0,
+                                           SolutionId = s.Id,
+                                           Year = y.Year,
+                                           UpDown = y.UpDown
+                                       };
+                            var result = await data.ToListAsync();
+                            var all = result.GroupBy(p => new { p.AuditFlowId, p.GradientId, p.InputCount, p.SolutionId, })
+                                .Select(p => new GetPriceEvaluationTableInput
+                                {
+                                    AuditFlowId = p.Key.AuditFlowId,
+                                    GradientId = p.Key.GradientId,
+                                    InputCount = p.Key.InputCount,
+                                    SolutionId = p.Key.SolutionId,
+                                    Year = PriceEvalConsts.AllYear,
+                                    UpDown = YearType.Year
+                                }).Distinct();
+                            result.AddRange(all);
+                            foreach (var item in result)
                             {
-                                NodeInstanceId = eventData.Entity.Id,
-                                FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
-                                Comment = "系统判断不合规"
-                            });
+                                var priceEvaluationTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(item);
+                                await _panelJsonRepository.InsertAsync(new PanelJson
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    InputCount = item.InputCount,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                    DataJson = priceEvaluationTable.ToJsonString()
+                                });
+                            }
                         }
+
+                        //到核价审批录入后，要清空核价需求录入的缓存
+                        if (eventData.Entity.NodeId == "主流程_核价审批录入")
+                        {
+                            await _priceEvaluationStartDataRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                        }
+
+                        //NRE手板件清空
+                        if (eventData.Entity.NodeId == "主流程_NRE手板件")
+                        {
+                            await _nrePricingAppService.GetProjectManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                        }
+
+                        if (eventData.Entity.NodeId == "主流程_NRE_EMC实验费录入")
+                        {
+                            await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                        }
+
+                        if (eventData.Entity.NodeId == "主流程_归档")
+                        {
+                            var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
+                            wf.WorkflowState = WorkflowState.Ended;
+                        }
+
+
+                        #region 邮件发送
+
+#if !DEBUG
+
+                        SendEmail email = new SendEmail();
+                        string loginIp = email.GetLoginAddr();
+
+                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
+                        {
+
+                            var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfos();
+                            var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
+                            foreach (var task in tasks)
+                            {
+                                foreach (var item in task.AuditFlowRightDetailList)
+                                {
+                                    //foreach (var userId in item.TaskUserIds)
+                                    //{
+                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
+
+                                    if (userInfo != null)
+                                    {
+                                        string emailAddr = userInfo.EmailAddress;
+
+                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+                                        
+                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                        string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                        Task.Run(async () =>
+                                        {
+                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        });
+#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                    }
+                                    //}
+                                }
+                            }
+                        }
+
+#endif
 
                         #endregion
 
-
                     }
-
-                    //如果流转到核价看板之后，就缓存核价看板的全部信息
-                    if (eventData.Entity.NodeId == "主流程_项目部课长审核")
+                    else if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Passed)
                     {
-                        var data = from g in _gradientRepository.GetAll()
-                                   from s in _solutionRepository.GetAll()
-                                   from y in _modelCountYearRepository.GetAll()
-                                   where g.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                   && s.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                   && y.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                   select new GetPriceEvaluationTableInput
-                                   {
-                                       AuditFlowId = eventData.Entity.WorkFlowInstanceId,
-                                       GradientId = g.Id,
-                                       InputCount = 0,
-                                       SolutionId = s.Id,
-                                       Year = y.Year,
-                                       UpDown = y.UpDown
-                                   };
-                        var result = await data.ToListAsync();
-                        var all = result.GroupBy(p => new { p.AuditFlowId, p.GradientId, p.InputCount, p.SolutionId, })
-                            .Select(p => new GetPriceEvaluationTableInput
-                            {
-                                AuditFlowId = p.Key.AuditFlowId,
-                                GradientId = p.Key.GradientId,
-                                InputCount = p.Key.InputCount,
-                                SolutionId = p.Key.SolutionId,
-                                Year = PriceEvalConsts.AllYear,
-                                UpDown = YearType.Year
-                            }).Distinct();
-                        result.AddRange(all);
-                        foreach (var item in result)
+                        //如果是流转到主流程_电子BOM单价审核
+                        if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                         {
-                            var priceEvaluationTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(item);
-                            await _panelJsonRepository.InsertAsync(new PanelJson
-                            {
-                                AuditFlowId = item.AuditFlowId,
-                                GradientId = item.GradientId,
-                                InputCount = item.InputCount,
-                                SolutionId = item.SolutionId,
-                                Year = item.Year,
-                                UpDown = item.UpDown,
-                                DataJson = priceEvaluationTable.ToJsonString()
-                            });
+                            await _resourceEnteringAppService.ElectronicBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
                         }
-                    }
 
-                    //到核价审批录入后，要清空核价需求录入的缓存
-                    if (eventData.Entity.NodeId == "主流程_核价审批录入")
-                    {
-                        await _priceEvaluationStartDataRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    //NRE手板件清空
-                    if (eventData.Entity.NodeId == "主流程_NRE手板件")
-                    {
-                        await _nrePricingAppService.GetProjectManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    if (eventData.Entity.NodeId == "主流程_NRE_EMC实验费录入")
-                    {
-                        await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
-                    }
-
-                    if (eventData.Entity.NodeId == "主流程_归档")
-                    {
-                        var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
-                        wf.WorkflowState = WorkflowState.Ended;
+                        //如果是流转到主流程_结构BOM单价审核
+                        if (eventData.Entity.NodeId == "主流程_结构BOM匹配修改")
+                        {
+                            await _resourceEnteringAppService.StructureBOMUnitPriceCopying(eventData.Entity.WorkFlowInstanceId);
+                        }
                     }
                 }
 
