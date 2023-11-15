@@ -2,6 +2,7 @@
 using Abp.Authorization;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
+using Finance.NerPricing;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.PropertyDepartment.DemandApplyAudit;
@@ -29,13 +30,20 @@ namespace Finance.QuickQuotationReview
         /// </summary>
         private DemandApplyAuditAppService _demandApplyAuditAppService;
         /// <summary>
+        /// NRE服务
+        /// </summary>
+        private NrePricingAppService _nrePricingAppService;
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="priceEvaluationAppService"></param>
-        public QuickQuotationReviewAppService(PriceEvaluationAppService priceEvaluationAppService, DemandApplyAuditAppService applyAuditAppService)
+        /// <param name="applyAuditAppService"></param>
+        /// <param name="nrePricingAppService"></param>
+        public QuickQuotationReviewAppService(PriceEvaluationAppService priceEvaluationAppService, DemandApplyAuditAppService applyAuditAppService, NrePricingAppService nrePricingAppService)
         {
             _priceEvaluationAppService = priceEvaluationAppService;
             _demandApplyAuditAppService = applyAuditAppService;
+            _nrePricingAppService = nrePricingAppService;
         }
 
         /// <summary>
@@ -56,6 +64,9 @@ namespace Finance.QuickQuotationReview
             List<SolutionIdAndQuoteSolutionId> solutionIdAnds = await _demandApplyAuditAppService.FastAuditEntering(dto.AuditFlowId, dto.QuoteAuditFlowId);
             dto.SolutionIdAndQuoteSolutionId = solutionIdAnds;
             //产品开发部审核 无信息录入
+
+            //Nre环境实验费
+            await _nrePricingAppService.FastPostExperimentItemsSingle(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             return priceEvaluationStartResult;
         }
         public class dto

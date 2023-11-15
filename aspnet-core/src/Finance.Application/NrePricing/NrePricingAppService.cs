@@ -20,6 +20,7 @@ using Finance.PriceEval;
 using Finance.Processes;
 using Finance.Processes.ProcessHoursEnterDtos;
 using Finance.ProductDevelopment;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
@@ -255,9 +256,18 @@ namespace Finance.NerPricing
             _foundationEmcAppService = foundationEmcAppService;
             _processHoursEnterAppService = processHoursEnterAppService;
         }
-
-
-
+        #region 快速核报价流程
+        internal async Task FastPostExperimentItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                ExperimentItemsModel experiment = await GetReturnExperimentItemsSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                List<EnvironmentalExperimentFee> environmentalExperimentFees = ObjectMapper.Map<List<EnvironmentalExperimentFee>>(experiment.EnvironmentalExperimentFeeModels);           
+                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0;p.SolutionId= item.SolutionId; return p; }).ToList();
+                await _resourceEnvironmentalExperimentFee.BulkInsertAsync(environmentalExperimentFees);
+            }            
+        }
+        #endregion
         /// <summary>
         /// 获取 方案
         /// </summary>
