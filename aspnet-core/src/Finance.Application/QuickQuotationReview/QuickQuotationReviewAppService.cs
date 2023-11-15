@@ -64,9 +64,10 @@ namespace Finance.QuickQuotationReview
             List<SolutionIdAndQuoteSolutionId> solutionIdAnds = await _demandApplyAuditAppService.FastAuditEntering(dto.AuditFlowId, dto.QuoteAuditFlowId);
             dto.SolutionIdAndQuoteSolutionId = solutionIdAnds;
             //产品开发部审核 无信息录入
-
-            //Nre环境实验费
+            //NRE环境实验费
             await _nrePricingAppService.FastPostExperimentItemsSingle(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //NRE模具费
+            await _nrePricingAppService.FastPostResourcesManagementSingle(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             return priceEvaluationStartResult;
         }
         public class dto

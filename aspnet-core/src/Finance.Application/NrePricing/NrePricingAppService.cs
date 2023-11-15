@@ -257,6 +257,13 @@ namespace Finance.NerPricing
             _processHoursEnterAppService = processHoursEnterAppService;
         }
         #region 快速核报价流程
+        /// <summary>
+        /// 环境实验费快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
         internal async Task FastPostExperimentItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
         {
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
@@ -266,6 +273,23 @@ namespace Finance.NerPricing
                 environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0;p.SolutionId= item.SolutionId; return p; }).ToList();
                 await _resourceEnvironmentalExperimentFee.BulkInsertAsync(environmentalExperimentFees);
             }            
+        }
+        /// <summary>
+        /// 模具费快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
+                MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
+            }               
         }
         #endregion
         /// <summary>
