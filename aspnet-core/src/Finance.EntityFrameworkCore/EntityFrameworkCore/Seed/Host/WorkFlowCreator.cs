@@ -1043,7 +1043,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryDetailId = FinanceConsts.MybhgSelect_Cobzzcblr,
                     LineType = LineType.Reset,
                 },
-                45
+                
                 new Line
                 {
                     SoureNodeId = "不合规是否退回",
