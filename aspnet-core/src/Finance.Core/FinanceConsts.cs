@@ -780,6 +780,26 @@ namespace Finance
         /// </summary>
         public const string MybhgSelect_Cobzzcblr = "MybhgSelect_Cobzzcblr";
 
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE模具费录入】
+        /// </summary>
+        public const string MybhgSelect_Nremjflr = "MybhgSelect_Nremjflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-可靠性实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nrekkxsyflr = "MybhgSelect_Nrekkxsyflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE手板件】
+        /// </summary>
+        public const string MybhgSelect_Nresbj = "MybhgSelect_Nresbj";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-EMC实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nreemcsyflr = "MybhgSelect_Nreemcsyflr";
+
 
         /// <summary>
         /// 核价看板选项
