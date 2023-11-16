@@ -109,11 +109,11 @@ namespace Finance.WorkFlows
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
-        private async Task TestLine()
+        public async Task TestLine(long id)
         {
-            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 475);
+            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 459);
 
-            var route = await GetNodeRoute(11595, 11583);
+            var route = await GetNodeRoute(id, 11484);
             if (route.Any())
             {
                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
