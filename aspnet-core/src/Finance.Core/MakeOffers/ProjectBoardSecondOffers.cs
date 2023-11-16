@@ -36,4 +36,8 @@ public class ProjectBoardSecondOffers: FullAuditedEntity<long>
     /// 标题
     /// </summary>
     public string title { get; set; }
+    /// <summary>
+    /// 类别  0报价分析看板，1报价反馈
+    /// </summary>
+    public int ntype { get; set; }
 }

@@ -2241,7 +2241,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         else
         {
-            if (time >= 4)
+            if (time >= 3)
             {
                 throw new UserFriendlyException("本流程报价提交次数已经到顶");
             }
@@ -3883,9 +3883,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 UnitPrice = gtsl.OfferUnitPrice,
                 SolutionId = gtsl.SolutionId
             });
-            biddingStrategySecondModel.SopCost = niandu.SellingCost[0].value;
+            biddingStrategySecondModel.SopCost = niandu.AverageCost[0].value;
             biddingStrategySecondModel.FullLifeCyclecost =
-                niandu.SellingCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
+                niandu.AverageCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
             biddingStrategySecondModel.SopGrossMargin = niandu.GrossMargin[0].value; //sop毛利率
             BiddingStrategySecondModels.Add(biddingStrategySecondModel);
         }
@@ -3911,8 +3911,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 UnitPrice = sjslss.OfferUnitPrice,
                 SolutionId = sjslss.SolutionId
             });
-            model.SopCost = niandu.SellingCost[0].value;
-            model.FullLifeCyclecost = niandu.SellingCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
+            model.SopCost = niandu.AverageCost[0].value;
+            model.FullLifeCyclecost = niandu.AverageCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
             model.SopGrossMargin = niandu.GrossMargin[0].value; //sop毛利率
             BiddingStrategySecondModels.Add(model);
         }
