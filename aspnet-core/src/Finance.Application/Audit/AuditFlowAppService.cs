@@ -56,6 +56,7 @@ namespace Finance.Audit
 
         private readonly IRepository<Solution, long> _solutionRepository;
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
+        private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
 
 
         private long _projectManager = 0;
@@ -64,23 +65,28 @@ namespace Finance.Audit
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="auditFlowRepository"></param>
-        /// <param name="auditFinishedProcessRepository"></param>
-        /// <param name="auditCurrentProcessRepository"></param>
-        /// <param name="auditFlowDetailRepository"></param>
-        /// <param name="auditFlowRightRepository"></param>
-        /// <param name="flowProcessRepository"></param>
-        /// <param name="flowJumpInfoRepository"></param>
-        /// <param name="flowClearInfoRepository"></param>
-        /// <param name="priceEvaluationRepository"></param>
-        /// <param name="userInputInfoRepository"></param>
-        /// <param name="userRepository"></param>
-        /// <param name="roleRepository"></param>
-        /// <param name="userRoleRepository"></param>
-        /// <param name="tradeComplianceAppService"></param>
-        /// <param name="financeDictionaryDetailRepository"></param>
-        /// <param name="noticeEmailInfoRepository"></param>
-        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<FlowJumpInfo, long> flowJumpInfoRepository, IRepository<FlowClearInfo, long> flowClearInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, TradeComplianceAppService tradeComplianceAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<AuditFlowDelete, long> auditFlowDeleteRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository)
+        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository,
+
+            IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository,
+            IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository,
+            IRepository<AuditFlowDetail, long> auditFlowDetailRepository,
+            IRepository<AuditFlowRight, long> auditFlowRightRepository,
+            IRepository<FlowProcess, long> flowProcessRepository,
+            IRepository<FlowJumpInfo, long> flowJumpInfoRepository,
+            IRepository<FlowClearInfo, long> flowClearInfoRepository,
+            IRepository<PriceEvaluation, long> priceEvaluationRepository,
+            IRepository<UserInputInfo, long> userInputInfoRepository,
+            IRepository<User, long> userRepository,
+            IRepository<Role> roleRepository,
+            IRepository<UserRole, long> userRoleRepository,
+            TradeComplianceAppService tradeComplianceAppService,
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
+            IRepository<AuditFlowDelete, long> auditFlowDeleteRepository,
+            IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository,
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<Solution, long> solutionRepository,
+            IRepository<PricingTeam, long> pricingTeamRepository,
+            IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFinishedProcessRepository = auditFinishedProcessRepository;
@@ -103,6 +109,10 @@ namespace Finance.Audit
 
             _solutionRepository = solutionRepository;
             _pricingTeamRepository = pricingTeamRepository;
+
+            _priceEvaluationRepository = priceEvaluationRepository;
+
+            _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
         }
 
 
@@ -195,6 +205,10 @@ namespace Finance.Audit
             //获取项目经理
             var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
+            //获取核价需求录入保存项
+            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
+
             //项目经理控制的页面
             var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
 
@@ -221,15 +235,17 @@ namespace Finance.Audit
                 //物流成本录入
                 .WhereIf(pricingTeam == null || pricingTeam.ProductManageTimeId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.LogisticsCostEntry || p.IsReset)
 
-
                 //项目核价审核
                 .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit || p.IsReset)
 
                 //项目经理
-                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier) || p.IsReset)
+                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => ((!pmPage.Contains(p.ProcessIdentifier)) || p.ProcessName == FinanceConsts.Bomcbsh) || p.IsReset)
 
                 //生成报价分析界面选择报价方案、选择是否报价，必须是发起核价需求录入的人才能看到
                 .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.IsReset)
+
+                //核价需求录入，必须是自己录入或项目经理才可见
+                .WhereIf(priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
 
                 .ToList();
         }
@@ -269,6 +285,7 @@ namespace Finance.Audit
                     IsRetype = o.IsBack,
                     JumpDescription = o.Comment,
                     IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());

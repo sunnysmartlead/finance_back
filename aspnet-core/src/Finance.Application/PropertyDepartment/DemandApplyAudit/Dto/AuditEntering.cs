@@ -355,4 +355,16 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>        
         public DateTime? Deadline { get; set; }
     }
+    //快速核价报价 方案和引用用方案
+    public class SolutionIdAndQuoteSolutionId
+    {
+        /// <summary>
+        /// 方案ID
+        /// </summary>
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 引用流程的的方案ID
+        /// </summary>
+        public long QuoteSolutionId { get; set; }
+    }
 }

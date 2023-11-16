@@ -87,11 +87,7 @@ namespace Finance.MakeOffers
         /// </summary>
         public decimal NreGrossMargin { get; set; }
         
-        /// <summary>
-        /// 车型
-        /// </summary>
-        public virtual string CarModel { get; set; }
-        /// <summary>
+      
         /// 版本
         /// </summary>
         public int version { get; set; }  

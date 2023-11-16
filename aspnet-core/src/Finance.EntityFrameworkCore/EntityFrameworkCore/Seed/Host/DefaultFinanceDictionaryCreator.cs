@@ -249,6 +249,10 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Wlcblr, DisplayName="物流成本录入",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Gsgxtj, DisplayName="工序工时添加",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Cobzzcblr, DisplayName="COB制造成本录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nremjflr, DisplayName="NRE模具费录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nrekkxsyflr, DisplayName="NRE-可靠性实验费录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nresbj, DisplayName="NRE手板件",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nreemcsyflr, DisplayName="NRE-EMC实验费录入",},
 
                 //核价看板选项
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Yes, DisplayName="同意",},
@@ -268,6 +272,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Jgbomdjsh, DisplayName="结构BOM单价审核",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Dzbomdjsh, DisplayName="电子BOM单价审核",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Hjsplr, DisplayName="核价审批录入",},
 
 
 

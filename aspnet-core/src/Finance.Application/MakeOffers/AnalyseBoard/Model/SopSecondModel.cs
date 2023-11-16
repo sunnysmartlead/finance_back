@@ -20,15 +20,15 @@ public class SopSecondModel
     /// <summary>
     /// 年将率
     /// </summary>
-    public decimal YearDrop { get; set; }
+    public decimal AnnualDeclineRate { get; set; }
     /// <summary>
     /// 年度返利要求
     /// </summary>
-    public decimal RebateRequest { get; set; }
+    public decimal AnnualRebateRequirements { get; set; }
     /// <summary>
     /// 一次性折让
     /// </summary>
-    public decimal DiscountRate { get; set; }
+    public decimal OneTimeDiscountRate { get; set; }
     /// <summary>
     /// 年度佣金比例
     /// </summary>

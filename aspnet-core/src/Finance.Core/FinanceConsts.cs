@@ -642,6 +642,10 @@ namespace Finance
         /// </summary>
         public const string EvalFeedback_Bjxysp = "EvalFeedback_Bjxysp";
 
+        /// <summary>
+        /// BOM成本审核名称
+        /// </summary>
+        public const string Bomcbsh = "BOM成本审核";
 
         /// <summary>
         /// 结构BOM单价审核选项
@@ -776,6 +780,26 @@ namespace Finance
         /// </summary>
         public const string MybhgSelect_Cobzzcblr = "MybhgSelect_Cobzzcblr";
 
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE模具费录入】
+        /// </summary>
+        public const string MybhgSelect_Nremjflr = "MybhgSelect_Nremjflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-可靠性实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nrekkxsyflr = "MybhgSelect_Nrekkxsyflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE手板件】
+        /// </summary>
+        public const string MybhgSelect_Nresbj = "MybhgSelect_Nresbj";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-EMC实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nreemcsyflr = "MybhgSelect_Nreemcsyflr";
+
 
         /// <summary>
         /// 核价看板选项
@@ -787,6 +811,11 @@ namespace Finance
         /// 核价看板选项 【同意】
         /// </summary>
         public const string HjkbSelect_Yes = "HjkbSelect_Yes";
+
+        /// <summary>
+        /// 核价看板选项 【不合规是否退回】
+        /// </summary>
+        public const string HjkbSelect_Bhg = "HjkbSelect_Bhg";
 
         /// <summary>
         /// 核价看板选项 【退回到核价需求录入】
@@ -863,6 +892,11 @@ namespace Finance
         /// </summary>
         public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Nreemcsyflr";
 
+        /// <summary>
+        /// 核价看板选项 退回到【核价审批录入】
+        /// </summary>
+        public const string HjkbSelect_Hjsplr = "HjkbSelect_Hjsplr";
+
         #endregion
 
 
@@ -935,6 +969,11 @@ namespace Finance
         /// 生成报价分析界面选择报价方案
         /// </summary>
         public const string QuoteAnalysis = "QuoteAnalysis";
+
+        /// <summary>
+        /// 核价需求录入
+        /// </summary>
+        public const string PricingDemandInput = "PricingDemandInput";
 
         #endregion
 

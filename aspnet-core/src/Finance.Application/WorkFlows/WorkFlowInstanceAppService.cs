@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace Finance.WorkFlows
@@ -106,6 +107,18 @@ namespace Finance.WorkFlows
         {
             var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 189 && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
+        }
+
+        public async Task TestLine(long id)
+        {
+            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 459);
+
+            var route = await GetNodeRoute(id, 11484);
+            if (route.Any())
+            {
+                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
+                    .SelectMany(p => p).Where(p => p != null).DistinctBy(p => p.Id).ToList();
+            }
         }
 
         /// <summary>
@@ -425,12 +438,11 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
-
-
-                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
+                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id);
                             if (route.Any())
                             {
-                                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
+                                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
+                                    .SelectMany(p => p).Where(p => p != null).DistinctBy(p => p.Id);
                                 lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
                             }
                         }
@@ -657,6 +669,7 @@ namespace Finance.WorkFlows
                 Title = p.Title,
                 WorkFlowName = p.WorkFlowName,
                 TaskUser = string.Join(",", p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Name)).Distinct()),
+                TaskUserIds = p.RoleId.SelectMany(o => users.Where(x => x.Id == o.To<long>()).Select(p => p.Id)).Distinct().ToList(),
                 WorkflowState = p.WorkflowState,
                 WorkFlowInstanceId = p.WorkFlowInstanceId,
                 ProcessIdentifier = p.ProcessIdentifier,
@@ -910,6 +923,9 @@ namespace Finance.WorkFlows
             {
                 if (data.Select(p => p.Id).Any(p => p == targetNodeInstanceId))
                 {
+
+                    pathNode.Add(targetNodeInstance);
+
                     paths.Add(pathNode);
                     return true;
                 }
@@ -918,7 +934,7 @@ namespace Finance.WorkFlows
                     var result = false;
                     foreach (var item in data)
                     {
-                        result = await IsHasTargetNode(item, targetNodeInstance, paths, pathNode);
+                        result = await IsHasTargetNode(item, targetNodeInstance, paths, new List<NodeInstance>(pathNode));//pathNode
                     }
                     return result;
                 }
@@ -931,24 +947,16 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task<List<NodeInstance>> GetTargetNodeByNodeId(long nodeInstanceId)
         {
-            //try
-            //{
             var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
 
             var data = from l in _lineInstanceRepository.GetAll()
                        join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
                        where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
-                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
+                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && l.LineType != LineType.Reset && l.FinanceDictionaryDetailId != FinanceConsts.YesOrNo_No
                        select n;
-            return await data.ToListAsync();
+            var result = await data.ToListAsync();
 
-
-            //}
-            //catch (Exception e)
-            //{
-
-            //    throw;
-            //}
+            return result;
         }
 
 
@@ -1005,6 +1013,54 @@ namespace Finance.WorkFlows
             }
 
             #endregion
+        }
+
+
+        /// <summary>
+        /// 获取普通核报价归档流程
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<PagedResultDto<WorkflowInstance>> GetWorkflowOvered(GetWorkflowOveredInput input)
+        {
+            //普通流程的核价原因
+            var hjyy = new List<string> { FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Nj };
+
+            var data = (from w in _workflowInstanceRepository.GetAll()
+                        join h in _instanceHistoryRepository.GetAll() on w.Id equals h.WorkFlowInstanceId
+                        where h.NodeId == "主流程_核价需求录入" && hjyy.Contains(h.FinanceDictionaryDetailId)
+                        && w.WorkflowState == WorkflowState.Ended
+                        select w)
+                        .Distinct()
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+
+            var count = await data.CountAsync();
+
+            var paged = data.PageBy(input);
+
+            var result = await paged.ToListAsync();
+
+            return new PagedResultDto<WorkflowInstance>(count, result);
+        }
+
+        /// <summary>
+        /// 结束流程
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task OverWorkflow(OverWorkflowInput input)
+        {
+            var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
+            wf.WorkflowState = WorkflowState.Ended;
+
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name == "主流程_归档");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            foreach (var item in nodes)
+            {
+                item.NodeInstanceStatus = NodeInstanceStatus.Over;
+            }
         }
     }
 }

@@ -11,6 +11,21 @@ public class CoreComponentAndNreDto
     public List<NreExpense> nres { get; set; }
     
 }
+public class CoreDeviceDto
+{ 
+    List<CoreDevice> CoreDevice { get; set; }
+}
+
+public class CoreDevice
+{
+    public string ProjectName { get; set; }
+    public decimal UnitPrice { get; set; }
+    public double Number { get; set; }
+    public decimal Rate { get; set; }
+    public decimal Sum { get; set; }
+
+}
+
 
 public class productAndGradient
 {

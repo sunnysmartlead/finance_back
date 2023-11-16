@@ -559,7 +559,7 @@ namespace Finance.PriceEval
                 DtoExcel(dto);
 
                 //核价表总成本保留2位小数
-                Math.Round(dto.TotalCost, 2);
+                dto.TotalCost = Math.Round(dto.TotalCost, 2);
                 return dto;
             }
             else
@@ -569,7 +569,7 @@ namespace Finance.PriceEval
                 DtoExcel(dto);
 
                 //核价表总成本保留2位小数
-                Math.Round(dto.TotalCost, 2);
+                dto.TotalCost = Math.Round(dto.TotalCost, 2);
                 return dto;
             }
 
@@ -611,7 +611,7 @@ namespace Finance.PriceEval
 
                 #endregion
 
-                return new PriceEvaluationTableDto
+                var dto = new PriceEvaluationTableDto
                 {
                     Year = year,
                     UpDown = upDown,
@@ -635,6 +635,8 @@ namespace Finance.PriceEval
                     AuditDate = DateTime.Now,//工作流取    审核日期
                     ApprovalDate = DateTime.Now,//工作流取  批准日期
                 };
+                return dto;
+
             }
         }
 
@@ -1043,7 +1045,7 @@ namespace Finance.PriceEval
             //(sopYear + yearCount)表示分摊截止年份，input.Year减去它，如果不为负数，表示当前年份可分摊
             var isHasCost = IsHasCostFunc(input.Year, input.UpDown, sopYear.Year, yearCount);//input.Year - (sopYear.Year + yearCount) < 0;
 
-
+            var isHasNre = priceEvaluation.IsHasNre != null && priceEvaluation.IsHasNre == false;
 
             var otherCostItem2List = new List<OtherCostItem2List>
             {
@@ -1053,7 +1055,7 @@ namespace Finance.PriceEval
                     ItemName = MoldCosts,
                     Total = data.MouldInventoryTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfMouldCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfMouldCost
                 },
                 new OtherCostItem2List
                 {
@@ -1061,7 +1063,7 @@ namespace Finance.PriceEval
                     ItemName = FixtureCost,
                     Total = data.FixtureCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfFixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfFixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1069,7 +1071,7 @@ namespace Finance.PriceEval
                     ItemName = ToolCost,
                     Total = data.ToolingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FrockCost
+                    IsShare =isHasNre?false: priceEvaluation.FrockCost
                 },
                 new OtherCostItem2List
                 {
@@ -1077,7 +1079,7 @@ namespace Finance.PriceEval
                     ItemName = InspectionCost,
                     Total = data.QAQCDepartmentsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.FixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1085,7 +1087,7 @@ namespace Finance.PriceEval
                     ItemName = SpecializedEquipmentCost,
                     Total = data.ProductionEquipmentCost.Where(p=>p.DeviceStatusName=="专用").Sum(p=>p.Cost),//data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfEquipmentCost
+                    IsShare = isHasNre?false:priceEvaluation.AllocationOfEquipmentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1093,7 +1095,7 @@ namespace Finance.PriceEval
                     ItemName = ExperimentCost,
                     Total = data.LaboratoryFeeModelsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.ExperimentCost
+                    IsShare = isHasNre?false:priceEvaluation.ExperimentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1101,7 +1103,7 @@ namespace Finance.PriceEval
                     ItemName = TestSoftwareCost,
                     Total = data.SoftwareTestingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TestCost
+                    IsShare = isHasNre?false:priceEvaluation.TestCost
                 },
                  new OtherCostItem2List
                 {
@@ -1109,7 +1111,7 @@ namespace Finance.PriceEval
                     ItemName =OtherExpensesCost,
                     Total = data.RestsCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.OtherCost
+                    IsShare = isHasNre?false:priceEvaluation.OtherCost
                 },
                   new OtherCostItem2List
                 {
@@ -1117,7 +1119,7 @@ namespace Finance.PriceEval
                     ItemName = TravelCost,
                     Total = data.TravelExpenseTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TravelCost
+                    IsShare = isHasNre?false:priceEvaluation.TravelCost
                 },
 
                 new OtherCostItem2List
@@ -1246,6 +1248,12 @@ namespace Finance.PriceEval
             //计算-成本项目
             var costItem = electronicAndStructureList.GroupBy(x => x.SuperType)
                 .Select(p => new LossCost { EditId = p.Key, Id = year, Name = p.Key, WastageCost = p.Sum(o => o.Loss), MoqShareCount = p.Sum(o => o.MoqShareCount) }).ToList();//只有损耗，还要增加分摊
+
+            if (year == 0)
+            {
+                //全生命周期，改成算入修改项
+                isChange = true;
+            }
 
 
             if (isChange)
@@ -1383,14 +1391,15 @@ namespace Finance.PriceEval
                             Loss = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.Loss * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity) * p.Key.AssemblyCount.To<decimal>(),
                             InputCount = p.Sum(o => o.InputCount),
                             PurchaseCount = p.Sum(o => o.PurchaseCount),
-                            //MoqShareCount = p.Key.MoqShareCount,
-                            MoqShareCount = p.MinBy(p => p.Year).MoqShareCount,
+                            //MoqShareCount = p.MinBy(p => p.Year).MoqShareCount,
+                            MoqShareCount = p.Sum(o => o.MoqShareCount * o.Quantity) / p.Sum(o => o.Quantity),
                             Moq = p.Key.Moq,
                             AvailableInventory = p.Key.AvailableInventory,
                             Remarks = p.Key.Remarks,
                             MaterialPriceCyn = p.Key.AssemblyCount == 0 ? 0 : p.Sum(o => o.MaterialPrice * o.ExchangeRate * o.AssemblyCount.To<decimal>() * o.Quantity) / p.Sum(o => p.Key.AssemblyCount.To<decimal>() * o.Quantity), //* p.Key.AssemblyCount.To<decimal>(),
                             ModificationComments = p.FirstOrDefault()?.ModificationComments,
-                            TotalMoneyCynNoCustomerSupply = p.Sum(o => o.TotalMoneyCynNoCustomerSupply * o.Quantity) / p.Sum(o => o.Quantity)
+                            TotalMoneyCynNoCustomerSupply = p.Sum(o => o.TotalMoneyCynNoCustomerSupply * o.Quantity) / p.Sum(o => o.Quantity),
+                            IsCustomerSupply = p.MinBy(o => o.Year).IsCustomerSupply,
                         }).ToList();
                     foreach (var item in dto)
                     {
@@ -1398,7 +1407,7 @@ namespace Finance.PriceEval
                         item.MaterialPrice = item.MaterialPriceCyn / item.SopExchangeRate;
                         item.LossRate = item.TotalMoneyCyn == 0 ? 0 : item.Loss / item.TotalMoneyCyn;
                         item.MaterialCost = item.TotalMoneyCyn + item.Loss;
-                        item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
+                        //item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
 
                     }
                     return dto.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
@@ -1535,7 +1544,7 @@ namespace Finance.PriceEval
                     {
                         item.Year = year;
                         item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
-                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.Currency == item.ExchangeRateId ? customerTargetPrice.ExchangeRate : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
+                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not null && customerTargetPrice.ExchangeRate is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.ExchangeRate is not 0 && customerTargetPrice.Currency == item.ExchangeRateId ? customerTargetPrice.ExchangeRate.Value : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
                         item.MaterialPriceCyn = item.MaterialPrice * item.ExchangeRate;  //GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
                         item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
@@ -1546,7 +1555,7 @@ namespace Finance.PriceEval
                         item.PurchaseCount = item.AvailableInventory > item.InputCount ? 0 : ((item.InputCount - item.AvailableInventory) > item.Moq ? (item.Moq == 0 ? 0 : Formula(item)) : item.Moq);
                         item.MoqShareCount = (item.Moq == 0 || item.InputCount == 0) ? 0 : ((item.PurchaseCount - item.InputCount) < 0 ? 0 : (item.PurchaseCount - item.InputCount) * item.MaterialPriceCyn / item.InputCount);
 
-                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);
+                        var bomIsCustomerSupplyFirst = bomIsCustomerSupply?.FirstOrDefault(p => p.Id == item.Id);
                         item.IsCustomerSupply = (bomIsCustomerSupply == null || bomIsCustomerSupplyFirst == null) ? false : bomIsCustomerSupplyFirst.IsCustomerSupply;
                         item.TotalMoneyCynNoCustomerSupply = item.IsCustomerSupply ? 0 : item.TotalMoneyCyn;
 
@@ -1627,6 +1636,10 @@ namespace Finance.PriceEval
             //全生命周期处理
             if (input.Year == PriceEvalConsts.AllYear)
             {
+                //全生命周期，改成算入修改项
+                isChange = true;
+
+
                 #region 组测
 
                 //获取总年数
@@ -2437,6 +2450,9 @@ namespace Finance.PriceEval
 
             if (input.Year == PriceEvalConsts.AllYear)
             {
+                //全生命周期，改成算入修改项
+                isChange = true;
+
                 var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
                                                join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
                                                where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == solution.Productld
@@ -2575,6 +2591,12 @@ namespace Finance.PriceEval
         /// <returns></returns>
         private async Task<QualityCostListDto> GetQualityCostPrivate(GetOtherCostItemInput input, bool isChange = true)
         {
+            if (input.Year == 0)
+            {
+                //全生命周期，改成算入修改项
+                isChange = true;
+            }
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var gradientModel = await _gradientModelRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.ProductId == solution.Productld);
 
@@ -3122,7 +3144,7 @@ namespace Finance.PriceEval
             dtoAll.LogisticsFee = dtoAll.OtherCostItem.LogisticsFee;
             dtoAll.ProductCategory = dtoAll.OtherCostItem.ProductCategory;
             dtoAll.CostProportion = dtoAll.OtherCostItem.CostProportion;
-            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion}%";
+            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion * 100}%";
             dtoAll.QualityCost = dtoAll.OtherCostItem.QualityCost;
             dtoAll.AccountingPeriod = dtoAll.OtherCostItem.AccountingPeriod;
             dtoAll.CapitalCostRate = dtoAll.OtherCostItem.CapitalCostRate;
@@ -3146,7 +3168,7 @@ namespace Finance.PriceEval
 
 
             dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCyn);
-            dtoAll.TotalMoneyCynCount = dtoAll.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+            dtoAll.TotalMoneyCynNoCustomerSupply = dtoAll.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
 
             dtoAll.LossCount = dtoAll.Material.Sum(p => p.Loss);
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
@@ -3164,7 +3186,7 @@ namespace Finance.PriceEval
         {
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
 
-            var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? null : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
+            var bomIsCustomerSupply = priceEvaluation.BomIsCustomerSupplyJson.IsNullOrWhiteSpace() ? new List<BomIsCustomerSupply>() : priceEvaluation.BomIsCustomerSupplyJson.FromJsonString<List<BomIsCustomerSupply>>();
             foreach (var item in input.BomIsCustomerSupplyList)
             {
                 var db = bomIsCustomerSupply.FirstOrDefault(p => p.Id == item.Id);

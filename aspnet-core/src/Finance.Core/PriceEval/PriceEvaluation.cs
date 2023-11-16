@@ -353,6 +353,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// BOM是否客供Json
         /// </summary>
+        [Column(TypeName = "CLOB")]
         public virtual string BomIsCustomerSupplyJson { get; set;}
     }
 }

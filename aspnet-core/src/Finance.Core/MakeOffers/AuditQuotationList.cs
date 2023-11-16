@@ -23,5 +23,15 @@ namespace Finance.MakeOffers
         /// </summary>
         [Column(TypeName = "CLOB")]
         public string AuditQuotationListJson { get; set; }
+        /// <summary>
+        /// 版本
+        /// </summary>
+        public int version { get; set; }
+        
+        /// <summary>
+        /// 1 营销部审批、总经理审批1、总经理2
+        /// </summary>
+        public int ntype { get; set; }
+
     }
 }
