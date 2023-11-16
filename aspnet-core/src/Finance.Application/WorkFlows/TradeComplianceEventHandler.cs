@@ -260,6 +260,11 @@ namespace Finance.WorkFlows
                             await _nrePricingAppService.GetProductDepartmentConfigurationState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+                        if (eventData.Entity.NodeId == "主流程_NRE_可靠性实验费录入")
+                        {
+                            await _nrePricingAppService.GetExperimentItemsConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                        }
+
                         if (eventData.Entity.NodeId == "主流程_归档")
                         {
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);

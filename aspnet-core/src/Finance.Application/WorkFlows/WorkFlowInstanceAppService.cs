@@ -109,6 +109,18 @@ namespace Finance.WorkFlows
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
+        public async Task TestLine(long id)
+        {
+            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 459);
+
+            var route = await GetNodeRoute(id, 11484);
+            if (route.Any())
+            {
+                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
+                    .SelectMany(p => p).Where(p => p != null).DistinctBy(p => p.Id).ToList();
+            }
+        }
+
         /// <summary>
         /// 开启一个工作流实例
         /// </summary>
@@ -426,12 +438,11 @@ namespace Finance.WorkFlows
                         //退回逻辑，如果被激活的节点和目标节点的连线，类型是退回连线，就把两者之间所有可能的路径，都设置为已重置
                         if (line.LineType == LineType.Reset)
                         {
-
-
-                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id);
+                            var route = await GetNodeRoute(nodeInstance.FirstOrDefault(p => p.NodeId == line.TargetNodeId).Id, nodeInstance.FirstOrDefault(p => p.NodeId == line.SoureNodeId).Id);
                             if (route.Any())
                             {
-                                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId))).SelectMany(p => p);
+                                var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
+                                    .SelectMany(p => p).Where(p => p != null).DistinctBy(p => p.Id);
                                 lines.ForEach(p => p.NodeInstanceStatus = NodeInstanceStatus.Reset);
                             }
                         }
@@ -912,6 +923,9 @@ namespace Finance.WorkFlows
             {
                 if (data.Select(p => p.Id).Any(p => p == targetNodeInstanceId))
                 {
+
+                    pathNode.Add(targetNodeInstance);
+
                     paths.Add(pathNode);
                     return true;
                 }
@@ -920,7 +934,7 @@ namespace Finance.WorkFlows
                     var result = false;
                     foreach (var item in data)
                     {
-                        result = await IsHasTargetNode(item, targetNodeInstance, paths, pathNode);
+                        result = await IsHasTargetNode(item, targetNodeInstance, paths, new List<NodeInstance>(pathNode));//pathNode
                     }
                     return result;
                 }
@@ -933,24 +947,16 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task<List<NodeInstance>> GetTargetNodeByNodeId(long nodeInstanceId)
         {
-            //try
-            //{
             var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
 
             var data = from l in _lineInstanceRepository.GetAll()
                        join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
                        where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
-                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
+                       && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && l.LineType != LineType.Reset && l.FinanceDictionaryDetailId != FinanceConsts.YesOrNo_No
                        select n;
-            return await data.ToListAsync();
+            var result = await data.ToListAsync();
 
-
-            //}
-            //catch (Exception e)
-            //{
-
-            //    throw;
-            //}
+            return result;
         }
 
 
