@@ -303,7 +303,7 @@ namespace Finance.NerPricing
                 PricingFormDto pricingFormDto = new PricingFormDto();
                 //开始行
                 int StartLine = 5;
-                int index = 0;             
+                int index = 0;
                 if (System.IO.Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
                 using (var memoryStream = new MemoryStream())
                 {
@@ -313,115 +313,73 @@ namespace Finance.NerPricing
                     var workbook = new XSSFWorkbook(memoryStream);
                     // 获取第一个工作表
                     var sheet = workbook.GetSheetAt(0);
-
-                 
                     pricingFormDto.HandPieceCost = new();//手板件实例化
+                    int[] HandPieceCost = new int[2];
                     pricingFormDto.MouldInventory = new();//模具清单(模具费用)
+                    int[] MouldInventory = new int[2];
                     pricingFormDto.ToolingCost = new();//工装费用
+                    int[] ToolingCost = new int[2];
                     pricingFormDto.ProjectName = sheet.GetRow(StartLine).GetCell(2).ToString();//获取项目名称
                     pricingFormDto.ClientName = sheet.GetRow(StartLine).GetCell(4).ToString();//获取客户名称
                     pricingFormDto.RequiredCapacity = sheet.GetRow(StartLine).GetCell(6).ToString();//获取产能需求   
                     // 遍历行
                     for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
                     {
-                        var row = sheet.GetRow(rowIndex);                        
-                        string ExpenseName = sheet.GetRow(rowIndex).GetCell(2).ToString();                       
+                        var row = sheet.GetRow(rowIndex);
+                        string ExpenseName = sheet.GetRow(rowIndex).GetCell(2).ToString();
+                        string ExpenseNameHJ = sheet.GetRow(rowIndex).GetCell(5).ToString();
                         if (ExpenseName.Equals("手板件费用"))
-                        {                          
-                         
-                        }
-                        if (ExpenseName.Equals("手板件费用合计\r\n"))
                         {
-
+                            HandPieceCost[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("手板件费用合计"))
+                        {
+                            HandPieceCost[1] = rowIndex - 1;
                         }
                         if (ExpenseName.Equals("模具费用"))
                         {
-                         
+                            MouldInventory[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("模具费用合计"))
+                        {
+                            MouldInventory[1] = rowIndex - 1;
                         }
                         if (ExpenseName.Equals("工装费用"))
                         {
-                           
+                            ToolingCost[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("工装费用合计"))
+                        {
+                            ToolingCost[1] = rowIndex - 1;
                         }
                         if (ExpenseName.Equals("治具费用"))
                         {
-                          
+
                         }
                         if (ExpenseName.Equals("检具费用"))
                         {
-                          
+
                         }
                         if (ExpenseName.Equals("生产设备费用"))
                         {
-                          
+
                         }
                         if (ExpenseName.Equals("实验费用"))
                         {
-                           
+
                         }
                         if (ExpenseName.Equals("测试软件费用"))
                         {
-                           
+
                         }
                         if (ExpenseName.Equals("差旅费"))
                         {
-                            
+
                         }
                         if (ExpenseName.Equals("其他费用"))
                         {
-                           
-                        }
-                        switch (index)
-                        {
-                            case 1:
-                                {
-                                    //var PartName = rowOne.GetCell(2).ToString();
-                                    //var PartNumber = rowOne.GetCell(3).ToString();
-                                    //var UnitPrice = Convert.ToDecimal(rowOne.GetCell(4).ToString());
-                                    //var Quantity = Convert.ToInt32(rowOne.GetCell(5).ToString());
-                                    //var Cost = Convert.ToDecimal(rowOne.GetCell(6).ToString());
-                                    //var Remark = rowOne.GetCell(7).ToString();
-                                    //pricingFormDto.HandPieceCost.Add(new HandPieceCostModel() { PartName = PartName, PartNumber = PartNumber, UnitPrice = UnitPrice, Quantity = Quantity, Cost = Cost, Remark = Remark });
-                                    
-                                }                              
-                                break;
-                            case 2:
-                                {
-                                    //var ModelName = rowOne.GetCell(2).ToString();
-                                    //var MoldCavityCount = Convert.ToInt32(rowOne.GetCell(3).ToString());
-                                    //var Count = Convert.ToDouble(rowOne.GetCell(4).ToString());
-                                    //var UnitPrice = Convert.ToDecimal(rowOne.GetCell(5).ToString());
-                                    //var Cost = Convert.ToDecimal(rowOne.GetCell(6).ToString());
-                                    //var Remark = rowOne.GetCell(7).ToString();
-                                    //pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count , UnitPrice = UnitPrice , Cost = Cost , Remark = Remark });
-                                   
-                                }                               
-                                break;
-                            case 3:
-                                {
-                                    //var WorkName = rowOne.GetCell(2).ToString();                               
-                                    //var UnitPriceOfTooling = Convert.ToDecimal(rowOne.GetCell(4).ToString());
-                                    //var ToolingCount = Convert.ToInt32(rowOne.GetCell(5).ToString());
-                                    //var Cost = Convert.ToDecimal(rowOne.GetCell(6).ToString());
-                                    //var Remark = rowOne.GetCell(7).ToString();
-                                    //pricingFormDto.ToolingCost.Add(new() { WorkName = WorkName , UnitPriceOfTooling = UnitPriceOfTooling , ToolingCount = ToolingCount , Cost = Cost , Remark = Remark });
-                                  
-                                }
-                                break;
-                            case 4:
-                                break;
-                            case 5:
-                                break;
-                            case 6:
-                                break;
-                            case 7:
-                                break;
-                            case 8:
-                                break;
-                            case 9:
-                                break;
-                            case 10:
-                                break;
-                        }
+
+                        }              
                         if (row.GetCell(1).ToString().Equals("（不含税人民币）NRE 总费用"))
                         {
                             pricingFormDto.RMBAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
@@ -429,6 +387,43 @@ namespace Finance.NerPricing
                         if (row.GetCell(1).ToString().Equals("（不含税美金）NRE 总费用"))
                         {
                             pricingFormDto.USDAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
+                        }
+                    }
+                    // 遍历行
+                    for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                    {
+                        var row = sheet.GetRow(rowIndex);
+                        if (rowIndex >= HandPieceCost[0] && rowIndex <= HandPieceCost[1])
+                        {
+                            var PartName = row.GetCell(2).ToString();
+                            var PartNumber = row.GetCell(3).ToString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var Quantity = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.HandPieceCost.Add(new HandPieceCostModel() { PartName = PartName, PartNumber = PartNumber, UnitPrice = UnitPrice, Quantity = Quantity, Cost = Cost, Remark = Remark });
+
+                        }
+                        if (rowIndex >= MouldInventory[0] && rowIndex <= MouldInventory[1])
+                        {
+                            var ModelName = row.GetCell(2).ToString();
+                            var MoldCavityCount = Convert.ToInt32(row.GetCell(3).ToString());
+                            var Count = Convert.ToDouble(row.GetCell(4).ToString());
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count, UnitPrice = UnitPrice, Cost = Cost, Remark = Remark });
+
+                        }
+                        if (rowIndex >= ToolingCost[0] && rowIndex <= ToolingCost[1])
+                        {
+                            var WorkName = row.GetCell(2).ToString();
+                            var UnitPriceOfTooling = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var ToolingCount = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.ToolingCost.Add(new() { WorkName = WorkName, UnitPriceOfTooling = UnitPriceOfTooling, ToolingCount = ToolingCount, Cost = Cost, Remark = Remark });
+
                         }
                     }
                 }
