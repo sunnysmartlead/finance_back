@@ -48,4 +48,8 @@ public class SampleQuotation : FullAuditedEntity<long>
     /// 版本
     /// </summary>
     public int version { get; set; }
+    /// <summary>
+    /// 类别  0报价分析看板，1报价反馈
+    /// </summary>
+    public int ntype { get; set; }
 }

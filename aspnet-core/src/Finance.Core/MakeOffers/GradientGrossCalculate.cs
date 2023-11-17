@@ -80,5 +80,9 @@ public class GradientGrossCalculate : FullAuditedEntity<long>
     /// 本次报价剔除NRE分摊费用毛利率
     /// </summary>
     public decimal OfferNreGrossMargin { get; set; }
+    /// <summary>
+    /// 类别  0报价分析看板，1报价反馈
+    /// </summary>
+    public int ntype { get; set; }
 
 }
