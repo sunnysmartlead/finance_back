@@ -1484,7 +1484,7 @@ namespace Finance.Processes
                     if (!Capacity.Equals(0.000M))
                     {
                         decimal xtftl = 0;
-                        decimal Xtsl = Math.Ceiling(Math.Round(lineQuantity / Capacity, 2));
+                        decimal Xtsl = Math.Ceiling(lineQuantity / Capacity);
                         //线体分摊率
                         if (!Xtsl.Equals(0.000M))
                         {
