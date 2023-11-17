@@ -108,6 +108,12 @@ namespace Finance.MakeOffers
         /// 单车数量
         /// </summary>
         public int carNum { get; set; }
+        
+        
+        /// <summary>
+        /// 类别  0报价分析看板，1报价反馈
+        /// </summary>
+        public int ntype { get; set; }
     }
 }
 

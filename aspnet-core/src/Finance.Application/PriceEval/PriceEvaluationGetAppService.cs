@@ -1045,7 +1045,7 @@ namespace Finance.PriceEval
             //(sopYear + yearCount)表示分摊截止年份，input.Year减去它，如果不为负数，表示当前年份可分摊
             var isHasCost = IsHasCostFunc(input.Year, input.UpDown, sopYear.Year, yearCount);//input.Year - (sopYear.Year + yearCount) < 0;
 
-
+            var isHasNre = priceEvaluation.IsHasNre != null && priceEvaluation.IsHasNre == false;
 
             var otherCostItem2List = new List<OtherCostItem2List>
             {
@@ -1055,7 +1055,7 @@ namespace Finance.PriceEval
                     ItemName = MoldCosts,
                     Total = data.MouldInventoryTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfMouldCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfMouldCost
                 },
                 new OtherCostItem2List
                 {
@@ -1063,7 +1063,7 @@ namespace Finance.PriceEval
                     ItemName = FixtureCost,
                     Total = data.FixtureCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfFixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfFixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1071,7 +1071,7 @@ namespace Finance.PriceEval
                     ItemName = ToolCost,
                     Total = data.ToolingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FrockCost
+                    IsShare =isHasNre?false: priceEvaluation.FrockCost
                 },
                 new OtherCostItem2List
                 {
@@ -1079,7 +1079,7 @@ namespace Finance.PriceEval
                     ItemName = InspectionCost,
                     Total = data.QAQCDepartmentsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.FixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1087,7 +1087,7 @@ namespace Finance.PriceEval
                     ItemName = SpecializedEquipmentCost,
                     Total = data.ProductionEquipmentCost.Where(p=>p.DeviceStatusName=="专用").Sum(p=>p.Cost),//data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfEquipmentCost
+                    IsShare = isHasNre?false:priceEvaluation.AllocationOfEquipmentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1095,7 +1095,7 @@ namespace Finance.PriceEval
                     ItemName = ExperimentCost,
                     Total = data.LaboratoryFeeModelsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.ExperimentCost
+                    IsShare = isHasNre?false:priceEvaluation.ExperimentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1103,7 +1103,7 @@ namespace Finance.PriceEval
                     ItemName = TestSoftwareCost,
                     Total = data.SoftwareTestingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TestCost
+                    IsShare = isHasNre?false:priceEvaluation.TestCost
                 },
                  new OtherCostItem2List
                 {
@@ -1111,7 +1111,7 @@ namespace Finance.PriceEval
                     ItemName =OtherExpensesCost,
                     Total = data.RestsCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.OtherCost
+                    IsShare = isHasNre?false:priceEvaluation.OtherCost
                 },
                   new OtherCostItem2List
                 {
@@ -1119,7 +1119,7 @@ namespace Finance.PriceEval
                     ItemName = TravelCost,
                     Total = data.TravelExpenseTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TravelCost
+                    IsShare = isHasNre?false:priceEvaluation.TravelCost
                 },
 
                 new OtherCostItem2List

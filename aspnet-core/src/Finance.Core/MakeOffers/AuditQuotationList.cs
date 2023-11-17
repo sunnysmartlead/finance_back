@@ -32,6 +32,10 @@ namespace Finance.MakeOffers
         /// 1 营销部审批、总经理审批1、总经理2
         /// </summary>
         public int ntype { get; set; }
+        /// <summary>
+        /// 1 类别  0报价分析看板，1报价反馈
+        /// </summary>
+        public int nsource { get; set; }
 
     }
 }
