@@ -781,7 +781,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     /// <summary>
     /// 用于对外报价NRE清单
-    ///  /// <param name="auditFlowId"></param>
+    ///<param name="auditFlowId"></param>
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
