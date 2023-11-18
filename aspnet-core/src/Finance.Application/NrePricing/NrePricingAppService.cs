@@ -23,6 +23,8 @@ using Finance.ProductDevelopment;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
+using Finance.PropertyDepartment.UnitPriceLibrary.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +34,7 @@ using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using Spire.Xls;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -269,10 +272,10 @@ namespace Finance.NerPricing
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
             {
                 ExperimentItemsModel experiment = await GetReturnExperimentItemsSingle(QuoteAuditFlowId, item.QuoteSolutionId);
-                List<EnvironmentalExperimentFee> environmentalExperimentFees = ObjectMapper.Map<List<EnvironmentalExperimentFee>>(experiment.EnvironmentalExperimentFeeModels);           
-                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0;p.SolutionId= item.SolutionId; return p; }).ToList();
+                List<EnvironmentalExperimentFee> environmentalExperimentFees = ObjectMapper.Map<List<EnvironmentalExperimentFee>>(experiment.EnvironmentalExperimentFeeModels);
+                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
                 await _resourceEnvironmentalExperimentFee.BulkInsertAsync(environmentalExperimentFees);
-            }            
+            }
         }
         /// <summary>
         /// 模具费快速核报价
@@ -289,7 +292,147 @@ namespace Finance.NerPricing
                 List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
                 MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
                 await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
-            }               
+            }
+        }
+        #endregion
+        #region 快速核报价之直接上传
+        public async Task<PricingFormDto> FastUploadNreExecl(IFormFile filename)
+        {
+            try
+            {
+                PricingFormDto pricingFormDto = new PricingFormDto();
+                //开始行
+                int StartLine = 5;
+                int index = 0;
+                if (System.IO.Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
+                using (var memoryStream = new MemoryStream())
+                {
+                    await filename.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0;
+                    // 创建工作簿
+                    var workbook = new XSSFWorkbook(memoryStream);
+                    // 获取第一个工作表
+                    var sheet = workbook.GetSheetAt(0);
+                    pricingFormDto.HandPieceCost = new();//手板件实例化
+                    int[] HandPieceCost = new int[2];
+                    pricingFormDto.MouldInventory = new();//模具清单(模具费用)
+                    int[] MouldInventory = new int[2];
+                    pricingFormDto.ToolingCost = new();//工装费用
+                    int[] ToolingCost = new int[2];
+                    pricingFormDto.ProjectName = sheet.GetRow(StartLine).GetCell(2).ToString();//获取项目名称
+                    pricingFormDto.ClientName = sheet.GetRow(StartLine).GetCell(4).ToString();//获取客户名称
+                    pricingFormDto.RequiredCapacity = sheet.GetRow(StartLine).GetCell(6).ToString();//获取产能需求   
+                    // 遍历行
+                    for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                    {
+                        var row = sheet.GetRow(rowIndex);
+                        string ExpenseName = sheet.GetRow(rowIndex).GetCell(2).ToString();
+                        string ExpenseNameHJ = sheet.GetRow(rowIndex).GetCell(5).ToString();
+                        if (ExpenseName.Equals("手板件费用"))
+                        {
+                            HandPieceCost[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("手板件费用合计"))
+                        {
+                            HandPieceCost[1] = rowIndex - 1;
+                        }
+                        if (ExpenseName.Equals("模具费用"))
+                        {
+                            MouldInventory[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("模具费用合计"))
+                        {
+                            MouldInventory[1] = rowIndex - 1;
+                        }
+                        if (ExpenseName.Equals("工装费用"))
+                        {
+                            ToolingCost[0] = rowIndex + 2;
+                        }
+                        if (ExpenseNameHJ.Equals("工装费用合计"))
+                        {
+                            ToolingCost[1] = rowIndex - 1;
+                        }
+                        if (ExpenseName.Equals("治具费用"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("检具费用"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("生产设备费用"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("实验费用"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("测试软件费用"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("差旅费"))
+                        {
+
+                        }
+                        if (ExpenseName.Equals("其他费用"))
+                        {
+
+                        }              
+                        if (row.GetCell(1).ToString().Equals("（不含税人民币）NRE 总费用"))
+                        {
+                            pricingFormDto.RMBAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
+                        }
+                        if (row.GetCell(1).ToString().Equals("（不含税美金）NRE 总费用"))
+                        {
+                            pricingFormDto.USDAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
+                        }
+                    }
+                    // 遍历行
+                    for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                    {
+                        var row = sheet.GetRow(rowIndex);
+                        if (rowIndex >= HandPieceCost[0] && rowIndex <= HandPieceCost[1])
+                        {
+                            var PartName = row.GetCell(2).ToString();
+                            var PartNumber = row.GetCell(3).ToString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var Quantity = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.HandPieceCost.Add(new HandPieceCostModel() { PartName = PartName, PartNumber = PartNumber, UnitPrice = UnitPrice, Quantity = Quantity, Cost = Cost, Remark = Remark });
+
+                        }
+                        if (rowIndex >= MouldInventory[0] && rowIndex <= MouldInventory[1])
+                        {
+                            var ModelName = row.GetCell(2).ToString();
+                            var MoldCavityCount = Convert.ToInt32(row.GetCell(3).ToString());
+                            var Count = Convert.ToDouble(row.GetCell(4).ToString());
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count, UnitPrice = UnitPrice, Cost = Cost, Remark = Remark });
+
+                        }
+                        if (rowIndex >= ToolingCost[0] && rowIndex <= ToolingCost[1])
+                        {
+                            var WorkName = row.GetCell(2).ToString();
+                            var UnitPriceOfTooling = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var ToolingCount = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.ToolingCost.Add(new() { WorkName = WorkName, UnitPriceOfTooling = UnitPriceOfTooling, ToolingCount = ToolingCount, Cost = Cost, Remark = Remark });
+
+                        }
+                    }
+                }
+                return pricingFormDto;
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }
         }
         #endregion
         /// <summary>
@@ -595,7 +738,7 @@ namespace Finance.NerPricing
             {
                 MouldInventoryPartModel mouldInventoryPartModel = new();//  Nre核价 模组清单模型
                 mouldInventoryPartModel.SolutionId = part.SolutionId;//方案的 Id                              
-                List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));             
+                List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));
                 mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
                 var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
                 var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
@@ -603,8 +746,8 @@ namespace Finance.NerPricing
                 mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
-                    IsAllNull = false;                   
-                }                             
+                    IsAllNull = false;
+                }
             }
             //循环每一个方案
             foreach (SolutionModel part in partModels)
@@ -637,11 +780,11 @@ namespace Finance.NerPricing
 
                 //mouldInventory = mouldInventory.Except(mouldInventoryEquals).Distinct().ToList();//差集
                 mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
-                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p=>p.StructuralId).ToList();
-                var id= mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p=>p.Id).ToList();
-                await _resourceMouldInventory.DeleteAsync(p=> id.Contains(p.Id));
+                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
+                var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
+                await _resourceMouldInventory.DeleteAsync(p => id.Contains(p.Id));
 
-                mouldInventory = mouldInventory.Where(p=>!id.Contains(p.Id)).ToList();                
+                mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();
                 foreach (MouldInventoryModel item in mouldInventoryPartModel.MouldInventoryModels)
                 {
                     MouldInventory mouldInventory1 = mouldInventory.FirstOrDefault(p => p.StructuralId.Equals(item.StructuralId));
@@ -663,7 +806,7 @@ namespace Finance.NerPricing
                 mouldInventoryPartModel.IsAllNull = IsAllNull;
                 mouldInventoryPartModels.Add(mouldInventoryPartModel);
             }
-           
+
             return mouldInventoryPartModels.FirstOrDefault();
         }
 
@@ -2039,7 +2182,7 @@ namespace Finance.NerPricing
                                                 Uph = a.Uph,
                                                 Value = (decimal)a.Value,
                                                 Year = (int)b.Year,
-                                                UpDown=b.UpDown,
+                                                UpDown = b.UpDown,
                                                 Description = a.Uph.ParseEnum<OperateTypeCode>().GetDescription()
                                             }).ToList();
                 if (result.Count is not 0)
@@ -2068,7 +2211,7 @@ namespace Finance.NerPricing
                     {
                         //获取值最大的那年
                         var maxXtsl = xtsl.OrderByDescending(p => p.Value).FirstOrDefault();
-                        result = result.Where(p => p.Year.Equals(maxXtsl.Year)&&p.UpDown.Equals(maxXtsl.UpDown)).ToList();
+                        result = result.Where(p => p.Year.Equals(maxXtsl.Year) && p.UpDown.Equals(maxXtsl.UpDown)).ToList();
                     }
                 }
 
@@ -2090,7 +2233,7 @@ namespace Finance.NerPricing
                 modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p => p.Cost);
                 //模具费用
                 //List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                modify.MouldInventory =(await GetInitialResourcesManagementSingle(auditFlowId, solutionId)).MouldInventoryModels;
+                modify.MouldInventory = (await GetInitialResourcesManagementSingle(auditFlowId, solutionId)).MouldInventoryModels;
                 foreach (MouldInventoryModel item in modify.MouldInventory)
                 {
                     User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
@@ -2107,7 +2250,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd/100
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd / 100
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
@@ -2117,7 +2260,7 @@ namespace Finance.NerPricing
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
-                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd/100,
+                    Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd / 100,
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
                 modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
@@ -2225,14 +2368,14 @@ namespace Finance.NerPricing
                                                                             ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                         }).ToList();
                 ProcessHoursEnterTotalDto porp = await _processHoursEnterAppService.GetProcessHoursEnterTotal(new GetProcessHoursEntersInput() { AuditFlowId = auditFlowId, SolutionId = solutionId, MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
-                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice* UphAndValuesd/100 } } };
+                List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice * UphAndValuesd / 100 } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
-               
+
 
                 //测试软件费用=>追溯软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware* UphAndValuesd/100 });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 1, SoftwareProject = "追溯软件费用", Cost = porp.TraceabilitySoftware * UphAndValuesd / 100 });
                 //测试软件费用=>开图软件费用
-                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp .SoftwarePrice* UphAndValuesd/100 });
+                modify.SoftwareTestingCost.Add(new SoftwareTestingCotsModel { Id = processHours.FirstOrDefault().Id + 2, SoftwareProject = "开图软件费用", Cost = porp.SoftwarePrice * UphAndValuesd / 100 });
                 modify.SoftwareTestingCostTotal = modify.SoftwareTestingCost.Sum(p => p.Cost);
                 //差旅费
                 List<TravelExpenseModel> travelExpenses = _resourceTravelExpense.GetAll().Where(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))
@@ -2333,8 +2476,8 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelitionOfCostModificationItemsForHandBoards(long Id)
-        {                         
-            await _handPieceCostModify.HardDeleteAsync(p=>p.Id.Equals(Id));
+        {
+            await _handPieceCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
         /// 模具费用修改项添加
@@ -2351,7 +2494,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelMoldCostModificationItem(long Id)
-        {            
+        {
             await _mouldInventoryModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2369,7 +2512,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelToolingCostModificationItem(long Id)
-        {          
+        {
             await _toolingCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2387,7 +2530,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelitionOfFixtureCostModificationItem(long Id)
-        {         
+        {
             await _fixtureCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2405,7 +2548,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelInspectionToolCostModificationItem(long Id)
-        {           
+        {
             await _inspectionToolCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2423,7 +2566,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelProductionEquipmentCostModificationItem(long Id)
-        {         
+        {
             await _productionEquipmentCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2441,7 +2584,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelExperimentalFeeModificationItem(long Id)
-        {            
+        {
             await _experimentalExpensesModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2459,7 +2602,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelingModificationItemsForTestingSoftwareCosts(long Id)
-        {         
+        {
             await _testingSoftwareCostsModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2477,7 +2620,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelTravelExpenseModificationItem(long Id)
-        {            
+        {
             await _travelExpenseModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>
@@ -2495,7 +2638,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         [HttpGet]
         public async Task DelOtherExpenseModificationItemsAdded(long Id)
-        {            
+        {
             await _restsCostModify.HardDeleteAsync(p => p.Id.Equals(Id));
         }
         /// <summary>

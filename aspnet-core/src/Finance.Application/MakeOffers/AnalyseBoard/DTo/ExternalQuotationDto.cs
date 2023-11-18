@@ -98,42 +98,42 @@ public class ExternalQuotationDto
     /// <summary>
     /// 制作
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("制作")]
     public virtual string Make { get; set; }
     /// <summary>
     /// 审核
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("审核")]
     public virtual string ToExamine { get; set; }
     /// <summary>
     /// 记录编号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("记录编号")]
     public virtual string RecordNo { get; set; }
     /// <summary>
     /// 户名
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("户名")]
     public virtual string AccountName { get; set; }
     /// <summary>
     /// 税号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("税号")]
     public virtual string DutyParagraph { get; set; }
     /// <summary>
     /// 开户行
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("开户行")]
     public virtual string BankOfDeposit { get; set; }
     /// <summary>
     /// 账号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("账号")]
     public virtual string AccountNumber { get; set; }
     /// <summary>
     /// 地址
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("地址")]
     public virtual string Address { get; set; }
     /// <summary>
     /// 报价次数
