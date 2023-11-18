@@ -629,7 +629,7 @@ namespace Finance.MakeOffers.AnalyseBoard
                 #endregion
                 #region 某个模组核价表全生命周期 文件保存
                 //核价表
-                MemoryStream memoryStreamPricing = null;//await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(new PriceEvaluationTableDownloadStreamInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id, IsAll=false });
+                MemoryStream memoryStreamPricing = await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(new PriceEvaluationTableDownloadStreamInput() { AuditFlowId=auditFlow,  IsAll=false });
                 //将核价表全保存到硬盘中
                 FileName="核价表.xlsx";
                 IFormFile file = new FormFile(memoryStreamPricing, 0, memoryStreamPricing.Length, FileName, FileName);

@@ -313,3 +313,25 @@ public string MessageName { get; set; }
 public List<YearValue> YearValues{ get; set; }
 
 }
+
+
+
+public class MotionGradientSecondModel{
+    /// <summary>
+    /// 梯度
+    /// </summary>
+    public  string gradient { get; set; }
+    /// <summary>
+    /// 标题
+    /// </summary>
+    public string key { get; set; }
+
+    /// <summary>
+    /// 值
+    /// </summary>
+    public string value { get; set; }
+
+
+ 
+
+}
