@@ -20,5 +20,9 @@ public class AnalyseBoardSecondInputDto
     /// 报价次数
     /// </summary>
     public int ntime { get; set; }
+    /// <summary>
+    /// 0 报价分析看板，1 报价反馈
+    /// </summary>
+    public int ntype { get; set; }
   
 }
