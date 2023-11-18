@@ -2,6 +2,7 @@
 using Abp.Authorization;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
+using Finance.Entering;
 using Finance.NerPricing;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
@@ -34,16 +35,21 @@ namespace Finance.QuickQuotationReview
         /// </summary>
         private NrePricingAppService _nrePricingAppService;
         /// <summary>
+        /// 单子单价录入服务
+        /// </summary>
+        private ResourceEnteringAppService _resourceEnteringAppService;
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="priceEvaluationAppService"></param>
         /// <param name="applyAuditAppService"></param>
         /// <param name="nrePricingAppService"></param>
-        public QuickQuotationReviewAppService(PriceEvaluationAppService priceEvaluationAppService, DemandApplyAuditAppService applyAuditAppService, NrePricingAppService nrePricingAppService)
+        public QuickQuotationReviewAppService(PriceEvaluationAppService priceEvaluationAppService, DemandApplyAuditAppService applyAuditAppService, NrePricingAppService nrePricingAppService, ResourceEnteringAppService resourceEnteringAppService)
         {
             _priceEvaluationAppService = priceEvaluationAppService;
             _demandApplyAuditAppService = applyAuditAppService;
             _nrePricingAppService = nrePricingAppService;
+            _resourceEnteringAppService = resourceEnteringAppService;
         }
 
         /// <summary>
@@ -68,6 +74,10 @@ namespace Finance.QuickQuotationReview
             await _nrePricingAppService.FastPostExperimentItemsSingle(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //NRE模具费
             await _nrePricingAppService.FastPostResourcesManagementSingle(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //电子单价录入
+            await _resourceEnteringAppService.FastPostElectronicMaterialEntering(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //结构单价录入
+            await _resourceEnteringAppService.FastPostStructuralMemberEntering(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             return priceEvaluationStartResult;
         }
         public class dto
