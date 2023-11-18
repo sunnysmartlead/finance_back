@@ -1553,7 +1553,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<YearOrValueMode> yearOrValueKvModes = electronicDto.InTheRate.FirstOrDefault(p => p.Kv.Equals(sysCurr.Kv)).YearOrValueModes;
                     for (int i = 1; i < sysCurr.YearOrValueModes.Count; i++)
                     {
-                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value);
+                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value/100);
                     }
                 }
             }
@@ -1598,7 +1598,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                     List<YearOrValueMode> yearOrValueKvModes = structural.InTheRate.FirstOrDefault(p => p.Kv.Equals(sysCurr.Kv)).YearOrValueModes;
                     for (int i = 1; i < sysCurr.YearOrValueModes.Count; i++)
                     {
-                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value);
+                        sysCurr.YearOrValueModes[i].Value = sysCurr.YearOrValueModes[i - 1].Value * (1 - yearOrValueKvModes[i].Value/100);
                     }
                 }
             }
