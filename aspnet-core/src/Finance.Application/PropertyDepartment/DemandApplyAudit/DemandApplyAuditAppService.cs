@@ -87,7 +87,14 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _fileCommonService = fileCommonService;
         }
         #region 快速核报价内容
-        public async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId,long QuoteAuditFlowId)
+        /// <summary>
+        /// 核价需求审批快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        internal async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId,long QuoteAuditFlowId)
         {
             List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds = new();
             AuditEntering auditEntering = await AuditExport(QuoteAuditFlowId);
@@ -96,15 +103,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             if (!exists)
             {
                 throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
-            }
-            //方案表
-            await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
-            //设计方案
-            await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
+            }            
             // 核价团队  其中包含(核价人员以及对应完成时间)
             PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
             pricingTeam.AuditFlowId = AuditFlowId;
-            await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
+            pricingTeam.Id = 0;
+            await _resourcePricingTeam.InsertAsync(pricingTeam);
             #region 方案表
             // 营销部审核 方案表
             List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);

@@ -96,7 +96,7 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// <summary>
         /// 之前几轮的 本次报价的值
         /// </summary>
-        public List<decimal> OldOffer { get; set; }
+        public decimal OldOffer { get; set; }
         
         
         
