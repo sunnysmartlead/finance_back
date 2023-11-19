@@ -895,7 +895,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 long gradientid = 0;
                 foreach (var gradient in gradients)
                 {
-                    if (modelCount.Quantity < gradient.GradientValue)
+                    if (modelCount.Quantity <= gradient.GradientValue)
                     {
                         gradientid = gradient.Id;
                         break;
@@ -1593,7 +1593,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             long grad = 0;
             foreach (var gradient in gradients)
             {
-                if (qu < gradient.GradientValue)
+                if (qu  <=gradient.GradientValue)
                 {
                     grad = gradient.Id;
                     break;
@@ -2035,7 +2035,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             long grad = 0;
             foreach (var gradient in gradients)
             {
-                if (qu < gradient.GradientValue)
+                if (qu <= gradient.GradientValue)
                 {
                     grad = gradient.Id;
                     break;
@@ -3118,12 +3118,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<IActionResult> DownloadAuditQuotationList(long auditFlowId, int version)
     {
-        string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\新报价审批表模板.xlsx";
+        string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\报价审批表模板-含样品.xlsx";
         var au = await GetfinanceAuditQuotationList(auditFlowId, version, 1, 1);
         QuotationListSecondDto value = new QuotationListSecondDto();
         if (au is null)
         {
-            value = await QuotationListSecond(auditFlowId, version, 1);
+            value = await QuotationListSecond(auditFlowId, version, 0);
         }
         else
         {
@@ -3134,7 +3134,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             using (var memoryStream = new MemoryStream())
             {
-                MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/新报价审批模板.xlsx", value);
+                MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—含样品.xlsx", value);
                 return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
                 {
                     FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
