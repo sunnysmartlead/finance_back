@@ -5567,7 +5567,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
-    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId,
+    internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
         long numberOfQuotations)
     {
         ExternalQuotationDto external =
@@ -5586,10 +5586,26 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/报价单下载.xlsx", external);
 
+        return memoryStream;
+    }
+    /// <summary>
+    ///  下载对外报价单-流
+    /// </summary>
+    /// <returns></returns>
+    internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId,
+        long numberOfQuotations)
+    {  
+        MemoryStream memoryStream = await DownloadExternalQuotationStream(auditFlowId, solutionId, numberOfQuotations);
+    
         return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
             { FileDownloadName = "报价单下载.xlsx" };
     }
-
+    /// <summary>
+    /// 下载对外报价单
+    /// </summary>
+    /// <param name="processId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
     public async Task<CoreComponentAndNreDto> GetCoreComponentAndNreList(long processId, int version)
     {
         CoreComponentAndNreDto coreComponentAndNreDto = new();
