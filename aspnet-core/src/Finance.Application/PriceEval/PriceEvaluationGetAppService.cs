@@ -3024,31 +3024,38 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadStreamInput input)
+        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
         {
-            return null;
-            //if (input.IsAll)
-            //{
-            //    var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
-            //    DtoExcel(dtoAll);
-            //    var memoryStream = new MemoryStream();
-            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
-            //    return memoryStream;
-            //}
-            //else
-            //{
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+            var productId = solution.Productld;
+
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
+
+            DtoExcel(dtoAll);
+            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
+
+            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
+                .SelectAsync(async p =>
+                {
+                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
+                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
+                })).ToList();
+
+            var memoryStream = new MemoryStream();
 
 
-            //    var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
-
-            //    DtoExcel(dto);
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
 
 
-            //    var memoryStream2 = new MemoryStream();
+            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
-            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
-            //    return memoryStream2;
-            //}
+            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+
+            return memoryStream2;
         }
 
         private string GetYearName(YearType yearType)
@@ -3082,37 +3089,9 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            var solution = await _solutionRepository.GetAsync(input.SolutionId);
-            var productId = solution.Productld;
-
-            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
-
-            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
-
-            DtoExcel(dtoAll);
-            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
-
-            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
-                .SelectAsync(async p =>
-                {
-                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
-                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
-                })).ToList();
-
-            var memoryStream = new MemoryStream();
-
-
-            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
-
-
-            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
-
-            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
-            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+            var memoryStream2 = await PriceEvaluationTableDownloadStream(input);
 
             return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
-
         }
 
         /// <summary>
