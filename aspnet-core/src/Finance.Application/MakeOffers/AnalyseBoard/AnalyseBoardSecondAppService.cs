@@ -56,10 +56,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 流程流转服务
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
+
     /// <summary>
     /// 文件管理接口
     /// </summary>
     private readonly FileCommonService _fileCommonService;
+
+    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
 
     /// <summary>
     /// 核价部分服务
@@ -72,6 +75,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 报价方案组合
     /// </summary>
     private readonly IRepository<SolutionQuotation, long> _solutionQutation;
+
     /// <summary>
     /// 归档文件列表实体类
     /// </summary>
@@ -99,6 +103,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
         PriceEvaluationAppService priceEvaluationAppService,
         FileCommonService fileCommonService,
+        PriceEvaluationGetAppService priceEvaluationGetAppService,
         IRepository<DownloadListSave, long> financeDownloadListSave,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<NreQuotation, long> nreQuotation)
@@ -109,8 +114,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _resourceSchemeTable = resourceSchemeTable;
         _solutionQutation = solutionQutation;
         _flowAppService = flowAppService;
-        _fileCommonService=fileCommonService;
-                   _financeDownloadListSave=financeDownloadListSave;
+        _fileCommonService = fileCommonService;
+        _priceEvaluationGetAppService = priceEvaluationGetAppService;
+        _financeDownloadListSave = financeDownloadListSave;
 
         _priceEvaluationAppService = priceEvaluationAppService;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
@@ -412,14 +418,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.DownloadExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
     }
+
     /// <summary>
     ///  下载对外报价单-流
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    public async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId, long numberOfQuotations)
+    public async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
+        long numberOfQuotations)
     {
-        return await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlowId, solutionId, numberOfQuotations);
+        return await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlowId, solutionId,
+            numberOfQuotations);
     }
 
     /// <summary>
@@ -930,115 +939,122 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         await this.GetDownloadListSave(quotationListDto.AuditFlowId);
     }
+
     /// <summary>
     /// 归档文件列表保存
     /// </summary>
     /// <returns></returns>
     public async Task GetDownloadListSave(long auditFlow)
     {
-      
         string FileName = "";
-
-        /*
-        AuditFlow audit = await _financeAuditFlow.FirstOrDefaultAsync(p => p.Id.Equals(auditFlow));
-        //循环模组
-        List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlow));
-        foreach (ModelCount modelCount in modelCounts)
+        var audit = _financeDownloadListSave.FirstOrDefault(P => P.AuditFlowId == auditFlow);
+        if (audit is null)
         {
-            #region 某个模组核价表全生命周期 文件保存
+            var priceEvaluationStartInputResult =
+                await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlow);
+            // 报价审核表 文件保存
 
-            //核价表全生命周期
-            MemoryStream
-                memoryStreamPricingAll =
-                    null; // await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(new PriceEvaluationTableDownloadStreamInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id, IsAll=true });
-            //将核价表全生命周期保存到硬盘中
-            FileName = "核价表全生命周期.xlsx";
-            IFormFile fileAll = new FormFile(memoryStreamPricingAll, 0, memoryStreamPricingAll.Length, FileName,
-                FileName);
-            FileUploadOutputDto fileUploadOutputDtoAll = await _fileCommonService.UploadFile(fileAll);
-            //核价表全生命周期的路径和名称保存到
-            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+            var time = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow).Max(p => p.ntime);
+            var sols = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow && p.ntime == time);
+            foreach (var sol in sols)
             {
-                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
-                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDtoAll.FileUrl,
-                FileId = fileUploadOutputDtoAll.FileId
-            });
+                MemoryStream memoryStreamOffer =
+                    await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow, sol.version, 1,
+                        "报价审批表" + sol.version);
+                //报价审核表
+                //将报价审核表保存到硬盘中
+                FileName = "版本" + sol.version + "报价审核表.xlsx";
+                IFormFile fileOffer = new FormFile(memoryStreamOffer, 0, memoryStreamOffer.Length, FileName, FileName);
+                FileUploadOutputDto fileUploadOutputDtoOffer = await _fileCommonService.UploadFile(fileOffer);
+                //报价审核表的路径和名称保存到
 
-            #endregion
 
-            #region 某个模组核价表全生命周期 文件保存
-
-            /*
-            //核价表
-            MemoryStream memoryStreamPricing =
-                await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(
-                    new PriceEvaluationTableDownloadStreamInput() { AuditFlowId = auditFlow, IsAll = false });
-            //将核价表全保存到硬盘中
-            FileName = "核价表.xlsx";
-            IFormFile file = new FormFile(memoryStreamPricing, 0, memoryStreamPricing.Length, FileName, FileName);
-            FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
-            //核价表全的路径和名称保存到
-            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
-            {
-                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
-                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDto.FileUrl,
-                FileId = fileUploadOutputDto.FileId
-            });#1#
-
-            #endregion
-
-            #region 某个模组 Nre 核价表 文件保存
-
-            //核价表
-            MemoryStream
-                memoryStreamNre =
-                    null; // await _resourcePriceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id });
-            //将核价表保存到硬盘中
-            FileName = "Nre核价表.xlsx";
-            IFormFile fileNre = new FormFile(memoryStreamNre, 0, memoryStreamNre.Length, FileName, FileName);
-            FileUploadOutputDto fileUploadOutputDtoNre = await _fileCommonService.UploadFile(fileNre);
-            //核价表的路径和名称保存到
-            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
-            {
-                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
-                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDtoNre.FileUrl,
-                FileId = fileUploadOutputDtoNre.FileId
-            });
-
-            #endregion
-        }*/
-        var priceEvaluationStartInputResult =
-            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlow);
-        // 报价审核表 文件保存
-
-        var time = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow).Max(p => p.ntime);
-        var sols = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow && p.ntime == time);
-        foreach (var sol in sols)
-        {
-            MemoryStream memoryStreamOffer = await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow,sol.version,1,"报价审批表"+sol.version);
-            //报价审核表
-            //将报价审核表保存到硬盘中
-            FileName = "报价审核表.xlsx";
-            IFormFile fileOffer = new FormFile(memoryStreamOffer, 0, memoryStreamOffer.Length, FileName, FileName);
-            FileUploadOutputDto fileUploadOutputDtoOffer = await _fileCommonService.UploadFile(fileOffer);
-            //报价审核表的路径和名称保存到
-
-          var audit=  _financeDownloadListSave.FirstOrDefault(P => P.AuditFlowId == auditFlow);
-            
-            if (audit is not null)
-                
                 await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName, ProductName = "", ProductId = 0,
-                    FileName = "报价审批表"+sol.version, FilePath = fileUploadOutputDtoOffer.FileUrl,
+                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "", ProductId = 0,
+                    FileName = "版本" + sol.version + "报价审批表", FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
 
+
+                List<Solution> solutions = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson);
+                var gradients = await _analysisBoardSecondMethod.getGradient(auditFlow);
+                foreach (var solution in solutions)
+                {
+                    foreach (var gradient in gradients)
+                    {
+                        //核价表
+                        var hejia = await _priceEvaluationGetAppService.PriceEvaluationTableDownloadStream(
+                            new PriceEvaluationTableDownloadInput()
+                            {
+                                AuditFlowId = auditFlow,
+                                SolutionId = solution.Id,
+                                GradientId = gradient.Id
+                            });
+
+
+                        FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
+                        IFormFile fileOfferhejia = new FormFile(hejia, 0, memoryStreamOffer.Length, FileName, FileName);
+                        FileUploadOutputDto fileUploadOutputDtoOfferhejia =
+                            await _fileCommonService.UploadFile(fileOfferhejia);
+                        //核价表的路径和名称保存到
+
+
+                        await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+                        {
+                            AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                            ProductName = "", ProductId = 0,
+                            FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表",
+                            FilePath = fileUploadOutputDtoOfferhejia.FileUrl,
+                            FileId = fileUploadOutputDtoOfferhejia.FileId
+                        });
+                    }
+
+//NRE核价表
+                    var nrehejia = await _priceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput()
+                    {
+                        AuditFlowId = auditFlow,
+                        SolutionId = solution.Id
+                    });
+                    FileName = solution.ModuleName + "NRE核价表.xlsx";
+                    IFormFile fileOffernrehejia =
+                        new FormFile(nrehejia, 0, memoryStreamOffer.Length, FileName, FileName);
+                    FileUploadOutputDto fileUploadOutputDtoOffernrehejia =
+                        await _fileCommonService.UploadFile(fileOffernrehejia);
+                    //NRE核价表的路径和名称保存到
+
+
+                    await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+                    {
+                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "", ProductId = 0,
+                        FileName = solution.ModuleName + "NRE核价表", FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
+                        FileId = fileUploadOutputDtoOffernrehejia.FileId
+                    });
+
+
+                    //对外报价单
+                    MemoryStream dwbjd =
+                        await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlow, solution.Id,
+                            sol.version);
+                    FileName = solution.ModuleName + "对外报价单.xlsx";
+                    IFormFile fileOfferdwbj = new FormFile(dwbjd, 0, memoryStreamOffer.Length, FileName, FileName);
+                    FileUploadOutputDto fileUploadOutputDtoOfferdwbj =
+                        await _fileCommonService.UploadFile(fileOfferdwbj);
+                    //对外报价单的路径和名称保存到
+
+
+                    await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+                    {
+                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "", ProductId = 0,
+                        FileName = solution.ModuleName + "对外报价单", FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
+                        FileId = fileUploadOutputDtoOfferdwbj.FileId
+                    });
+                }
+            }
         }
-        
-        
-        
-      
     }
 
     /// <summary>
@@ -1048,23 +1064,24 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<List<PigeonholeDownloadTableModel>> GetDownloadList(long? auditFlowId)
     {
         List<PigeonholeDownloadTableModel> pigeonholeDownloadTableModels = new();
-        List<DownloadListSave> downloadListSaves =await _financeDownloadListSave.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)); 
-        
-        
+        List<DownloadListSave> downloadListSaves =
+            await _financeDownloadListSave.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+
+
         foreach (DownloadListSave item in downloadListSaves)
         {
             PigeonholeDownloadTableModel pigeonholeDownloadTableModel = new();
-            pigeonholeDownloadTableModel.DownloadListSaveId=item.Id;// 归档文件列表id
-            pigeonholeDownloadTableModel.FileName=item.FileName;// 归档文件名称
-            pigeonholeDownloadTableModel.ProductName=item.ProductName;// 零件名称
-            pigeonholeDownloadTableModel.QuoteProjectName=item.QuoteProjectName;// 核报价项目名称
+            pigeonholeDownloadTableModel.DownloadListSaveId = item.Id; // 归档文件列表id
+            pigeonholeDownloadTableModel.FileName = item.FileName; // 归档文件名称
+            pigeonholeDownloadTableModel.ProductName = item.ProductName; // 零件名称
+            pigeonholeDownloadTableModel.QuoteProjectName = item.QuoteProjectName; // 核报价项目名称
             pigeonholeDownloadTableModels.Add(pigeonholeDownloadTableModel);
         }
-        
-        
-     
+
+
         return pigeonholeDownloadTableModels;
     }
+
     /// <summary>
     /// 归档文件下载 传 DownloadListSaveId
     /// </summary>
@@ -1087,10 +1104,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     stream.Write(memory.ToArray(), 0, fileStream.Length.To<int>());
                 }
-
             }
         }
-        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "归档文件下载.zip" };
+
+        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+            { FileDownloadName = "归档文件下载.zip" };
     }
 
     /// <summary>
@@ -1101,14 +1119,62 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version)
     {
+        List<SoltionGradPrice> gsp = await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, 1);
+        Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
+            .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
+
+        var gradients = await _analysisBoardSecondMethod.getGradient(auditFlowId);
+
+
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
+        var modelcouts = priceEvaluationStartInputResult.ModelCount;
         List<ProductDto> productDtos = new List<ProductDto>();
-        productDtos.Add(new ProductDto()
+        foreach (var modelcout in modelcouts)
         {
-            ProductName = "测试",
-            Motion = 1,
-            Year = "2023",
-            UntilPrice = "12"
-        });
+            var mcys = modelcout.ModelCountYearList;
+
+            foreach (var mcy in mcys)
+            {
+                String key = "";
+
+
+                if (mcy.Equals(YearType.FirstHalf))
+                {
+                    key += "上半年";
+                }
+
+                if (mcy.Equals(YearType.SecondHalf))
+                {
+                    key += "下半年";
+                }
+
+                if (mcy.Equals(YearType.Year))
+                {
+                    key += "年";
+                }
+
+                string UntilPrice = "";
+                foreach (var gradient in gradients)
+                {
+                    if (mcy.Quantity <= gradient.GradientValue)
+                    {
+                        var list = gsmap[gradient.Id];
+                        UntilPrice = list.FirstOrDefault(p => p.Equals(modelcout.Product)).UnitPrice.ToString();
+                    }
+                }
+
+                productDtos.Add(new ProductDto()
+                {
+                    ProductName = modelcout.Product,
+                    Motion = mcy.Quantity,
+                    Year = key,
+                    UntilPrice = UntilPrice
+                });
+            }
+        }
+
 
         return productDtos;
     }
