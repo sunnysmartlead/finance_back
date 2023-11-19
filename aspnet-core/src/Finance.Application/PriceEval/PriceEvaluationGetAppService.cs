@@ -2169,7 +2169,7 @@ namespace Finance.PriceEval
                 var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
                 if (manufacturingCostEdit is not null)
                 {
-                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
+                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.GroupTest.ToString());
 
                     if (zf is not null)
                     {
@@ -2346,7 +2346,7 @@ namespace Finance.PriceEval
 
             var dto = new ManufacturingCost
             {
-                EditId = PriceEvalConsts.Zc,
+                EditId = CostType.GroupTest.ToString(),
                 Id = year,
                 CostType = CostType.GroupTest,
                 CostItem = PriceEvalConsts.GroupTest,
