@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
@@ -393,7 +394,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         return await _analysisBoardSecondMethod.DownloadExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
     }
-
+    /// <summary>
+    ///  下载对外报价单-流
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    public async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId, long numberOfQuotations)
+    {
+        return await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlowId, solutionId, numberOfQuotations);
+    }
 
     /// <summary>
     /// 根据流程号获取方案
