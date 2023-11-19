@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
 using Abp.UI;
 using Finance.Audit;
 using Finance.Audit.Dto;
@@ -18,6 +21,9 @@ using Finance.Nre;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes;
+using Finance.ProjectManagement;
+using Finance.ProjectManagement.Dto;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using NPOI.HPSF;
@@ -50,6 +56,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 流程流转服务
     /// </summary>
     private readonly AuditFlowAppService _flowAppService;
+    /// <summary>
+    /// 文件管理接口
+    /// </summary>
+    private readonly FileCommonService _fileCommonService;
 
     /// <summary>
     /// 核价部分服务
@@ -62,6 +72,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 报价方案组合
     /// </summary>
     private readonly IRepository<SolutionQuotation, long> _solutionQutation;
+    /// <summary>
+    /// 归档文件列表实体类
+    /// </summary>
+    private readonly IRepository<DownloadListSave, long> _financeDownloadListSave;
 
     /// <summary>
     /// 报价Nre
@@ -84,6 +98,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
         PriceEvaluationAppService priceEvaluationAppService,
+        FileCommonService fileCommonService,
+        IRepository<DownloadListSave, long> financeDownloadListSave,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<NreQuotation, long> nreQuotation)
     {
@@ -93,6 +109,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _resourceSchemeTable = resourceSchemeTable;
         _solutionQutation = solutionQutation;
         _flowAppService = flowAppService;
+        _fileCommonService=fileCommonService;
+                   _financeDownloadListSave=financeDownloadListSave;
+
         _priceEvaluationAppService = priceEvaluationAppService;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _nreQuotation = nreQuotation;
@@ -623,7 +642,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         try
         {
-            return await _analysisBoardSecondMethod.DownloadAuditQuotationList(auditFlowId, version);
+            return await _analysisBoardSecondMethod.DownloadAuditQuotationList(auditFlowId, version, 0);
         }
         catch (Exception e)
         {
@@ -895,21 +914,175 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
+    /// 报价审核表 审批
+    /// </summary>
+    /// <param name="quotationListDto"></param>
+    /// <returns></returns>
+    public async Task PostAuditQuotationList(AuditQuotationListDto quotationListDto)
+    {
+        await this.GetDownloadListSave(quotationListDto.AuditFlowId);
+    }
+    /// <summary>
+    /// 归档文件列表保存
+    /// </summary>
+    /// <returns></returns>
+    public async Task GetDownloadListSave(long auditFlow)
+    {
+      
+        string FileName = "";
+
+        /*
+        AuditFlow audit = await _financeAuditFlow.FirstOrDefaultAsync(p => p.Id.Equals(auditFlow));
+        //循环模组
+        List<ModelCount> modelCounts = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlow));
+        foreach (ModelCount modelCount in modelCounts)
+        {
+            #region 某个模组核价表全生命周期 文件保存
+
+            //核价表全生命周期
+            MemoryStream
+                memoryStreamPricingAll =
+                    null; // await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(new PriceEvaluationTableDownloadStreamInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id, IsAll=true });
+            //将核价表全生命周期保存到硬盘中
+            FileName = "核价表全生命周期.xlsx";
+            IFormFile fileAll = new FormFile(memoryStreamPricingAll, 0, memoryStreamPricingAll.Length, FileName,
+                FileName);
+            FileUploadOutputDto fileUploadOutputDtoAll = await _fileCommonService.UploadFile(fileAll);
+            //核价表全生命周期的路径和名称保存到
+            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+            {
+                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
+                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDtoAll.FileUrl,
+                FileId = fileUploadOutputDtoAll.FileId
+            });
+
+            #endregion
+
+            #region 某个模组核价表全生命周期 文件保存
+
+            /*
+            //核价表
+            MemoryStream memoryStreamPricing =
+                await _resourcePriceEvaluationAppService.PriceEvaluationTableDownloadStream(
+                    new PriceEvaluationTableDownloadStreamInput() { AuditFlowId = auditFlow, IsAll = false });
+            //将核价表全保存到硬盘中
+            FileName = "核价表.xlsx";
+            IFormFile file = new FormFile(memoryStreamPricing, 0, memoryStreamPricing.Length, FileName, FileName);
+            FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
+            //核价表全的路径和名称保存到
+            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+            {
+                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
+                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDto.FileUrl,
+                FileId = fileUploadOutputDto.FileId
+            });#1#
+
+            #endregion
+
+            #region 某个模组 Nre 核价表 文件保存
+
+            //核价表
+            MemoryStream
+                memoryStreamNre =
+                    null; // await _resourcePriceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput() { AuditFlowId=auditFlow, ProductId=modelCount.Id });
+            //将核价表保存到硬盘中
+            FileName = "Nre核价表.xlsx";
+            IFormFile fileNre = new FormFile(memoryStreamNre, 0, memoryStreamNre.Length, FileName, FileName);
+            FileUploadOutputDto fileUploadOutputDtoNre = await _fileCommonService.UploadFile(fileNre);
+            //核价表的路径和名称保存到
+            await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+            {
+                AuditFlowId = auditFlow, QuoteProjectName = audit.QuoteProjectName, ProductName = modelCount.Product,
+                ProductId = modelCount.Id, FileName = FileName, FilePath = fileUploadOutputDtoNre.FileUrl,
+                FileId = fileUploadOutputDtoNre.FileId
+            });
+
+            #endregion
+        }*/
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlow);
+        // 报价审核表 文件保存
+
+        var time = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow).Max(p => p.ntime);
+        var sols = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow && p.ntime == time);
+        foreach (var sol in sols)
+        {
+            MemoryStream memoryStreamOffer = await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow,sol.version,1,"报价审批表"+sol.version);
+            //报价审核表
+            //将报价审核表保存到硬盘中
+            FileName = "报价审核表.xlsx";
+            IFormFile fileOffer = new FormFile(memoryStreamOffer, 0, memoryStreamOffer.Length, FileName, FileName);
+            FileUploadOutputDto fileUploadOutputDtoOffer = await _fileCommonService.UploadFile(fileOffer);
+            //报价审核表的路径和名称保存到
+
+          var audit=  _financeDownloadListSave.FirstOrDefault(P => P.AuditFlowId == auditFlow);
+            
+            if (audit is not null)
+                
+                await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+                {
+                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName, ProductName = "", ProductId = 0,
+                    FileName = "报价审批表"+sol.version, FilePath = fileUploadOutputDtoOffer.FileUrl,
+                    FileId = fileUploadOutputDtoOffer.FileId
+                });
+
+        }
+        
+        
+        
+      
+    }
+
+    /// <summary>
     /// 归档文件列表
     /// </summary>
     /// <returns></returns>
     public async Task<List<PigeonholeDownloadTableModel>> GetDownloadList(long? auditFlowId)
     {
         List<PigeonholeDownloadTableModel> pigeonholeDownloadTableModels = new();
-        PigeonholeDownloadTableModel pg = new PigeonholeDownloadTableModel()
+        List<DownloadListSave> downloadListSaves =await _financeDownloadListSave.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)); 
+        
+        
+        foreach (DownloadListSave item in downloadListSaves)
         {
-            DownloadListSaveId = 129, // 归档文件列表id
-            FileName = "测试", // 归档文件名称
-            ProductName = "测试", // 零件名称
-            QuoteProjectName = "测试1232" // 核报价项目名称
-        };
-        pigeonholeDownloadTableModels.Add(pg);
+            PigeonholeDownloadTableModel pigeonholeDownloadTableModel = new();
+            pigeonholeDownloadTableModel.DownloadListSaveId=item.Id;// 归档文件列表id
+            pigeonholeDownloadTableModel.FileName=item.FileName;// 归档文件名称
+            pigeonholeDownloadTableModel.ProductName=item.ProductName;// 零件名称
+            pigeonholeDownloadTableModel.QuoteProjectName=item.QuoteProjectName;// 核报价项目名称
+            pigeonholeDownloadTableModels.Add(pigeonholeDownloadTableModel);
+        }
+        
+        
+     
         return pigeonholeDownloadTableModels;
+    }
+    /// <summary>
+    /// 归档文件下载 传 DownloadListSaveId
+    /// </summary>
+    /// <returns></returns>
+    public async Task<IActionResult> PostPigeonholeDownload(List<long> DownloadListSaveIds)
+    {
+        List<DownloadListSave> downloadListSaves = (from a in await _financeDownloadListSave.GetAllListAsync()
+            join b in DownloadListSaveIds on a.Id equals b
+            select a).ToList();
+        var memoryStream = new MemoryStream();
+        using (var zipArich = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+        {
+            foreach (DownloadListSave item in downloadListSaves)
+            {
+                FileStream fileStream = new FileStream(item.FilePath, FileMode.Open, FileAccess.Read); //创建文件流
+                MemoryStream memory = new MemoryStream();
+                fileStream.CopyTo(memory);
+                var entry = zipArich.CreateEntry(item.FileName);
+                using (System.IO.Stream stream = entry.Open())
+                {
+                    stream.Write(memory.ToArray(), 0, fileStream.Length.To<int>());
+                }
+
+            }
+        }
+        return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "归档文件下载.zip" };
     }
 
     /// <summary>
