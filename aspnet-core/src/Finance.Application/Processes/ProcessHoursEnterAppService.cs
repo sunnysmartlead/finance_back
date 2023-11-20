@@ -610,6 +610,17 @@ namespace Finance.Processes
         public virtual async Task<string> GetProcessHoursEnterCopyAsync(ProcessHoursEnterCopy processHoursEnterCopy)
         {
             // 设置查询条件
+            var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId).ToList();
+            foreach (var item in query)
+            {
+                _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+            }
+            await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
+            await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
+            await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
+
             var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == processHoursEnterCopy.AuditFlowId).ToList();
 
             // 查询数据

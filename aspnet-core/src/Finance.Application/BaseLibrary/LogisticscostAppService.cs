@@ -258,7 +258,7 @@ namespace Finance.BaseLibrary
         /// <returns>结果</returns>
         public virtual async Task<string> GetLogisticscostsCopyAsync(GetLogisticscostsCopy getLogisticscostsCopy)
         {
-
+            await _logisticscostRepository.DeleteAsync(s => s.AuditFlowId == getLogisticscostsCopy.AuditFlowNewId);
             var query = _logisticscostRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == getLogisticscostsCopy.AuditFlowId);
             foreach (var item in query)
             {

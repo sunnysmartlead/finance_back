@@ -299,14 +299,14 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual async Task<string> GetAuditFlowlAsync(GetBomEntersCopy input)
+        public virtual async Task<string> GetBomEntersCopyAsync(GetBomEntersCopy input)
         {
 
-          
-         
 
-                //有数据的返回
-                var query = _bomEnterRepository.GetAllList(p =>
+            await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
+            //有数据的返回
+            var query = _bomEnterRepository.GetAllList(p =>
          p.IsDeleted == false&& p.AuditFlowId == input.AuditFlowId).ToList();
 
             var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>
