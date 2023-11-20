@@ -275,6 +275,22 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
             }
+
+            if (input.SopTime < DateTime.Now.Year)
+            {
+                throw new FriendlyException($"SOP年份不能小于当年年份！");
+            }
+
+            if (input.Gradient == null || input.Gradient.Count == 0)
+            {
+                throw new FriendlyException($"梯度数量不能为0！");
+            }
+
+            if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
+            {
+                throw new FriendlyException($"梯度数量不能重复！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
@@ -845,6 +861,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<List<LossCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LossCost
@@ -905,6 +926,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"组测成本的全生命周期数据不允许修改！");
             }
 
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -960,6 +986,11 @@ namespace Finance.PriceEval
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
+
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
             }
 
             var entity = await _updateItemRepository.GetAll()
@@ -1072,6 +1103,12 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
             }
+
+            if (input.UpdateItem.Any(p => p.Note.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.OtherCostItem2List
