@@ -167,6 +167,10 @@ namespace Finance.Audit
         /// "归档下载界面
         /// </summary>
         public const string AF_ArchiveEnd = "ArchiveEnd";
+        /// <summary>
+        /// 保存核价看板各成本修改后合计，用于核心器件查询使用
+        /// </summary>
+        public const string AF_AfterUpdateSum = "AfterUpdateSum";
     }
 
     /// <summary>
