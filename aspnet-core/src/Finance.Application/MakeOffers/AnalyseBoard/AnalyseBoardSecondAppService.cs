@@ -95,13 +95,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _financeAuditQuotationList = financeAuditQuotationList;
         _resourceSchemeTable = resourceSchemeTable;
         _flowAppService = flowAppService;
-        _priceEvaluationAppService = priceEvaluationAppService;
-        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
-        _analysisBoardSecondMethod = analysisBoardSecondMethod;
-        _gradientRepository = gradientRepository;
-        _financeAuditQuotationList = financeAuditQuotationList;
-        _resourceSchemeTable = resourceSchemeTable;
-        _flowAppService = flowAppService;
         _fileCommonService = fileCommonService;
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
         _priceEvaluationAppService = priceEvaluationAppService;
@@ -111,6 +104,20 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
