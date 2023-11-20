@@ -1423,10 +1423,36 @@ namespace Finance.PriceEval
 
         public async Task SaveAfterUpdateSum(AfterUpdateSumDto input)
         {
-            var afterUpdateSumInfo = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-            if (afterUpdateSumInfo.Count is not 0)
+            var afterUpdateSumInfoList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+            
+            
+            if (afterUpdateSumInfoList.Count is not 0)
             {
-                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo.FirstOrDefault());
+                AfterUpdateSumInfo afterUpdateSumInfo = afterUpdateSumInfoList.FirstOrDefault();
+
+                if (input.QualityCostAfterSum>0)
+                {
+                    afterUpdateSumInfo.QualityCostAfterSum = input.QualityCostAfterSum;
+                }
+                if (input.LossCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LossCostAfterSum = input.LossCostAfterSum;
+                }
+                if (input.ManufacturingAfterSum > 0)
+                {
+                    afterUpdateSumInfo.ManufacturingAfterSum = input.ManufacturingAfterSum;
+                }
+                if (input.LogisticsAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LogisticsAfterSum = input.LogisticsAfterSum;
+                }
+                if (input.OtherCosttAfterSum > 0)
+                {
+                    afterUpdateSumInfo.OtherCosttAfterSum = input.OtherCosttAfterSum;
+                }
+
+
+                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo);
             
             }
             else
