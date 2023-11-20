@@ -1201,7 +1201,6 @@ namespace Finance.PriceEval
                 UpDown = input.UpDown
             });
 
-            otherCostItem2List.ForEach(p => p.EditId = p.CostType);
 
             return otherCostItem2List;
         }

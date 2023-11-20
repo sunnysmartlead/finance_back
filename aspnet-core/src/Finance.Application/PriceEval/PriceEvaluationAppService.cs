@@ -1101,7 +1101,7 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
             }
 
-            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            if (input.UpdateItem.Any(p => p.Note.IsNullOrWhiteSpace()))
             {
                 throw new FriendlyException($"必须填写修改备注！");
             }
