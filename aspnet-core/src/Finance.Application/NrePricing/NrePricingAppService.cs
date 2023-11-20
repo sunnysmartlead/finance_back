@@ -298,102 +298,184 @@ namespace Finance.NerPricing
         #region 快速核报价之直接上传
         public async Task<PricingFormDto> FastUploadNreExecl(IFormFile filename)
         {
-            try
+            PricingFormDto pricingFormDto = new PricingFormDto();
+            //开始行
+            int StartLine = 5;
+            if (System.IO.Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
+            using (var memoryStream = new MemoryStream())
             {
-                PricingFormDto pricingFormDto = new PricingFormDto();
-                //开始行
-                int StartLine = 5;
-                int index = 0;
-                if (System.IO.Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
-                using (var memoryStream = new MemoryStream())
+                await filename.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+                // 创建工作簿
+                var workbook = new XSSFWorkbook(memoryStream);
+                // 获取第一个工作表
+                var sheet = workbook.GetSheetAt(0);
+                pricingFormDto.HandPieceCost = new();//手板件实例化
+                int[] HandPieceCost = new int[2];
+                pricingFormDto.MouldInventory = new();//模具清单(模具费用)
+                int[] MouldInventory = new int[2];
+                pricingFormDto.ToolingCost = new();//工装费用
+                int[] ToolingCost = new int[2];
+                pricingFormDto.FixtureCost = new();//治具费用
+                int[] FixtureCost = new int[2];
+                pricingFormDto.QAQCDepartments = new();//检具费用
+                int[] QAQCDepartments = new int[2];
+                pricingFormDto.ProductionEquipmentCost = new();//生产设备费
+                int[] ProductionEquipmentCost = new int[2];
+                pricingFormDto.LaboratoryFeeModels = new();//实验费用
+                int[] LaboratoryFeeModels = new int[2];
+                pricingFormDto.SoftwareTestingCost = new();//测试软件费用
+                int[] SoftwareTestingCost = new int[2];
+                pricingFormDto.TravelExpense = new();//差旅费
+                int[] TravelExpense = new int[2];
+                pricingFormDto.RestsCost = new();//其他费用
+                int[] RestsCost = new int[2];
+                pricingFormDto.UphAndValues = new();//线体数量和线体分摊率的值
+                pricingFormDto.ProjectName = sheet.GetRow(StartLine).GetCell(2).ToString();//获取项目名称
+                pricingFormDto.ClientName = sheet.GetRow(StartLine).GetCell(4).ToString();//获取客户名称
+                pricingFormDto.RequiredCapacity = sheet.GetRow(StartLine).GetCell(6).ToString();//获取产能需求   
+                                                                                                // 遍历行
+                for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
                 {
-                    await filename.CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-                    // 创建工作簿
-                    var workbook = new XSSFWorkbook(memoryStream);
-                    // 获取第一个工作表
-                    var sheet = workbook.GetSheetAt(0);
-                    pricingFormDto.HandPieceCost = new();//手板件实例化
-                    int[] HandPieceCost = new int[2];
-                    pricingFormDto.MouldInventory = new();//模具清单(模具费用)
-                    int[] MouldInventory = new int[2];
-                    pricingFormDto.ToolingCost = new();//工装费用
-                    int[] ToolingCost = new int[2];
-                    pricingFormDto.ProjectName = sheet.GetRow(StartLine).GetCell(2).ToString();//获取项目名称
-                    pricingFormDto.ClientName = sheet.GetRow(StartLine).GetCell(4).ToString();//获取客户名称
-                    pricingFormDto.RequiredCapacity = sheet.GetRow(StartLine).GetCell(6).ToString();//获取产能需求   
-                    // 遍历行
-                    for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                    var row = sheet.GetRow(rowIndex);
+                    string ExpenseName = row.GetCell(2).ToString();
+                    string ExpenseNameHJ = row.GetCell(5).ToString();
+                    if (ExpenseName.Equals("手板件费用"))
                     {
-                        var row = sheet.GetRow(rowIndex);
-                        string ExpenseName = sheet.GetRow(rowIndex).GetCell(2).ToString();
-                        string ExpenseNameHJ = sheet.GetRow(rowIndex).GetCell(5).ToString();
-                        if (ExpenseName.Equals("手板件费用"))
+                        HandPieceCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("手板件费用合计"))
+                    {
+                        HandPieceCost[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("模具费用"))
+                    {
+                        MouldInventory[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("模具费用合计"))
+                    {
+                        MouldInventory[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("工装费用"))
+                    {
+                        ToolingCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("工装费用合计"))
+                    {
+                        ToolingCost[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("治具费用"))
+                    {
+                        FixtureCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("治具费用合计"))
+                    {
+                        FixtureCost[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("检具费用"))
+                    {
+                        QAQCDepartments[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("检具费用合计"))
+                    {
+                        QAQCDepartments[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("生产设备费用"))
+                    {
+                        ProductionEquipmentCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("生产设备费用合计"))
+                    {
+                        ProductionEquipmentCost[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("实验费用"))
+                    {
+                        LaboratoryFeeModels[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("实验费用合计"))
+                    {
+                        LaboratoryFeeModels[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("测试软件费用"))
+                    {
+                        SoftwareTestingCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("测试软件费用合计"))
+                    {
+                        SoftwareTestingCost[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("差旅费"))
+                    {
+                        TravelExpense[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("差旅费合计"))
+                    {
+                        TravelExpense[1] = rowIndex - 1;
+                    }
+                    if (ExpenseName.Equals("其他费用"))
+                    {
+                        RestsCost[0] = rowIndex + 2;
+                    }
+                    if (ExpenseNameHJ.Equals("其他费用合计"))
+                    {
+                        RestsCost[1] = rowIndex - 1;
+                    }                   
+                    try
+                    {
+                        if (row.GetCell(1).ToString().Equals("共线分摊率(%)"))
                         {
-                            HandPieceCost[0] = rowIndex + 2;
+                            var Value = Convert.ToDecimal(row.GetCell(3).ToString());
+                            if (pricingFormDto.UphAndValues.Where(p => p.Uph == OperateTypeCode.gxftl.ToString()).Count() == 0) pricingFormDto.UphAndValues.Add(new UphAndValue() { Uph = OperateTypeCode.gxftl.ToString(), Description = row.GetCell(1).ToString(), Value = Value, });
                         }
-                        if (ExpenseNameHJ.Equals("手板件费用合计"))
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FriendlyException($"共线分摊率值有误!{rowIndex+1}行,D列");
+                    }
+                    try
+                    {
+                        if (row.GetCell(1).ToString().Equals("线体数量"))
                         {
-                            HandPieceCost[1] = rowIndex - 1;
+                            var Value = Convert.ToDecimal(row.GetCell(3).ToString());
+                            if (pricingFormDto.UphAndValues.Where(p => p.Uph == OperateTypeCode.xtsl.ToString()).Count() == 0) pricingFormDto.UphAndValues.Add(new UphAndValue() { Uph = OperateTypeCode.xtsl.ToString(), Description = row.GetCell(1).ToString(), Value = Value, });
                         }
-                        if (ExpenseName.Equals("模具费用"))
-                        {
-                            MouldInventory[0] = rowIndex + 2;
-                        }
-                        if (ExpenseNameHJ.Equals("模具费用合计"))
-                        {
-                            MouldInventory[1] = rowIndex - 1;
-                        }
-                        if (ExpenseName.Equals("工装费用"))
-                        {
-                            ToolingCost[0] = rowIndex + 2;
-                        }
-                        if (ExpenseNameHJ.Equals("工装费用合计"))
-                        {
-                            ToolingCost[1] = rowIndex - 1;
-                        }
-                        if (ExpenseName.Equals("治具费用"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("检具费用"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("生产设备费用"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("实验费用"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("测试软件费用"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("差旅费"))
-                        {
-
-                        }
-                        if (ExpenseName.Equals("其他费用"))
-                        {
-
-                        }              
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FriendlyException($"线体数量值有误!{rowIndex + 1}行,D列");
+                    }
+                    try
+                    {
                         if (row.GetCell(1).ToString().Equals("（不含税人民币）NRE 总费用"))
                         {
                             pricingFormDto.RMBAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FriendlyException($"（不含税人民币）NRE 总费用值有误!{rowIndex + 1}行,G列");
+                    }
+                    try
+                    {
+
                         if (row.GetCell(1).ToString().Equals("（不含税美金）NRE 总费用"))
                         {
                             pricingFormDto.USDAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
                         }
                     }
-                    // 遍历行
-                    for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                    catch (Exception e)
                     {
-                        var row = sheet.GetRow(rowIndex);
-                        if (rowIndex >= HandPieceCost[0] && rowIndex <= HandPieceCost[1])
+                        throw new FriendlyException($"（不含税美金）NRE 总费用值有误!{rowIndex + 1}行,G列");
+                    }
+                }
+                // 遍历行
+                for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+                {
+                    var row = sheet.GetRow(rowIndex);
+                    //手板件费用
+                    if (rowIndex >= HandPieceCost[0] && rowIndex <= HandPieceCost[1])
+                    {
+                        try
                         {
                             var PartName = row.GetCell(2).ToString();
                             var PartNumber = row.GetCell(3).ToString();
@@ -402,9 +484,16 @@ namespace Finance.NerPricing
                             var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
                             var Remark = row.GetCell(7).ToString();
                             pricingFormDto.HandPieceCost.Add(new HandPieceCostModel() { PartName = PartName, PartNumber = PartNumber, UnitPrice = UnitPrice, Quantity = Quantity, Cost = Cost, Remark = Remark });
-
                         }
-                        if (rowIndex >= MouldInventory[0] && rowIndex <= MouldInventory[1])
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"手板件费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
+                        }                  
+                    }
+                    //模具费用
+                    if (rowIndex >= MouldInventory[0] && rowIndex <= MouldInventory[1])
+                    {
+                        try
                         {
                             var ModelName = row.GetCell(2).ToString();
                             var MoldCavityCount = Convert.ToInt32(row.GetCell(3).ToString());
@@ -415,7 +504,15 @@ namespace Finance.NerPricing
                             pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count, UnitPrice = UnitPrice, Cost = Cost, Remark = Remark });
 
                         }
-                        if (rowIndex >= ToolingCost[0] && rowIndex <= ToolingCost[1])
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"模具费用!{rowIndex + 1}行,模穴数/单价/数量/费用值存在问题!");
+                        }                        
+                    }
+                    //工装费用
+                    if (rowIndex >= ToolingCost[0] && rowIndex <= ToolingCost[1])
+                    {
+                        try
                         {
                             var WorkName = row.GetCell(2).ToString();
                             var UnitPriceOfTooling = Convert.ToDecimal(row.GetCell(4).ToString());
@@ -423,16 +520,157 @@ namespace Finance.NerPricing
                             var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
                             var Remark = row.GetCell(7).ToString();
                             pricingFormDto.ToolingCost.Add(new() { WorkName = WorkName, UnitPriceOfTooling = UnitPriceOfTooling, ToolingCount = ToolingCount, Cost = Cost, Remark = Remark });
-
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"工装费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
+                        }
+                    }
+                    //治具费用
+                    if (rowIndex >= FixtureCost[0] && rowIndex <= FixtureCost[1])
+                    {
+                        try
+                        {
+                            var ToolingName = row.GetCell(2).ToString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var Number = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.FixtureCost.Add(new() { ToolingName = ToolingName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"治具费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
+                        }
+                    }
+                    //检具费用
+                    if (rowIndex >= QAQCDepartments[0] && rowIndex <= QAQCDepartments[1])
+                    {
+                        try
+                        {
+                            var Qc = row.GetCell(2).ToString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var Count = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.QAQCDepartments.Add(new() { Qc = Qc, UnitPrice = UnitPrice, Count = Count, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"检具费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
+                        }
+                    }
+                    //生产设备费用
+                    if (rowIndex >= ProductionEquipmentCost[0] && rowIndex <= ProductionEquipmentCost[1])
+                    {
+                        try
+                        {
+                            var EquipmentName = row.GetCell(2).ToString();
+                            var DeviceStatusName = row.GetCell(3).ToString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var Number = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"生产设备费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
+                        }
+                    }
+                    //实验费
+                    if (rowIndex >= LaboratoryFeeModels[0] && rowIndex <= LaboratoryFeeModels[1])
+                    {
+                        try
+                        {
+                            var ProjectName = row.GetCell(2).ToString();
+                            var IsThirdParty = row.GetCell(3).ToString() == "是" ? true : false;
+                            var CountBottomingOut = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var CountDV = Convert.ToDecimal(row.GetCell(5).ToString());
+                            var CountPV = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var AllCost = Convert.ToDecimal(row.GetCell(7).ToString());
+                            var Remark = row.GetCell(8).ToString();
+                            pricingFormDto.LaboratoryFeeModels.Add(new() { ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"实验费!{rowIndex + 1}行,时间-摸底/时间-DV/时间-PV/费用值存在问题!");
+                        }
+                    }
+                    //测试软件费用
+                    if (rowIndex >= SoftwareTestingCost[0] && rowIndex <= SoftwareTestingCost[1])
+                    {
+                        try
+                        {
+                            var SoftwareProject = row.GetCell(2).ToString();
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.SoftwareTestingCost.Add(new() { SoftwareProject = SoftwareProject, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"测试软件费用!{rowIndex + 1}行,费用值存在问题!");
+                        }
+                    }
+                    //差旅费
+                    if (rowIndex >= TravelExpense[0] && rowIndex <= TravelExpense[1])
+                    {
+                        try
+                        {
+                            var ReasonsId = row.GetCell(2).ToString();
+                            var ReasonsName = row.GetCell(2).ToString();
+                            var PeopleCount = Convert.ToInt32(row.GetCell(3).ToString());
+                            var CostSky = Convert.ToDecimal(row.GetCell(4).ToString());
+                            var SkyCount = Convert.ToInt32(row.GetCell(5).ToString());
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.TravelExpense.Add(new() { ReasonsId = ReasonsId, ReasonsName = ReasonsName, PeopleCount = PeopleCount, CostSky = CostSky, SkyCount = SkyCount, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"差旅费!{rowIndex + 1}行,事由/人数/费用/天/天数/费用值存在问题!");
+                        }
+                    }
+                    //其他费用
+                    if (rowIndex >= RestsCost[0] && rowIndex <= RestsCost[1])
+                    {
+                        try
+                        {
+                            var ConstName = row.GetCell(2).ToString();
+                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            var Remark = row.GetCell(7).ToString();
+                            pricingFormDto.RestsCost.Add(new() { ConstName = ConstName, Cost = Cost, Remark = Remark });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FriendlyException($"其他费用!{rowIndex + 1}行,费用值存在问题!");
                         }
                     }
                 }
-                return pricingFormDto;
             }
-            catch (Exception e)
-            {
-                throw new FriendlyException(e.Message);
-            }
+            pricingFormDto.HandPieceCostTotal = pricingFormDto.HandPieceCost.Sum(p => p.Cost);
+            pricingFormDto.MouldInventoryTotal = pricingFormDto.MouldInventory.Sum(p => p.Cost);
+            pricingFormDto.ToolingCostTotal = pricingFormDto.ToolingCost.Sum(p => p.Cost);
+            pricingFormDto.FixtureCostTotal = pricingFormDto.FixtureCost.Sum(p => p.Cost);
+            pricingFormDto.QAQCDepartmentsTotal = pricingFormDto.QAQCDepartments.Sum(p => p.Cost);
+            pricingFormDto.ProductionEquipmentCostTotal = pricingFormDto.ProductionEquipmentCost.Sum(p => p.Cost);
+            pricingFormDto.LaboratoryFeeModelsTotal = pricingFormDto.LaboratoryFeeModels.Sum(p => p.AllCost);
+            pricingFormDto.SoftwareTestingCostTotal = pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost);
+            pricingFormDto.TravelExpenseTotal = pricingFormDto.TravelExpense.Sum(p => p.Cost);
+            pricingFormDto.RestsCostTotal = pricingFormDto.RestsCost.Sum(p => p.Cost);
+            //(不含税人民币) NRE 总费用
+            pricingFormDto.RMBAllCost = pricingFormDto.HandPieceCost.Sum(p => p.Cost)//手板件总费用
+                                     + pricingFormDto.MouldInventory.Sum(p => p.Cost)//模具清单总费用
+                                     + pricingFormDto.ToolingCost.Sum(p => p.Cost)//工装费用总费用
+                                     + pricingFormDto.FixtureCost.Sum(p => p.Cost)//治具费用总费用
+                                     + pricingFormDto.QAQCDepartments.Sum(p => p.Cost)//检具费用总费用
+                                     + pricingFormDto.ProductionEquipmentCost.Sum(p => p.Cost)//生产设备总费用
+                                     + pricingFormDto.LaboratoryFeeModels.Sum(p => p.AllCost)//实验费用总费用
+                                     + pricingFormDto.SoftwareTestingCost.Sum(p => p.Cost)//测试软件总费用
+                                     + pricingFormDto.TravelExpense.Sum(p => p.Cost)//差旅费总费用
+                                     + pricingFormDto.RestsCost.Sum(p => p.Cost);//其他费用总费用                
+            return pricingFormDto;
+
         }
         #endregion
         /// <summary>
@@ -690,7 +928,7 @@ namespace Finance.NerPricing
                     if (travelExpenses is not null) travelExpenseModels = ObjectMapper.Map<List<TravelExpenseModel>>(travelExpenses);
                     projectManagementModel.TravelExpense = new();
                     projectManagementModel.TravelExpense = travelExpenseModels;//差旅费
-                    //判断 该方案 是否已经录入
+                                                                               //判断 该方案 是否已经录入
                     int Count = await _resourceNreIsSubmit.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(partModel.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProjectManagement.ToString()));
                     projectManagementModel.IsSubmit = Count > 0;
                     projectManagementModels.Add(projectManagementModel);
@@ -733,7 +971,7 @@ namespace Finance.NerPricing
             List<SolutionModel> partModelsAll = await TotalSolution(auditFlowId);// 获总方案       
             List<SolutionModel> partModels = await TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));// 获取指定的方案         
             List<MouldInventoryPartModel> mouldInventoryPartModels = new();// Nre核价 带 方案 id 的模具清单 模型  
-            //循环每一个方案
+                                                                           //循环每一个方案
             foreach (SolutionModel part in partModelsAll)
             {
                 MouldInventoryPartModel mouldInventoryPartModel = new();//  Nre核价 模组清单模型
@@ -754,25 +992,25 @@ namespace Finance.NerPricing
             {
                 MouldInventoryPartModel mouldInventoryPartModel = new();//  Nre核价 模组清单模型
                 mouldInventoryPartModel.SolutionId = part.SolutionId;//方案的 Id             
-                //获取初始值的时候如果数据库里有,直接拿数据库中的
-                //删除的结构BOMid
-                //List<long> longs = new();
-                //List<StructBomDifferent> structBomDifferents = await _configStructBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(part.SolutionId));
-                //if (structBomDifferents.Count is not 0)//有差异
-                //{
-                //    foreach (StructBomDifferent structBom in structBomDifferents)
-                //    {
-                //        //判断差异类型
-                //        if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
-                //        {
-                //            //删除存在数据库里的数据和返回数据中的数据即可
-                //            //1.删除数据库中的数据
-                //            await _resourceMouldInventory.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId) && p.StructuralId.Equals(structBom.StructureId));
-                //            longs.Add(structBom.StructureId);
-                //        }
-                //    }
-                //}
-                //获取初始值的时候如果数据库里有,直接拿数据库中的
+                                                                     //获取初始值的时候如果数据库里有,直接拿数据库中的
+                                                                     //删除的结构BOMid
+                                                                     //List<long> longs = new();
+                                                                     //List<StructBomDifferent> structBomDifferents = await _configStructBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.ProductId.Equals(part.SolutionId));
+                                                                     //if (structBomDifferents.Count is not 0)//有差异
+                                                                     //{
+                                                                     //    foreach (StructBomDifferent structBom in structBomDifferents)
+                                                                     //    {
+                                                                     //        //判断差异类型
+                                                                     //        if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
+                                                                     //        {
+                                                                     //            //删除存在数据库里的数据和返回数据中的数据即可
+                                                                     //            //1.删除数据库中的数据
+                                                                     //            await _resourceMouldInventory.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId) && p.StructuralId.Equals(structBom.StructureId));
+                                                                     //            longs.Add(structBom.StructureId);
+                                                                     //        }
+                                                                     //    }
+                                                                     //}
+                                                                     //获取初始值的时候如果数据库里有,直接拿数据库中的
                 List<MouldInventory> mouldInventory = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(part.SolutionId));
                 //List<MouldInventory> mouldInventoryEquals = (from a in mouldInventory
                 //                                             join b in longs on a.StructuralId equals b
@@ -855,7 +1093,7 @@ namespace Finance.NerPricing
                 });
                 //}
             }
-            #endregion          
+            #endregion
         }
         /// <summary>
         /// 资源部模具费录入  判断是否全部提交完毕  true 所有方案已录完   false  没有录完
@@ -1652,7 +1890,7 @@ namespace Finance.NerPricing
             //工装治具费
             initialSalesDepartmentDto = new();
             initialSalesDepartmentDto.FormName = StaticName.GZZJF;//工装+治具+测试线         
-            //测试线+工装
+                                                                  //测试线+工装
             List<WorkingHoursInfo> workingHours = await _resourceWorkingHoursInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             //治具
             List<EquipmentInfo> equipment = (from a in workingHours
