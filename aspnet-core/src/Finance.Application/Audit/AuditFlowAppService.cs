@@ -250,6 +250,27 @@ namespace Finance.Audit
                 .ToList();
         }
 
+
+        /// <summary>
+        /// 过滤已办项
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
+        {
+            var tradeComplianceAuditor = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
+            var isTradeComplianceAuditor = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
+
+            return list
+
+                //如果当前用户不是贸易合规审核员，就把贸易合规页面过滤掉
+                .WhereIf(!isTradeComplianceAuditor, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+
+                .ToList();
+        }
+
+
         /// <summary>
         /// 获取当前用户关联的项目核价流程和界面
         /// </summary>
@@ -296,102 +317,22 @@ namespace Finance.Audit
 
             //已办
             var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
-            var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            var taskedDto = (await tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
             {
                 AuditFlowId = p.Key.WorkFlowInstanceId,
                 AuditFlowTitle = p.Key.Title,
-                AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                AuditFlowRightDetailList = await TaskCompleted(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                 {
                     Id = o.Id,
                     ProcessName = o.NodeName,
                     Right = RIGHTTYPE.ReadOnly,
                     ProcessIdentifier = o.ProcessIdentifier
-                }).ToList()
-            }).ToList();
-
-            ////项目经理的全部已办
-            //var userRole = from ur in _userRoleRepository.GetAll()
-            //               join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
-            //               where ur.UserId == AbpSession.UserId
-            //               && r.Name.Contains("项目经理")
-            //               select r.Name;
-            //var isPm = await userRole.AnyAsync();
-            //if (isPm)
-            //{
-            //    var auditFlowIds = dto.Select(p => p.AuditFlowId).Union(taskedDto.Select(p => p.AuditFlowId)).Distinct();
-            //    var taskedPm = await auditFlowIds.SelectAsync(async p => await _workflowInstanceAppService.GetInstanceHistoryByWorkflowInstanceId(p));
-            //    var taskedDtoPm = taskedPm.SelectMany(p => p.Items).GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
-            //    {
-            //        AuditFlowId = p.Key.WorkFlowInstanceId,
-            //        AuditFlowTitle = p.Key.Title,
-            //        AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
-            //        {
-            //            Id = o.Id,
-            //            ProcessName = o.NodeName,
-            //            Right = RIGHTTYPE.ReadOnly,
-            //            ProcessIdentifier = o.ProcessIdentifier
-            //        }).ToList()
-            //    }).ToList();
-            //    auditFlowRightInfoDtoList.AddRange(taskedDtoPm);
-            //}
-            //else
-            //{
-            //    auditFlowRightInfoDtoList.AddRange(taskedDto);
-            //}
-
+                }).ToList())
+            })).Where(p => p.AuditFlowRightDetailList.Any());
 
             auditFlowRightInfoDtoList.AddRange(taskedDto);
 
             return auditFlowRightInfoDtoList;
-
-
-            //var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == AbpSession.UserId.Value);
-            //foreach (var flowRight in flowRightInfos)
-            //{
-            //    AuditFlowRightInfoDto auditFlowRightInfoDto = this.GetIndexOfRightInfoList(flowRight.AuditFlowId, auditFlowRightInfoDtoList);
-            //    if (auditFlowRightInfoDto == null)
-            //    {
-            //        auditFlowRightInfoDto = new();
-            //        auditFlowRightInfoDto.AuditFlowId = flowRight.AuditFlowId;
-            //        var priceEvaluations = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == flowRight.AuditFlowId);
-            //        if (priceEvaluations.Count > 0)
-            //        {
-            //            auditFlowRightInfoDto.AuditFlowTitle = priceEvaluations.FirstOrDefault().Title;
-            //        }
-            //        else
-            //        {
-            //            continue;
-            //        }
-            //        auditFlowRightInfoDto.AuditFlowRightDetailList = new();
-            //        auditFlowRightInfoDtoList.Add(auditFlowRightInfoDto);
-            //    }
-            //    if (flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
-            //    {
-            //        var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowRight.AuditFlowId);
-            //        if (flowList.Count > 0)
-            //        {
-            //            if (!(flowList.FirstOrDefault()).IsValid)
-            //            {
-            //                continue;
-            //            }
-            //        }
-            //        else
-            //        {
-            //            continue;
-            //        }
-            //    }
-            //    AuditFlowRightDetailDto auditFlowRightDetailDto = new()
-            //    {
-            //        ProcessIdentifier = flowRight.ProcessIdentifier,
-            //        ProcessName = this.AuditFlowName(flowRight.ProcessIdentifier),
-            //        Right = flowRight.RightType,
-            //        IsRetype = flowRight.IsRetype,
-            //        JumpDescription = flowRight.Remark
-            //    };
-            //    auditFlowRightInfoDto.AuditFlowRightDetailList.Add(auditFlowRightDetailDto);
-            //}
-
-            //return auditFlowRightInfoDtoList;
         }
 
         private string AuditFlowName(string ProcessIdentifier)
