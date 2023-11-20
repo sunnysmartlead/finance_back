@@ -415,6 +415,12 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
+        /// <summary>
+        /// 保存核价看板修改后合计
+        /// </summary>
+        public virtual DbSet<AfterUpdateSumInfo> AfterUpdateSumInfo { get; set; }
+
+
 
         public virtual DbSet<TaskReset> TaskReset { get; set; }
 
@@ -599,6 +605,9 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<FProcesses>().ToTable("FProcesses");
             modelBuilder.Entity<FTWorkingHour>().ToTable("FTSWorkingHour");
             modelBuilder.Entity<FollowLineTangent>().ToTable("FollowLineTangent");
+
+
+            modelBuilder.Entity<AfterUpdateSumInfo>().ToTable("AfterUpdateSumInfo");
 
             base.OnModelCreating(modelBuilder);
         }
