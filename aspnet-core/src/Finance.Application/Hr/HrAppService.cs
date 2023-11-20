@@ -209,6 +209,7 @@ namespace Finance.Hr
             var data = (from u in UserManager.Users
                         join d in _departmentRepository.GetAll() on u.DepartmentId equals d.Id
                         select new { u, d })
+                        .Where(p => p.u.IsActive)
                         .WhereIf(!input.Name.IsNullOrWhiteSpace(), p => p.u.Name.Contains(input.Name))
                         .WhereIf(!input.DeptName.IsNullOrWhiteSpace(), p => p.d.Name.Contains(input.DeptName))
                         .Select(p => p.u);
