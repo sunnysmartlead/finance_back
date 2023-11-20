@@ -278,6 +278,16 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"SOP年份不能小于当年年份！");
             }
 
+            if (input.Gradient == null || input.Gradient.Count == 0)
+            {
+                throw new FriendlyException($"梯度数量不能为0！");
+            }
+
+            if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
+            {
+                throw new FriendlyException($"梯度数量不能重复！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
