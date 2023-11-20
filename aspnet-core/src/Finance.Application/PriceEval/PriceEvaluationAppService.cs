@@ -36,8 +36,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
+using Spire.Xls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,6 +51,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.PriceEval
 {
@@ -1232,15 +1238,58 @@ namespace Finance.PriceEval
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
             var memoryStream = await NreTableDownloadStream(input);
+            ////开始行
+            int StartLine = 5;
+            memoryStream.Position = 0;
+            // 创建工作簿
+            var workbook = new XSSFWorkbook(memoryStream);
+            // 获取第一个工作表
+            var sheet = workbook.GetSheetAt(0);
+            int[] ProductionEquipmentCost = new int[2];//生产设备费       
+            int[] TravelExpense = new int[2];//差旅费           
 
+            for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+            {
+                var row = sheet.GetRow(rowIndex);
+                if (row == null) continue;
+                string ExpenseName = row.GetCell(2).ToString();
+                string ExpenseNameHJ = row.GetCell(5).ToString();
 
-            //var memoryStream = new MemoryStream();
-
-            //await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/NRE.xlsx", dto);
-
-            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "NRE核价表.xlsx" };
+                if (ExpenseName.Equals("生产设备费用"))
+                {
+                    ProductionEquipmentCost[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("生产设备费用合计"))
+                {
+                    ProductionEquipmentCost[1] = rowIndex - 1;
+                }
+                if (ExpenseName.Equals("差旅费"))
+                {
+                    TravelExpense[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("差旅费合计"))
+                {
+                    TravelExpense[1] = rowIndex - 1;
+                }
+            }
+            //设备状态
+            List<FinanceDictionaryDetail> ProductionEquipmentCostName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.Sbzt));
+            //事由
+            List<FinanceDictionaryDetail> TravelExpenseName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.NreReasons));
+            //列数据约束 生产设备费用
+            workbook.SetConstraint(sheet, 3, ProductionEquipmentCost[0], ProductionEquipmentCost[1], ProductionEquipmentCostName.Select(p => p.DisplayName).ToArray());
+            //列数据约束 差旅费
+            workbook.SetConstraint(sheet, 2, TravelExpense[0], TravelExpense[1], TravelExpenseName.Select(p=>p.DisplayName).ToArray());       
+            // 保存工作簿
+            using (MemoryStream fileStream = new MemoryStream())
+            {
+                workbook.Write(fileStream);
+                return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"NRE核价表.xlsx"
+                };
+            }           
         }
-
         #endregion
 
         #region 制造成本

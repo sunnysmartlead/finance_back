@@ -296,6 +296,12 @@ namespace Finance.NerPricing
         }
         #endregion
         #region 快速核报价之直接上传
+        /// <summary>
+        /// NRE核价表快速上传
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
         public async Task<PricingFormDto> FastUploadNreExecl(IFormFile filename)
         {
             PricingFormDto pricingFormDto = new PricingFormDto();
@@ -334,7 +340,7 @@ namespace Finance.NerPricing
                 pricingFormDto.ProjectName = sheet.GetRow(StartLine).GetCell(2).ToString();//获取项目名称
                 pricingFormDto.ClientName = sheet.GetRow(StartLine).GetCell(4).ToString();//获取客户名称
                 pricingFormDto.RequiredCapacity = sheet.GetRow(StartLine).GetCell(6).ToString();//获取产能需求   
-                                                                                                // 遍历行
+                // 遍历行
                 for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
                 {
                     var row = sheet.GetRow(rowIndex);
@@ -419,7 +425,7 @@ namespace Finance.NerPricing
                     if (ExpenseNameHJ.Equals("其他费用合计"))
                     {
                         RestsCost[1] = rowIndex - 1;
-                    }                   
+                    }
                     try
                     {
                         if (row.GetCell(1).ToString().Equals("共线分摊率(%)"))
@@ -430,7 +436,7 @@ namespace Finance.NerPricing
                     }
                     catch (Exception e)
                     {
-                        throw new FriendlyException($"共线分摊率值有误!{rowIndex+1}行,D列");
+                        throw new FriendlyException($"共线分摊率值有误!{rowIndex + 1}行,D列");
                     }
                     try
                     {
@@ -488,7 +494,7 @@ namespace Finance.NerPricing
                         catch (Exception e)
                         {
                             throw new FriendlyException($"手板件费用!{rowIndex + 1}行,单价/数量/费用值存在问题!");
-                        }                  
+                        }
                     }
                     //模具费用
                     if (rowIndex >= MouldInventory[0] && rowIndex <= MouldInventory[1])
@@ -507,7 +513,7 @@ namespace Finance.NerPricing
                         catch (Exception e)
                         {
                             throw new FriendlyException($"模具费用!{rowIndex + 1}行,模穴数/单价/数量/费用值存在问题!");
-                        }                        
+                        }
                     }
                     //工装费用
                     if (rowIndex >= ToolingCost[0] && rowIndex <= ToolingCost[1])
@@ -563,15 +569,20 @@ namespace Finance.NerPricing
                     //生产设备费用
                     if (rowIndex >= ProductionEquipmentCost[0] && rowIndex <= ProductionEquipmentCost[1])
                     {
+                        var DeviceStatusName= row.GetCell(3).ToString();
+                        var DeviceStatus = _financeDictionaryDetailRepository.FirstOrDefault(p => p.DisplayName.Equals(DeviceStatusName))?.Id;
+                        if (string.IsNullOrEmpty(DeviceStatus))
+                        {
+                            throw new FriendlyException($"生产设备费用!{rowIndex + 1}行,设备状态:{DeviceStatusName}在库中找不到,值存在问题!");
+                        }
                         try
                         {
                             var EquipmentName = row.GetCell(2).ToString();
-                            var DeviceStatusName = row.GetCell(3).ToString();
                             var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
                             var Number = Convert.ToInt32(row.GetCell(5).ToString());
                             var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
                             var Remark = row.GetCell(7).ToString();
-                            pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
+                            pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatus= DeviceStatus, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
                         {
@@ -615,10 +626,11 @@ namespace Finance.NerPricing
                     //差旅费
                     if (rowIndex >= TravelExpense[0] && rowIndex <= TravelExpense[1])
                     {
+                        var ReasonsName = row.GetCell(2).ToString();
+                        var ReasonsId = _financeDictionaryDetailRepository.FirstOrDefault(p => p.DisplayName.Equals(ReasonsName))?.Id;
+                        if (string.IsNullOrEmpty(ReasonsId)) { throw new FriendlyException($"差旅费!{rowIndex + 1}行,事由:{ReasonsName}在库中找不到,值存在问题!"); }
                         try
                         {
-                            var ReasonsId = row.GetCell(2).ToString();
-                            var ReasonsName = row.GetCell(2).ToString();
                             var PeopleCount = Convert.ToInt32(row.GetCell(3).ToString());
                             var CostSky = Convert.ToDecimal(row.GetCell(4).ToString());
                             var SkyCount = Convert.ToInt32(row.GetCell(5).ToString());
