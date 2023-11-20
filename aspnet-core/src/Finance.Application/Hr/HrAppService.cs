@@ -242,7 +242,9 @@ namespace Finance.Hr
         /// <returns></returns>
         public async Task<PagedResultDto<UserDto>> GetUserByDepartmentId(GetUserByDepartmentIdInput input)
         {
-            var filter = UserManager.Users.Where(p => p.DepartmentId == input.DepartmentId);
+            var filter = UserManager.Users
+                .Where(p => p.IsActive)
+                .Where(p => p.DepartmentId == input.DepartmentId);
 
             var count = await filter.CountAsync();
 
