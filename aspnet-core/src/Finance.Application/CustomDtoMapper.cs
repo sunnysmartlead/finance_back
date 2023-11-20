@@ -349,6 +349,10 @@ namespace Finance
             //工程部-切线跟线工时参数库
             configuration.CreateMap<FollowLineTangent, WorkingHoursV2Dto>();
             configuration.CreateMap<WorkingHoursV2Dto, FollowLineTangent>();
+
+            //保存核价看板修改后合计
+            configuration.CreateMap<AfterUpdateSumDto, AfterUpdateSumInfo>();
+            configuration.CreateMap<AfterUpdateSumInfo, AfterUpdateSumDto>();
         }
     }
 }

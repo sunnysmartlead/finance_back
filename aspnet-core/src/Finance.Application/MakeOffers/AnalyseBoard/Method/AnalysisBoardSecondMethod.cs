@@ -2491,6 +2491,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
+    /// 获取梯度
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<Gradient>> getGradient(long AuditFlowId)
+    {
+        //获取梯度
+        List<Gradient> gradients =
+            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == AuditFlowId);
+        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
+        return gradients;
+    }
+    
+    
+    
+    
+    
+    /// <summary>
     /// 报价毛利率测算 实际数量  接口
     /// </summary>
     /// <returns></returns>
@@ -3476,14 +3493,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         if ("PriceEvalType_Sample".Equals(pricetype))
         {
-            templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\报价审批表模板—仅含样品.xlsx";
-            {
-                templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\报价审批表模板—含样品.xlsx";
-            };
+            templatePath ="wwwroot/Excel/报价审批表模板—仅含样品.xlsx";
+          
+        }else  {
+            templatePath = "wwwroot/Excel/报价审批表模板—含样品.xlsx";
         }
         var memoryStream = new MemoryStream();
-        await memoryStream.SaveAsByTemplateAsync(templatePath, value);
-        memoryStream.Seek(0, SeekOrigin.Begin);
+        await MiniExcel.SaveAsByTemplateAsync(memoryStream, templatePath, value);
         return memoryStream;
     }
     /// <summary>
@@ -5673,6 +5689,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         var sps = await _actualUnitPriceOffer.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.ntype == type);
+       sps=  sps.OrderBy(p => p.gradient).ToList();
         var list = (from sp in sps
             select new SoltionGradPrice()
             {

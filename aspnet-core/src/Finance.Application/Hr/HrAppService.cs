@@ -209,6 +209,7 @@ namespace Finance.Hr
             var data = (from u in UserManager.Users
                         join d in _departmentRepository.GetAll() on u.DepartmentId equals d.Id
                         select new { u, d })
+                        .Where(p => p.u.IsActive)
                         .WhereIf(!input.Name.IsNullOrWhiteSpace(), p => p.u.Name.Contains(input.Name))
                         .WhereIf(!input.DeptName.IsNullOrWhiteSpace(), p => p.d.Name.Contains(input.DeptName))
                         .Select(p => p.u);
@@ -218,6 +219,39 @@ namespace Finance.Hr
             var paged = await data.PageBy(input).ToListAsync();
             return new PagedResultDto<UserDto>(count, ObjectMapper.Map<List<UserDto>>(paged));
 
+        }
+
+        /// <summary>
+        /// 根据名称模糊查询部门
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<DepartmentListDto>> GetDepartmentByName(GetDepartmentByNameInput input)
+        {
+            var filter = _departmentRepository.GetAll().WhereIf(!input.Name.IsNullOrWhiteSpace(), p => p.Name.Contains(input.Name));
+
+            var count = await filter.CountAsync();
+
+            var result = await filter.PageBy(input).ToListAsync();
+
+            return new PagedResultDto<DepartmentListDto>(count, ObjectMapper.Map<List<DepartmentListDto>>(result));
+        }
+
+        /// <summary>
+        /// 根据部门Id获取用户
+        /// </summary>
+        /// <returns></returns>
+        public async Task<PagedResultDto<UserDto>> GetUserByDepartmentId(GetUserByDepartmentIdInput input)
+        {
+            var filter = UserManager.Users
+                .Where(p => p.IsActive)
+                .Where(p => p.DepartmentId == input.DepartmentId);
+
+            var count = await filter.CountAsync();
+
+            var result = await filter.PageBy(input).ToListAsync();
+
+            return new PagedResultDto<UserDto>(count, ObjectMapper.Map<List<UserDto>>(result));
         }
     }
 }

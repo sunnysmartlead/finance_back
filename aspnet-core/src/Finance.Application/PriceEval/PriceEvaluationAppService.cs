@@ -106,6 +106,8 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
+        private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
+
         public PriceEvaluationAppService(ICacheManager cacheManager, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
@@ -132,7 +134,7 @@ namespace Finance.PriceEval
            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
            IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-           IRepository<PanelJson, long> panelJsonRepository)
+           IRepository<PanelJson, long> panelJsonRepository, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
@@ -163,6 +165,7 @@ namespace Finance.PriceEval
             _updateItemRepository = updateItemRepository;
 
             _countryLibraryRepository = countryLibraryRepository;
+            _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         }
 
 
@@ -278,6 +281,22 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
             }
+
+            if (input.SopTime < DateTime.Now.Year)
+            {
+                throw new FriendlyException($"SOP年份不能小于当年年份！");
+            }
+
+            if (input.Gradient == null || input.Gradient.Count == 0)
+            {
+                throw new FriendlyException($"梯度数量不能为0！");
+            }
+
+            if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
+            {
+                throw new FriendlyException($"梯度数量不能重复！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
@@ -848,6 +867,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<List<LossCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LossCost
@@ -908,6 +932,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"组测成本的全生命周期数据不允许修改！");
             }
 
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -963,6 +992,11 @@ namespace Finance.PriceEval
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
+
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
             }
 
             var entity = await _updateItemRepository.GetAll()
@@ -1075,6 +1109,12 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
             }
+
+            if (input.UpdateItem.Any(p => p.Note.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.OtherCostItem2List
@@ -1424,6 +1464,68 @@ namespace Finance.PriceEval
                 return null;
             }
             return new ManufacturingCostInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, Cob = cob, Smt = smt, Other = other };
+        }
+
+        #endregion
+
+        #region 保存核价看板各成本修改后合计，用于核心器件查询使用
+
+        public async Task SaveAfterUpdateSum(AfterUpdateSumDto input)
+        {
+            var afterUpdateSumInfoList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+            
+            
+            if (afterUpdateSumInfoList.Count is not 0)
+            {
+                AfterUpdateSumInfo afterUpdateSumInfo = afterUpdateSumInfoList.FirstOrDefault();
+
+                if (input.QualityCostAfterSum>0)
+                {
+                    afterUpdateSumInfo.QualityCostAfterSum = input.QualityCostAfterSum;
+                }
+                if (input.LossCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LossCostAfterSum = input.LossCostAfterSum;
+                }
+                if (input.ManufacturingAfterSum > 0)
+                {
+                    afterUpdateSumInfo.ManufacturingAfterSum = input.ManufacturingAfterSum;
+                }
+                if (input.LogisticsAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LogisticsAfterSum = input.LogisticsAfterSum;
+                }
+                if (input.OtherCosttAfterSum > 0)
+                {
+                    afterUpdateSumInfo.OtherCosttAfterSum = input.OtherCosttAfterSum;
+                }
+
+
+                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo);
+            
+            }
+            else
+            {
+
+                AfterUpdateSumInfo afterSumInfo = new()
+                {
+                    AuditFlowId = input.AuditFlowId,
+                    SolutionId = input.SolutionId,
+                    GradientId=input.GradientId,
+                    Year = input.Year,
+                    UpDown=input.UpDown,
+                    QualityCostAfterSum=input.QualityCostAfterSum,
+                    LossCostAfterSum=input.LossCostAfterSum,
+                    ManufacturingAfterSum=input.LossCostAfterSum,
+                    OtherCosttAfterSum=input.OtherCosttAfterSum,
+
+                };
+                    await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
+                 
+            }
+
+           
+
         }
 
         #endregion
