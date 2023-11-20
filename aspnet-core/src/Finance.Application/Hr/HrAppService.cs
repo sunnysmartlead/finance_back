@@ -219,5 +219,36 @@ namespace Finance.Hr
             return new PagedResultDto<UserDto>(count, ObjectMapper.Map<List<UserDto>>(paged));
 
         }
+
+        /// <summary>
+        /// 根据名称模糊查询部门
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<DepartmentListDto>> GetDepartmentByName(GetDepartmentByNameInput input)
+        {
+            var filter = _departmentRepository.GetAll().WhereIf(!input.Name.IsNullOrWhiteSpace(), p => p.Name.Contains(input.Name));
+
+            var count = await filter.CountAsync();
+
+            var result = await filter.PageBy(input).ToListAsync();
+
+            return new PagedResultDto<DepartmentListDto>(count, ObjectMapper.Map<List<DepartmentListDto>>(result));
+        }
+
+        /// <summary>
+        /// 根据部门Id获取用户
+        /// </summary>
+        /// <returns></returns>
+        public async Task<PagedResultDto<UserDto>> GetUserByDepartmentId(GetUserByDepartmentIdInput input)
+        {
+            var filter = UserManager.Users.Where(p => p.DepartmentId == input.DepartmentId);
+
+            var count = await filter.CountAsync();
+
+            var result = await filter.PageBy(input).ToListAsync();
+
+            return new PagedResultDto<UserDto>(count, ObjectMapper.Map<List<UserDto>>(result));
+        }
     }
 }
