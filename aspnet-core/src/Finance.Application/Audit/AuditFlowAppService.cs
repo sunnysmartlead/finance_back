@@ -301,6 +301,48 @@ namespace Finance.Audit
                 .ToList();
         }
 
+        /// <summary>
+        /// 邮件专用流程获取
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfosForEmail()
+        {
+            List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
+            //待办
+            var data = await _workflowInstanceAppService.GetTaskByUserId(0, false);
+
+            //重置
+            var resetData = await _workflowInstanceAppService.GetReset(0, false);
+
+            data.Items = data.Items.Where(p => !resetData.Items.Select(o => o.Id).Contains(p.Id))
+                .Union(resetData.Items).ToList();
+
+            var dto = (await data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
+            {
+                AuditFlowId = p.Key.WorkFlowInstanceId,
+                AuditFlowTitle = p.Key.Title,
+                AuditFlowRightDetailList = await FilteTask(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
+                {
+                    Id = o.Id,
+                    ProcessName = o.NodeName,
+                    Right = RIGHTTYPE.Edit,
+                    ProcessIdentifier = o.ProcessIdentifier,
+                    IsRetype = o.IsBack,
+                    JumpDescription = o.Comment,
+                    IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
+                }).ToList())
+            }))
+            .Where(p => p.AuditFlowRightDetailList.Any());
+
+
+
+            auditFlowRightInfoDtoList.AddRange(dto);
+
+            return auditFlowRightInfoDtoList;
+
+        }
+
 
         /// <summary>
         /// 获取当前用户关联的项目核价流程和界面
