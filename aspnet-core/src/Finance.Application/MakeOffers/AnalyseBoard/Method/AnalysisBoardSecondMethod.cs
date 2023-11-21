@@ -456,15 +456,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 var sop = new SopAnalysisModel();
 
-                long gradientid = 0;
-                foreach (var gradient in gradients)
-                {
-                    if (model.Quantity <= gradient.GradientValue)
-                    {
-                        gradientid = gradient.Id; //获取对应梯度id
-                        break;
-                    }
-                }
+                long gradientid = GetGradient(model.Quantity,gradients);
+         
 
                 //获取核价看板的值
                 var ex = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
@@ -521,16 +514,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 decimal njl = 1;
                 foreach (var mc in mcyl)
                 {
-                    long gradientid = 0;
-                    foreach (var gradient in gradients)
-                    {
-                        if (mc.Quantity <= gradient.GradientValue)
-                        {
-                            gradientid = gradient.Id; //获取对应梯度id
-                            break;
-                        }
-                    }
-
+                    long gradientid = GetGradient(mc.Quantity,gradients);
                     var sop = sops.FindFirst(p =>
                         p.Product.Equals(modelCountDto.Product) && p.GradientId == gradientid);
 
@@ -892,16 +876,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
                 var modelCountDto = modelcoutnlist.FindFirst(p => p.Product.Equals(solution.ModuleName)); //获取第一年的数量
                 var modelCount = modelCountDto.ModelCountYearList.OrderBy(p => p.Year).ThenBy(p => p.UpDown).First();
-                long gradientid = 0;
-                foreach (var gradient in gradients)
-                {
-                    if (modelCount.Quantity <= gradient.GradientValue)
-                    {
-                        gradientid = gradient.Id;
-                        break;
-                    }
-                }
-
+               
+                long gradientid = GetGradient(modelCount.Quantity,gradients);
+                
                 var gradq = gradientQuotedGrossMarginModels.FindFirst(p =>
                     p.GradientId == gradientid && p.product.Equals(solution.ModuleName)); //第一年的单价
 
@@ -1023,6 +1000,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal sjkhsl = 0;
         decimal sjnbxssr = 0;
         decimal sjkhxssr = 0;
+        decimal sjnbyj = 0;
+        decimal sjkhyj = 0;
         decimal sjnbcb = 0;
         decimal sjkhcb = 0;
         decimal sjnbml = 0;
@@ -1049,6 +1028,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             sjnbsl += nmj.sl;
             sjnbxssr += nmj.xssr;
             sjnbcb += nmj.xscb;
+            sjnbyj += nmj.yj;
             sjnbml += nmj.xsml;
             var khj = await PostGrossMarginForactual(new YearProductBoardProcessSecondDto()
             {
@@ -1065,6 +1045,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             });
             sjkhsl += khj.sl;
             sjkhxssr += khj.xssr;
+            sjkhyj += khj.yj;
             sjkhcb += khj.xscb;
             sjkhml += khj.xsml;
             QuotedGrossMarginActual quotedGrossMarginActualS = new()
@@ -1173,12 +1154,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         sjxssr.ClientTarget = Math.Round(sjkhxssr, 2);
 
         projectBoardSecondModelssj.Add(sjxssr);
-        /*ProjectBoardSecondModel sjyj = new();
+        ProjectBoardSecondModel sjyj = new();
         sjyj.ProjectName = "佣金";
-       sjyj.InteriorTarget = sjyj;
-        sjyj.ClientTarget = ;
+        sjyj.AuditFlowId = auditFlowId;
+       sjyj.InteriorTarget = sjnbyj;
+        sjyj.ClientTarget = sjkhyj;
 
-        projectBoardSecondModelssj.Add(sjyj);*/
+        projectBoardSecondModelssj.Add(sjyj);
         ProjectBoardSecondModel sjpjdj = new();
         sjpjdj.ProjectName = "平均单价";
         sjpjdj.AuditFlowId = auditFlowId;
@@ -1231,7 +1213,31 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return analyseBoardSecondDto;
     }
+    /// <summary>
+    /// 根据数量确定梯度
+    /// </summary>
+    /// <returns></returns>
+    public long GetGradient(decimal Quantity, List<Gradient> gradients)
+    {
+        var maxgrad=  gradients.OrderByDescending(p => p.GradientValue).FirstOrDefault();
+        if (Quantity >= maxgrad.GradientValue)
+        {
+            return maxgrad.Id;
+        }
 
+        long gradientid = 0;
+        foreach (var gradient in gradients)
+        {
+            if (Quantity <= gradient.GradientValue)
+            {
+                gradientid = gradient.Id; //获取对应梯度id
+                break;
+            }
+        }
+
+        return gradientid;
+
+    }
 
     /// <summary>
     /// 查询毛利率方案(查询依据 GrossMarginName)
@@ -1590,16 +1596,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             numk.Add(num);
 
             var qu = modelcountyear.Quantity; //modelcount获取对应梯度,实际数量落在哪个阶梯
-            long grad = 0;
-            foreach (var gradient in gradients)
-            {
-                if (qu <= gradient.GradientValue)
-                {
-                    grad = gradient.Id;
-                    break;
-                }
-            }
-
+           
+            long grad = GetGradient(qu,gradients);
+            
             var sgprice =
                 SoltionGradPrices.FindFirst(p => p.Gradientid == grad && p.SolutionId == solutionid); //相应梯度的单价
             if (i == 0)
@@ -2032,15 +2031,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             num.value = nnum; //核价需求界面单个车型该模组的数量
             numk.Add(num);
             var qu = modelcountyear.Quantity; //modelcount获取对应梯度,实际数量落在哪个阶梯
-            long grad = 0;
-            foreach (var gradient in gradients)
-            {
-                if (qu <= gradient.GradientValue)
-                {
-                    grad = gradient.Id;
-                    break;
-                }
-            }
+            long grad = GetGradient(qu,gradients);
+
 
             var sgprice =
                 SoltionGradPrices.FindFirst(p => p.Gradientid == grad && p.SolutionId == solutionid); //相应梯度的单价
@@ -2566,6 +2558,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 AuditFlowId = jtsl.AuditFlowId,
                 version = jtsl.version,
+                GradientId = jtsl.GradientId,
                 gradient = jtsl.gradient,
                 SolutionId = jtsl.SolutionId,
                 product = jtsl.product,
@@ -2679,6 +2672,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 {
                     AuditFlowId = p.AuditFlowId,
                     ProjectName = p.ProjectName,
+                    GradientId = p.GradientId,
                     version = version,
                     Id = p.Id,
                     InteriorTarget = p.InteriorTarget,
@@ -4759,36 +4753,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 sjsls = hebing(sjsls, sjslsnew);
             }
         }
-
+        
         MotionMessageSecondModel sjsl = new MotionMessageSecondModel()
         {
             MessageName = "实际数量(K)"
         };
         sjsl.YearValues = sjsls;
         messageModels.Add(sjsl);
-        var crms = priceEvaluationStartInputResult.Requirement;
-        MotionMessageSecondModel njl = new MotionMessageSecondModel()
+        
+       
+        pp.MotionMessage = messageModels;
+
+        
+        var createRequirementDtos = priceEvaluationStartInputResult.Requirement;
+        List<SopSecondModel> Sop = new List<SopSecondModel>();
+        foreach (var crm in createRequirementDtos)
         {
-            MessageName = "年降率(%)"
-        };
-        List<YearValue> njls = new();
-        MotionMessageSecondModel flyq = new MotionMessageSecondModel()
-        {
-            MessageName = "年度返利要求(%)"
-        };
-        List<YearValue> flyqs = new();
-        MotionMessageSecondModel zrl = new MotionMessageSecondModel()
-        {
-            MessageName = "一次性折让率(%)"
-        };
-        List<YearValue> zrls = new();
-        MotionMessageSecondModel yjbl = new MotionMessageSecondModel()
-        {
-            MessageName = "佣金比例"
-        };
-        List<YearValue> yjbls = new();
-        foreach (var crm in crms)
-        {
+            SopSecondModel sop = new SopSecondModel();
             string key = crm.Year.ToString();
             var ud = crm.UpDown;
             if (ud.Equals(YearType.FirstHalf))
@@ -4806,38 +4787,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 key += "年";
             }
 
-            njls.Add(new YearValue()
-            {
-                key = key,
-                value = crm.AnnualDeclineRate
-            });
-            flyqs.Add(new YearValue()
-            {
-                key = key,
-                value = crm.AnnualRebateRequirements
-            });
-            zrls.Add(new YearValue()
-            {
-                key = key,
-                value = crm.OneTimeDiscountRate
-            });
-            yjbls.Add(new YearValue()
-            {
-                key = key,
-                value = crm.CommissionRate
-            });
+            sop.Year = key;
+         
+            sop.AnnualDeclineRate = crm.AnnualDeclineRate; //年将率
+            sop.AnnualRebateRequirements = crm.AnnualRebateRequirements; // 年度返利要求
+            sop.OneTimeDiscountRate = crm.OneTimeDiscountRate; //一次性折让率（%）
+            sop.CommissionRate = crm.CommissionRate; //年度佣金比例（%）
+            Sop.Add(sop);
         }
 
-        njl.YearValues = njls;
-        messageModels.Add(njl);
-        flyq.YearValues = flyqs;
-        messageModels.Add(flyq);
-        zrl.YearValues = zrls;
-        messageModels.Add(zrl);
-        yjbl.YearValues = yjbls;
-        messageModels.Add(yjbl);
-        pp.MotionMessage = messageModels;
-
+        pp.sops = Sop;
+        
+        
 
         //核心组件
         List<PartsSecondModel> partsModels =

@@ -88,7 +88,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
 
-    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<SolutionQuotation, long> solutionQutation, IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
+    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
+        IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
+        IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
+        FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService,
+        PriceEvaluationAppService priceEvaluationAppService,
+        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
+        IRepository<SolutionQuotation, long> solutionQutation,
+        IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
+        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -107,8 +115,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
     }
-
-
 
 
     /// <summary>
@@ -133,6 +139,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
+  
     /// <summary>
     /// 用于调试接口
     /// </summary>
@@ -268,7 +275,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async virtual Task<List<CoreDevice>> PostCoreComponentAndNreList(GetPriceEvaluationTableInput input)
     {
         //BOM成本
-        var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
+        var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput
+        {
+            AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount,
+            SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown
+        });
 
         List<CoreDevice> CoreDeviclist = new List<CoreDevice>();
         decimal moq = 0;
@@ -278,7 +289,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             if (material.SuperType.Equals("电子料") && material.TypeName.Equals("Sensor芯片")
                 || material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片")
                 || material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头")
-                )
+               )
             {
                 CoreDevice CoreDevice = new CoreDevice();
                 CoreDevice.ProjectName = material.MaterialName;
@@ -288,10 +299,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
 
                 CoreDeviclist.Add(CoreDevice);
-
             }
 
-            else if (material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") || material.SuperType.Equals("电子料") && !material.TypeName.Equals("串行芯片"))
+            else if (material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") ||
+                     material.SuperType.Equals("电子料") && !material.TypeName.Equals("串行芯片"))
             {
                 CoreDevice CoreDevice = new CoreDevice();
                 CoreDevice.ProjectName = "PCBA";
@@ -314,13 +325,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                 CoreDeviclist.Add(CoreDevice);
             }
-
         }
 
 
         //质量成本
-        var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-        
+        var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p =>
+            p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) &&
+            p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+
         CoreDevice zhiliangCoreDevice = new CoreDevice();
         zhiliangCoreDevice.ProjectName = "质量成本";
         zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
@@ -362,9 +374,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         foreach (var coreDevice in CoreDeviclist)
         {
             total = total + coreDevice.Sum;
-
-
         }
+
         CoreDevice totalCoreDevice = new CoreDevice();
         totalCoreDevice.ProjectName = "总合计";
         totalCoreDevice.Sum = total;
@@ -372,7 +383,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
         return CoreDeviclist;
-
     }
 
 
@@ -827,8 +837,23 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version)
     {
+        AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new()
+        {
+            auditFlowId = auditFlowId,
+            version = version
+        };
+        SolutionQuotation solutionQuotation =
+            await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
+        if (solutionQuotation is null)
+        {
+            throw new UserFriendlyException("请选择报价方案");
+        }
+
+        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+
+        analyseBoardSecondInputDto.solutionTables = solutionList;
         analyseBoardSecondInputDto.ntype = 1;
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
