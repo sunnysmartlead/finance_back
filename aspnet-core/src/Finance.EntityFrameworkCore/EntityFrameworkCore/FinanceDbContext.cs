@@ -254,6 +254,10 @@ namespace Finance.EntityFrameworkCore
         /// 工装费用 修改项 实体类
         /// </summary>
         public virtual DbSet<ToolingCostsModify> ToolingCostsModify { get; set; }
+        /// <summary>
+        /// Nre 核价表 带流程ID 实体类
+        /// </summary>
+        public virtual DbSet<AuditFlowIdPricingForm> AuditFlowIdPricingForm { get; set; }
         #endregion
 
         //工作流相关的表

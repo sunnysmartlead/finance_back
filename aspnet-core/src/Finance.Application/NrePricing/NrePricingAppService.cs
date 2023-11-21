@@ -214,8 +214,12 @@ namespace Finance.NerPricing
         /// EMC实验费录入 服务
         /// </summary>
         private readonly ProcessHoursEnterAppService _processHoursEnterAppService;
+        /// <summary>
+        /// Nre 核价表 带流程ID
+        /// </summary>
+        private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
 
-        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService)
+        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -258,6 +262,7 @@ namespace Finance.NerPricing
             _foundationreliableAppService = foundationreliableAppService;
             _foundationEmcAppService = foundationEmcAppService;
             _processHoursEnterAppService = processHoursEnterAppService;
+            _auditFlowIdPricingForm = auditFlowIdPricingForm;
         }
         #region 快速核报价流程
         /// <summary>
@@ -297,7 +302,7 @@ namespace Finance.NerPricing
         #endregion
         #region 快速核报价之直接上传
         /// <summary>
-        /// NRE核价表快速上传
+        /// NRE核价表快速上传-快速核报价之直接上传
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
@@ -683,6 +688,43 @@ namespace Finance.NerPricing
                                      + pricingFormDto.RestsCost.Sum(p => p.Cost);//其他费用总费用                
             return pricingFormDto;
 
+        }
+        /// <summary>
+        /// NRE核价表保存-快速核报价之直接上传
+        /// </summary>
+        /// <param name="pricingFormDto"></param>
+        /// <returns></returns>
+        public async Task FastSaveNreExecl(AuditFlowIdPricingFormDto pricingFormDto)
+        {
+            AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(pricingFormDto.AuditFlowId) && p.SolutionId.Equals(pricingFormDto.SolutionId));
+            if(auditFlowIdPricingForms is not null)
+            {
+                auditFlowIdPricingForms.JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto);
+                await _auditFlowIdPricingForm.UpdateAsync(auditFlowIdPricingForms);
+            }
+            else
+            {
+                await _auditFlowIdPricingForm.InsertAsync(new AuditFlowIdPricingForm()
+                {
+                    AuditFlowId = pricingFormDto.AuditFlowId,
+                    SolutionId = pricingFormDto.SolutionId,
+                    JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto)
+                });
+            }
+          
+        }
+        /// <summary>
+        /// 查询NRE保存的数据-快速核报价之直接上传
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="solutionId"></param>
+        /// <returns></returns>
+        public async Task<PricingFormDto> FastQueryNreExecl(long auditFlowId, long solutionId)
+        {
+           AuditFlowIdPricingForm auditFlowIdPricingForms=  await _auditFlowIdPricingForm.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
+           PricingFormDto pricingFormDto = new();
+           if(auditFlowIdPricingForms is not null&& auditFlowIdPricingForms.JsonData is not null) pricingFormDto=JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
+           return pricingFormDto;
         }
         #endregion
         /// <summary>
