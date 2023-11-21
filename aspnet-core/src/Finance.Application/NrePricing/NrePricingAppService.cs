@@ -2992,7 +2992,7 @@ namespace Finance.NerPricing
             var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
             if (cache is null)
             {
-                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(1, 0, 0));
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, seconds: 0));
             }
             else
             {
