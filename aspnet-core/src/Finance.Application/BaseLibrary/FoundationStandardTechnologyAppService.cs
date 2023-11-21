@@ -455,9 +455,29 @@ namespace Finance.BaseLibrary
                         {
                             ProcessHoursEnteritemDto technologyHardware = new ProcessHoursEnteritemDto();
                             technologyHardware.Year = device.Year;
-                            technologyHardware.LaborHour = decimal.Parse(device.LaborHour);
-                            technologyHardware.MachineHour = decimal.Parse(device.MachineHour);
-                            technologyHardware.PersonnelNumber = decimal.Parse(device.NumberPersonnel);
+                            if (null != device.LaborHour)
+                            {
+                                technologyHardware.LaborHour = decimal.Parse(device.LaborHour);
+                            }
+                            else {
+                                technologyHardware.LaborHour = 0;
+                            }
+                            if (null != device.MachineHour)
+                            {
+                                technologyHardware.MachineHour = decimal.Parse(device.MachineHour);
+                            }
+                            else
+                            {
+                                technologyHardware.MachineHour = 0;
+                            }
+                            if (null != device.NumberPersonnel)
+                            {
+                                technologyHardware.PersonnelNumber = decimal.Parse(device.NumberPersonnel);
+                            }
+                            else
+                            {
+                                technologyHardware.PersonnelNumber = 0;
+                            }
                             foundationWorkingHourItemDtosItem.Add(technologyHardware);
 
 

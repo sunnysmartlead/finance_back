@@ -290,6 +290,86 @@ namespace Finance.Processes
             }
          
         }
+
+
+
+
+        /// <summary>
+        /// 复制流程
+        /// </summary>
+        /// <param name="input">查询条件</param>
+        /// <returns>结果</returns>
+        public virtual async Task<string> GetBomEntersCopyAsync(GetBomEntersCopy input)
+        {
+
+
+            await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
+            //有数据的返回
+            var query = _bomEnterRepository.GetAllList(p =>
+         p.IsDeleted == false&& p.AuditFlowId == input.AuditFlowId).ToList();
+
+            var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>
+     p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId).ToList();
+            foreach (var ListBomEnterItem in query)
+            {
+                BomEnter bomEnter = new BomEnter();
+                bomEnter.SolutionId = ListBomEnterItem.SolutionId;
+                bomEnter.AuditFlowId = input.AuditFlowNewId;
+                bomEnter.Classification = ListBomEnterItem.Classification;
+                bomEnter.CreationTime = DateTime.Now;
+                bomEnter.DirectDepreciation = ListBomEnterItem.DirectDepreciation;
+                bomEnter.DirectLaborPrice = ListBomEnterItem.DirectLaborPrice;
+                bomEnter.DirectLineChangeCost = ListBomEnterItem.DirectLineChangeCost;
+                bomEnter.DirectManufacturingCosts = ListBomEnterItem.DirectManufacturingCosts;
+                bomEnter.DirectSummary = ListBomEnterItem.DirectSummary;
+                bomEnter.IndirectDepreciation = ListBomEnterItem.IndirectDepreciation;
+                bomEnter.IndirectLaborPrice = ListBomEnterItem.IndirectLaborPrice;
+                bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
+                bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
+                bomEnter.TotalCost = ListBomEnterItem.TotalCost;
+                bomEnter.Year = ListBomEnterItem.Year;
+                bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
+                bomEnter.Remark = ListBomEnterItem.Remark;
+                if (AbpSession.UserId != null)
+                {
+                    bomEnter.CreatorUserId = AbpSession.UserId.Value;
+                    bomEnter.LastModificationTime = DateTime.Now;
+                    bomEnter.LastModifierUserId = AbpSession.UserId.Value;
+                }
+                bomEnter.LastModificationTime = DateTime.Now;
+                await _bomEnterRepository.InsertAsync(bomEnter);
+
+
+
+            }
+            foreach (var ListBomEnterTotalItem in queryEnterTotal)
+            {
+                BomEnterTotal bomEnterTotal = new BomEnterTotal();
+                bomEnterTotal.SolutionId = ListBomEnterTotalItem.SolutionId;
+                bomEnterTotal.AuditFlowId = input.AuditFlowNewId;
+                bomEnterTotal.Classification = ListBomEnterTotalItem.Classification;
+                bomEnterTotal.CreationTime = DateTime.Now;
+                bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
+                bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                bomEnterTotal.ModelCountYearId = ListBomEnterTotalItem.ModelCountYearId;
+                bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                if (AbpSession.UserId != null)
+                {
+                    bomEnterTotal.CreatorUserId = AbpSession.UserId.Value;
+                    bomEnterTotal.LastModificationTime = DateTime.Now;
+                    bomEnterTotal.LastModifierUserId = AbpSession.UserId.Value;
+                }
+                bomEnterTotal.LastModificationTime = DateTime.Now;
+                await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
+            }
+
+            // 数据返回 
+            return "复制成功";
+            }
+          
+
+        
         /// <summary>
         /// 获取修改
         /// </summary>
