@@ -698,7 +698,7 @@ namespace Finance.WorkFlows
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
-
+                        || n.Name == "总经理查看中标金额"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,

@@ -279,6 +279,10 @@ namespace Finance.Audit
             var projectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectMinister);
             var isProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectMinister.Id);
 
+            // 总经理
+            var generalManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.GeneralManager);
+            var isGeneralManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
+
 
             return list
 
@@ -290,6 +294,9 @@ namespace Finance.Audit
 
                 //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】，就把【项目部长查看核价表】页面过滤掉
                 .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
+
+                //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
+                .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
 
                 .ToList();
         }

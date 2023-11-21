@@ -298,6 +298,17 @@ namespace Finance.WorkFlows
                             });
                         }
 
+                        //如果流转到总经理查看中标金额
+                        if (eventData.Entity.NodeId == "主流程_总经理查看中标金额")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
                         if (eventData.Entity.NodeId == "主流程_归档")
                         {
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
