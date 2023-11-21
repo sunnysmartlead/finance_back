@@ -1,5 +1,6 @@
 ﻿using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Caching;
 using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
@@ -218,8 +219,8 @@ namespace Finance.NerPricing
         /// Nre 核价表 带流程ID
         /// </summary>
         private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
-
-        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm)
+        private readonly ICacheManager _cacheManager;
+        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, ICacheManager cacheManager)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -263,6 +264,7 @@ namespace Finance.NerPricing
             _foundationEmcAppService = foundationEmcAppService;
             _processHoursEnterAppService = processHoursEnterAppService;
             _auditFlowIdPricingForm = auditFlowIdPricingForm;
+            _cacheManager = cacheManager;
         }
         #region 快速核报价流程
         /// <summary>
@@ -2759,6 +2761,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AdditionOfCostModificationItemsForHandBoards(HandPieceCostModifyDto handPieceCostModifyDto)
         {
+            await ProcessAntiShaking("AdditionOfCostModificationItemsForHandBoards", handPieceCostModifyDto);
             HandPieceCostModify handPieceCostModify = ObjectMapper.Map<HandPieceCostModify>(handPieceCostModifyDto);
             await _handPieceCostModify.BulkInsertOrUpdateAsync(handPieceCostModify);
         }
@@ -2777,6 +2780,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddMoldCostModificationItem(MouldInventoryModifyDto mouldInventoryModifyDto)
         {
+            await ProcessAntiShaking("AddMoldCostModificationItem", mouldInventoryModifyDto);
             MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
             await _mouldInventoryModify.BulkInsertOrUpdateAsync(mouldInventoryModify);
         }
@@ -2795,6 +2799,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddToolingCostModificationItem(ToolingCostsModifyDto toolingCostsModifyDto)
         {
+            await ProcessAntiShaking("AddToolingCostModificationItem", toolingCostsModifyDto);
             ToolingCostsModify toolingCostsModify = ObjectMapper.Map<ToolingCostsModify>(toolingCostsModifyDto);
             await _toolingCostsModify.BulkInsertOrUpdateAsync(toolingCostsModify);
         }
@@ -2813,6 +2818,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AdditionOfFixtureCostModificationItem(FixtureCostsModifyDto fixtureCostsModifyDto)
         {
+            await ProcessAntiShaking("AdditionOfFixtureCostModificationItem", fixtureCostsModifyDto);
             FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
             await _fixtureCostsModify.BulkInsertOrUpdateAsync(fixtureCostsModify);
         }
@@ -2831,6 +2837,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddInspectionToolCostModificationItem(InspectionToolCostModifyDto inspectionToolCostModifyDto)
         {
+            await ProcessAntiShaking("AddInspectionToolCostModificationItem", inspectionToolCostModifyDto);
             InspectionToolCostModify inspectionToolCostModify = ObjectMapper.Map<InspectionToolCostModify>(inspectionToolCostModifyDto);
             await _inspectionToolCostModify.BulkInsertOrUpdateAsync(inspectionToolCostModify);
         }
@@ -2849,6 +2856,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddProductionEquipmentCostModificationItem(ProductionEquipmentCostsModifyDto productionEquipmentCostsModifyDto)
         {
+            await ProcessAntiShaking("AddProductionEquipmentCostModificationItem", productionEquipmentCostsModifyDto);
             ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
             await _productionEquipmentCostsModify.BulkInsertOrUpdateAsync(productionEquipmentCostsModify);
         }
@@ -2867,6 +2875,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddExperimentalFeeModificationItem(ExperimentalExpensesModifyDto experimentalExpensesModifyDto)
         {
+            await ProcessAntiShaking("AddExperimentalFeeModificationItem", experimentalExpensesModifyDto);
             ExperimentalExpensesModify experimentalExpensesModify = ObjectMapper.Map<ExperimentalExpensesModify>(experimentalExpensesModifyDto);
             await _experimentalExpensesModify.BulkInsertOrUpdateAsync(experimentalExpensesModify);
         }
@@ -2885,6 +2894,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddingModificationItemsForTestingSoftwareCosts(TestingSoftwareCostsModifyDto testingSoftwareCostsModifyDto)
         {
+            await ProcessAntiShaking("AddingModificationItemsForTestingSoftwareCosts", testingSoftwareCostsModifyDto);
             TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
             await _testingSoftwareCostsModify.BulkInsertOrUpdateAsync(testingSoftwareCostsModify);
         }
@@ -2903,6 +2913,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task AddTravelExpenseModificationItem(TravelExpenseModifyDto travelExpenseModifyDto)
         {
+            await ProcessAntiShaking("AddTravelExpenseModificationItem", travelExpenseModifyDto);
             TravelExpenseModify travelExpenseModify = ObjectMapper.Map<TravelExpenseModify>(travelExpenseModifyDto);
             await _travelExpenseModify.BulkInsertOrUpdateAsync(travelExpenseModify);
         }
@@ -2921,6 +2932,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task OtherExpenseModificationItemsAdded(RestsCostModifyDto restsCostModifyDto)
         {
+            await ProcessAntiShaking("OtherExpenseModificationItemsAdded", restsCostModifyDto);
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
             await _restsCostModify.BulkInsertOrUpdateAsync(restsCostModify);
         }
@@ -2964,6 +2976,29 @@ namespace Finance.NerPricing
                 FinanceDictionaryDetailId = toExamineDto.Opinion,
                 Comment = toExamineDto.Comment,
             });
+        }
+        /// <summary>
+        /// 流程防抖
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="object"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        public async Task ProcessAntiShaking(string name,object @object)
+        {
+            #region 流程防抖
+            var cacheJson = JsonConvert.SerializeObject(@object);
+            var code = cacheJson.GetHashCode().ToString();
+            var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
+            if (cache is null)
+            {
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(1, 0, 0));
+            }
+            else
+            {
+                throw new FriendlyException($"您重复提交了流程！");
+            }
+            #endregion
         }
     }
 }
