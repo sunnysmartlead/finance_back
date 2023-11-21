@@ -285,10 +285,7 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveStructionBom(ProductDevelopmentInputDto dto)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.StructEngineerId == PeopleId)
-            {
+            
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
 
 
@@ -382,11 +379,7 @@ namespace Finance.ProductDevelopment
                     #endregion
 
                 }
-            }
-            else
-            {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
         }
 
         /// <summary>
