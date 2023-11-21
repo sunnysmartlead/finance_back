@@ -18,6 +18,7 @@ using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
 using Finance.Nre;
+using Finance.NrePricing.Dto;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes;
@@ -88,33 +89,29 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
 
-    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
-        IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
-        IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
-        FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService,
-        PriceEvaluationAppService priceEvaluationAppService,
-        IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-        IRepository<SolutionQuotation, long> solutionQutation,
-        IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
-        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
+
+    private readonly NrePricingAppService _nrePricingAppService;
+
+    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<SolutionQuotation, long> solutionQutation, IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
         _financeAuditQuotationList = financeAuditQuotationList;
         _resourceSchemeTable = resourceSchemeTable;
-        _solutionQutation = solutionQutation;
         _flowAppService = flowAppService;
         _fileCommonService = fileCommonService;
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
-        _financeDownloadListSave = financeDownloadListSave;
-
         _priceEvaluationAppService = priceEvaluationAppService;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _solutionQutation = solutionQutation;
         _financeDownloadListSave = financeDownloadListSave;
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
+        _nrePricingAppService = nrePricingAppService;
     }
+
+
+
 
 
     /// <summary>
@@ -1304,4 +1301,45 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         return productDtos;
     }
+
+    /// <summary>
+    /// 核心器件NRE部分接口整合
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="solutionId"></param>
+    /// <returns></returns>
+    public async Task<NreExpense2> GetCoreNRE(long auditFlowId, long solutionId)
+    {
+        PricingFormDto pricingFormDto =
+                await _nrePricingAppService.GetPricingFormDownload(auditFlowId, solutionId);
+        decimal deviceStatusSpecial = 0m;
+        foreach (var ProductionEquipment in pricingFormDto.ProductionEquipmentCost)
+        {
+            if (ProductionEquipment.DeviceStatus == "专用")
+            {
+                deviceStatusSpecial = deviceStatusSpecial + ProductionEquipment.Cost;
+            }
+
+        }
+
+        NreExpense2 nreExpense = new()
+        {
+            handPieceCostTotal = pricingFormDto.HandPieceCostTotal,
+            mouldInventoryTotal = pricingFormDto.MouldInventoryTotal,
+            toolingCostTotal = pricingFormDto.ToolingCostTotal,
+            fixtureCostTotal = pricingFormDto.FixtureCostTotal,
+            qaqcDepartmentsTotal = pricingFormDto.QAQCDepartmentsTotal,
+            productionEquipmentCostTotal = pricingFormDto.ProductionEquipmentCostTotal,
+            deviceStatusSpecial = deviceStatusSpecial,
+            deviceStatus = pricingFormDto.ProductionEquipmentCostTotal - deviceStatusSpecial,
+            laboratoryFeeModelsTotal = pricingFormDto.LaboratoryFeeModelsTotal,
+            softwareTestingCostTotal = pricingFormDto.SoftwareTestingCostTotal,
+            travelExpenseTotal = pricingFormDto.TravelExpenseTotal,
+            restsCostTotal = pricingFormDto.RestsCostTotal,
+            sum = pricingFormDto.HandPieceCostTotal + pricingFormDto.MouldInventoryTotal + pricingFormDto.ToolingCostTotal + pricingFormDto.FixtureCostTotal + pricingFormDto.QAQCDepartmentsTotal + pricingFormDto.ProductionEquipmentCostTotal + deviceStatusSpecial + pricingFormDto.ProductionEquipmentCostTotal - deviceStatusSpecial + pricingFormDto.LaboratoryFeeModelsTotal + pricingFormDto.SoftwareTestingCostTotal + pricingFormDto.TravelExpenseTotal + pricingFormDto.RestsCostTotal,
+
+        };
+        return nreExpense;
+    }
+
 }
