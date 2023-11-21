@@ -1070,5 +1070,46 @@ namespace Finance.WorkFlows
                 item.NodeInstanceStatus = NodeInstanceStatus.Over;
             }
         }
+
+
+        /// <summary>
+        /// 激活结构BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task ActivateStructBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+        }
+
+        /// <summary>
+        /// 失活结构BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task DeactivateStructBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+        }
+
+        /// <summary>
+        /// 激活电子BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task ActivateElectronicBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+        }
+
+        /// <summary>
+        /// 失活电子BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task DeactivateElectronicBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+        }
     }
 }
