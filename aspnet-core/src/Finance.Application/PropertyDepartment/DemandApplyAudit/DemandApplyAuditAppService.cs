@@ -1,5 +1,6 @@
 ﻿using Abp.AutoMapper;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Session;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
@@ -87,6 +88,44 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _fileCommonService = fileCommonService;
         }
         #region 快速核报价内容
+        /// <summary>
+        /// BOM页面枚举
+        /// </summary>
+        public enum BOMtype
+        {
+            /// <summary>
+            /// 结构
+            /// </summary>
+            Structure = 0,
+            /// <summary>
+            /// 电子
+            /// </summary>
+            Electronics = 1
+        }
+        /// <summary>
+        /// BOM查看的权限
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="SolutionId"></param>
+        /// <param name="bOMtype"></param>
+        /// <returns></returns>
+        public async Task<bool> GetBOMViewPermissions(long AuditFlowId, long SolutionId, BOMtype bOMtype)
+        {
+            long userId = AbpSession.GetUserId();
+            //结构
+            if (bOMtype.Equals(BOMtype.Structure))
+            {
+                Solution solution = await _resourceSchemeTable.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.Id.Equals(SolutionId) && p.StructEngineerId.Equals(userId));
+                return solution == null ? false : true;
+            }
+            //电子
+            if (bOMtype.Equals(BOMtype.Electronics))
+            {
+                Solution solution = await _resourceSchemeTable.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.Id.Equals(SolutionId) && p.ElecEngineerId.Equals(userId));
+                return solution == null ? false : true;
+            }
+            throw new FriendlyException("BOM查看的权限接口bOMtype参数异常!");
+        }
         /// <summary>
         /// 核价需求审批快速核报价
         /// </summary>

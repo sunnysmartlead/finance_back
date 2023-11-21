@@ -18,6 +18,7 @@ using Finance.MakeOffers.AnalyseBoard.Method;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using Finance.NerPricing;
 using Finance.Nre;
+using Finance.NrePricing.Dto;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes;
@@ -88,10 +89,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
 
-    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<SolutionQuotation, long> solutionQutation, IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
+
+    private readonly NrePricingAppService _nrePricingAppService;
+
+    public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod, IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList, IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<SolutionQuotation, long> solutionQutation, IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService)
     {
-        _financeAuditQuotationList = financeAuditQuotationList;
-        _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
         _financeAuditQuotationList = financeAuditQuotationList;
@@ -105,7 +107,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _financeDownloadListSave = financeDownloadListSave;
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
+        _nrePricingAppService = nrePricingAppService;
     }
+
 
 
 
@@ -132,6 +136,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
+  
     /// <summary>
     /// 用于调试接口
     /// </summary>
@@ -267,30 +272,55 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async virtual Task<List<CoreDevice>> PostCoreComponentAndNreList(GetPriceEvaluationTableInput input)
     {
         //BOM成本
-        var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
+        var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput
+        {
+            AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount,
+            SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown
+        });
 
         List<CoreDevice> CoreDeviclist = new List<CoreDevice>();
         decimal moq = 0;
         foreach (var material in electronicAndStructureList)
         {
             moq = moq + material.MoqShareCount;
-            if (material.SuperType.Equals("电子料") && material.TypeName.Equals("Sensor芯片")
-                || material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片")
-                || material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头")
-                )
+            if (material.SuperType.Equals("电子料") && material.TypeName.Equals("Sensor芯片"))
             {
                 CoreDevice CoreDevice = new CoreDevice();
-                CoreDevice.ProjectName = material.MaterialName;
+                CoreDevice.ProjectName = "Sensor芯片";
                 CoreDevice.UnitPrice = material.MaterialPrice;
                 CoreDevice.Number = material.AssemblyCount;
                 CoreDevice.Rate = material.ExchangeRate;
                 CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
 
                 CoreDeviclist.Add(CoreDevice);
-
             }
 
-            else if (material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") || material.SuperType.Equals("电子料") && !material.TypeName.Equals("串行芯片"))
+            else if (material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片"))
+            {
+                CoreDevice CoreDevice = new CoreDevice();
+                CoreDevice.ProjectName = "串行芯片";
+                CoreDevice.UnitPrice = material.MaterialPrice;
+                CoreDevice.Number = material.AssemblyCount;
+                CoreDevice.Rate = material.ExchangeRate;
+                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
+
+                CoreDeviclist.Add(CoreDevice);
+            }
+
+            else if (material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头"))
+            {
+                CoreDevice CoreDevice = new CoreDevice();
+                CoreDevice.ProjectName = "镜头";
+                CoreDevice.UnitPrice = material.MaterialPrice;
+                CoreDevice.Number = material.AssemblyCount;
+                CoreDevice.Rate = material.ExchangeRate;
+                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
+
+                CoreDeviclist.Add(CoreDevice);
+            }
+
+            else if (material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") ||
+                     material.SuperType.Equals("电子料") && !material.TypeName.Equals("串行芯片"))
             {
                 CoreDevice CoreDevice = new CoreDevice();
                 CoreDevice.ProjectName = "PCBA";
@@ -313,40 +343,75 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                 CoreDeviclist.Add(CoreDevice);
             }
-
         }
 
 
         //质量成本
-        var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-        
+        var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p =>
+            p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) &&
+            p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
         CoreDevice zhiliangCoreDevice = new CoreDevice();
         zhiliangCoreDevice.ProjectName = "质量成本";
-        zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
+        if (QualityList.Count > 0)
+        {
+            zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
+        }
+        else {
+            zhiliangCoreDevice.Sum = 0;
+        }
+        
         CoreDeviclist.Add(zhiliangCoreDevice);
 
         //损耗成本
         CoreDevice lossCostCoreDevice = new CoreDevice();
         lossCostCoreDevice.ProjectName = "损耗成本";
-        lossCostCoreDevice.Sum = QualityList.FirstOrDefault().LossCostAfterSum;
+        if (QualityList.Count > 0)
+        {
+            lossCostCoreDevice.Sum = QualityList.FirstOrDefault().LossCostAfterSum;
+        }
+        else
+        {
+            lossCostCoreDevice.Sum = 0;
+        }
         CoreDeviclist.Add(lossCostCoreDevice);
 
         //制造成本
         CoreDevice qualityCosDevice = new CoreDevice();
         qualityCosDevice.ProjectName = "制造成本";
-        qualityCosDevice.Sum = QualityList.FirstOrDefault().QualityCostAfterSum;
+        if (QualityList.Count > 0)
+        {
+            qualityCosDevice.Sum = QualityList.FirstOrDefault().QualityCostAfterSum;
+        }
+        else
+        {
+            qualityCosDevice.Sum = 0;
+        }
         CoreDeviclist.Add(qualityCosDevice);
 
         //物流成本
         CoreDevice logisticsCosDevice = new CoreDevice();
         logisticsCosDevice.ProjectName = "物流成本";
-        logisticsCosDevice.Sum = QualityList.FirstOrDefault().LogisticsAfterSum;
+        if (QualityList.Count > 0)
+        {
+            logisticsCosDevice.Sum = QualityList.FirstOrDefault().LogisticsAfterSum;
+        }
+        else
+        {
+            logisticsCosDevice.Sum = 0;
+        }
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
         CoreDevice OtherCostDevice = new CoreDevice();
         OtherCostDevice.ProjectName = "其他成本";
-        OtherCostDevice.Sum = QualityList.FirstOrDefault().OtherCosttAfterSum;
+        if (QualityList.Count > 0)
+        {
+            OtherCostDevice.Sum = QualityList.FirstOrDefault().OtherCosttAfterSum;
+        }
+        else
+        {
+            OtherCostDevice.Sum = 0;
+        }
         CoreDeviclist.Add(OtherCostDevice);
 
 
@@ -361,9 +426,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         foreach (var coreDevice in CoreDeviclist)
         {
             total = total + coreDevice.Sum;
-
-
         }
+
         CoreDevice totalCoreDevice = new CoreDevice();
         totalCoreDevice.ProjectName = "总合计";
         totalCoreDevice.Sum = total;
@@ -371,7 +435,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
         return CoreDeviclist;
-
     }
 
 
@@ -826,8 +889,23 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(AnalyseBoardSecondInputDto analyseBoardSecondInputDto)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version)
     {
+        AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new()
+        {
+            auditFlowId = auditFlowId,
+            version = version
+        };
+        SolutionQuotation solutionQuotation =
+            await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
+        if (solutionQuotation is null)
+        {
+            throw new UserFriendlyException("请选择报价方案");
+        }
+
+        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+
+        analyseBoardSecondInputDto.solutionTables = solutionList;
         analyseBoardSecondInputDto.ntype = 1;
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
@@ -1278,4 +1356,46 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         return productDtos;
     }
+
+    /// <summary>
+    /// 核心器件NRE部分接口整合
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <param name="solutionId"></param>
+    /// <returns></returns>
+    public async Task<NreExpense2> GetCoreNRE(long auditFlowId, long solutionId)
+    {
+        PricingFormDto pricingFormDto =
+                await _nrePricingAppService.GetPricingFormDownload(auditFlowId, solutionId);
+        decimal deviceStatusSpecial = 0m;
+        foreach (var ProductionEquipment in pricingFormDto.ProductionEquipmentCost)
+        {
+            if (ProductionEquipment.DeviceStatus == "Sbzt_Zy")
+
+            {
+                deviceStatusSpecial = deviceStatusSpecial + ProductionEquipment.Cost;
+            }
+
+        }
+
+        NreExpense2 nreExpense = new()
+        {
+            handPieceCostTotal = pricingFormDto.HandPieceCostTotal,
+            mouldInventoryTotal = pricingFormDto.MouldInventoryTotal,
+            toolingCostTotal = pricingFormDto.ToolingCostTotal,
+            fixtureCostTotal = pricingFormDto.FixtureCostTotal,
+            qaqcDepartmentsTotal = pricingFormDto.QAQCDepartmentsTotal,
+            productionEquipmentCostTotal = pricingFormDto.ProductionEquipmentCostTotal,
+            deviceStatusSpecial = deviceStatusSpecial,
+            deviceStatus = pricingFormDto.ProductionEquipmentCostTotal - deviceStatusSpecial,
+            laboratoryFeeModelsTotal = pricingFormDto.LaboratoryFeeModelsTotal,
+            softwareTestingCostTotal = pricingFormDto.SoftwareTestingCostTotal,
+            travelExpenseTotal = pricingFormDto.TravelExpenseTotal,
+            restsCostTotal = pricingFormDto.RestsCostTotal,
+            sum = pricingFormDto.HandPieceCostTotal + pricingFormDto.MouldInventoryTotal + pricingFormDto.ToolingCostTotal + pricingFormDto.FixtureCostTotal + pricingFormDto.QAQCDepartmentsTotal + pricingFormDto.ProductionEquipmentCostTotal + deviceStatusSpecial + pricingFormDto.ProductionEquipmentCostTotal - deviceStatusSpecial + pricingFormDto.LaboratoryFeeModelsTotal + pricingFormDto.SoftwareTestingCostTotal + pricingFormDto.TravelExpenseTotal + pricingFormDto.RestsCostTotal,
+
+        };
+        return nreExpense;
+    }
+
 }

@@ -36,8 +36,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
+using Spire.Xls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,6 +51,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.PriceEval
 {
@@ -220,6 +226,12 @@ namespace Finance.PriceEval
             #endregion
 
             #region 通用参数校验
+
+            if (input.ProjectCycle > 8)
+            {
+                throw new FriendlyException($"项目周期不得大于8年！");
+            }
+
             var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
             if (isProductInformation)
             {
@@ -275,6 +287,22 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
             }
+
+            if (input.SopTime < DateTime.Now.Year)
+            {
+                throw new FriendlyException($"SOP年份不能小于当年年份！");
+            }
+
+            if (input.Gradient == null || input.Gradient.Count == 0)
+            {
+                throw new FriendlyException($"梯度数量不能为0！");
+            }
+
+            if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
+            {
+                throw new FriendlyException($"梯度数量不能重复！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
@@ -845,6 +873,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<List<LossCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LossCost
@@ -905,6 +938,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"组测成本的全生命周期数据不允许修改！");
             }
 
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -960,6 +998,11 @@ namespace Finance.PriceEval
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
+
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
             }
 
             var entity = await _updateItemRepository.GetAll()
@@ -1072,6 +1115,12 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
             }
+
+            if (input.UpdateItem.Any(p => p.Note.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.OtherCostItem2List
@@ -1235,15 +1284,58 @@ namespace Finance.PriceEval
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
             var memoryStream = await NreTableDownloadStream(input);
+            ////开始行
+            int StartLine = 5;
+            memoryStream.Position = 0;
+            // 创建工作簿
+            var workbook = new XSSFWorkbook(memoryStream);
+            // 获取第一个工作表
+            var sheet = workbook.GetSheetAt(0);
+            int[] ProductionEquipmentCost = new int[2];//生产设备费       
+            int[] TravelExpense = new int[2];//差旅费           
 
+            for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+            {
+                var row = sheet.GetRow(rowIndex);
+                if (row == null) continue;
+                string ExpenseName = row.GetCell(2).ToString();
+                string ExpenseNameHJ = row.GetCell(5).ToString();
 
-            //var memoryStream = new MemoryStream();
-
-            //await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/NRE.xlsx", dto);
-
-            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "NRE核价表.xlsx" };
+                if (ExpenseName.Equals("生产设备费用"))
+                {
+                    ProductionEquipmentCost[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("生产设备费用合计"))
+                {
+                    ProductionEquipmentCost[1] = rowIndex - 1;
+                }
+                if (ExpenseName.Equals("差旅费"))
+                {
+                    TravelExpense[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("差旅费合计"))
+                {
+                    TravelExpense[1] = rowIndex - 1;
+                }
+            }
+            //设备状态
+            List<FinanceDictionaryDetail> ProductionEquipmentCostName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.Sbzt));
+            //事由
+            List<FinanceDictionaryDetail> TravelExpenseName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.NreReasons));
+            //列数据约束 生产设备费用
+            workbook.SetConstraint(sheet, 3, ProductionEquipmentCost[0], ProductionEquipmentCost[1], ProductionEquipmentCostName.Select(p => p.DisplayName).ToArray());
+            //列数据约束 差旅费
+            workbook.SetConstraint(sheet, 2, TravelExpense[0], TravelExpense[1], TravelExpenseName.Select(p => p.DisplayName).ToArray());
+            // 保存工作簿
+            using (MemoryStream fileStream = new MemoryStream())
+            {
+                workbook.Write(fileStream);
+                return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"NRE核价表.xlsx"
+                };
+            }
         }
-
         #endregion
 
         #region 制造成本
@@ -1386,11 +1478,37 @@ namespace Finance.PriceEval
 
         public async Task SaveAfterUpdateSum(AfterUpdateSumDto input)
         {
-            var afterUpdateSumInfo = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-            if (afterUpdateSumInfo.Count is not 0)
+            var afterUpdateSumInfoList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+
+
+            if (afterUpdateSumInfoList.Count is not 0)
             {
-                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo.FirstOrDefault());
-            
+                AfterUpdateSumInfo afterUpdateSumInfo = afterUpdateSumInfoList.FirstOrDefault();
+
+                if (input.QualityCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.QualityCostAfterSum = input.QualityCostAfterSum;
+                }
+                if (input.LossCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LossCostAfterSum = input.LossCostAfterSum;
+                }
+                if (input.ManufacturingAfterSum > 0)
+                {
+                    afterUpdateSumInfo.ManufacturingAfterSum = input.ManufacturingAfterSum;
+                }
+                if (input.LogisticsAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LogisticsAfterSum = input.LogisticsAfterSum;
+                }
+                if (input.OtherCosttAfterSum > 0)
+                {
+                    afterUpdateSumInfo.OtherCosttAfterSum = input.OtherCosttAfterSum;
+                }
+
+
+                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo);
+
             }
             else
             {
@@ -1399,20 +1517,20 @@ namespace Finance.PriceEval
                 {
                     AuditFlowId = input.AuditFlowId,
                     SolutionId = input.SolutionId,
-                    GradientId=input.GradientId,
+                    GradientId = input.GradientId,
                     Year = input.Year,
-                    UpDown=input.UpDown,
-                    QualityCostAfterSum=input.QualityCostAfterSum,
-                    LossCostAfterSum=input.LossCostAfterSum,
-                    ManufacturingAfterSum=input.LossCostAfterSum,
-                    OtherCosttAfterSum=input.OtherCosttAfterSum,
+                    UpDown = input.UpDown,
+                    QualityCostAfterSum = input.QualityCostAfterSum,
+                    LossCostAfterSum = input.LossCostAfterSum,
+                    ManufacturingAfterSum = input.LossCostAfterSum,
+                    OtherCosttAfterSum = input.OtherCosttAfterSum,
 
                 };
-                    await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
-                 
+                await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
+
             }
 
-           
+
 
         }
 
