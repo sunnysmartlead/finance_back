@@ -109,7 +109,7 @@ namespace Finance.WorkFlows
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
-        private async Task TestLine(long id,long id2)
+        private async Task TestLine(long id, long id2)
         {
             var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
 
@@ -697,7 +697,7 @@ namespace Finance.WorkFlows
                        where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
 
-                       || n.Name == "贸易合规"
+                       || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
 
                        select new UserTask
                        {

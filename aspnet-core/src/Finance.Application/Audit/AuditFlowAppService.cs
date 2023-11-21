@@ -259,13 +259,37 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
+            //贸易合规审核员
             var tradeComplianceAuditor = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
             var isTradeComplianceAuditor = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
+
+            //项目管理部-项目经理
+            var projectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectManager);
+            var isProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectManager.Id);
+
+            // 市场部-项目经理
+            var marketProjectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectManager);
+            var isMarketProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectManager.Id);
+
+            //项目管理部-项目部长
+            var marketProjectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectMinister);
+            var isMarketProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectMinister.Id);
+
+            // 市场部-项目部长
+            var projectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectMinister);
+            var isProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectMinister.Id);
+
 
             return list
 
                 //如果当前用户不是贸易合规审核员，就把贸易合规页面过滤掉
                 .WhereIf(!isTradeComplianceAuditor, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+
+                //如果当前用户不是【项目管理部-项目经理】或【市场部-项目经理】，就把【查看每个方案初版BOM成本】页面过滤掉
+                .WhereIf((!isProjectManager) || (!isMarketProjectManager), p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
+
+                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】，就把【项目部长查看核价表】页面过滤掉
+                .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
 
                 .ToList();
         }

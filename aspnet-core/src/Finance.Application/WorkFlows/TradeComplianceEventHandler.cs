@@ -276,6 +276,28 @@ namespace Finance.WorkFlows
                             });
                         }
 
+                        //如果流转到查看每个方案初版BOM成本
+                        if (eventData.Entity.NodeId == "主流程_查看每个方案初版BOM成本")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
+                        //如果流转到项目部长查看核价表
+                        if (eventData.Entity.NodeId == "主流程_项目部长查看核价表")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
                         if (eventData.Entity.NodeId == "主流程_归档")
                         {
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
