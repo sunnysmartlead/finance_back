@@ -2996,7 +2996,7 @@ namespace Finance.NerPricing
             }
             else
             {
-                throw new FriendlyException($"您重复提交了流程！");
+                throw new FriendlyException($"您重复提交了数据！");
             }
             #endregion
         }
