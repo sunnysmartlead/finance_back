@@ -1,9 +1,11 @@
-﻿using Finance.NrePricing.Model;
+﻿using Finance.Ext;
+using Finance.NrePricing.Model;
 using Finance.PriceEval;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.NrePricing.Dto
 {
@@ -199,5 +201,25 @@ namespace Finance.NrePricing.Dto
         /// 年份类型
         /// </summary>       
         public virtual YearType UpDown { get; set; }
+    }
+    /// <summary>
+    /// Nre 核价表 带流程ID 交互类
+    /// </summary>
+    public class AuditFlowIdPricingFormDto
+    {
+        /// <summary>
+        /// 审批流程主表ID
+        /// </summary>
+        [FriendlyRequired("流程ID")]
+        public  long AuditFlowId { get; set; }
+        /// <summary>
+        /// 方案ID
+        /// </summary>
+        [FriendlyRequired("方案ID")]
+        public long SolutionId { get; set; }
+        /// <summary>
+        /// 交互数据
+        /// </summary>
+        public PricingFormDto PricingFormDto { get; set; }
     }
 }

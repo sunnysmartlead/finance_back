@@ -243,7 +243,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.YesOrNo,
                     Activation = $"{MainFlowId}_物流成本录入_{MainFlowId}_贸易合规 && {MainFlowId}_COB制造成本录入_{MainFlowId}_贸易合规",
                     RoleId = tradeComplianceAuditor.Id.ToString(),
-                    ProcessIdentifier = "TradeCompliance",
+                    ProcessIdentifier = FinanceConsts.TradeCompliance,
                 },
                 new Node
                 {
