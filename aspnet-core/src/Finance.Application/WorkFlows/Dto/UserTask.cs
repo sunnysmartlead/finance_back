@@ -70,5 +70,10 @@ namespace Finance.WorkFlows.Dto
         /// 审批评论
         /// </summary>
         public virtual string Comment { get; set; }
+
+        /// <summary>
+        /// 目标用户Id
+        /// </summary>
+        public virtual long TargetUserId { get; set; }
     }
 }

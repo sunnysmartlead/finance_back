@@ -276,6 +276,39 @@ namespace Finance.WorkFlows
                             });
                         }
 
+                        //如果流转到查看每个方案初版BOM成本
+                        if (eventData.Entity.NodeId == "主流程_查看每个方案初版BOM成本")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
+                        //如果流转到项目部长查看核价表
+                        if (eventData.Entity.NodeId == "主流程_项目部长查看核价表")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
+                        //如果流转到总经理查看中标金额
+                        if (eventData.Entity.NodeId == "主流程_总经理查看中标金额")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转"
+                            });
+                        }
+
                         if (eventData.Entity.NodeId == "主流程_归档")
                         {
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
@@ -285,46 +318,46 @@ namespace Finance.WorkFlows
 
                         #region 邮件发送
 
-#if !DEBUG
+////#if !DEBUG
 
-                        SendEmail email = new SendEmail();
-                        string loginIp = email.GetLoginAddr();
+//                        SendEmail email = new SendEmail();
+//                        string loginIp = email.GetLoginAddr();
 
-                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
-                        {
+//                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
+//                        {
 
-                            var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfos();
-                            var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
-                            foreach (var task in tasks)
-                            {
-                                foreach (var item in task.AuditFlowRightDetailList)
-                                {
-                                    //foreach (var userId in item.TaskUserIds)
-                                    //{
-                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
+//                            var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfosForEmail();
+//                            var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
+//                            foreach (var task in tasks)
+//                            {
+//                                foreach (var item in task.AuditFlowRightDetailList)
+//                                {
+//                                    //foreach (var userId in item.TaskUserIds)
+//                                    //{
+//                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+//                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
 
-                                    if (userInfo != null)
-                                    {
-                                        string emailAddr = userInfo.EmailAddress;
+//                                    if (userInfo != null)
+//                                    {
+//                                        string emailAddr = userInfo.EmailAddress;
 
-                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+//                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
                                         
-                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                        string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                        Task.Run(async () =>
-                                        {
-                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                        });
-#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    }
-                                    //}
-                                }
-                            }
-                        }
+//                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+//                                        string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+//#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+//                                        Task.Run(async () =>
+//                                        {
+//                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+//                                        });
+//#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+//                                    }
+//                                    //}
+//                                }
+//                            }
+//                        }
 
-#endif
+////#endif
 
                         #endregion
 

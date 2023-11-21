@@ -1316,6 +1316,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         foreach (var ProductionEquipment in pricingFormDto.ProductionEquipmentCost)
         {
             if (ProductionEquipment.DeviceStatus == "Sbzt_Zy")
+
             {
                 deviceStatusSpecial = deviceStatusSpecial + ProductionEquipment.Cost;
             }
