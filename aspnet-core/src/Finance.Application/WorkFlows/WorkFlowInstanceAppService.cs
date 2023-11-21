@@ -696,6 +696,9 @@ namespace Finance.WorkFlows
 
                        where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
+
+                       || n.Name == "贸易合规"
+
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
