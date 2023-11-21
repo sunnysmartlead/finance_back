@@ -148,6 +148,11 @@ public class QuotationListSecondDto
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct { get; set; }
+    /// <summary>
+    /// 客户年降率、年度返利要求、一次性折让率、佣金比例
+    /// </summary>
+
+    public List<SopSecondModel> sops{ get; set; }
 }
 
 /// <summary>

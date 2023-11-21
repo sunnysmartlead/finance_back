@@ -263,7 +263,7 @@ namespace Finance.BaseLibrary
                         FoundationDeviceDto entity = new FoundationDeviceDto();
                         entity.IsDeleted = false;
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
-                        entity.ProcessName = initRow.GetCell(1).ToString();
+                        entity.ProcessName = initRow.GetCell(1).StringCellValue;
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
