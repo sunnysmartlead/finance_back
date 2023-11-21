@@ -114,6 +114,29 @@ namespace Finance.Ext
             // 将数据验证添加到工作表中
             sheet.AddValidationData(listValidation);
         }
+        /// <summary>
+        /// 设置数据约束（Sheet法）
+        /// </summary>
+        /// <param name="firstRow">开始行</param>
+        /// <param name="lastRow">结束行</param>
+        /// <param name="workbook">工作簿对象</param>
+        /// <param name="sheet">工作表对象</param>
+        /// <param name="columnIndex">列索引</param>
+        /// <param name="rowIndex">行索引</param>
+        /// <param name="data">下拉列表中的值</param>
+        public static void SetConstraint(this XSSFWorkbook workbook, ISheet sheet, int columnIndex, int firstRow, int lastRow, params string[] data)
+        {          
+            // 创建数据约束列表
+            string[] constraintValues = data;
+            // 创建下拉数据约束对象
+            IDataValidationHelper validationHelper = sheet.GetDataValidationHelper();
+            CellRangeAddressList addressList = new CellRangeAddressList(firstRow, lastRow, columnIndex, columnIndex); // 设置约束的单元格范围
+            IDataValidationConstraint constraint = validationHelper.CreateExplicitListConstraint(constraintValues);
+            IDataValidation validation = validationHelper.CreateValidation(constraint, addressList);
+
+            // 将约束应用到单元格
+            sheet.AddValidationData(validation);
+        }
 
         /// <summary>
         /// Excel sheet合并，多个单sheet的Excel合并为一个
