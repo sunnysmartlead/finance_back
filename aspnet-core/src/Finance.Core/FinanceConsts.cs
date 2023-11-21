@@ -922,6 +922,10 @@ namespace Finance
         /// </summary>
         public const string FormulaOperationAddition = "FormulaOperationAddition";
 
+        /// <summary>
+        /// 贸易合规
+        /// </summary>
+        public const string TradeCompliance = "TradeCompliance";
 
         /// <summary>
         /// NRE_EMC实验费录入

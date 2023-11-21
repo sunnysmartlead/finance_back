@@ -2661,7 +2661,7 @@ namespace Finance.PriceEval
                     QualityCost = qualityCost / yearCount.Sum(p => p.Quantity),
                 };
 
-                result.CostProportion = result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+                result.CostProportion = (result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply)) * 100;
 
                 return result;
             }
@@ -3123,7 +3123,7 @@ namespace Finance.PriceEval
             dtoAll.LogisticsFee = dtoAll.OtherCostItem.LogisticsFee;
             dtoAll.ProductCategory = dtoAll.OtherCostItem.ProductCategory;
             dtoAll.CostProportion = dtoAll.OtherCostItem.CostProportion;
-            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion * 100}%";
+            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion}%";// * 100
             dtoAll.QualityCost = dtoAll.OtherCostItem.QualityCost;
             dtoAll.AccountingPeriod = dtoAll.OtherCostItem.AccountingPeriod;
             dtoAll.CapitalCostRate = dtoAll.OtherCostItem.CapitalCostRate;
