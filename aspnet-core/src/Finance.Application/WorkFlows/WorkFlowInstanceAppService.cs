@@ -109,11 +109,11 @@ namespace Finance.WorkFlows
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
-        public async Task TestLine(long id)
+        private async Task TestLine(long id,long id2)
         {
-            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 459);
+            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
 
-            var route = await GetNodeRoute(id, 11484);
+            var route = await GetNodeRoute(id, id2);
             if (route.Any())
             {
                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
@@ -950,12 +950,17 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task<List<NodeInstance>> GetTargetNodeByNodeId(long nodeInstanceId)
         {
+            var hjkb = new List<string> { FinanceConsts .HjkbSelect_Input ,
+                FinanceConsts .HjkbSelect_Yes ,
+            };
+
             var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
 
             var data = from l in _lineInstanceRepository.GetAll()
                        join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
                        where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
                        && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && l.LineType != LineType.Reset && l.FinanceDictionaryDetailId != FinanceConsts.YesOrNo_No
+                       && (!hjkb.Contains(l.FinanceDictionaryDetailId))
                        select n;
             var result = await data.ToListAsync();
 
