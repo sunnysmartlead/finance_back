@@ -302,7 +302,7 @@ namespace Finance.NerPricing
         #endregion
         #region 快速核报价之直接上传
         /// <summary>
-        /// NRE核价表快速上传
+        /// NRE核价表快速上传-快速核报价之直接上传
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
@@ -690,21 +690,31 @@ namespace Finance.NerPricing
 
         }
         /// <summary>
-        /// NRE核价表保存
+        /// NRE核价表保存-快速核报价之直接上传
         /// </summary>
         /// <param name="pricingFormDto"></param>
         /// <returns></returns>
         public async Task FastSaveNreExecl(AuditFlowIdPricingFormDto pricingFormDto)
         {
-            await _auditFlowIdPricingForm.InsertAsync(new AuditFlowIdPricingForm()
+            AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(pricingFormDto.AuditFlowId) && p.SolutionId.Equals(pricingFormDto.SolutionId));
+            if(auditFlowIdPricingForms is not null)
             {
-                AuditFlowId = pricingFormDto.AuditFlowId,
-                SolutionId = pricingFormDto.SolutionId,
-                JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto)
-            }); 
+                auditFlowIdPricingForms.JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto);
+                await _auditFlowIdPricingForm.UpdateAsync(auditFlowIdPricingForms);
+            }
+            else
+            {
+                await _auditFlowIdPricingForm.InsertAsync(new AuditFlowIdPricingForm()
+                {
+                    AuditFlowId = pricingFormDto.AuditFlowId,
+                    SolutionId = pricingFormDto.SolutionId,
+                    JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto)
+                });
+            }
+          
         }
         /// <summary>
-        /// 查询NRE保存的数据
+        /// 查询NRE保存的数据-快速核报价之直接上传
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
