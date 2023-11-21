@@ -1315,7 +1315,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         decimal deviceStatusSpecial = 0m;
         foreach (var ProductionEquipment in pricingFormDto.ProductionEquipmentCost)
         {
-            if (ProductionEquipment.DeviceStatus == "专用")
+            if (ProductionEquipment.DeviceStatus == "Sbzt_Zy")
             {
                 deviceStatusSpecial = deviceStatusSpecial + ProductionEquipment.Cost;
             }
