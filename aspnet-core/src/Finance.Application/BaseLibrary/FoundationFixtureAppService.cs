@@ -257,7 +257,9 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        this.CreateLog(" 导入治具项目" + list.Count + "条");
+                        var query1 = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false);
+
+                        this.CreateLog(" 导入治具项目" + query1.Count() + "条");
                     }
                 }
             }

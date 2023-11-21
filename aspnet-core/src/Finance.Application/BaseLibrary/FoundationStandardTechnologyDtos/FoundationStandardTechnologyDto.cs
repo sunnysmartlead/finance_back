@@ -10,6 +10,10 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class FoundationStandardTechnologyDto: EntityDto<long>
     {
+        /// <summary>
+        /// 维护人
+        /// </summary>
+        public string LastModifierUserName { get; set; }
         public bool IsDeleted { get; set; }
         public System.Nullable<System.Int64> DeleterUserId { get; set; }
         public System.Nullable<System.DateTime> DeletionTime { get; set; }

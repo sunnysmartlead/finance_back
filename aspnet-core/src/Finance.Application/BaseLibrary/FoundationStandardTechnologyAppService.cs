@@ -166,6 +166,10 @@ namespace Finance.BaseLibrary
             foreach (var item in dtos)
             {
                 var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                if (user != null)
+                {
+                    item.LastModifierUserName = user.Name;
+                }
                 List<FoundationReliableProcessHoursResponseDto> foundationReliableProcessHoursResponseDtos = new List<FoundationReliableProcessHoursResponseDto>();
 
              List<FoundationReliableProcessHours> FoundationReliableProcessHourList =  this._foundationFoundationReliableProcessHoursRepository.GetAll().Where(u => u.StandardTechnologyId == item.Id).ToList();

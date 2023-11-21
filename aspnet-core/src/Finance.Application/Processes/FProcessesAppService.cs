@@ -188,10 +188,10 @@ namespace Finance.Processes
                         }
                     }
                 }
-           
+
                 // 获取总数
-                var totalCount = query.Count();
-                 this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                var query1 = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
+                this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
             }
             return true;
         }

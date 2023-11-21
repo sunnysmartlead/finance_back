@@ -291,9 +291,11 @@ namespace Finance.BaseLibrary
                         }
                     }
                 }
-            
+
                 // 获取总数
-                var totalCount = query.Count();
+                var query1 = this._foundationEmcRepository.GetAll().Where(t => t.IsDeleted == false);
+
+                var totalCount = query1.Count();
                 this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
             }
             return true;
