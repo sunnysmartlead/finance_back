@@ -283,13 +283,34 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         foreach (var material in electronicAndStructureList)
         {
             moq = moq + material.MoqShareCount;
-            if (material.SuperType.Equals("电子料") && material.TypeName.Equals("Sensor芯片")
-                || material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片")
-                || material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头")
-               )
+            if (material.SuperType.Equals("电子料") && material.TypeName.Equals("Sensor芯片"))
             {
                 CoreDevice CoreDevice = new CoreDevice();
-                CoreDevice.ProjectName = material.MaterialName;
+                CoreDevice.ProjectName = "Sensor芯片";
+                CoreDevice.UnitPrice = material.MaterialPrice;
+                CoreDevice.Number = material.AssemblyCount;
+                CoreDevice.Rate = material.ExchangeRate;
+                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
+
+                CoreDeviclist.Add(CoreDevice);
+            }
+
+            else if (material.SuperType.Equals("电子料") && material.TypeName.Equals("串行芯片"))
+            {
+                CoreDevice CoreDevice = new CoreDevice();
+                CoreDevice.ProjectName = "串行芯片";
+                CoreDevice.UnitPrice = material.MaterialPrice;
+                CoreDevice.Number = material.AssemblyCount;
+                CoreDevice.Rate = material.ExchangeRate;
+                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
+
+                CoreDeviclist.Add(CoreDevice);
+            }
+
+            else if (material.SuperType.Equals("结构料") && material.TypeName.Equals("镜头"))
+            {
+                CoreDevice CoreDevice = new CoreDevice();
+                CoreDevice.ProjectName = "镜头";
                 CoreDevice.UnitPrice = material.MaterialPrice;
                 CoreDevice.Number = material.AssemblyCount;
                 CoreDevice.Rate = material.ExchangeRate;
@@ -329,34 +350,68 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p =>
             p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) &&
             p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-
         CoreDevice zhiliangCoreDevice = new CoreDevice();
         zhiliangCoreDevice.ProjectName = "质量成本";
-        zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
+        if (QualityList.Count > 0)
+        {
+            zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
+        }
+        else {
+            zhiliangCoreDevice.Sum = 0;
+        }
+        
         CoreDeviclist.Add(zhiliangCoreDevice);
 
         //损耗成本
         CoreDevice lossCostCoreDevice = new CoreDevice();
         lossCostCoreDevice.ProjectName = "损耗成本";
-        lossCostCoreDevice.Sum = QualityList.FirstOrDefault().LossCostAfterSum;
+        if (QualityList.Count > 0)
+        {
+            lossCostCoreDevice.Sum = QualityList.FirstOrDefault().LossCostAfterSum;
+        }
+        else
+        {
+            lossCostCoreDevice.Sum = 0;
+        }
         CoreDeviclist.Add(lossCostCoreDevice);
 
         //制造成本
         CoreDevice qualityCosDevice = new CoreDevice();
         qualityCosDevice.ProjectName = "制造成本";
-        qualityCosDevice.Sum = QualityList.FirstOrDefault().QualityCostAfterSum;
+        if (QualityList.Count > 0)
+        {
+            qualityCosDevice.Sum = QualityList.FirstOrDefault().QualityCostAfterSum;
+        }
+        else
+        {
+            qualityCosDevice.Sum = 0;
+        }
         CoreDeviclist.Add(qualityCosDevice);
 
         //物流成本
         CoreDevice logisticsCosDevice = new CoreDevice();
         logisticsCosDevice.ProjectName = "物流成本";
-        logisticsCosDevice.Sum = QualityList.FirstOrDefault().LogisticsAfterSum;
+        if (QualityList.Count > 0)
+        {
+            logisticsCosDevice.Sum = QualityList.FirstOrDefault().LogisticsAfterSum;
+        }
+        else
+        {
+            logisticsCosDevice.Sum = 0;
+        }
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
         CoreDevice OtherCostDevice = new CoreDevice();
         OtherCostDevice.ProjectName = "其他成本";
-        OtherCostDevice.Sum = QualityList.FirstOrDefault().OtherCosttAfterSum;
+        if (QualityList.Count > 0)
+        {
+            OtherCostDevice.Sum = QualityList.FirstOrDefault().OtherCosttAfterSum;
+        }
+        else
+        {
+            OtherCostDevice.Sum = 0;
+        }
         CoreDeviclist.Add(OtherCostDevice);
 
 
