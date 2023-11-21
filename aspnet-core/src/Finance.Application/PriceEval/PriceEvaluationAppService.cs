@@ -226,6 +226,12 @@ namespace Finance.PriceEval
             #endregion
 
             #region 通用参数校验
+
+            if (input.ProjectCycle > 8)
+            {
+                throw new FriendlyException($"项目周期不得大于8年！");
+            }
+
             var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
             if (isProductInformation)
             {
@@ -1319,7 +1325,7 @@ namespace Finance.PriceEval
             //列数据约束 生产设备费用
             workbook.SetConstraint(sheet, 3, ProductionEquipmentCost[0], ProductionEquipmentCost[1], ProductionEquipmentCostName.Select(p => p.DisplayName).ToArray());
             //列数据约束 差旅费
-            workbook.SetConstraint(sheet, 2, TravelExpense[0], TravelExpense[1], TravelExpenseName.Select(p=>p.DisplayName).ToArray());       
+            workbook.SetConstraint(sheet, 2, TravelExpense[0], TravelExpense[1], TravelExpenseName.Select(p => p.DisplayName).ToArray());
             // 保存工作簿
             using (MemoryStream fileStream = new MemoryStream())
             {
@@ -1328,7 +1334,7 @@ namespace Finance.PriceEval
                 {
                     FileDownloadName = $"NRE核价表.xlsx"
                 };
-            }           
+            }
         }
         #endregion
 
@@ -1473,13 +1479,13 @@ namespace Finance.PriceEval
         public async Task SaveAfterUpdateSum(AfterUpdateSumDto input)
         {
             var afterUpdateSumInfoList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
-            
-            
+
+
             if (afterUpdateSumInfoList.Count is not 0)
             {
                 AfterUpdateSumInfo afterUpdateSumInfo = afterUpdateSumInfoList.FirstOrDefault();
 
-                if (input.QualityCostAfterSum>0)
+                if (input.QualityCostAfterSum > 0)
                 {
                     afterUpdateSumInfo.QualityCostAfterSum = input.QualityCostAfterSum;
                 }
@@ -1502,7 +1508,7 @@ namespace Finance.PriceEval
 
 
                 await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo);
-            
+
             }
             else
             {
@@ -1511,20 +1517,20 @@ namespace Finance.PriceEval
                 {
                     AuditFlowId = input.AuditFlowId,
                     SolutionId = input.SolutionId,
-                    GradientId=input.GradientId,
+                    GradientId = input.GradientId,
                     Year = input.Year,
-                    UpDown=input.UpDown,
-                    QualityCostAfterSum=input.QualityCostAfterSum,
-                    LossCostAfterSum=input.LossCostAfterSum,
-                    ManufacturingAfterSum=input.LossCostAfterSum,
-                    OtherCosttAfterSum=input.OtherCosttAfterSum,
+                    UpDown = input.UpDown,
+                    QualityCostAfterSum = input.QualityCostAfterSum,
+                    LossCostAfterSum = input.LossCostAfterSum,
+                    ManufacturingAfterSum = input.LossCostAfterSum,
+                    OtherCosttAfterSum = input.OtherCosttAfterSum,
 
                 };
-                    await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
-                 
+                await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
+
             }
 
-           
+
 
         }
 
