@@ -351,8 +351,18 @@ namespace Finance.NerPricing
                 for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
                 {
                     var row = sheet.GetRow(rowIndex);
-                    string ExpenseName = row.GetCell(2).ToString();
-                    string ExpenseNameHJ = row.GetCell(5).ToString();
+                    string ExpenseName = "";
+                    string ExpenseNameHJ = "";
+                    if (row == null) continue;
+                    try
+                    {
+                        ExpenseName = row.GetCell(2).ToString();
+                        ExpenseNameHJ = row.GetCell(5).ToString();
+                    }
+                    catch (Exception)
+                    {
+                        throw new FriendlyException($"{rowIndex + 1}行,表格请加上边框");
+                    }                   
                     if (ExpenseName.Equals("手板件费用"))
                     {
                         HandPieceCost[0] = rowIndex + 2;
@@ -435,6 +445,7 @@ namespace Finance.NerPricing
                     }
                     try
                     {
+                        var pp = row.GetCell(1).ToString();
                         if (row.GetCell(1).ToString().Equals("共线分摊率(%)"))
                         {
                             var Value = Convert.ToDecimal(row.GetCell(3).ToString());
@@ -485,6 +496,7 @@ namespace Finance.NerPricing
                 for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
                 {
                     var row = sheet.GetRow(rowIndex);
+                    if (row == null) continue;
                     //手板件费用
                     if (rowIndex >= HandPieceCost[0] && rowIndex <= HandPieceCost[1])
                     {
