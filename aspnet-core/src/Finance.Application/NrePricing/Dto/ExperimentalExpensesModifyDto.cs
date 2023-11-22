@@ -37,7 +37,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 实验项目
         /// </summary>
-        public string TestItem { get; set; }
+        public string ProjectName { get; set; }
         /// <summary>
         /// 是否指定第三方 (是 true   否 false)
         /// </summary>
