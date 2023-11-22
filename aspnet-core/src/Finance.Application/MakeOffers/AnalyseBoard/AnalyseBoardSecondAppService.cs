@@ -889,6 +889,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
+   /// <summary>
+    /// 报价反馈
+    /// </summary>
+    /// <param name="auditFlowId"></param>
+    /// <returns></returns>
     public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version)
     {
         AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new()
