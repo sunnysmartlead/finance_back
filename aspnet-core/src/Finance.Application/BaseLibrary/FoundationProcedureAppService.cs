@@ -107,7 +107,7 @@ namespace Finance.BaseLibrary
             var dtos = ObjectMapper.Map<List<FoundationProcedure>, List<FoundationProcedureDto>>(list, new List<FoundationProcedureDto>());
             foreach (var item in dtos)
             {
-                var user = this._foundationProcedureRepository.GetAll().Where(u => u.Id == item.CreatorUserId).ToList().FirstOrDefault();
+                var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
                 if (user != null)
                 {
                     item.LastModifierUserName = user.Name;
@@ -221,9 +221,10 @@ namespace Finance.BaseLibrary
                     }
                
                 }
+                var query1 = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
 
                 // 获取总数
-                this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
+                this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
 
             }
             return true;

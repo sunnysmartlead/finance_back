@@ -349,7 +349,9 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        this.CreateLog(" 导入设备项目" + list.Count + "条");
+                        var query1 = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
+
+                        this.CreateLog(" 导入设备项目" + query1.Count() + "条");
                     }
                 }
             }

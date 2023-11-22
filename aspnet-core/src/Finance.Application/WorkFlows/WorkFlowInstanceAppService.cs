@@ -14,6 +14,7 @@ using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -109,11 +110,11 @@ namespace Finance.WorkFlows
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
-        public async Task TestLine(long id)
+        private async Task TestLine(long id, long id2)
         {
-            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 459);
+            var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
 
-            var route = await GetNodeRoute(id, 11484);
+            var route = await GetNodeRoute(id, id2);
             if (route.Any())
             {
                 var lines = route.Select(p => p.Zip(p.Skip(1), (a, b) => lineInstance.FirstOrDefault(o => o.SoureNodeId == a.NodeId && o.TargetNodeId == b.NodeId)))
@@ -516,34 +517,34 @@ namespace Finance.WorkFlows
         /// <summary>
         /// 获取他人重置给自己的任务
         /// </summary>
-        /// <param name="userId"></param>
         /// <returns></returns>
-        public async virtual Task<PagedResultDto<UserTask>> GetReset(long userId)
+        public async virtual Task<PagedResultDto<UserTask>> GetReset(long userId, bool isFilter = true)
         {
             if (userId == 0)
             {
                 userId = AbpSession.UserId == null ? 0 : AbpSession.UserId.Value;
             }
 
-            var node = from n in _nodeInstanceRepository.GetAll()
-                       join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
-                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId
-                       where t.TargetUserId == userId && t.IsActive
-                       && w.WorkflowState == WorkflowState.Running && n.NodeInstanceStatus == NodeInstanceStatus.Current
-                       select new UserTask
-                       {
-                           Id = n.Id,
-                           WorkFlowName = w.Name,
-                           Title = w.Title,
-                           NodeName = n.Name,
-                           CreationTime = n.CreationTime,
-                           WorkflowState = w.WorkflowState,
-                           WorkFlowInstanceId = w.Id,
-                           ProcessIdentifier = n.ProcessIdentifier,
-                           IsBack = n.IsBack,
-                           Comment = n.Comment,
-                           IsReset = true,
-                       };
+            var node = (from n in _nodeInstanceRepository.GetAll()
+                        join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
+                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId
+                        where t.IsActive
+                        && w.WorkflowState == WorkflowState.Running && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                        select new UserTask
+                        {
+                            Id = n.Id,
+                            WorkFlowName = w.Name,
+                            Title = w.Title,
+                            NodeName = n.Name,
+                            CreationTime = n.CreationTime,
+                            WorkflowState = w.WorkflowState,
+                            WorkFlowInstanceId = w.Id,
+                            ProcessIdentifier = n.ProcessIdentifier,
+                            IsBack = n.IsBack,
+                            Comment = n.Comment,
+                            IsReset = true,
+                            TargetUserId = t.TargetUserId
+                        }).WhereIf(isFilter, t => t.TargetUserId == userId);
             var result = await node.ToListAsync();
             return new PagedResultDto<UserTask>(result.Count, result);
 
@@ -582,7 +583,7 @@ namespace Finance.WorkFlows
         /// 根据用户Id 获取待办
         /// </summary>
         /// <returns></returns>
-        public async virtual Task<PagedResultDto<UserTask>> GetTaskByUserId(long userId)
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskByUserId(long userId, bool isFilter = true)
         {
             if (userId == 0)
             {
@@ -597,15 +598,6 @@ namespace Finance.WorkFlows
                 .Join(_workflowInstanceRepository.GetAll(), n => n.WorkFlowInstanceId, w => w.Id, (n, w) => new { n, w })
                 .Where(p => p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current);
 
-            //// 先初步过滤一遍角色Id
-            //if (roleIds.Any())
-            //{
-            //    roleIds.ForEach(o => { node = node.Where(p => p.n.RoleId.Contains(o)); });
-            //}
-            //else
-            //{
-            //    node = node.Where(p => false);
-            //}
 
             //取入内存中
             var nodeList = await node.ToListAsync();
@@ -627,25 +619,22 @@ namespace Finance.WorkFlows
                 p.n.Comment,
             });
 
-
-            if (roleIds.Any())
+            //是否筛选
+            if (isFilter)
             {
-                dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
-                                                                            //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
-                 .Where(p => p.NodeType != NodeType.End || p.OperatedUserIds.IsNullOrWhiteSpace() || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
 
-                //foreach (var o in roleIds)
-                //{
-                //    dto = dto.Where(p => p.RoleId.Contains(o));
-                //}
-                //roleIds.ForEach(o => { dto = dto.Where(p => p.RoleId.Contains(o)); });
+                if (roleIds.Any())
+                {
+                    dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
+                                                                                //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                     .Where(p => p.NodeType != NodeType.End || p.OperatedUserIds.IsNullOrWhiteSpace() || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                }
+                else
+                {
+                    dto = dto.Where(p => false);
+                }
             }
-            else
-            {
-                dto = dto.Where(p => false);
-            }
-            //var dfgd = dto is null;
-            //var dfddfdf = dto.Count();
+
 
             var roles = dto.SelectMany(p => p.RoleId).Select(p => p.To<long>()).Distinct();
 
@@ -697,8 +686,8 @@ namespace Finance.WorkFlows
                        where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
 
-                       || n.Name == "贸易合规"
-
+                       || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
+                        || n.Name == "总经理查看中标金额"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -950,12 +939,17 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         private async Task<List<NodeInstance>> GetTargetNodeByNodeId(long nodeInstanceId)
         {
+            var hjkb = new List<string> { FinanceConsts .HjkbSelect_Input ,
+                FinanceConsts .HjkbSelect_Yes ,
+            };
+
             var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
 
             var data = from l in _lineInstanceRepository.GetAll()
                        join n in _nodeInstanceRepository.GetAll() on l.TargetNodeId equals n.NodeId
                        where l.SoureNodeId == nodeInstance.NodeId && l.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId
                        && n.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && l.LineType != LineType.Reset && l.FinanceDictionaryDetailId != FinanceConsts.YesOrNo_No
+                       && (!hjkb.Contains(l.FinanceDictionaryDetailId))
                        select n;
             var result = await data.ToListAsync();
 
@@ -1064,6 +1058,47 @@ namespace Finance.WorkFlows
             {
                 item.NodeInstanceStatus = NodeInstanceStatus.Over;
             }
+        }
+
+
+        /// <summary>
+        /// 激活结构BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task ActivateStructBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+        }
+
+        /// <summary>
+        /// 失活结构BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task DeactivateStructBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+        }
+
+        /// <summary>
+        /// 激活电子BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task ActivateElectronicBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+        }
+
+        /// <summary>
+        /// 失活电子BOM单价审核
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task DeactivateElectronicBomEval(long auditFlowId)
+        {
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
+            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
         }
     }
 }

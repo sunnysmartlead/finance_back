@@ -343,12 +343,29 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     RoleId = generalManager.Id.ToString(),
                     ProcessIdentifier = "QuoteApproval",
                 },
+                //new Node
+                //{
+                //    Name="系统生成报价审批表报价单",
+                //    FinanceDictionaryId = FinanceConsts.Done,
+                //    Activation = $"{MainFlowId}_审批报价策略与核价表_{MainFlowId}_系统生成报价审批表报价单",
+                //    RoleId = salesMan.Id.ToString(),
+                //    ProcessIdentifier = "ExternalQuotation",
+                //},
                 new Node
                 {
-                    Name="系统生成报价审批表报价单",
+                    Name="报价单",
                     FinanceDictionaryId = FinanceConsts.Done,
-                    Activation = $"{MainFlowId}_审批报价策略与核价表_{MainFlowId}_系统生成报价审批表报价单",
+                    Activation = $"{MainFlowId}_审批报价策略与核价表_{MainFlowId}_报价单",
                     RoleId = salesMan.Id.ToString(),
+                    ProcessIdentifier = "ExternalQuotation",
+                },
+                new Node
+                {
+                    Name="报价审批表",
+                    FinanceDictionaryId = FinanceConsts.Done,
+                    Activation = $"{MainFlowId}_审批报价策略与核价表_{MainFlowId}_报价审批表",
+                    RoleId = salesMan.Id.ToString(),
+                    ProcessIdentifier = "QuotationApprovalForm",
                 },
                 new Node
                 {
@@ -387,7 +404,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 {
                     Name="报价反馈",
                     FinanceDictionaryId = FinanceConsts.EvalFeedback,
-                    Activation = $"{MainFlowId}_系统生成报价审批表报价单_{MainFlowId}_报价反馈",
+                    Activation = $"{MainFlowId}_报价单_{MainFlowId}_报价反馈 && {MainFlowId}_报价审批表_{MainFlowId}_报价反馈",
                     RoleId = salesMan.Id.ToString(),
                     ProcessIdentifier = "QuoteFeedback",
                 },
@@ -792,16 +809,44 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_Yes,
                 },
+                //new Line
+                //{
+                //    SoureNodeId = "审批报价策略与核价表",
+                //    TargetNodeId = "系统生成报价审批表报价单",
+                //    Index = 0,
+                //    FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Yes,
+                //},
                 new Line
                 {
                     SoureNodeId = "审批报价策略与核价表",
-                    TargetNodeId = "系统生成报价审批表报价单",
+                    TargetNodeId = "报价单",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Yes,
                 },
                 new Line
                 {
-                    SoureNodeId = "系统生成报价审批表报价单",
+                    SoureNodeId = "审批报价策略与核价表",
+                    TargetNodeId = "报价审批表",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.Spbjclyhjb_Yes,
+                },
+                //new Line
+                //{
+                //    SoureNodeId = "系统生成报价审批表报价单",
+                //    TargetNodeId = "报价反馈",
+                //    Index = 0,
+                //    FinanceDictionaryDetailId = FinanceConsts.Done,
+                //},
+                new Line
+                {
+                    SoureNodeId = "报价单",
+                    TargetNodeId = "报价反馈",
+                    Index = 0,
+                    FinanceDictionaryDetailId = FinanceConsts.Done,
+                },
+                new Line
+                {
+                    SoureNodeId = "报价审批表",
                     TargetNodeId = "报价反馈",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.Done,
