@@ -2730,25 +2730,25 @@ namespace Finance.NerPricing
                     modify.USDAllCost = modify.RMBAllCost;
                 }
                 //手板件费用修改项
-                modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList(); 
                 //模具费用修改项
-                modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //工装费用修改项
-                modify.ToolingCostsModifyDtos = ObjectMapper.Map<List<ToolingCostsModifyDto>>(_toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.ToolingCostsModifyDtos = ObjectMapper.Map<List<ToolingCostsModifyDto>>(_toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //治具费用修改项
-                modify.FixtureCostsModifyDtos = ObjectMapper.Map<List<FixtureCostsModifyDto>>(_fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.FixtureCostsModifyDtos = ObjectMapper.Map<List<FixtureCostsModifyDto>>(_fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //检具费用修改项
-                modify.InspectionToolCostModifyDtos = ObjectMapper.Map<List<InspectionToolCostModifyDto>>(_inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.InspectionToolCostModifyDtos = ObjectMapper.Map<List<InspectionToolCostModifyDto>>(_inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //生产设备费用修改项
-                modify.ProductionEquipmentCostsModifyDtos = ObjectMapper.Map<List<ProductionEquipmentCostsModifyDto>>(_productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.ProductionEquipmentCostsModifyDtos = ObjectMapper.Map<List<ProductionEquipmentCostsModifyDto>>(_productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //实验费用修改项
-                modify.ExperimentalExpensesModifyDtos = ObjectMapper.Map<List<ExperimentalExpensesModifyDto>>(_experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.ExperimentalExpensesModifyDtos = ObjectMapper.Map<List<ExperimentalExpensesModifyDto>>(_experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //测试软件费用修改项
-                modify.TestingSoftwareCostsModifyDtos = ObjectMapper.Map<List<TestingSoftwareCostsModifyDto>>(_testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.TestingSoftwareCostsModifyDtos = ObjectMapper.Map<List<TestingSoftwareCostsModifyDto>>(_testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 // 差旅费用修改项
-                modify.TravelExpenseModifyDtos = ObjectMapper.Map<List<TravelExpenseModifyDto>>(_travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.TravelExpenseModifyDtos = ObjectMapper.Map<List<TravelExpenseModifyDto>>(_travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 // 其他费用修改项
-                modify.RestsCostModifyDtos = ObjectMapper.Map<List<RestsCostModifyDto>>(_restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId)));
+                modify.RestsCostModifyDtos = ObjectMapper.Map<List<RestsCostModifyDto>>(_restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
 
                 return modify;
             }
@@ -2771,11 +2771,11 @@ namespace Finance.NerPricing
         /// 手板件费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AdditionOfCostModificationItemsForHandBoards(HandPieceCostModifyDto handPieceCostModifyDto)
+        public async Task<long> AdditionOfCostModificationItemsForHandBoards(HandPieceCostModifyDto handPieceCostModifyDto)
         {
             await ProcessAntiShaking("AdditionOfCostModificationItemsForHandBoards", handPieceCostModifyDto);
             HandPieceCostModify handPieceCostModify = ObjectMapper.Map<HandPieceCostModify>(handPieceCostModifyDto);
-            await _handPieceCostModify.BulkInsertOrUpdateAsync(handPieceCostModify);
+            return await _handPieceCostModify.InsertOrUpdateAndGetIdAsync(handPieceCostModify);
         }
         /// <summary>
         /// 手板件费用修改项删除
@@ -2790,11 +2790,11 @@ namespace Finance.NerPricing
         /// 模具费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddMoldCostModificationItem(MouldInventoryModifyDto mouldInventoryModifyDto)
+        public async Task<long> AddMoldCostModificationItem(MouldInventoryModifyDto mouldInventoryModifyDto)
         {
             await ProcessAntiShaking("AddMoldCostModificationItem", mouldInventoryModifyDto);
             MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
-            await _mouldInventoryModify.BulkInsertOrUpdateAsync(mouldInventoryModify);
+            return await _mouldInventoryModify.InsertOrUpdateAndGetIdAsync(mouldInventoryModify);
         }
         /// <summary>
         /// 模具费用修改项删除
@@ -2809,11 +2809,11 @@ namespace Finance.NerPricing
         /// 工装费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddToolingCostModificationItem(ToolingCostsModifyDto toolingCostsModifyDto)
+        public async Task<long> AddToolingCostModificationItem(ToolingCostsModifyDto toolingCostsModifyDto)
         {
             await ProcessAntiShaking("AddToolingCostModificationItem", toolingCostsModifyDto);
             ToolingCostsModify toolingCostsModify = ObjectMapper.Map<ToolingCostsModify>(toolingCostsModifyDto);
-            await _toolingCostsModify.BulkInsertOrUpdateAsync(toolingCostsModify);
+            return await _toolingCostsModify.InsertOrUpdateAndGetIdAsync(toolingCostsModify);
         }
         /// <summary>
         /// 工装费用修改项删除
@@ -2828,11 +2828,11 @@ namespace Finance.NerPricing
         /// 治具费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AdditionOfFixtureCostModificationItem(FixtureCostsModifyDto fixtureCostsModifyDto)
+        public async Task<long> AdditionOfFixtureCostModificationItem(FixtureCostsModifyDto fixtureCostsModifyDto)
         {
             await ProcessAntiShaking("AdditionOfFixtureCostModificationItem", fixtureCostsModifyDto);
             FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
-            await _fixtureCostsModify.BulkInsertOrUpdateAsync(fixtureCostsModify);
+            return await _fixtureCostsModify.InsertOrUpdateAndGetIdAsync(fixtureCostsModify);
         }
         /// <summary>
         /// 治具费用修改项删除
@@ -2847,11 +2847,11 @@ namespace Finance.NerPricing
         /// 检具费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddInspectionToolCostModificationItem(InspectionToolCostModifyDto inspectionToolCostModifyDto)
+        public async Task<long> AddInspectionToolCostModificationItem(InspectionToolCostModifyDto inspectionToolCostModifyDto)
         {
             await ProcessAntiShaking("AddInspectionToolCostModificationItem", inspectionToolCostModifyDto);
             InspectionToolCostModify inspectionToolCostModify = ObjectMapper.Map<InspectionToolCostModify>(inspectionToolCostModifyDto);
-            await _inspectionToolCostModify.BulkInsertOrUpdateAsync(inspectionToolCostModify);
+            return await _inspectionToolCostModify.InsertOrUpdateAndGetIdAsync(inspectionToolCostModify);
         }
         /// <summary>
         /// 检具费用修改项删除
@@ -2866,11 +2866,11 @@ namespace Finance.NerPricing
         /// 生产设备费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddProductionEquipmentCostModificationItem(ProductionEquipmentCostsModifyDto productionEquipmentCostsModifyDto)
+        public async Task<long> AddProductionEquipmentCostModificationItem(ProductionEquipmentCostsModifyDto productionEquipmentCostsModifyDto)
         {
             await ProcessAntiShaking("AddProductionEquipmentCostModificationItem", productionEquipmentCostsModifyDto);
             ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
-            await _productionEquipmentCostsModify.BulkInsertOrUpdateAsync(productionEquipmentCostsModify);
+            return await _productionEquipmentCostsModify.InsertOrUpdateAndGetIdAsync(productionEquipmentCostsModify);
         }
         /// <summary>
         /// 生产设备费用修改项删除
@@ -2885,11 +2885,11 @@ namespace Finance.NerPricing
         /// 实验费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddExperimentalFeeModificationItem(ExperimentalExpensesModifyDto experimentalExpensesModifyDto)
+        public async Task<long> AddExperimentalFeeModificationItem(ExperimentalExpensesModifyDto experimentalExpensesModifyDto)
         {
             await ProcessAntiShaking("AddExperimentalFeeModificationItem", experimentalExpensesModifyDto);
             ExperimentalExpensesModify experimentalExpensesModify = ObjectMapper.Map<ExperimentalExpensesModify>(experimentalExpensesModifyDto);
-            await _experimentalExpensesModify.BulkInsertOrUpdateAsync(experimentalExpensesModify);
+            return await _experimentalExpensesModify.InsertOrUpdateAndGetIdAsync(experimentalExpensesModify);
         }
         /// <summary>
         /// 实验费用修改项删除
@@ -2904,11 +2904,11 @@ namespace Finance.NerPricing
         /// 测试软件费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddingModificationItemsForTestingSoftwareCosts(TestingSoftwareCostsModifyDto testingSoftwareCostsModifyDto)
+        public async Task<long> AddingModificationItemsForTestingSoftwareCosts(TestingSoftwareCostsModifyDto testingSoftwareCostsModifyDto)
         {
             await ProcessAntiShaking("AddingModificationItemsForTestingSoftwareCosts", testingSoftwareCostsModifyDto);
             TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
-            await _testingSoftwareCostsModify.BulkInsertOrUpdateAsync(testingSoftwareCostsModify);
+            return await _testingSoftwareCostsModify.InsertOrUpdateAndGetIdAsync(testingSoftwareCostsModify);
         }
         /// <summary>
         /// 测试软件费用修改项删除
@@ -2923,11 +2923,11 @@ namespace Finance.NerPricing
         /// 差旅费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task AddTravelExpenseModificationItem(TravelExpenseModifyDto travelExpenseModifyDto)
+        public async Task<long> AddTravelExpenseModificationItem(TravelExpenseModifyDto travelExpenseModifyDto)
         {
             await ProcessAntiShaking("AddTravelExpenseModificationItem", travelExpenseModifyDto);
             TravelExpenseModify travelExpenseModify = ObjectMapper.Map<TravelExpenseModify>(travelExpenseModifyDto);
-            await _travelExpenseModify.BulkInsertOrUpdateAsync(travelExpenseModify);
+            return await _travelExpenseModify.InsertOrUpdateAndGetIdAsync(travelExpenseModify);
         }
         /// <summary>
         /// 差旅费用修改项删除
@@ -2942,11 +2942,11 @@ namespace Finance.NerPricing
         /// 其他费用修改项添加
         /// </summary>
         /// <returns></returns>
-        public async Task OtherExpenseModificationItemsAdded(RestsCostModifyDto restsCostModifyDto)
+        public async Task<long> OtherExpenseModificationItemsAdded(RestsCostModifyDto restsCostModifyDto)
         {
             await ProcessAntiShaking("OtherExpenseModificationItemsAdded", restsCostModifyDto);
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
-            await _restsCostModify.BulkInsertOrUpdateAsync(restsCostModify);
+            return await _restsCostModify.InsertOrUpdateAndGetIdAsync(restsCostModify);
         }
         /// <summary>
         /// 其他费用修改项删除
