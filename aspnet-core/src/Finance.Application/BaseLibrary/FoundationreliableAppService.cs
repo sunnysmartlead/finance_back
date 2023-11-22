@@ -277,6 +277,7 @@ namespace Finance.BaseLibrary
                 {
                     await _foundationreliableRepository.DeleteAsync(s => s.Id == item.Id);
                 }
+
                 //跳过表头
                 for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
                 {
@@ -315,8 +316,9 @@ namespace Finance.BaseLibrary
                         }
                     }
                 }
+                var query1 = this._foundationreliableRepository.GetAll().Where(t => t.IsDeleted == false);
                 // 获取总数
-                var totalCount = query.Count();
+                var totalCount = query1.Count();
                 this.CreateLog(" 新表单导入，共" + totalCount + "条数据");
             }
             return true;

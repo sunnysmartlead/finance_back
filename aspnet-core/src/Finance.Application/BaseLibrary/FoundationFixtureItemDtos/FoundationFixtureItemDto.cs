@@ -8,6 +8,7 @@ namespace Finance.BaseLibrary
     /// </summary>
     public class FoundationFixtureItemDto: EntityDto<long>
     {
+        
         public bool IsDeleted { get; set; }
         public System.Nullable<System.Int64> DeleterUserId { get; set; }
         public System.Nullable<System.DateTime> DeletionTime { get; set; }
