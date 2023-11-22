@@ -2990,7 +2990,7 @@ namespace Finance.NerPricing
             });
         }
         /// <summary>
-        /// 流程防抖
+        /// 提交防抖
         /// </summary>
         /// <param name="name"></param>
         /// <param name="object"></param>
@@ -3004,7 +3004,7 @@ namespace Finance.NerPricing
             var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
             if (cache is null)
             {
-                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, 0));
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 0, 3));
             }
             else
             {
