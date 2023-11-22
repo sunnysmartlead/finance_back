@@ -342,7 +342,7 @@ namespace Finance.Entering
             else
             {
                 //激活结构BOM单价审核
-                await _workflowInstanceAppService.ActivateStructBomEval(electronicDto.AuditFlowId);
+                await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
 
                 //电子料单价录入确认
                 await _resourceElectronicStructuralMethod.ElectronicMaterialEntering(electronicDto);
@@ -547,8 +547,8 @@ namespace Finance.Entering
             }
             else
             {
-                //激活电子BOM单价审核
-                await _workflowInstanceAppService.ActivateElectronicBomEval(structuralMemberEnteringModel.AuditFlowId);
+                //激活结构BOM单价审核
+                await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
 
                 await _resourceElectronicStructuralMethod.StructuralMemberEntering(structuralMemberEnteringModel);
             }
