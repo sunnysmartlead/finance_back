@@ -362,7 +362,7 @@ namespace Finance.NerPricing
                     catch (Exception)
                     {
                         throw new FriendlyException($"{rowIndex + 1}行,表格请加上边框");
-                    }                   
+                    }
                     if (ExpenseName.Equals("手板件费用"))
                     {
                         HandPieceCost[0] = rowIndex + 2;
@@ -588,7 +588,7 @@ namespace Finance.NerPricing
                     //生产设备费用
                     if (rowIndex >= ProductionEquipmentCost[0] && rowIndex <= ProductionEquipmentCost[1])
                     {
-                        var DeviceStatusName= row.GetCell(3).ToString();
+                        var DeviceStatusName = row.GetCell(3).ToString();
                         var DeviceStatus = _financeDictionaryDetailRepository.FirstOrDefault(p => p.DisplayName.Equals(DeviceStatusName))?.Id;
                         if (string.IsNullOrEmpty(DeviceStatus))
                         {
@@ -601,7 +601,7 @@ namespace Finance.NerPricing
                             var Number = Convert.ToInt32(row.GetCell(5).ToString());
                             var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
                             var Remark = row.GetCell(7).ToString();
-                            pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatus= DeviceStatus, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
+                            pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatus = DeviceStatus, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
                         {
@@ -711,7 +711,7 @@ namespace Finance.NerPricing
         public async Task FastSaveNreExecl(AuditFlowIdPricingFormDto pricingFormDto)
         {
             AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(pricingFormDto.AuditFlowId) && p.SolutionId.Equals(pricingFormDto.SolutionId));
-            if(auditFlowIdPricingForms is not null)
+            if (auditFlowIdPricingForms is not null)
             {
                 auditFlowIdPricingForms.JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto);
                 await _auditFlowIdPricingForm.UpdateAsync(auditFlowIdPricingForms);
@@ -725,7 +725,7 @@ namespace Finance.NerPricing
                     JsonData = JsonConvert.SerializeObject(pricingFormDto.PricingFormDto)
                 });
             }
-          
+
         }
         /// <summary>
         /// 查询NRE保存的数据-快速核报价之直接上传
@@ -735,10 +735,10 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task<PricingFormDto> FastQueryNreExecl(long auditFlowId, long solutionId)
         {
-           AuditFlowIdPricingForm auditFlowIdPricingForms=  await _auditFlowIdPricingForm.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
-           PricingFormDto pricingFormDto = new();
-           if(auditFlowIdPricingForms is not null&& auditFlowIdPricingForms.JsonData is not null) pricingFormDto=JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
-           return pricingFormDto;
+            AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+            PricingFormDto pricingFormDto = new();
+            if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null) pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
+            return pricingFormDto;
         }
         #endregion
         /// <summary>
@@ -2730,7 +2730,7 @@ namespace Finance.NerPricing
                     modify.USDAllCost = modify.RMBAllCost;
                 }
                 //手板件费用修改项
-                modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList(); 
+                modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //模具费用修改项
                 modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //工装费用修改项
@@ -2775,7 +2775,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AdditionOfCostModificationItemsForHandBoards", handPieceCostModifyDto);
             HandPieceCostModify handPieceCostModify = ObjectMapper.Map<HandPieceCostModify>(handPieceCostModifyDto);
-            return await _handPieceCostModify.InsertOrUpdateAndGetIdAsync(handPieceCostModify);
+            HandPieceCostModify prop = await _handPieceCostModify.BulkInsertOrUpdateAsync(handPieceCostModify);
+            return prop.Id;
         }
         /// <summary>
         /// 手板件费用修改项删除
@@ -2794,7 +2795,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddMoldCostModificationItem", mouldInventoryModifyDto);
             MouldInventoryModify mouldInventoryModify = ObjectMapper.Map<MouldInventoryModify>(mouldInventoryModifyDto);
-            return await _mouldInventoryModify.InsertOrUpdateAndGetIdAsync(mouldInventoryModify);
+            MouldInventoryModify prop = await _mouldInventoryModify.BulkInsertOrUpdateAsync(mouldInventoryModify);
+            return prop.Id;
         }
         /// <summary>
         /// 模具费用修改项删除
@@ -2813,7 +2815,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddToolingCostModificationItem", toolingCostsModifyDto);
             ToolingCostsModify toolingCostsModify = ObjectMapper.Map<ToolingCostsModify>(toolingCostsModifyDto);
-            return await _toolingCostsModify.InsertOrUpdateAndGetIdAsync(toolingCostsModify);
+            ToolingCostsModify prop = await _toolingCostsModify.BulkInsertOrUpdateAsync(toolingCostsModify);
+            return prop.Id;
         }
         /// <summary>
         /// 工装费用修改项删除
@@ -2832,7 +2835,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AdditionOfFixtureCostModificationItem", fixtureCostsModifyDto);
             FixtureCostsModify fixtureCostsModify = ObjectMapper.Map<FixtureCostsModify>(fixtureCostsModifyDto);
-            return await _fixtureCostsModify.InsertOrUpdateAndGetIdAsync(fixtureCostsModify);
+            var prop = await _fixtureCostsModify.BulkInsertOrUpdateAsync(fixtureCostsModify);
+            return prop.Id;
         }
         /// <summary>
         /// 治具费用修改项删除
@@ -2851,7 +2855,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddInspectionToolCostModificationItem", inspectionToolCostModifyDto);
             InspectionToolCostModify inspectionToolCostModify = ObjectMapper.Map<InspectionToolCostModify>(inspectionToolCostModifyDto);
-            return await _inspectionToolCostModify.InsertOrUpdateAndGetIdAsync(inspectionToolCostModify);
+            var prop = await _inspectionToolCostModify.BulkInsertOrUpdateAsync(inspectionToolCostModify);
+            return prop.Id;
         }
         /// <summary>
         /// 检具费用修改项删除
@@ -2870,7 +2875,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddProductionEquipmentCostModificationItem", productionEquipmentCostsModifyDto);
             ProductionEquipmentCostsModify productionEquipmentCostsModify = ObjectMapper.Map<ProductionEquipmentCostsModify>(productionEquipmentCostsModifyDto);
-            return await _productionEquipmentCostsModify.InsertOrUpdateAndGetIdAsync(productionEquipmentCostsModify);
+            var prop = await _productionEquipmentCostsModify.BulkInsertOrUpdateAsync(productionEquipmentCostsModify);
+            return prop.Id;
         }
         /// <summary>
         /// 生产设备费用修改项删除
@@ -2889,7 +2895,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddExperimentalFeeModificationItem", experimentalExpensesModifyDto);
             ExperimentalExpensesModify experimentalExpensesModify = ObjectMapper.Map<ExperimentalExpensesModify>(experimentalExpensesModifyDto);
-            return await _experimentalExpensesModify.InsertOrUpdateAndGetIdAsync(experimentalExpensesModify);
+            ExperimentalExpensesModify expensesModify = await _experimentalExpensesModify.BulkInsertOrUpdateAsync(experimentalExpensesModify);
+            return expensesModify.Id;
         }
         /// <summary>
         /// 实验费用修改项删除
@@ -2908,7 +2915,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddingModificationItemsForTestingSoftwareCosts", testingSoftwareCostsModifyDto);
             TestingSoftwareCostsModify testingSoftwareCostsModify = ObjectMapper.Map<TestingSoftwareCostsModify>(testingSoftwareCostsModifyDto);
-            return await _testingSoftwareCostsModify.InsertOrUpdateAndGetIdAsync(testingSoftwareCostsModify);
+            var prop = await _testingSoftwareCostsModify.BulkInsertOrUpdateAsync(testingSoftwareCostsModify);
+            return prop.Id;
         }
         /// <summary>
         /// 测试软件费用修改项删除
@@ -2927,7 +2935,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("AddTravelExpenseModificationItem", travelExpenseModifyDto);
             TravelExpenseModify travelExpenseModify = ObjectMapper.Map<TravelExpenseModify>(travelExpenseModifyDto);
-            return await _travelExpenseModify.InsertOrUpdateAndGetIdAsync(travelExpenseModify);
+            var prop = await _travelExpenseModify.BulkInsertOrUpdateAsync(travelExpenseModify);
+            return prop.Id;
         }
         /// <summary>
         /// 差旅费用修改项删除
@@ -2946,7 +2955,8 @@ namespace Finance.NerPricing
         {
             await ProcessAntiShaking("OtherExpenseModificationItemsAdded", restsCostModifyDto);
             RestsCostModify restsCostModify = ObjectMapper.Map<RestsCostModify>(restsCostModifyDto);
-            return await _restsCostModify.InsertOrUpdateAndGetIdAsync(restsCostModify);
+            var prop = await _restsCostModify.BulkInsertOrUpdateAsync(restsCostModify);
+            return prop.Id;
         }
         /// <summary>
         /// 其他费用修改项删除
@@ -2996,7 +3006,7 @@ namespace Finance.NerPricing
         /// <param name="object"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task ProcessAntiShaking(string name,object @object)
+        public async Task ProcessAntiShaking(string name, object @object)
         {
             #region 流程防抖
             var cacheJson = JsonConvert.SerializeObject(@object);
