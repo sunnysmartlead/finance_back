@@ -78,6 +78,10 @@ namespace Finance.QuickQuotationReview
             await _resourceEnteringAppService.FastPostElectronicMaterialEntering(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //结构单价录入
             await _resourceEnteringAppService.FastPostStructuralMemberEntering(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //电子单价录入复制表
+            await _resourceEnteringAppService.FastPostElectronicMaterialEnteringCopy(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //结构单价录入复制表
+            await _resourceEnteringAppService.FastPostStructuralMemberEnteringCopy(dto.AuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             return priceEvaluationStartResult;
         }
         public class dto
