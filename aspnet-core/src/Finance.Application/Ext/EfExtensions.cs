@@ -72,6 +72,8 @@ namespace Finance.Ext
                     }
                     else
                     {
+                        //将ID设置为默认值
+                        entity.Id = default(TPrimaryKey);
                         await entitySet.AddAsync(entity);
                     }
                 }
@@ -112,6 +114,8 @@ namespace Finance.Ext
                     }
                     else
                     {
+                        //将ID设置为默认值
+                        entity.Id = default(TPrimaryKey);
                         newEntities.Add(entity);
                     }
                 }
@@ -147,7 +151,9 @@ namespace Finance.Ext
                     dbContext.Entry(existingEntity).CurrentValues.SetValues(entity);
                 }
                 else
-                {
+                {           
+                    //将ID设置为默认值
+                    entity.Id = default(TPrimaryKey);                 
                     await entitySet.AddAsync(entity);
                 }
                 await dbContext.SaveChangesAsync();
@@ -158,6 +164,8 @@ namespace Finance.Ext
                 throw new FriendlyException(ex.Message);
             }
         }
+ 
+
         /// <summary>
         /// 批量删除指定实体类型的所有实体
         /// </summary>
