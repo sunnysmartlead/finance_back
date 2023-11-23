@@ -10,6 +10,8 @@ using Finance.Ext;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.ProductDevelopment.Dto;
+using Finance.ProjectManagement;
+using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
@@ -54,11 +56,18 @@ namespace Finance.ProductDevelopment
         private readonly IObjectMapper _objectMapper;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
+
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
-        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> resourceSchemeTable)
+
+        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, IRepository<Solution, long> resourceSchemeTable)
         {
             _logger = logger;
             _structureBomInfoRepository = structureBomInfoRepository;
@@ -71,8 +80,10 @@ namespace Finance.ProductDevelopment
             _productDevelopmentInputAppService = productDevelopmentInputAppService;
             _objectMapper = objectMapper;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _fileCommonService = fileCommonService;
             _resourceSchemeTable = resourceSchemeTable;
         }
+
 
 
 
@@ -85,6 +96,13 @@ namespace Finance.ProductDevelopment
         /// <exception cref="UserFriendlyException"></exception>
         public async Task<ProductDevelopmentInputDto> LoadExcel(IFormFile file)
         {
+            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+
+            FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
+
+
+            result.Stu3DFileId = fileUploadOutputDto.FileId;
+
             //打开上传文件的输入流
             Stream stream = file.OpenReadStream();
 
@@ -96,7 +114,7 @@ namespace Finance.ProductDevelopment
             var sheet = workbook.GetSheetAt(0);
 
             List<StructureBomDto> list = new List<StructureBomDto>();
-            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+           
 
             //判断是否获取到 sheet
             if (sheet != null)
@@ -311,6 +329,7 @@ namespace Finance.ProductDevelopment
                         bomInfo.AuditFlowId = AuditFlowId;
                         bomInfo.SolutionId = SolutionId;
                         bomInfo.ProductId = ProductId;
+                        bomInfo.FileId = dto.StuFileId;
                     });
 
                     //要保存的bom表list
@@ -351,6 +370,7 @@ namespace Finance.ProductDevelopment
                                 SecondaryProcessingMethod = item.SecondaryProcessingMethod,
                                 SurfaceTreatmentMethod = item.SurfaceTreatmentMethod,
                                 DimensionalAccuracyRemark = item.DimensionalAccuracyRemark,
+                                FileId=item.FileId,
                             };
                             await _structureBomInfoRepository.InsertAsync(structureBomInfo);
                         }
