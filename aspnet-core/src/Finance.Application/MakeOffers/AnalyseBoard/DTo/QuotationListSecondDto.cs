@@ -106,6 +106,10 @@ public class QuotationListSecondDto
     /// 走量信息
     /// </summary>
     public List<MotionMessageSecondModel> MotionMessage { get; set; }
+    /// <summary>
+    /// 走量信息
+    /// </summary>
+    public List<MotionGradientSecondModel> motion { get; set; }
 
     /// <summary>
     /// 项目名称

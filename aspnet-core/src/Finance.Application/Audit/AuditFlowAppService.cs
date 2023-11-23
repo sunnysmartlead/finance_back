@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Finance.DemandApplyAudit;
 using static Finance.Authorization.Roles.StaticRoleNames;
 using Abp.Collections.Extensions;
+using Finance.WorkFlows.Dto;
 
 namespace Finance.Audit
 {
@@ -220,7 +221,7 @@ namespace Finance.Audit
                 //如果当前用户不是结构工程师，就把结构BOM录入页面过滤掉
                 .WhereIf(!solutionList.Any(p => p.StructEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.StructureBOM || p.IsReset)
 
-                //公式工序
+                //工序工时
                 .WhereIf(pricingTeam == null || pricingTeam.EngineerId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.FormulaOperationAddition || p.IsReset)
 
                 //环境实验费
@@ -360,11 +361,16 @@ namespace Finance.Audit
             //待办
             var data = await _workflowInstanceAppService.GetTaskByUserId(0);
 
-            //重置
+            //添加别人重置给自己的任务
             var resetData = await _workflowInstanceAppService.GetReset(0);
 
             data.Items = data.Items.Where(p => !resetData.Items.Select(o => o.Id).Contains(p.Id))
                 .Union(resetData.Items).ToList();
+
+            //删去自己重置给别人任务
+            var resetedData = await _workflowInstanceAppService.GetReseted(0);
+
+            data.Items = data.Items.ExceptBy(resetedData.Items.Select(p => p.Id), p => p.Id).ToList();
 
             var dto = (await data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
             {
@@ -383,8 +389,6 @@ namespace Finance.Audit
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());
-
-
 
             auditFlowRightInfoDtoList.AddRange(dto);
 
