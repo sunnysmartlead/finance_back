@@ -101,7 +101,7 @@ namespace Finance.ProductDevelopment
             FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
 
 
-            result.Stu3DFileId = fileUploadOutputDto.FileId;
+            result.StuFileId = fileUploadOutputDto.FileId;
 
             //打开上传文件的输入流
             Stream stream = file.OpenReadStream();

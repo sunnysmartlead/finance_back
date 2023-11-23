@@ -3060,7 +3060,7 @@ namespace Finance.NerPricing
             }
         }
         ///// <summary>
-        ///// 模具费快速核报价
+        ///// 手板件、差旅、其他快速核报价
         ///// </summary>
         ///// <param name="AuditFlowId"></param>
         ///// <param name="QuoteAuditFlowId"></param>
