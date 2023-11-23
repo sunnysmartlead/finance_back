@@ -12,6 +12,8 @@ using Finance.Nre;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.ProductDevelopment.Dto;
+using Finance.ProjectManagement;
+using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
@@ -57,11 +59,18 @@ namespace Finance.ProductDevelopment
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
+
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
+
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
-        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> resourceSchemeTable)
+
+        public ElectronicBomAppService(ILogger<ElectronicBomAppService> logger, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<ElectronicBomInfoBak, long> electronicBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ElecBomDifferent, long> elecBomDifferentRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ProductInformation, long> productInformationRepository, IRepository<BoardInfo, long> boardInfoRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, IRepository<Solution, long> resourceSchemeTable)
         {
             _logger = logger;
             _electronicBomInfoRepository = electronicBomInfoRepository;
@@ -76,6 +85,7 @@ namespace Finance.ProductDevelopment
             _flowAppService = flowAppService;
             _objectMapper = objectMapper;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _fileCommonService = fileCommonService;
             _resourceSchemeTable = resourceSchemeTable;
         }
 
@@ -92,6 +102,16 @@ namespace Finance.ProductDevelopment
         /// <returns></returns>
         public async Task<ProductDevelopmentInputDto> UploadExcel(IFormFile file)
         {
+
+            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+
+            FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
+  
+
+            result.ElcFileId = fileUploadOutputDto.FileId;
+
+
+
             //打开上传文件的输入流
             Stream stream = file.OpenReadStream();
 
@@ -103,7 +123,7 @@ namespace Finance.ProductDevelopment
             var sheet = workbook.GetSheetAt(0);
 
             List<ElectronicBomDto> list = new List<ElectronicBomDto>();
-            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+            
 
             //判断是否获取到 sheet
             if (sheet != null)
@@ -237,7 +257,11 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveElectronicBom(ProductDevelopmentInputDto dto)
         {
-           
+            var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+            if (boardInfoByProductIds.Count == 0) {
+                throw new FriendlyException( "板部件没数据");
+            }
+
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 if (productIsSubmits.Count is not 0)
                 {
@@ -261,6 +285,7 @@ namespace Finance.ProductDevelopment
                         bomInfo.SolutionId = SolutionId;
                         bomInfo.ProductId = ProductId;
 
+                        bomInfo.FileId = dto.ElcFileId;
                         string str = bomInfo.CategoryName + bomInfo.TypeName + bomInfo.IsInvolveItem + bomInfo.SapItemName + bomInfo.SapItemNum;
 
                         strList.Add(str);
@@ -303,6 +328,7 @@ namespace Finance.ProductDevelopment
                                 SapItemNum = item.SapItemNum,
                                 AssemblyQuantity = item.AssemblyQuantity,
                                 EncapsulationSize = item.EncapsulationSize,
+                                FileId = item.FileId
                             };
 
                                 await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);

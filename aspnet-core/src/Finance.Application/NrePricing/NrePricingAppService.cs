@@ -1448,17 +1448,35 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
-        public async Task<IsSubmitLaboratoryFeeModel> GetProductDepartmentSingle(long auditFlowId, long solutionId)
+        public async Task<LaboratoryItemsModel> GetProductDepartmentSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
-            IsSubmitLaboratoryFeeModel isSubmitLaboratoryFeeModel = new();
-            isSubmitLaboratoryFeeModel.SolutionId = solutionId;
-            //判断 该方案 是否已经录入
-            int Count = await _resourceNreIsSubmit.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId) && p.EnumSole.Equals(NreIsSubmitDto.EnvironmentalExperimentFee.ToString()));
-            isSubmitLaboratoryFeeModel.IsSubmit = Count > 0;
-            List<LaboratoryFee> laboratoryFees = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-            List<LaboratoryFeeModel> laboratoryFeeModels = ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
-            isSubmitLaboratoryFeeModel.laboratoryFeeModels = laboratoryFeeModels;
-            return isSubmitLaboratoryFeeModel;
+            try 
+            {
+                List<LaboratoryItemsModel> LaboratoryItemsModels = new();
+                //所有的方案
+                List<SolutionModel> partModels = new();
+                partModels = await TotalSolution(auditFlowId);
+                partModels = partModels.Where(p => p.SolutionId.Equals(solutionId)).ToList();
+                foreach (SolutionModel partModel in partModels)
+                {
+                    LaboratoryItemsModel laboratoryItemsModel = new();
+                    //判断 该方案 是否已经录入
+                    int Count = await _resourceNreIsSubmit.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(partModel.SolutionId) && p.EnumSole.Equals(NreIsSubmitDto.ProductDepartment.ToString()));
+                    laboratoryItemsModel.IsSubmit = Count > 0;
+                    laboratoryItemsModel.SolutionId = partModel.SolutionId;
+                    laboratoryItemsModel.laboratoryFeeModels = new();
+                    List<LaboratoryFee> eMCtTests = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(partModel.SolutionId));
+                    if (eMCtTests is not null) laboratoryItemsModel.laboratoryFeeModels = ObjectMapper.Map<List<LaboratoryFeeModel>>(eMCtTests);
+                    LaboratoryItemsModels.Add(laboratoryItemsModel);
+
+                }
+                return LaboratoryItemsModels.FirstOrDefault();
+            }
+            catch (Exception e)
+            {
+                throw new UserFriendlyException(e.Message);
+            }
+            
         }
         /// <summary>
         ///  Nre 产品部EMC+电性能实验费 导出数据(传数据)
@@ -3022,5 +3040,43 @@ namespace Finance.NerPricing
             }
             #endregion
         }
+
+
+        /// <summary>
+        /// EMC实验费快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostEmcItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                LaboratoryItemsModel laboratory = await GetProductDepartmentSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                List<LaboratoryFee> laboratoryExperimentFees = ObjectMapper.Map<List<LaboratoryFee>>(laboratory.laboratoryFeeModels);
+                laboratoryExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                await _resourceLaboratoryFee.BulkInsertAsync(laboratoryExperimentFees);
+            }
+        }
+        ///// <summary>
+        ///// 手板件、差旅、其他快速核报价
+        ///// </summary>
+        ///// <param name="AuditFlowId"></param>
+        ///// <param name="QuoteAuditFlowId"></param>
+        ///// <param name="solutionIdAndQuoteSolutionIds"></param>
+        ///// <returns></returns>
+        //internal async Task FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        //{
+        //    foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+        //    {
+        //        MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+        //        List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
+        //        MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+        //        await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
+        //    }
+        //}
+
+
     }
 }

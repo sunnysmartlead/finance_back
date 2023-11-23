@@ -122,6 +122,11 @@ namespace Finance.ProductDevelopment
         /// </summary>
         [Column("DIMENSIONALACCURACYREMARK")]
         public string DimensionalAccuracyRemark { get; set; }
+        /// <summary>
+        /// 电子BOM文件Id
+        /// </summary>
+        [Column("FILEID")]
+        public long FileId { get; set; }
 
     }
 }
