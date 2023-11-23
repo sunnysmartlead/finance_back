@@ -31,6 +31,11 @@ namespace Finance.Ext
                 {
                     return null;
                 }
+                // 将实例的ID属性设置为默认值
+                foreach (var entity in entities)
+                {
+                    entity.Id = default(TPrimaryKey);
+                }
                 var dbContext = repository.GetDbContext();
                 var entitySet = dbContext.Set<TEntity>();
                 await entitySet.AddRangeAsync(entities);
