@@ -827,7 +827,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             mll.GradientId = gradient.Id;
             mll.InteriorTarget = Math.Round((mbnbml / mbnbxssr) * 100, 2);
-            mll.ClientTarget =(mbkhxssr==0)?0: Math.Round((mbkhml / mbkhxssr) * 100, 2);
+            mll.ClientTarget = (mbkhxssr == 0) ? 0 : Math.Round((mbkhml / mbkhxssr) * 100, 2);
 
             projectBoardSecondModels.Add(mll);
             boardModel.ProjectBoardModels = projectBoardSecondModels;
@@ -967,13 +967,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 carNum = cnum,
                 product = "齐套",
                 InteriorPrice = qtmbnbdj,
-                InteriorGrossMargin =(qtnbsr==0)?0:(qtnbml / qtnbsr) * 100,
-                InteriorNreGrossMargin =(qtnbftss==0)?0: (qtnbftml / qtnbftss) * 100,
-                InteriorClientGrossMargin = (qtnbkgsr==0)?0: (qtnbkgml / qtnbkgsr) * 100,
+                InteriorGrossMargin = (qtnbsr == 0) ? 0 : (qtnbml / qtnbsr) * 100,
+                InteriorNreGrossMargin = (qtnbftss == 0) ? 0 : (qtnbftml / qtnbftss) * 100,
+                InteriorClientGrossMargin = (qtnbkgsr == 0) ? 0 : (qtnbkgml / qtnbkgsr) * 100,
                 ClientPrice = qtmbkhdj,
-                ClientGrossMargin =  (qtkhsr==0)?0:(qtkhml / qtkhsr) * 100,
-                ClientClientGrossMargin = (qtkhkgsr==0)?0:(qtkhkgml / qtkhkgsr) * 100,
-                ClientNreGrossMargin =(qtkhftss==0)?0: (qtkhftml / qtkhftss)*100
+                ClientGrossMargin = (qtkhsr == 0) ? 0 : (qtkhml / qtkhsr) * 100,
+                ClientClientGrossMargin = (qtkhkgsr == 0) ? 0 : (qtkhkgml / qtkhkgsr) * 100,
+                ClientNreGrossMargin = (qtkhftss == 0) ? 0 : (qtkhftml / qtkhftss) * 100
             };
             if (last > 0)
             {
@@ -1206,7 +1206,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
         sjmll.InteriorTarget = Math.Round((sjnbml / sjnbxssr) * 100, 2);
-        sjmll.ClientTarget =(sjkhxssr==0)?0: Math.Round((sjkhml / sjkhxssr) * 100, 2);
+        sjmll.ClientTarget = (sjkhxssr == 0) ? 0 : Math.Round((sjkhml / sjkhxssr) * 100, 2);
 
         projectBoardSecondModelssj.Add(sjmll);
         sj.ProjectBoardModels = projectBoardSecondModelssj;
@@ -2403,7 +2403,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 //应陈梦瑶要求增加可改变方案功能，先把老数据删除
         if (ntype == 0)
         {
-            _solutionQutation.Delete(p =>p.version == version && p.AuditFlowId == AuditFlowId);
+            _solutionQutation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId);
         }
 
 
@@ -3019,7 +3019,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     InputCount = 0,
                     SolutionId = solution.Id,
                     Year = 0,
-                    UpDown =sopTimeType
+                    UpDown = sopTimeType
                 };
                 var fullex = await _priceEvaluationAppService.GetPriceEvaluationTable(
                     full);
@@ -3198,7 +3198,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         if (customprice is not null)
         {
             hl = customprice[0].ExchangeRate == null ? 0 : customprice[0].ExchangeRate.Value;
-            bz =customprice[0].ExchangeRate == null ? "" : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
+            bz = customprice[0].ExchangeRate == null
+                ? ""
+                : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
         }
         else
         {
@@ -3524,7 +3526,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         if (customprice is not null)
         {
             hl = customprice[0].ExchangeRate == null ? 0 : customprice[0].ExchangeRate.Value;
-            bz = customprice[0].ExchangeRate == null ? "" :_exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
+            bz = customprice[0].ExchangeRate == null
+                ? ""
+                : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
         }
         else
         {
@@ -3946,7 +3950,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         if (customprice is not null)
         {
             hl = customprice[0].ExchangeRate == null ? 0 : customprice[0].ExchangeRate.Value;
-            bz =customprice[0].ExchangeRate == null ? "" : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
+            bz = customprice[0].ExchangeRate == null
+                ? ""
+                : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
         }
         else
         {
@@ -3963,14 +3969,21 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
                 DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
                 TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-                OfferForm =(string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))?"": _financeDictionaryDetailRepository
-                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
+                OfferForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                    ? ""
+                    : _financeDictionaryDetailRepository
+                        .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType))
+                        .DisplayName, //报价形式
                 SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
                 ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
-                ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))?"":_financeDictionaryDetailRepository
-                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
-                modeOfTrade =  (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))?"":_financeDictionaryDetailRepository
-                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
+                ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                    ? ""
+                    : _financeDictionaryDetailRepository
+                        .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
+                modeOfTrade = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))
+                    ? ""
+                    : _financeDictionaryDetailRepository
+                        .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
                 PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
                 ExchangeRate = hl, //汇率
                 Sop = Sop,
@@ -4527,16 +4540,45 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         List<SolutionQuotation> sols =
             await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-        var solts = (from sol in sols
-            select new SolutionQuotationDto()
+        List<SolutionQuotationDto> solts = new();
+        foreach (var sol in sols)
+        {
+            var isQuotation = await getQuotation(auditFlowId, sol.version);
+            solts.Add(new SolutionQuotationDto()
             {
                 version = sol.version,
                 Id = sol.Id,
                 ntime = sol.ntime,
                 AuditFlowId = auditFlowId,
+                isQuotation =isQuotation,
                 solutionList = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson)
-            }).ToList();
+            });
+        }
         return solts;
+    }
+    /// <summary>
+    /// 获取是否生成报价反馈
+    /// </summary>
+    /// <param name="departmentDtos"></param>
+    /// <returns></returns>
+    public async Task<bool> getQuotation(long auditFlowId, int version)
+    {
+        var nrecount =
+            await _nreQuotation.CountAsync(p => p.AuditFlowId == auditFlowId && p.version == version && p.ntype == 1);
+        if (nrecount > 0)
+        {
+            return true;
+        }
+
+        var samplecount =
+            await _sampleQuotation.CountAsync(p =>
+                p.AuditFlowId == auditFlowId && p.version == version && p.ntype == 1);
+        if (samplecount > 0)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -4571,7 +4613,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         if (customprice is not null)
         {
             hl = customprice[0].ExchangeRate == null ? 0 : customprice[0].ExchangeRate.Value;
-            bz =customprice[0].ExchangeRate == null ? "" : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
+            bz = customprice[0].ExchangeRate == null
+                ? ""
+                : _exchangeRate.FirstOrDefault(p => p.Id == customprice[0].Currency).ExchangeRateKind;
         }
         else
         {
@@ -4585,20 +4629,29 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             Date = DateTime.Now, //查询日期
             RecordNumber = priceEvaluationStartInputResult.Number, // 单据编号
             Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
-            OfferForm =  (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))?"":_financeDictionaryDetailRepository
-                .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
+            OfferForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
+                ? ""
+                : _financeDictionaryDetailRepository
+                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             ClientNature = priceEvaluationStartInputResult.CustomerNature, //客户性质
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            TerminalClientNature = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TerminalNature))?"": _financeDictionaryDetailRepository
-                .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TerminalNature)).DisplayName, //终端客户性质
+            TerminalClientNature = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TerminalNature))
+                ? ""
+                : _financeDictionaryDetailRepository
+                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TerminalNature))
+                    .DisplayName, //终端客户性质
             //开发计划 手工录入
             SopTime = priceEvaluationStartInputResult.SopTime, //Sop时间
             ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目周期
-            ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))?"":_financeDictionaryDetailRepository
-                .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
-            modeOfTrade = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))?"": _financeDictionaryDetailRepository
-                .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
+            ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                ? ""
+                : _financeDictionaryDetailRepository
+                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
+            modeOfTrade = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))
+                ? ""
+                : _financeDictionaryDetailRepository
+                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
             PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
             QuoteCurrency = bz, //报价币种
             ExchangeRate = hl, //汇率
@@ -4707,7 +4760,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             messageModels.Add(motionMessageModel);
         }
 
-     
+
         //实际数量
         var modelcounts = priceEvaluationStartInputResult.ModelCount;
         List<YearValue> sjsls = new();
@@ -5037,8 +5090,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             ClientNature = priceEvaluationStartInputResult.CustomerNature, //客户性质
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            TerminalClientNature = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TerminalNature))?"": _financeDictionaryDetailRepository
-                .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TerminalNature)).DisplayName, //终端客户性质 //终端客户性质
+            TerminalClientNature = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TerminalNature))
+                ? ""
+                : _financeDictionaryDetailRepository
+                    .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TerminalNature))
+                    .DisplayName, //终端客户性质 //终端客户性质
             //开发计划 手工录入
 
             //  ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率
