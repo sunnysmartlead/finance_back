@@ -104,9 +104,9 @@ namespace Finance.WorkFlows
         /// 手动触发贸易合规（手动测试使用时改为public）
         /// </summary>
         /// <returns></returns>
-        private async Task GG()
+        public  async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 189 && p.NodeId == "主流程_贸易合规");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
@@ -543,8 +543,46 @@ namespace Finance.WorkFlows
                             IsBack = n.IsBack,
                             Comment = n.Comment,
                             IsReset = true,
-                            TargetUserId = t.TargetUserId
+                            TargetUserId = t.TargetUserId,
+                            ResetUserId = t.ResetUserId,
                         }).WhereIf(isFilter, t => t.TargetUserId == userId);
+            var result = await node.ToListAsync();
+            return new PagedResultDto<UserTask>(result.Count, result);
+
+        }
+
+        /// <summary>
+        /// 获取自己重置给他人的任务
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetReseted(long userId, bool isFilter = true)
+        {
+            if (userId == 0)
+            {
+                userId = AbpSession.UserId == null ? 0 : AbpSession.UserId.Value;
+            }
+
+            var node = (from n in _nodeInstanceRepository.GetAll()
+                        join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
+                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId
+                        where t.IsActive
+                        && w.WorkflowState == WorkflowState.Running && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                        select new UserTask
+                        {
+                            Id = n.Id,
+                            WorkFlowName = w.Name,
+                            Title = w.Title,
+                            NodeName = n.Name,
+                            CreationTime = n.CreationTime,
+                            WorkflowState = w.WorkflowState,
+                            WorkFlowInstanceId = w.Id,
+                            ProcessIdentifier = n.ProcessIdentifier,
+                            IsBack = n.IsBack,
+                            Comment = n.Comment,
+                            IsReset = true,
+                            TargetUserId = t.TargetUserId,
+                            ResetUserId = t.ResetUserId,
+                        }).WhereIf(isFilter, t => t.ResetUserId == userId);
             var result = await node.ToListAsync();
             return new PagedResultDto<UserTask>(result.Count, result);
 

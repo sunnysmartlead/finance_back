@@ -75,5 +75,10 @@ namespace Finance.WorkFlows.Dto
         /// 目标用户Id
         /// </summary>
         public virtual long TargetUserId { get; set; }
+
+        /// <summary>
+        /// 重置用户Id
+        /// </summary>
+        public virtual long ResetUserId { get; set; }
     }
 }
