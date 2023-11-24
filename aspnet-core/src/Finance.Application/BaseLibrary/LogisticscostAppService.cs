@@ -270,7 +270,7 @@ namespace Finance.BaseLibrary
                     foreach (var itemQuery in query)
                     {
                         Logisticscost logisticscost = new Logisticscost();
-                        logisticscost.SolutionId = item.QuoteSolutionId;
+                        logisticscost.SolutionId = item.NewSolutionId;
                         logisticscost.AuditFlowId = AuditFlowNewId;
                         logisticscost.Classification = itemQuery.Classification;
                         logisticscost.CreationTime = DateTime.Now;
@@ -463,7 +463,7 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
         {
-            await _logisticscostRepository.DeleteAsync(s => s.Id == AuditFlowId);
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == AuditFlowId && t.EnumSole == NreIsSubmitDto.Logisticscost.ToString());
         }
     }
 }
