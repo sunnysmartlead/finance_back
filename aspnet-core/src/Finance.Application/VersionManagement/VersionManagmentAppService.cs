@@ -94,8 +94,7 @@ namespace Finance.VersionManagement
             var data = (from p in _priceEvaluationRepository.GetAll()
                         join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
                         join f in _financeDictionaryDetailRepository.GetAll() on p.PriceEvalType equals f.Id
-                        where p.ProjectName == versionFilterInput.ProjectName
-                        //&& p.QuoteVersion == versionFilterInput.Version
+                        //&& p.QuoteVersion == versionFilterInput.Version  
                         select new VersionBasicInfoDto
                         {
                             AuditFlowId = p.AuditFlowId,
@@ -108,7 +107,10 @@ namespace Finance.VersionManagement
                             //FinishedTime = p.FinishedTime
                         }).WhereIf(versionFilterInput.Version != default, p => p.Version == versionFilterInput.Version)
                         .WhereIf(versionFilterInput.DraftStartTime.HasValue, p => p.DraftTime >= versionFilterInput.DraftStartTime)
-                        .WhereIf(versionFilterInput.DraftEndTime.HasValue, p => p.DraftTime >= versionFilterInput.DraftEndTime);
+                        .WhereIf(versionFilterInput.DraftEndTime.HasValue, p => p.DraftTime <= versionFilterInput.DraftEndTime)
+                        .WhereIf(versionFilterInput.AuditFlowId!=default, p => p.AuditFlowId == versionFilterInput.AuditFlowId)
+                        .WhereIf(versionFilterInput.ProjectName != default, p => p.ProjectName == versionFilterInput.ProjectName)
+                        .WhereIf(versionFilterInput.Number != default, p => p.Number == versionFilterInput.Number);
 
             var result = await data.ToListAsync();
 
