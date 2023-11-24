@@ -641,7 +641,7 @@ namespace Finance.Processes
                         ProcessHoursEnter entity = new ProcessHoursEnter();
                         entity.ProcessName = input.ProcessName;
                         entity.ProcessNumber = input.ProcessNumber;
-                        entity.SolutionId = itemProcessHoursEnterCopy.QuoteSolutionId;
+                        entity.SolutionId = itemProcessHoursEnterCopy.NewSolutionId;
                         entity.AuditFlowId = AuditFlowNewId;
                         entity.DeviceTotalPrice = input.DeviceTotalPrice;
                         entity.HardwareTotalPrice = input.HardwareTotalPrice;
@@ -744,7 +744,7 @@ namespace Finance.Processes
                     }
                     //uph
 
-                    var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
+                    var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
                     //uph
                     if (null != listUph)
                     {
@@ -755,7 +755,7 @@ namespace Finance.Processes
                             processHoursEnterUph.Year = item.Year;
                             processHoursEnterUph.Uph = item.Uph;
                             processHoursEnterUph.Value = item.Value;
-                            processHoursEnterUph.SolutionId = (long)itemProcessHoursEnterCopy.QuoteSolutionId;
+                            processHoursEnterUph.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
                             processHoursEnterUph.AuditFlowId = AuditFlowNewId;
                             await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
 
@@ -764,7 +764,7 @@ namespace Finance.Processes
                     }
                     //线体
 
-                    var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
+                    var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
 
                     //线体数量、共线分摊率
                     if (null != listLine)
@@ -775,7 +775,7 @@ namespace Finance.Processes
                             processHoursEnterLine.ModelCountYearId = item.ModelCountYearId;
                             processHoursEnterLine.Uph = item.Uph;
                             processHoursEnterLine.Value = item.Value;
-                            processHoursEnterLine.SolutionId = (long)itemProcessHoursEnterCopy.QuoteSolutionId;
+                            processHoursEnterLine.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
                             processHoursEnterLine.AuditFlowId = AuditFlowNewId;
                             await _processHoursEnterLineRepository.InsertAsync(processHoursEnterLine);
 
@@ -3223,18 +3223,9 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
         {
-            var processHoursEnter =_processHoursEnterRepository.GetAll().Where(T =>T.AuditFlowId == AuditFlowId && T.IsDeleted == false).ToList();
-            foreach (var item in processHoursEnter)
-            {
-                await _processHoursEnterRepository.DeleteAsync(s => s.Id == item.Id);
-                await _processHoursEnterFixtureRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
-                await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
-                await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
-                await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
-            }
-            _processHoursEnterUphRepository.Delete(s => s.AuditFlowId == AuditFlowId);
-            _processHoursEnterLineRepository.Delete(s => s.AuditFlowId == AuditFlowId);
-        
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == AuditFlowId && t.EnumSole == NreIsSubmitDto.ProcessHoursEnter.ToString());
+
+
         }
 
         /// <summary>
