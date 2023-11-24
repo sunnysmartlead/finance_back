@@ -32,4 +32,12 @@ public class SolutionQuotationDto
     /// 是否报价反馈
     /// </summary>
     public bool isQuotation{ get; set; }
+    /// <summary>
+    /// 报价分析看板仅保存
+    /// </summary>
+    public bool IsFirst { get; set; }
+    /// <summary>
+    /// 报价反馈仅保存
+    /// </summary>
+    public bool IsCOB { get; set; }
 }

@@ -70,5 +70,8 @@ public class IsOfferSecondDto
     /// 0 报价分析看板，1 报价反馈
     /// </summary>
     public int ntype { get; set; }
-    
+    /// <summary>
+    /// 仅保存
+    /// </summary>
+    public bool IsFirst { get; set; }
 }
