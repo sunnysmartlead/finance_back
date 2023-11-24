@@ -1459,6 +1459,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
+        [Obsolete]
         public virtual async Task<ManufacturingCostInput> GetInputManufacturingCost(GetManufacturingCostInputDto input)
         {
             var data = await _allManufacturingCostRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
