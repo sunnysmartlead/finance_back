@@ -215,6 +215,13 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Jdcbpg, DisplayName="节点成本预估",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xmbg, DisplayName="项目变更",},
 
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Schj, DisplayName="首次核价",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Lcyp, DisplayName="量产样品",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xnnj, DisplayName="下年年降",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtsclc, DisplayName="其他上传流程",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtlxbj, DisplayName="其他零星报价",},
+
+
                 //完成与否
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Done, Id = FinanceConsts.Done, DisplayName="完成",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Done, Id = FinanceConsts.Save, DisplayName="保存",},
