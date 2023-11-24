@@ -20,6 +20,8 @@ using Microsoft.EntityFrameworkCore;
 using Abp.Json;
 using Finance.NerPricing;
 using Finance.Authorization.Users;
+using Finance.BaseLibrary;
+using Finance.Processes;
 
 namespace Finance.WorkFlows
 {
@@ -47,8 +49,19 @@ namespace Finance.WorkFlows
         private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
-
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository)
+        /// <summary>
+        /// 物流成本服务
+        /// </summary>
+        private readonly LogisticscostAppService _logisticscostAppService;
+        /// <summary>
+        /// 工时工序服务  
+        /// </summary>
+        private readonly ProcessHoursEnterAppService _processHoursEnterAppService;
+        /// <summary>
+        /// COB制造成本服务
+        /// </summary>
+        private readonly BomEnterAppService _bomEnterAppService;
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -68,6 +81,9 @@ namespace Finance.WorkFlows
             _sendEmail = sendEmail;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
             _userRepository = userRepository;
+            _logisticscostAppService = logisticscostAppService;
+            _processHoursEnterAppService = processHoursEnterAppService;
+            _bomEnterAppService = bomEnterAppService;
         }
 
 
@@ -148,7 +164,23 @@ namespace Finance.WorkFlows
                             await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+                        //如果是流转到物流成本录入退回页面的
+                        if (eventData.Entity.NodeId == "主流程_物流成本录入")
+                        {
+                            await _logisticscostAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
 
+                        //如果是流转到工序工时添加退回页面的
+                        if (eventData.Entity.NodeId == "主流程_工序工时添加")
+                        {
+                            await _processHoursEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
+
+                        //如果是流转到CCOB制造成本录入退回页面的
+                        if (eventData.Entity.NodeId == "主流程_COB制造成本录入")
+                        {
+                            await _bomEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
                         ////如果是流转到主流程_电子BOM匹配修改
                         //if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                         //{
