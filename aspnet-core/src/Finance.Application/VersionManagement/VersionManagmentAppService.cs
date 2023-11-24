@@ -604,11 +604,12 @@ namespace Finance.VersionManagement
         /// </summary>
         public async virtual Task<List<ProjectNameAndVersionDto>> GetAllAuditFlowProjectNameAndVersionBySelf()
         {
-            var task = (await _auditFlowAppService.GetAllAuditFlowInfosByTask());
+            //var task = (await _auditFlowAppService.GetAllAuditFlowInfosByTask());
 
             var priceEvaluations = await _priceEvaluationRepository.GetAll().OrderByDescending(p => p.Id).ToListAsync();
 
             var data = (from p in priceEvaluations
+                        where p.ProjectManager == AbpSession.UserId
                         group p by new { p.ProjectCode, p.ProjectName, p.AuditFlowId } into g
                         select new ProjectNameAndVersionDto
                         {
@@ -616,7 +617,9 @@ namespace Finance.VersionManagement
                             ProjectNumber = g.Key.ProjectCode,
                             Versions = g.Select(p => p.QuoteVersion).ToList(),
                             AuditFlowId = g.Key.AuditFlowId
-                        }).Where(p => task.Select(o => o.AuditFlowId).Contains(p.AuditFlowId));
+                        })
+                        //.Where(p => task.Select(o => o.AuditFlowId).Contains(p.AuditFlowId))
+                        ;
 
             return data.ToList();
         }
