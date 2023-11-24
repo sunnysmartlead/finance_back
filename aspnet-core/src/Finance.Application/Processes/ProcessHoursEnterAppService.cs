@@ -299,6 +299,7 @@ namespace Finance.Processes
             //工装
             var queryProcedure = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
             if (queryProcedure.Count > 0)
+            if (queryProcedure.Count > 0)
             {
 
                 processHoursEnterDto.ToolInfo.FrockName = queryProcedure[0].InstallationName;
@@ -1624,6 +1625,21 @@ namespace Finance.Processes
                     ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(item.ModelCountYearId);
                     //查询制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
                     var manufacturingCostInfo = this._manufacturingCostInfoRepository.GetAll().Where(t => t.Year == modelCountYear.Year).ToList();
+                    if (manufacturingCostInfo.Count == 0 )
+                    {
+                        var manufacturingCostInfo1 = this._manufacturingCostInfoRepository.GetAll().Where(y => y.IsDeleted == false).OrderByDescending(t =>t.Year).ToList();
+                        //嫁接率
+                        rateOfMobilization = manufacturingCostInfo1[0].RateOfMobilization;
+                        CapacityrateOfMobilization = manufacturingCostInfo1[0].RateOfMobilization / 100;
+                        //月工作天数
+                        MonthlyWorkingDays = (decimal)manufacturingCostInfo1[0].MonthlyWorkingDays;
+                        //每日班次
+                        DailyShift = (decimal)manufacturingCostInfo1[0].DailyShift;
+                        //每班正常工作时间
+                        WorkingHours = (decimal)manufacturingCostInfo1[0].WorkingHours;
+                        //产能利用率
+                        CapacityUtilizationRate = (decimal)manufacturingCostInfo1[0].CapacityUtilizationRate / 100;
+                    }
                     if (manufacturingCostInfo.Count > 0)
                     {
                         //嫁接率
