@@ -27,7 +27,7 @@ public class ProjectBoardSecondOffers: FullAuditedEntity<long>
     /// <summary>
     /// 本次报价存 
     /// </summary>
-    public decimal Offer { get; set; }    
+    public decimal? Offer { get; set; }    
     /// <summary>
     /// 版本
     /// </summary>

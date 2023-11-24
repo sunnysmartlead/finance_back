@@ -91,7 +91,7 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_贸易合规");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_选择是否报价");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
@@ -717,7 +717,7 @@ namespace Finance.WorkFlows
 
             foreach (var item in data)
             {
-                var roleids = item.RoleIds.Split(",").Select(p => p.To<int>());
+                var roleids = item.RoleId.Split(",").Select(p => p.To<int>());
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
 

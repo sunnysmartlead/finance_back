@@ -350,7 +350,7 @@ namespace Finance.WorkFlows
 
                         #region 邮件发送
 
-                        ////#if !DEBUG
+#if !DEBUG
 
                         SendEmail email = new SendEmail();
                         string loginIp = email.GetLoginAddr();
@@ -385,7 +385,7 @@ namespace Finance.WorkFlows
                             }
                         }
 
-                        ////#endif
+#endif
 
                         #endregion
 
