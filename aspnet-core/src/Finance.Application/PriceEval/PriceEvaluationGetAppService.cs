@@ -1665,22 +1665,43 @@ namespace Finance.PriceEval
                 //月需求量的和
                 var manufacturingCostDirectListMonthlyDemand = dtoList.Sum(p => p.MonthlyDemand);
 
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gm.GradientId == input.GradientId && gm.AuditFlowId == input.AuditFlowId
+                                               && gm.ProductId == solution.Productld
+                                               select gmy).ToListAsync();
+                var gradientModelYearSum = gradientModelYear.Sum(p => p.Count);
+
                 var manufacturingCostDirect = new ManufacturingCostDirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
-                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
+                    //EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
+                    //LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostDirect.Subtotal = manufacturingCostDirect.DirectLabor + manufacturingCostDirect.EquipmentDepreciation + manufacturingCostDirect.LineChangeCost + manufacturingCostDirect.ManufacturingExpenses;
 
                 var manufacturingCostIndirect = new ManufacturingCostIndirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -2173,6 +2194,10 @@ namespace Finance.PriceEval
 
                     if (zf is not null)
                     {
+                        zf.UpDown = upDown;
+                        zf.ManufacturingCostDirect.UpDown = upDown;
+                        zf.ManufacturingCostIndirect.UpDown = upDown;
+
                         return zf;
                     }
                 }
@@ -2357,6 +2382,11 @@ namespace Finance.PriceEval
                 ManufacturingCostIndirect = manufacturingCostIndirect,
                 Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
             };
+
+            dto.UpDown = upDown;
+            dto.ManufacturingCostDirect.UpDown = upDown;
+            dto.ManufacturingCostIndirect.UpDown = upDown;
+
             return dto;
 
             //dto.Round2();//保留两位小数
