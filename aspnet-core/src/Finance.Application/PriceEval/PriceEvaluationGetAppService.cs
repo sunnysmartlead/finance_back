@@ -31,6 +31,7 @@ using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
 using LinqKit;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
@@ -44,6 +45,7 @@ using Spire.Xls.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
@@ -135,6 +137,7 @@ namespace Finance.PriceEval
         private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
 
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
+        private readonly IRepository<BomMaterial, long> _bomMaterialRepository;
 
 
         private string errMessage = string.Empty;
@@ -185,7 +188,8 @@ namespace Finance.PriceEval
             IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
             IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-            IRepository<PanelJson, long> panelJsonRepository)
+            IRepository<PanelJson, long> panelJsonRepository,
+            IRepository<BomMaterial, long> bomMaterialRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -235,6 +239,7 @@ namespace Finance.PriceEval
             _processHoursEnterRepository = processHoursEnterRepository;
 
             _panelJsonRepository = panelJsonRepository;
+            _bomMaterialRepository = bomMaterialRepository;
         }
 
 
@@ -3266,7 +3271,6 @@ namespace Finance.PriceEval
         //}
         #endregion
 
-
         #region 方案成本对比表
 
         /// <summary>
@@ -3471,6 +3475,39 @@ namespace Finance.PriceEval
 
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
+        }
+
+        #endregion
+
+        #region 快速核报价_数据复制
+
+        /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetBomImportTemplate()
+        {
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { new Material { SuperType = string.Empty } });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
+        /// 快速核报价：导入BOM成本
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task BomImport(long auditFlowId, [Required] IFormFile excle)
+        {
+            //获取excel数据
+            var stream = excle.OpenReadStream();
+            var rows = MiniExcel.Query<Material>(stream).ToList();
+
+            //删除表中数据
+            _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
+
+            //把excel数据插入表中
+            var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+            await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 
         #endregion
