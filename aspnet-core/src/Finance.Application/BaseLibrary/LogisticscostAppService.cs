@@ -406,7 +406,7 @@ namespace Finance.BaseLibrary
         {
             //已经录入数量
             List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.Logisticscost.ToString()));
-      
+
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
             int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)

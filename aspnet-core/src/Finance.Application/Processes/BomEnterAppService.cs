@@ -299,7 +299,7 @@ namespace Finance.Processes
 
 
 
-        /// <summary> 
+        /// <summary>
         /// 复制流程 AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// </summary>
         /// <returns>结果</returns>
@@ -372,8 +372,8 @@ namespace Finance.Processes
 
             }
 
-          
-            // 数据返回 
+
+            // 数据返回
             return "复制成功";
             }
           
