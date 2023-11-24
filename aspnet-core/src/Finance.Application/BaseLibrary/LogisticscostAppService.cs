@@ -28,6 +28,8 @@ using Finance.ProjectManagement;
 using static Finance.Ext.FriendlyRequiredAttribute;
 using Finance.Authorization.Users;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
+using Finance.Nre;
+using Finance.NrePricing.Model;
 
 namespace Finance.BaseLibrary
 {
@@ -44,7 +46,7 @@ namespace Finance.BaseLibrary
             private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<PriceEvaluation ,long> _priceEvaluationRepository;
-
+        private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
         /// <summary>
         /// 文件管理接口
         /// </summary>
@@ -66,7 +68,8 @@ namespace Finance.BaseLibrary
             IRepository<GradientModel, long> gradientModelRepository, IRepository<GradientModelYear, long> gradientModelYearRepository,
             WorkflowInstanceAppService workflowInstanceAppService,
             IRepository<PriceEvaluation, long> priceEvaluationRepository,
-            FileCommonService fileCommonService
+            FileCommonService fileCommonService,
+            IRepository<NreIsSubmit, long> resourceNreIsSubmit
             )
         {
             _logisticscostRepository = logisticscostRepository;
@@ -80,6 +83,7 @@ namespace Finance.BaseLibrary
             _priceEvaluationRepository = priceEvaluationRepository;
             _workflowInstanceAppService= workflowInstanceAppService;
             _fileCommonService = fileCommonService;
+            _resourceNreIsSubmit = resourceNreIsSubmit;
         }
 
         /// <summary>
@@ -386,7 +390,10 @@ namespace Finance.BaseLibrary
                     entity = await _logisticscostRepository.InsertAsync(logisticscost);
                 }
             }
+            //插入零件表
+            await _resourceNreIsSubmit.DeleteAsync(t=> t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.Logisticscost.ToString());
 
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.Logisticscost.ToString() });
         }
 
         /// <summary>
@@ -398,15 +405,13 @@ namespace Finance.BaseLibrary
         public virtual async Task<String> CreateSubmitAsync(GetLogisticscostsInput input)
         {
             //已经录入数量
-            var count = (from a in _logisticscostRepository.GetAllList(p =>
-         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
-         ).Select(p => p.SolutionId).Distinct()
-                         select a).ToList();
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.Logisticscost.ToString()));
+      
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - count.Count;
+            int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)
             {
-                return "还有" + quantity + "个方案没有提交，请先提交";
+                return "还有" + quantity + "个方案没有提交，请先保存";
             }
             else {
                 //嵌入工作流
@@ -448,6 +453,17 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _logisticscostRepository.DeleteAsync(s => s.Id == id);
+        }
+
+
+        /// <summary>
+        /// 流程退出，对应的数据进行删除
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        /// <returns></returns>
+        public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
+        {
+            await _logisticscostRepository.DeleteAsync(s => s.Id == AuditFlowId);
         }
     }
 }

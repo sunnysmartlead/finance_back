@@ -4,6 +4,8 @@ using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Nre;
+using Finance.NrePricing.Model;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.WorkFlows;
@@ -26,6 +28,7 @@ namespace Finance.Processes
         private readonly IRepository<BomEnterTotal, long> _bomEnterTotalRepository;
         private readonly DataInputAppService _dataInputAppService;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
+        private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
@@ -45,6 +48,7 @@ namespace Finance.Processes
               IRepository<Solution, long> resourceSchemeTable,
               IRepository<ModelCountYear, long> modelCountYearRepository,
             WorkflowInstanceAppService workflowInstanceAppService,
+             IRepository<NreIsSubmit, long> resourceNreIsSubmit,
             IRepository<BomEnter, long> bomEnterRepository)
 
         {
@@ -57,6 +61,7 @@ namespace Finance.Processes
             _workflowInstanceAppService = workflowInstanceAppService;
 
             _modelCountYearRepository = modelCountYearRepository;
+            _resourceNreIsSubmit = resourceNreIsSubmit;
         }
 
         /// <summary>
@@ -294,12 +299,11 @@ namespace Finance.Processes
 
 
 
-        /// <summary>
-        /// 复制流程
+        /// <summary> 
+        /// 复制流程 AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// </summary>
-        /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual async Task<string> GetBomEntersCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdBomEnterSolutionId> SolutionIdAndQuoteSolutionIds)
+        public virtual async Task<string> BomEntersCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdBomEnterSolutionId> SolutionIdAndQuoteSolutionIds)
         {
             if (SolutionIdAndQuoteSolutionIds.Count>0)
             {
@@ -460,6 +464,9 @@ namespace Finance.Processes
                     await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.COB.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.COB.ToString() });
 
 
         }
@@ -471,16 +478,14 @@ namespace Finance.Processes
         /// <returns></returns>
         public virtual async Task<String> CreateSubmitAsync(CreateSubmitInput input)
         {
-   
-                        var count = (from a in _bomEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
-         ).Select(p => p.SolutionId).Distinct()
-                         select a).ToList();
+
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.COB.ToString()));
+
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - count.Count;
+            int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)
             {
-                return "还有" + quantity + "个方案没有提交，请先提交";
+                return "还有" + quantity + "个方案没有提交，请先保存";
             }
             else
             {
@@ -523,6 +528,18 @@ namespace Finance.Processes
         public virtual async Task DeleteAsync(long id)
         {
             await _bomEnterRepository.DeleteAsync(s => s.Id == id);
+        }
+
+
+
+        /// <summary>
+        /// 流程退出，对应的数据进行删除
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
+        {
+            await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowId);
+            await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowId);
         }
     }
 }
