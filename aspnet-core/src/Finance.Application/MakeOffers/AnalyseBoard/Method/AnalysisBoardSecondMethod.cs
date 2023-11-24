@@ -690,6 +690,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
                 if (last > 0)
                 {
+                   // from jt in _actualUnitPriceOffer join 
+                    
                     var lastjt = await _actualUnitPriceOffer.FirstOrDefaultAsync(p =>
                         p.AuditFlowId == auditFlowId && p.GradientId == gradient.Id && p.version == last &&
                         p.product.Equals(solution.ModuleName) && p.ntype == ntype);
@@ -871,9 +873,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             int cnum = 0;
             foreach (var solution in Solutions)
             {
-                var carnum = createCarModelCountDtos
-                    .FindFirst(p => p.CarModel.Equals(key) && p.Product.Equals(solution.ModuleName))
-                    .SingleCarProductsQuantity;
+              var cdto=  createCarModelCountDtos
+                    .FindFirst(p => p.CarModel.Equals(key) && p.Product.Equals(solution.ModuleName));
+              if (cdto is null)
+              {
+                  continue;
+              }
+                var carnum = cdto.SingleCarProductsQuantity;
                 cnum += carnum;
                 var modelCountDto = modelcoutnlist.FindFirst(p => p.Product.Equals(solution.ModuleName)); //获取第一年的数量
                 var modelCount = modelCountDto.ModelCountYearList.OrderBy(p => p.Year).ThenBy(p => p.UpDown).First();
@@ -2394,7 +2400,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         else
         {
-            if (time >= 3)
+            if (ntype==1&&time >= 3)
             {
                 throw new UserFriendlyException("本流程报价提交次数已经到顶");
             }
@@ -2403,20 +2409,20 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 //应陈梦瑶要求增加可改变方案功能，先把老数据删除
         if (ntype == 0)
         {
-            _solutionQutation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId);
+            await  _solutionQutation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId);
         }
 
 
-        _nreQuotation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _deviceQuotation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _sampleQuotation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _resourceUnitPriceOffers.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _resourcePooledAnalysisOffers.Delete(p =>
+        await _nreQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _deviceQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _sampleQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await  _resourceUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+       await _resourcePooledAnalysisOffers.HardDeleteAsync(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _resourceProjectBoardSecondOffers.Delete(p =>
+       await  _resourceProjectBoardSecondOffers.HardDeleteAsync(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _actualUnitPriceOffer.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        _dynamicUnitPriceOffers.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+       await  _actualUnitPriceOffer.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+      await  _dynamicUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
 
         if (ntype == 0)
         {
@@ -4223,7 +4229,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             select new AnalyseBoardNreDto
             {
                 SolutionId = solution.Id,
-                solutionName = solution.ModuleName,
+                solutionName = solution.Product,
                 numberLine = nreQuotations.FirstOrDefault(p => p.SolutionId == solution.Id).numberLine,
                 collinearAllocationRate = nreQuotations.FirstOrDefault(p => p.SolutionId == solution.Id)
                     .collinearAllocationRate,
@@ -4918,7 +4924,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 gradient = gtsl.gradient,
                 Price = gtsl.OfferUnitPrice,
                 TotallifeCyclegrossMargin = gtsl.OfferGrossMargin,
-                ClientGrossMargin = gtsl.ClientGrossMargin,
+                ClientGrossMargin = gtsl.OfferClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
@@ -5619,6 +5625,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
         long numberOfQuotations)
     {
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations,1);
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations,1);
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
@@ -5733,5 +5741,121 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 SolutionId = sp.SolutionId
             }).ToList();
         return list;
+    }
+    
+    
+    
+     /// <summary>
+    /// 用于对外报价产品清单
+    /// <param name="auditFlowId"></param>
+    /// <param name="version">报价方案版本</param>
+    ///  <param name="version">0报价看板数据，1报价反馈数据</param>
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version,int ntype)
+    {
+        List<SoltionGradPrice> gsp = await GetSoltionGradPriceList(auditFlowId, version, ntype);
+        Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
+            .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
+
+        var gradients = await getGradient(auditFlowId);
+
+
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
+        var modelcouts = priceEvaluationStartInputResult.ModelCount;
+        List<ProductDto> productDtos = new List<ProductDto>();
+        foreach (var modelcout in modelcouts)
+        {
+            var mcys = modelcout.ModelCountYearList;
+
+            foreach (var mcy in mcys)
+            {
+                String key = "";
+
+
+                if (mcy.Equals(YearType.FirstHalf))
+                {
+                    key += "上半年";
+                }
+
+                if (mcy.Equals(YearType.SecondHalf))
+                {
+                    key += "下半年";
+                }
+
+                if (mcy.Equals(YearType.Year))
+                {
+                    key += "年";
+                }
+
+                string UntilPrice = "";
+                foreach (var gradient in gradients)
+                {
+                    if (mcy.Quantity <= gradient.GradientValue)
+                    {
+                        var list = gsmap[gradient.Id];
+                        UntilPrice = list.FirstOrDefault(p => p.Equals(modelcout.Product)).UnitPrice.ToString();
+                    }
+                }
+
+                productDtos.Add(new ProductDto()
+                {
+                    ProductName = modelcout.Product,
+                    Motion = mcy.Quantity,
+                    Year = key,
+                    UntilPrice = UntilPrice
+                });
+            }
+        }
+
+
+        return productDtos;
+    }
+
+    /// <summary>
+    /// 用于对外报价NRE清单
+    ///<param name="auditFlowId"></param>
+    /// <param name="version">报价方案版本</param>
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version,int ntype)
+    {
+        List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
+
+        var nres = await _nreQuotation.GetAllListAsync(p =>
+            p.AuditFlowId == auditFlowId && p.version == version && p.SolutionId != null&&p.ntype==ntype);
+        var nresmap = nres.GroupBy(p => p.SolutionId).ToDictionary(r => r.Key, x => x.Select(e => e).ToList());
+        //获取核价营销相关数据
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
+        var modelcouts = priceEvaluationStartInputResult.ModelCount;
+        foreach (var nremap in nresmap)
+        {
+            long solutionid = nremap.Key.Value;
+            var nresList = nremap.Value;
+            var solution = _resourceSchemeTable.FirstOrDefault(p => p.Id == solutionid);
+          var mcs=  modelcouts.FirstOrDefault(p => p.Product.Equals(solution.ModuleName));
+            
+            productDtos.Add(new QuotationNreDto()
+                {
+                    Product = solution.ModuleName,
+                    Pcs = mcs is not null ?mcs.SumQuantity:0,
+                    shouban = nresList.Where(p => p.FormName.Equals("手板件费")).Sum(p => p.OfferMoney),
+                    moju = nresList.Where(p => p.FormName.Equals("模具费")).Sum(p => p.OfferMoney),
+                    gzyj = nresList.Where(p => p.FormName.Equals("工装费") || p.FormName.Equals("治具费"))
+                        .Sum(p => p.OfferMoney),
+                    sy = nresList.Where(p => p.FormName.Equals("实验费")).Sum(p => p.OfferMoney),
+                    csrj = nresList.Where(p => p.FormName.Equals("测试软件费")).Sum(p => p.OfferMoney),
+                    cl = nresList.Where(p => p.FormName.Equals("差旅费")).Sum(p => p.OfferMoney),
+                    qt = nresList.Where(p => p.FormName.Equals("其他费用")).Sum(p => p.OfferMoney),
+                    scsb = nresList.Where(p => p.FormName.Equals("生产设备费")).Sum(p => p.OfferMoney),
+                    jianju = nresList.Where(p => p.FormName.Equals("检具费")).Sum(p => p.OfferMoney)
+                }
+            );
+        }
+
+        return productDtos;
     }
 }
