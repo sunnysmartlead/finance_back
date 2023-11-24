@@ -353,6 +353,10 @@ namespace Finance
             //保存核价看板修改后合计
             configuration.CreateMap<AfterUpdateSumDto, AfterUpdateSumInfo>();
             configuration.CreateMap<AfterUpdateSumInfo, AfterUpdateSumDto>();
+
+
+            configuration.CreateMap<Material, BomMaterial>().ReverseMap();
+
         }
     }
 }

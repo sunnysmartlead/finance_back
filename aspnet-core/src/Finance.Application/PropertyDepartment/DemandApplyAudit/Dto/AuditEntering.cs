@@ -361,7 +361,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// <summary>
         /// 方案ID
         /// </summary>
-        public long SolutionId { get; set; }
+        public long NewSolutionId { get; set; }
         /// <summary>
         /// 引用流程的的方案ID
         /// </summary>
