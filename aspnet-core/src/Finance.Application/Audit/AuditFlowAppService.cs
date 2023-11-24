@@ -246,7 +246,9 @@ namespace Finance.Audit
                 .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.IsReset)
 
                 //核价需求录入，必须是自己录入或项目经理才可见
-                .WhereIf((projectPm == null) || (priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
+                .WhereIf((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId )
+                
+                || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
 
                 .ToList();
         }

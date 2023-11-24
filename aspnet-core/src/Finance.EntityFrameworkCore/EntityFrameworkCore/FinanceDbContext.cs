@@ -428,6 +428,9 @@ namespace Finance.EntityFrameworkCore
 
         public virtual DbSet<TaskReset> TaskReset { get; set; }
 
+        public virtual DbSet<BomMaterial> BomMaterial { get; set; }
+
+
 
         #region 报价单新增表
         /// <summary>
