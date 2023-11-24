@@ -507,8 +507,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         }
 
-        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations);
-        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations);
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations,0);
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations,0);
 
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations,
             productDtos, quotationNreDtos);
@@ -859,16 +859,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task PostQuotationFeedback(IsOfferSecondDto isOfferDto)
     {
-        /*if (AbpSession.UserId is null)
-        {
-            throw new FriendlyException("请先登录");
-        }*/
-        if (isOfferDto.IsOffer)
-        {
-            isOfferDto.ntype = 1;
-            //进行报价
-            await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
-        }
+        isOfferDto.ntype = 1;
+        //进行报价
+        await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
 
     /// <summary>
@@ -1248,31 +1241,23 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     FileName = "版本" + sol.version + "报价审批表", FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
-
-                List<Solution> solutionss = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson);
-
-
-                foreach (var solution in solutionss)
+                //对外报价单
+                MemoryStream dwbjd =
+                    await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlow, sol.Id,
+                        sol.version);
+                FileName = sol.version + "对外报价单.xlsx";
+                IFormFile fileOfferdwbj = new FormFile(dwbjd, 0, memoryStreamOffer.Length, FileName, FileName);
+                FileUploadOutputDto fileUploadOutputDtoOfferdwbj =
+                    await _fileCommonService.UploadFile(fileOfferdwbj);
+                //对外报价单的路径和名称保存到
+                await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    //对外报价单
-                    MemoryStream dwbjd =
-                        await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlow, solution.Id,
-                            sol.version);
-                    FileName = solution.ModuleName + "对外报价单.xlsx";
-                    IFormFile fileOfferdwbj = new FormFile(dwbjd, 0, memoryStreamOffer.Length, FileName, FileName);
-                    FileUploadOutputDto fileUploadOutputDtoOfferdwbj =
-                        await _fileCommonService.UploadFile(fileOfferdwbj);
-                    //对外报价单的路径和名称保存到
-
-
-                    await _financeDownloadListSave.InsertAsync(new DownloadListSave()
-                    {
-                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                        ProductName = "", ProductId = 0,
-                        FileName = solution.ModuleName + "对外报价单", FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
-                        FileId = fileUploadOutputDtoOfferdwbj.FileId
-                    });
-                }
+                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "", ProductId = 0,
+                    FileName = sol.version+ "对外报价单", FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
+                    FileId = fileUploadOutputDtoOfferdwbj.FileId
+                });
+             
             }
         }
     }
@@ -1335,68 +1320,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 用于对外报价产品清单
     /// <param name="auditFlowId"></param>
     /// <param name="version">报价方案版本</param>
+    ///  <param name="version">0报价看板数据，1报价反馈数据</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version)
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version,int ntype)
     {
-        List<SoltionGradPrice> gsp = await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, 1);
-        Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
-            .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
-        var gradients = await _analysisBoardSecondMethod.getGradient(auditFlowId);
-
-
-        //获取核价营销相关数据
-        var priceEvaluationStartInputResult =
-            await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
-        var modelcouts = priceEvaluationStartInputResult.ModelCount;
-        List<ProductDto> productDtos = new List<ProductDto>();
-        foreach (var modelcout in modelcouts)
-        {
-            var mcys = modelcout.ModelCountYearList;
-
-            foreach (var mcy in mcys)
-            {
-                String key = "";
-
-
-                if (mcy.Equals(YearType.FirstHalf))
-                {
-                    key += "上半年";
-                }
-
-                if (mcy.Equals(YearType.SecondHalf))
-                {
-                    key += "下半年";
-                }
-
-                if (mcy.Equals(YearType.Year))
-                {
-                    key += "年";
-                }
-
-                string UntilPrice = "";
-                foreach (var gradient in gradients)
-                {
-                    if (mcy.Quantity <= gradient.GradientValue)
-                    {
-                        var list = gsmap[gradient.Id];
-                        UntilPrice = list.FirstOrDefault(p => p.Equals(modelcout.Product)).UnitPrice.ToString();
-                    }
-                }
-
-                productDtos.Add(new ProductDto()
-                {
-                    ProductName = modelcout.Product,
-                    Motion = mcy.Quantity,
-                    Year = key,
-                    UntilPrice = UntilPrice
-                });
-            }
-        }
-
-
-        return productDtos;
+       return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntype);
     }
 
     /// <summary>
@@ -1405,37 +1335,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version)
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version,int ntype)
     {
-        List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
-
-        var nres = await _nreQuotation.GetAllListAsync(p =>
-            p.AuditFlowId == auditFlowId && p.version == version && p.SolutionId != null);
-        var nresmap = nres.GroupBy(p => p.SolutionId).ToDictionary(r => r.Key, x => x.Select(e => e).ToList());
-        foreach (var nremap in nresmap)
-        {
-            long solutionid = nremap.Key.Value;
-            var nresList = nremap.Value;
-            var solution = _resourceSchemeTable.FirstOrDefault(p => p.Id == solutionid);
-            productDtos.Add(new QuotationNreDto()
-                {
-                    Product = solution.ModuleName,
-                    Pcs = 1,
-                    shouban = nresList.Where(p => p.FormName.Equals("手板件费")).Sum(p => p.OfferMoney),
-                    moju = nresList.Where(p => p.FormName.Equals("模具费")).Sum(p => p.OfferMoney),
-                    gzyj = nresList.Where(p => p.FormName.Equals("工装费") || p.FormName.Equals("治具费"))
-                        .Sum(p => p.OfferMoney),
-                    sy = nresList.Where(p => p.FormName.Equals("实验费")).Sum(p => p.OfferMoney),
-                    csrj = nresList.Where(p => p.FormName.Equals("测试软件费")).Sum(p => p.OfferMoney),
-                    cl = nresList.Where(p => p.FormName.Equals("差旅费")).Sum(p => p.OfferMoney),
-                    qt = nresList.Where(p => p.FormName.Equals("其他费用")).Sum(p => p.OfferMoney),
-                    scsb = nresList.Where(p => p.FormName.Equals("生产设备费")).Sum(p => p.OfferMoney),
-                    jianju = nresList.Where(p => p.FormName.Equals("检具费")).Sum(p => p.OfferMoney)
-                }
-            );
-        }
-
-        return productDtos;
+        
+        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, ntype);
+       
     }
 
     /// <summary>
