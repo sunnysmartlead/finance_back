@@ -28,6 +28,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using NPOI.HPSF;
+using NPOI.HSSF.Util;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 namespace Finance.MakeOffers.AnalyseBoard;
 
@@ -284,6 +287,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         List<CoreDevice> CoreDeviclist = new List<CoreDevice>();
         decimal moq = 0;
+        decimal totalPCBA = 0;
+        decimal totalStru = 0;
         foreach (var material in electronicAndStructureList)
         {
             moq = moq + material.MoqShareCount;
@@ -326,101 +331,96 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             else if (material.SuperType.Equals("电子料") && !material.TypeName.Equals("Sensor芯片") ||
                      material.SuperType.Equals("电子料") && !material.TypeName.Equals("串行芯片"))
             {
-                CoreDevice CoreDevice = new CoreDevice();
-                CoreDevice.ProjectName = "PCBA";
-                CoreDevice.UnitPrice = material.MaterialPrice;
-                CoreDevice.Number = material.AssemblyCount;
-                CoreDevice.Rate = material.ExchangeRate;
-                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
-
-                CoreDeviclist.Add(CoreDevice);
+                totalPCBA = totalPCBA + material.TotalMoneyCynNoCustomerSupply;  
             }
 
             else if (!material.SuperType.Equals("电子料") && !material.TypeName.Equals("镜头"))
             {
-                CoreDevice CoreDevice = new CoreDevice();
-                CoreDevice.ProjectName = "结构件（除lens）";
-                CoreDevice.UnitPrice = material.MaterialPrice;
-                CoreDevice.Number = material.AssemblyCount;
-                CoreDevice.Rate = material.ExchangeRate;
-                CoreDevice.Sum = material.TotalMoneyCynNoCustomerSupply;
-
-                CoreDeviclist.Add(CoreDevice);
+                totalStru = material.TotalMoneyCynNoCustomerSupply;
             }
         }
+        //PCBA
+        CoreDevice PCBACoreDevice = new CoreDevice();
+        PCBACoreDevice.ProjectName = "PCBA";
+        PCBACoreDevice.Sum = totalPCBA;
+        CoreDeviclist.Add(PCBACoreDevice);
+        //结构料
+        CoreDevice StruCoreDevice = new CoreDevice();
+        StruCoreDevice.ProjectName = "结构件（除lens）";
+        StruCoreDevice.Sum = totalStru;
+        CoreDeviclist.Add(StruCoreDevice);
 
+        //制造成本
+        List<ManufacturingCost> QualityList= await _priceEvaluationAppService.GetManufacturingCost(new GetManufacturingCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
+        decimal Subtotal = 0;
 
-        //质量成本
-        var QualityList = await _afterUpdateSumInfoRepository.GetAllListAsync(p =>
-            p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) &&
-            p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+        foreach (ManufacturingCost quality in QualityList)
+        {
+            Subtotal = Subtotal + quality.Subtotal;
+        }
+
         CoreDevice zhiliangCoreDevice = new CoreDevice();
-        zhiliangCoreDevice.ProjectName = "质量成本";
-        if (QualityList.Count > 0)
-        {
-            zhiliangCoreDevice.Sum = QualityList.FirstOrDefault().ManufacturingAfterSum;
-        }
-        else
-        {
-            zhiliangCoreDevice.Sum = 0;
-        }
-
+        zhiliangCoreDevice.ProjectName = "制造成本";
+        zhiliangCoreDevice.Sum = Subtotal;
         CoreDeviclist.Add(zhiliangCoreDevice);
 
         //损耗成本
+        List<LossCost> CostItemList = await _priceEvaluationAppService.GetLossCost(new GetCostItemInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown, });
+        decimal WastageCost = 0;
+
+        foreach (LossCost costItem in CostItemList)
+        {
+            WastageCost = WastageCost + costItem.WastageCost;
+        }
+
         CoreDevice lossCostCoreDevice = new CoreDevice();
         lossCostCoreDevice.ProjectName = "损耗成本";
-        if (QualityList.Count > 0)
-        {
-            lossCostCoreDevice.Sum = QualityList.FirstOrDefault().LossCostAfterSum;
-        }
-        else
-        {
-            lossCostCoreDevice.Sum = 0;
-        }
+        lossCostCoreDevice.Sum = WastageCost;
 
         CoreDeviclist.Add(lossCostCoreDevice);
 
-        //制造成本
+        //质量成本
+        QualityCostListDto qualityCost = await _priceEvaluationAppService.GetQualityCost(new GetOtherCostItemInput
+        {
+            AuditFlowId = input.AuditFlowId,
+            GradientId = input.GradientId,
+            SolutionId = input.SolutionId,
+            Year = input.Year,
+            UpDown = input.UpDown
+        });
         CoreDevice qualityCosDevice = new CoreDevice();
-        qualityCosDevice.ProjectName = "制造成本";
-        if (QualityList.Count > 0)
-        {
-            qualityCosDevice.Sum = QualityList.FirstOrDefault().QualityCostAfterSum;
-        }
-        else
-        {
-            qualityCosDevice.Sum = 0;
-        }
-
+        qualityCosDevice.ProjectName = "质量成本";
+        qualityCosDevice.Sum = qualityCost.QualityCost;
         CoreDeviclist.Add(qualityCosDevice);
 
         //物流成本
+        List<ProductionControlInfoListDto> dataList = await _priceEvaluationAppService.GetLogisticsCostPrivate(new GetLogisticsCostInput { AuditFlowId = input.AuditFlowId, Year = input.Year, UpDown = input.UpDown, GradientId = input.GradientId, SolutionId = input.SolutionId }, true);
+        decimal PerTotalLogisticsCost = 0;
+        foreach (ProductionControlInfoListDto data in dataList)
+        {
+            PerTotalLogisticsCost = PerTotalLogisticsCost + data.PerTotalLogisticsCost;
+        }
+
         CoreDevice logisticsCosDevice = new CoreDevice();
         logisticsCosDevice.ProjectName = "物流成本";
-        if (QualityList.Count > 0)
-        {
-            logisticsCosDevice.Sum = QualityList.FirstOrDefault().LogisticsAfterSum;
-        }
-        else
-        {
-            logisticsCosDevice.Sum = 0;
-        }
+        logisticsCosDevice.Sum = PerTotalLogisticsCost;
+
 
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
+        OtherCostItem otherCostItem = await _priceEvaluationAppService.GetOtherCostItem(new GetOtherCostItemInput
+        {
+            AuditFlowId = input.AuditFlowId,
+            GradientId = input.GradientId,
+            SolutionId = input.SolutionId,
+            Year = input.Year,
+            UpDown = input.UpDown
+        });
+
         CoreDevice OtherCostDevice = new CoreDevice();
         OtherCostDevice.ProjectName = "其他成本";
-        if (QualityList.Count > 0)
-        {
-            OtherCostDevice.Sum = QualityList.FirstOrDefault().OtherCosttAfterSum;
-        }
-        else
-        {
-            OtherCostDevice.Sum = 0;
-        }
-
+        OtherCostDevice.Sum = otherCostItem.Total;
         CoreDeviclist.Add(OtherCostDevice);
 
 
@@ -448,21 +448,188 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     /// <summary>
-    /// 下载核心器件、Nre费用拆分
+    ///   下载核心器件、Nre费用拆分
     /// </summary>
+    /// <param name="laboratoryFeeModels"></param>
     /// <returns></returns>
-    public async Task<IActionResult> GetDownloadCoreComponentAndNre(long Id, string FileName = "核心器件、Nre费用拆分下载")
+    /// <exception cref="FriendlyException"></exception>
+    public async Task<FileResult> GetDownloadCoreComponentAndNre(GetPriceEvaluationTableInput input)
     {
-        try
+
+        List<CoreDevice> coreDevice = await PostCoreComponentAndNreList(input);
+        NreExpense2 nreExpense2 = await GetCoreNRE(input.AuditFlowId, input.SolutionId);
+
+
+        //创建Workbook
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        //创建一个sheet
+        workbook.CreateSheet("sheet1");
+
+
+        ISheet sheet = workbook.GetSheetAt(0);//获取sheet
+
+        //创建头部
+        IRow row000 = sheet.CreateRow(0);
+        row000.CreateCell(0).SetCellValue("项目名称");
+        row000.CreateCell(1).SetCellValue("单价");
+        row000.CreateCell(2).SetCellValue("数量");
+        row000.CreateCell(3).SetCellValue("汇率");
+        row000.CreateCell(4).SetCellValue("合计");
+
+        int i = 1;
+        foreach (CoreDevice dev in coreDevice)
         {
-            // return await _analysisBoardSecondMethod.DownloadMessageSecond(Id, FileName);
-            return null;
+            IRow rowI = sheet.CreateRow(i);
+            rowI.CreateCell(0).SetCellValue(dev.ProjectName);
+            rowI.CreateCell(1).SetCellValue(null== dev.UnitPrice?null:dev.UnitPrice.ToString());
+            rowI.CreateCell(2).SetCellValue(null == dev.Number ? null : dev.Number.ToString());
+            rowI.CreateCell(3).SetCellValue(null == dev.Rate ? null : dev.Rate.ToString());
+            rowI.CreateCell(4).SetCellValue(dev.Sum.ToString());
+            i++;
         }
-        catch (Exception e)
+        //空一行
+        IRow rowNull = sheet.CreateRow(i);
+        i = i + 1;
+
+
+        IRow rowI01 = sheet.CreateRow(i);
+        rowI01.CreateCell(0).SetCellValue("手板件费用");
+        rowI01.CreateCell(1).SetCellValue(null == nreExpense2.handPieceCostTotal ? null : nreExpense2.handPieceCostTotal.ToString());
+
+        IRow rowI02 = sheet.CreateRow(i+1);
+        rowI02.CreateCell(0).SetCellValue("模具费用");
+        rowI02.CreateCell(1).SetCellValue(null == nreExpense2.mouldInventoryTotal ? null : nreExpense2.mouldInventoryTotal.ToString());
+
+        IRow rowI03 = sheet.CreateRow(i + 2);
+        rowI03.CreateCell(0).SetCellValue("工装费用");
+        rowI03.CreateCell(1).SetCellValue(null == nreExpense2.toolingCostTotal ? null : nreExpense2.toolingCostTotal.ToString());
+
+        IRow rowI04 = sheet.CreateRow(i + 3);
+        rowI04.CreateCell(0).SetCellValue("治具费用");
+        rowI04.CreateCell(1).SetCellValue(null == nreExpense2.fixtureCostTotal ? null : nreExpense2.fixtureCostTotal.ToString());
+
+        IRow rowI05 = sheet.CreateRow(i + 4);
+        rowI05.CreateCell(0).SetCellValue("检具费用");
+        rowI05.CreateCell(1).SetCellValue(null == nreExpense2.qaqcDepartmentsTotal ? null : nreExpense2.qaqcDepartmentsTotal.ToString());
+
+        IRow rowI06 = sheet.CreateRow(i + 5);
+        rowI06.CreateCell(0).SetCellValue("生产设备费用");
+        rowI06.CreateCell(1).SetCellValue(null == nreExpense2.productionEquipmentCostTotal ? null : nreExpense2.productionEquipmentCostTotal.ToString());
+
+        IRow rowI07 = sheet.CreateRow(i + 6);
+        rowI07.CreateCell(0).SetCellValue("专用生产设备");
+        rowI07.CreateCell(1).SetCellValue(null == nreExpense2.deviceStatusSpecial ? null : nreExpense2.deviceStatusSpecial.ToString());
+
+        IRow rowI08 = sheet.CreateRow(i + 7);
+        rowI08.CreateCell(0).SetCellValue("非专用生产设备");
+        rowI08.CreateCell(1).SetCellValue(null == nreExpense2.deviceStatus ? null : nreExpense2.deviceStatus.ToString());
+
+        IRow rowI09 = sheet.CreateRow(i + 8);
+        rowI09.CreateCell(0).SetCellValue("实验费用");
+        rowI09.CreateCell(1).SetCellValue(null == nreExpense2.laboratoryFeeModelsTotal ? null : nreExpense2.laboratoryFeeModelsTotal.ToString());
+
+        IRow rowI10 = sheet.CreateRow(i + 9);
+        rowI10.CreateCell(0).SetCellValue("测试软件费用");
+        rowI10.CreateCell(1).SetCellValue(null == nreExpense2.softwareTestingCostTotal ? null : nreExpense2.softwareTestingCostTotal.ToString());
+
+        IRow rowI11 = sheet.CreateRow(i + 10);
+        rowI11.CreateCell(0).SetCellValue("差旅费");
+        rowI11.CreateCell(1).SetCellValue(null == nreExpense2.travelExpenseTotal ? null : nreExpense2.travelExpenseTotal.ToString());
+
+        IRow rowI12 = sheet.CreateRow(i + 11);
+        rowI12.CreateCell(0).SetCellValue("其他费用");
+        rowI12.CreateCell(1).SetCellValue(null == nreExpense2.restsCostTotal ? null : nreExpense2.restsCostTotal.ToString());
+
+        IRow rowI13 = sheet.CreateRow(i + 12);
+        rowI13.CreateCell(0).SetCellValue("合计");
+        rowI13.CreateCell(1).SetCellValue(null == nreExpense2.sum ? null : nreExpense2.sum.ToString());
+
+        IRow rowI14 = sheet.CreateRow(i + 13);
+        rowI14.CreateCell(0).SetCellValue("备注");
+        rowI14.CreateCell(1).SetCellValue(null == nreExpense2.remark ? null : nreExpense2.remark.ToString());
+
+
+
+        //创建  占比  样式和列宽度
+        //XSSFCellStyle zhanbiStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+        //zhanbiStyle.Alignment = HorizontalAlignment.Center; // 居中
+        //sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 1).GetCell(1).CellStyle = zhanbiStyle;
+        //sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 2).GetCell(1).CellStyle = zhanbiStyle;
+        //sheet.GetRow(4 + TradeTable.ProductMaterialInfos.Count + 3).GetCell(1).CellStyle = zhanbiStyle;
+
+
+
+
+
+        //创建头部样式和列宽度
+        XSSFCellStyle titleStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+        titleStyle.Alignment = HorizontalAlignment.Center; // 居中
+        IFont titleFont = workbook.CreateFont();
+        titleFont.IsBold = true;
+        titleFont.FontHeightInPoints = 12;
+        titleFont.Color = HSSFColor.Black.Index;//设置字体颜色
+        titleStyle.SetFont(titleFont);
+        for (int c=0;c<5;c++) {
+            sheet.GetRow(0).GetCell(c).CellStyle = titleStyle;
+        }
+
+        for (int c = 0; c < 13; c++)
         {
-            throw new FriendlyException(e.Message);
+            sheet.GetRow(i+c).GetCell(0).CellStyle = titleStyle;
         }
+
+        //列宽
+        sheet.SetColumnWidth(0, 6000);
+        sheet.SetColumnWidth(1, 5000);
+        sheet.SetColumnWidth(4, 9000);
+
+
+        //边框
+        XSSFCellStyle cellStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+        cellStyle.BorderBottom = NPOI.SS.UserModel.BorderStyle.Thin;
+        cellStyle.BorderLeft = NPOI.SS.UserModel.BorderStyle.Thin;
+        cellStyle.BorderRight = NPOI.SS.UserModel.BorderStyle.Thin;
+        cellStyle.BorderTop = NPOI.SS.UserModel.BorderStyle.Thin;
+
+        for (int m = 0; m < i-1 ; m++)
+        {
+            for (int n = 0; n < 5; n++)
+            {
+                sheet.GetRow(m).GetCell(n).CellStyle = cellStyle;
+            }
+        }
+
+        for (int m = i; m <13; m++)
+        {
+            for (int n = 0; n < 2; n++)
+            {
+                sheet.GetRow(m).GetCell(n).CellStyle = cellStyle;
+            }
+        }
+
+
+        //sheet.SetColumnWidth(1, 5000);
+        //sheet.SetColumnWidth(2, 5500);
+        //sheet.SetColumnWidth(3, 6000);
+        //sheet.SetColumnWidth(4, 12000);
+        //sheet.SetColumnWidth(5, 2000);
+        //sheet.SetColumnWidth(6, 4000);
+        //sheet.SetColumnWidth(7, 5000);
+        //sheet.SetColumnWidth(8, 5000);
+
+
+        MemoryStream ms = new MemoryStream();
+        workbook.Write(ms);
+        //ms.Seek(0, SeekOrigin.Begin);
+
+        Byte[] btye2 = ms.ToArray();
+        FileContentResult fileContent = new FileContentResult(btye2, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") { FileDownloadName = "aaa.xlsx" };
+
+        return fileContent;
+
+
     }
+
 
 
     /// <summary>
@@ -1377,10 +1544,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             sum = pricingFormDto.HandPieceCostTotal + pricingFormDto.MouldInventoryTotal +
                   pricingFormDto.ToolingCostTotal + pricingFormDto.FixtureCostTotal +
                   pricingFormDto.QAQCDepartmentsTotal + pricingFormDto.ProductionEquipmentCostTotal +
-                  deviceStatusSpecial + pricingFormDto.ProductionEquipmentCostTotal - deviceStatusSpecial +
                   pricingFormDto.LaboratoryFeeModelsTotal + pricingFormDto.SoftwareTestingCostTotal +
                   pricingFormDto.TravelExpenseTotal + pricingFormDto.RestsCostTotal,
         };
         return nreExpense;
     }
+
+
+
 }
