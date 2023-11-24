@@ -27,6 +27,7 @@ using Finance.Ext;
 using Finance.ProjectManagement;
 using static Finance.Ext.FriendlyRequiredAttribute;
 using Finance.Authorization.Users;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 
 namespace Finance.BaseLibrary
 {
@@ -252,41 +253,45 @@ namespace Finance.BaseLibrary
 
 
         /// <summary>
-        /// 根据当前流程号复制新的流程
+        /// 根据当前流程号复制新的流程 AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// </summary>
-        /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual async Task<string> GetLogisticscostsCopyAsync(GetLogisticscostsCopy getLogisticscostsCopy)
+        public virtual async Task<string> LogisticscostsCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdLogisticscostsSolutionId> SolutionIdAndQuoteSolutionIds)
         {
-            await _logisticscostRepository.DeleteAsync(s => s.AuditFlowId == getLogisticscostsCopy.AuditFlowNewId);
-            var query = _logisticscostRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == getLogisticscostsCopy.AuditFlowId);
-            foreach (var item in query)
-            {
-                Logisticscost logisticscost = new Logisticscost();
-                logisticscost.SolutionId = item.SolutionId;
-                logisticscost.AuditFlowId = getLogisticscostsCopy.AuditFlowNewId;
-                logisticscost.Classification = item.Classification;
-                logisticscost.CreationTime = DateTime.Now;
-                logisticscost.FreightPrice = item.FreightPrice;
-                logisticscost.MonthlyDemandPrice = item.MonthlyDemandPrice;
-                logisticscost.PackagingPrice = item.PackagingPrice;
-                logisticscost.SinglyDemandPrice = item.SinglyDemandPrice;
-                logisticscost.StoragePrice = item.StoragePrice;
-                logisticscost.TransportPrice = item.TransportPrice;
-                logisticscost.Remark = item.Remark;
-                logisticscost.ModelCountYearId = item.ModelCountYearId;
-                if (AbpSession.UserId != null)
+            if (SolutionIdAndQuoteSolutionIds.Count>0) {
+                foreach (var item in SolutionIdAndQuoteSolutionIds)
                 {
-                    logisticscost.CreatorUserId = AbpSession.UserId.Value;
-                    logisticscost.LastModificationTime = DateTime.Now;
-                    logisticscost.LastModifierUserId = AbpSession.UserId.Value;
-                }
-                logisticscost.LastModificationTime = DateTime.Now;
-                await _logisticscostRepository.InsertAsync(logisticscost);
+                    await _logisticscostRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId ==item.QuoteSolutionId);
+                    var query = _logisticscostRepository.GetAllList(p => p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.SolutionId);
+                    foreach (var itemQuery in query)
+                    {
+                        Logisticscost logisticscost = new Logisticscost();
+                        logisticscost.SolutionId = item.QuoteSolutionId;
+                        logisticscost.AuditFlowId = AuditFlowNewId;
+                        logisticscost.Classification = itemQuery.Classification;
+                        logisticscost.CreationTime = DateTime.Now;
+                        logisticscost.FreightPrice = itemQuery.FreightPrice;
+                        logisticscost.MonthlyDemandPrice = itemQuery.MonthlyDemandPrice;
+                        logisticscost.PackagingPrice = itemQuery.PackagingPrice;
+                        logisticscost.SinglyDemandPrice = itemQuery.SinglyDemandPrice;
+                        logisticscost.StoragePrice = itemQuery.StoragePrice;
+                        logisticscost.TransportPrice = itemQuery.TransportPrice;
+                        logisticscost.Remark = itemQuery.Remark;
+                        logisticscost.ModelCountYearId = itemQuery.ModelCountYearId;
+                        if (AbpSession.UserId != null)
+                        {
+                            logisticscost.CreatorUserId = AbpSession.UserId.Value;
+                            logisticscost.LastModificationTime = DateTime.Now;
+                            logisticscost.LastModifierUserId = AbpSession.UserId.Value;
+                        }
+                        logisticscost.LastModificationTime = DateTime.Now;
+                        await _logisticscostRepository.InsertAsync(logisticscost);
 
+                    }
+
+                }
             }
 
-  
             // 数据返回
             return "复制成功";
 
