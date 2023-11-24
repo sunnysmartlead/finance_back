@@ -2487,7 +2487,7 @@ namespace Finance.NerPricing
             {
                 PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
                 List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-                List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                List<ModelCountYear> modelCountYears = await _resourceModelCountYear.GetAllListAsync();
                 ModifyItemPricingFormDto modify = new ModifyItemPricingFormDto();
                 if (priceEvaluation is not null)
                 {
