@@ -1881,7 +1881,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //毛利率
             YearValue gross = new();
             gross.key = SalesRevenues.key;
-            gross.value = (smdict[SalesRevenues.key].value / SalesRevenues.value) * 100; //销售毛利/销售收入
+            gross.value =SalesRevenues.value==0?0: (smdict[SalesRevenues.key].value / SalesRevenues.value) * 100; //销售毛利/销售收入
             GrossMargin.Add(gross);
         }
 
@@ -2110,7 +2110,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //毛利率
             YearValue gross = new();
             gross.key = key;
-            gross.value = (mar.value / rev.value) * 100; //销售毛利/销售收入
+            gross.value =(rev.value==0)?0: (mar.value / rev.value) * 100; //销售毛利/销售收入
             GrossMargin.Add(gross);
         }
 
@@ -2131,7 +2131,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         AverageCost.Add(new YearValue()
         {
             key = "全生命周期",
-            value = xszcb / total //销售成本/数量
+            value =total==0?0: xszcb / total //销售成本/数量
         });
         var totalsale = SalesRevenue.Sum(p => p.value); //销售收入总和
         SalesRevenue.Add(new YearValue()
@@ -2142,7 +2142,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         Prices.Add(new YearValue() //单价总和=销售收入总和/数量总和
         {
             key = "全生命周期",
-            value = totalsale / total
+            value = total==0?0:totalsale / total
         });
         var yj = commission.Sum(p => p.value); //佣金总和
         commission.Add(new YearValue()
@@ -2159,7 +2159,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         GrossMargin.Add(new YearValue() //销售毛利/销售收入
         {
             key = "全生命周期",
-            value = (xsml / totalsale) * 100
+            value = totalsale==0?0:(xsml / totalsale) * 100
         });
         yearDimensionalityComparisonSecondDto.numk = numk;
         yearDimensionalityComparisonSecondDto.Prices = Prices;
@@ -2291,7 +2291,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //毛利率
             YearValue gross = new();
             gross.key = key;
-            gross.value = (mar.value / rev.value) * 100; //销售毛利/销售收入
+            gross.value = (rev.value==0)?0:(mar.value / rev.value) * 100; //销售毛利/销售收入
             GrossMargin.Add(gross);
         }
 
@@ -2340,7 +2340,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         GrossMargin.Add(new YearValue() //销售毛利/销售收入
         {
             key = "全生命周期",
-            value = (xsml / totalsale) * 100
+            value =totalsale==0?0: (xsml / totalsale) * 100
         });
         yearDimensionalityComparisonSecondDto.numk = numk;
         yearDimensionalityComparisonSecondDto.Prices = Prices;
