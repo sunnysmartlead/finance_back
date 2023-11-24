@@ -160,7 +160,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 Solution solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
                 if (solution != null)
                 {
-                    solutionIdAndQuoteSolutionIds.Add(new SolutionIdAndQuoteSolutionId() { SolutionId= solution.Id , QuoteSolutionId= design.SolutionId });
+                    solutionIdAndQuoteSolutionIds.Add(new SolutionIdAndQuoteSolutionId() { NewSolutionId= solution.Id , QuoteSolutionId= design.SolutionId });
                     design.SolutionId = solution.Id;
                 }
             }
