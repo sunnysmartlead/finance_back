@@ -1,4 +1,5 @@
 ﻿using Castle.MicroKernel.SubSystems.Conversion;
+using Finance.Ext;
 using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Finance.Ext.FriendlyRequiredAttribute;
 
 namespace Finance.NrePricing.Model
 {
@@ -38,6 +40,32 @@ namespace Finance.NrePricing.Model
         /// </summary>
         public List<LaboratoryFeeModel> laboratoryFeeModels { get; set; }
     }
+
+    /// <summary>
+    /// 带零件id 的 品保部=>试验项目 录入 模型
+    /// </summary>
+    public class LaboratoryItemsModel
+    {
+        /// <summary>
+        /// 方案的id
+        /// </summary>
+        [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)]
+        public long SolutionId { get; set; }
+        /// <summary>
+        ///品保录入  EMC项目表 模型
+        /// </summary>
+        public List<LaboratoryFeeModel> laboratoryFeeModels { get; set; }
+        /// <summary>
+        /// 是否已经提交过 true/提交  false/未提交
+        /// </summary>
+        public bool IsSubmit { get; set; }
+    }
+
+
+
+
+
+
     /// <summary>
     /// EMC 实验费 模型
     /// </summary>

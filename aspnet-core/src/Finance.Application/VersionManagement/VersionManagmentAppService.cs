@@ -50,10 +50,11 @@ namespace Finance.VersionManagement
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
         private readonly IRepository<LineInstance, long> _lineInstanceRepository;
         private readonly IRepository<InstanceHistory, long> _instanceHistoryRepository;
+        private readonly AuditFlowAppService _auditFlowAppService;
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -74,7 +75,10 @@ namespace Finance.VersionManagement
             _nodeInstanceRepository = nodeInstanceRepository;
             _lineInstanceRepository = lineInstanceRepository;
             _instanceHistoryRepository = instanceHistoryRepository;
+            _auditFlowAppService = auditFlowAppService;
         }
+
+
 
 
 
@@ -350,7 +354,7 @@ namespace Finance.VersionManagement
                     var roleNames = string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name));
                     dto.RoleName = roleNames;
                 }
-                
+
 
                 auditFlowOperateReocrdDto.Add(dto);
             }
@@ -595,6 +599,27 @@ namespace Finance.VersionManagement
             return allVersion;
         }
 
+        /// <summary>
+        /// 获取项目已有核价流程所有项目名称和项目代码以及对应版本号（获取自己有的）
+        /// </summary>
+        public async virtual Task<List<ProjectNameAndVersionDto>> GetAllAuditFlowProjectNameAndVersionBySelf()
+        {
+            var task = (await _auditFlowAppService.GetAllAuditFlowInfosByTask());
+
+            var priceEvaluations = await _priceEvaluationRepository.GetAll().OrderByDescending(p => p.Id).ToListAsync();
+
+            var data = (from p in priceEvaluations
+                        group p by new { p.ProjectCode, p.ProjectName, p.AuditFlowId } into g
+                        select new ProjectNameAndVersionDto
+                        {
+                            ProjectName = g.Key.ProjectName,
+                            ProjectNumber = g.Key.ProjectCode,
+                            Versions = g.Select(p => p.QuoteVersion).ToList(),
+                            AuditFlowId = g.Key.AuditFlowId
+                        }).Where(p => task.Select(o => o.AuditFlowId).Contains(p.AuditFlowId));
+
+            return data.ToList();
+        }
 
         /// <summary>
         /// 获取项目已有核价流程所有项目名称和项目代码以及对应版本号
@@ -611,6 +636,7 @@ namespace Finance.VersionManagement
                            ProjectNumber = g.Key.ProjectCode,
                            Versions = g.Select(p => p.QuoteVersion).ToList()
                        };
+
             return data.ToList();
             #region 一开逻辑
             //List<ProjectNameAndVersionDto> projectNameAndVersions = new List<ProjectNameAndVersionDto>();

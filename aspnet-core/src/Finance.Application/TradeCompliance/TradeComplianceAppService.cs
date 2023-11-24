@@ -399,12 +399,12 @@ namespace Finance.TradeCompliance
             row004.CreateCell(7).SetCellValue("金额");
             row004.CreateCell(8).SetCellValue("物料管制状态分类");
 
-
+            int index = 0;
             for (int n = 0; n < TradeTable.ProductMaterialInfos.Count; n++)
             {
                 IRow row00n = sheet.CreateRow(4+1+n);
 
-                row00n.CreateCell(1).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialIdInBom);
+                row00n.CreateCell(1).SetCellValue(index);
                 row00n.CreateCell(2).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialCode);
                 row00n.CreateCell(3).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialName);
                 row00n.CreateCell(4).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialDetailName);
@@ -412,7 +412,7 @@ namespace Finance.TradeCompliance
                 row00n.CreateCell(6).SetCellValue(TradeTable.ProductMaterialInfos[n].UnitPrice.ToString());
                 row00n.CreateCell(7).SetCellValue(TradeTable.ProductMaterialInfos[n].Amount.ToString());
                 row00n.CreateCell(8).SetCellValue(TradeTable.ProductMaterialInfos[n].ControlStateType);
-
+                index++;
             }
 
             IRow rowAfterN1= sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);

@@ -94,7 +94,11 @@ namespace Finance.ProductDevelopment
         [Column("ENCAPSULATIONSIZE")]
         public string EncapsulationSize { get; set; }
 
-
+        /// <summary>
+        /// 电子BOM文件Id
+        /// </summary>
+        [Column("FILEID")]
+        public long FileId { get; set; }
 
     }
 }

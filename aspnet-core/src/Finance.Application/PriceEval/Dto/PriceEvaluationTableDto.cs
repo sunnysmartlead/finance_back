@@ -760,6 +760,11 @@ namespace Finance.PriceEval.Dto
     public class ManufacturingCost : EntityDto<int>
     {
         /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 修改项Id
         /// </summary>
         public virtual string EditId { get; set; }
@@ -811,6 +816,11 @@ namespace Finance.PriceEval.Dto
     public class ManufacturingCostDirect : EntityDto<int>
     {
         /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 直接制造成本：直接人工
         /// </summary>
         public virtual decimal DirectLabor { get; set; }
@@ -857,6 +867,11 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCostIndirect : EntityDto<int>
     {
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
         /// <summary>
         /// 月需求量
         /// </summary>

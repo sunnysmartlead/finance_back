@@ -326,6 +326,9 @@ namespace Finance.Entering
         {
             if (electronicDto.IsSubmit)
             {
+                //激活电子BOM单价审核
+                await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
+
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
                 //判断是否全部提交
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
@@ -341,9 +344,6 @@ namespace Finance.Entering
             }
             else
             {
-                //激活结构BOM单价审核
-                await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
-
                 //电子料单价录入确认
                 await _resourceElectronicStructuralMethod.ElectronicMaterialEntering(electronicDto);
             }
@@ -532,6 +532,9 @@ namespace Finance.Entering
         {
             if (structuralMemberEnteringModel.IsSubmit)
             {
+                //激活结构BOM单价审核
+                await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
+
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
                 //判断有没有全部提交完
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
@@ -547,9 +550,6 @@ namespace Finance.Entering
             }
             else
             {
-                //激活结构BOM单价审核
-                await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
-
                 await _resourceElectronicStructuralMethod.StructuralMemberEntering(structuralMemberEnteringModel);
             }
         }
@@ -752,7 +752,7 @@ namespace Finance.Entering
             await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
-            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy);
+            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy,false);
         }
         /// <summary>
         /// 结构单价复制
@@ -764,7 +764,7 @@ namespace Finance.Entering
             await _configStructureElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<StructureElectronic> structures = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<StructureElectronicCopy> structuresCopy = ObjectMapper.Map<List<StructureElectronicCopy>>(structures);
-            await _configStructureElectronicCopy.BulkInsertAsync(structuresCopy);
+            await _configStructureElectronicCopy.BulkInsertAsync(structuresCopy, false);
         }
         /// <summary>
         /// 电子单价复制清除

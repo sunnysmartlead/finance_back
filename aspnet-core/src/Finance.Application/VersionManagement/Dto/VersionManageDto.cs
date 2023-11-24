@@ -26,6 +26,11 @@ namespace Finance.VersionManagement.Dto
         /// 版本号
         /// </summary>
         public List<int> Versions { get; set; }
+
+        /// <summary>
+        /// 对应流程Id
+        /// </summary>
+        public long AuditFlowId { get; set; }
     }
 
     /// <summary>

@@ -27,4 +27,9 @@ public class SolutionQuotationDto
     /// 报价次数
     /// </summary>
     public List<Solution> solutionList { get; set; }
+    
+    /// <summary>
+    /// 是否报价反馈
+    /// </summary>
+    public bool isQuotation{ get; set; }
 }
