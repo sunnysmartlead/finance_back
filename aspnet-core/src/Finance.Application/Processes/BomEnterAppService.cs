@@ -319,7 +319,7 @@ namespace Finance.Processes
                     foreach (var ListBomEnterItem in query)
                     {
                         BomEnter bomEnter = new BomEnter();
-                        bomEnter.SolutionId = item.QuoteSolutionId;
+                        bomEnter.SolutionId = item.NewSolutionId;
                         bomEnter.AuditFlowId = AuditFlowNewId;
                         bomEnter.Classification = ListBomEnterItem.Classification;
                         bomEnter.CreationTime = DateTime.Now;
@@ -351,7 +351,7 @@ namespace Finance.Processes
                     foreach (var ListBomEnterTotalItem in queryEnterTotal)
                     {
                         BomEnterTotal bomEnterTotal = new BomEnterTotal();
-                        bomEnterTotal.SolutionId = (long)item.QuoteSolutionId;
+                        bomEnterTotal.SolutionId = (long)item.NewSolutionId;
                         bomEnterTotal.AuditFlowId = AuditFlowNewId;
                         bomEnterTotal.Classification = ListBomEnterTotalItem.Classification;
                         bomEnterTotal.CreationTime = DateTime.Now;
@@ -539,8 +539,7 @@ namespace Finance.Processes
         /// <param name="AuditFlowId">流程id</param>
         public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
         {
-            await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowId);
-            await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowId);
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == AuditFlowId && t.EnumSole == NreIsSubmitDto.COB.ToString());
         }
     }
 }

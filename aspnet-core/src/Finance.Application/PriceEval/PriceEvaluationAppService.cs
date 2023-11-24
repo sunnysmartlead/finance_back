@@ -134,11 +134,13 @@ namespace Finance.PriceEval
            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
            IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-           IRepository<PanelJson, long> panelJsonRepository, IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository)
+           IRepository<PanelJson, long> panelJsonRepository,
+           IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository,
+           IRepository<BomMaterial, long> bomMaterialRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
-                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository)
+                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository, bomMaterialRepository)
         {
             _cacheManager = cacheManager;
             _nodeInstanceRepository = nodeInstanceRepository;
@@ -293,7 +295,7 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"SOP年份不能小于当年年份！");
             }
 
-            if (input.Gradient == null || input.Gradient.Count == 0)
+            if (input.Gradient == null || input.Gradient.Count == 0 || input.Gradient.Any(p => p.GradientValue == 0))
             {
                 throw new FriendlyException($"梯度数量不能为0！");
             }
