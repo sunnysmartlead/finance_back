@@ -13,6 +13,7 @@ using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes.ProcessHoursEnterDtos;
 using Finance.ProductDevelopment;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
@@ -608,7 +609,7 @@ namespace Finance.Processes
         /// </summary>
         /// AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// <returns>结果</returns>
-        public virtual async Task<string> ProcessHoursEnterCopyAsync(long AuditFlowId,long AuditFlowNewId, List<SolutionIdProcessHoursEnterSolutionId> SolutionIdAndQuoteSolutionIds)
+        public virtual async Task<string> ProcessHoursEnterCopyAsync(long AuditFlowId,long AuditFlowNewId, List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionIds)
         {
             // 设置查询条件
             if (SolutionIdAndQuoteSolutionIds.Count>0)
@@ -626,7 +627,7 @@ namespace Finance.Processes
                     await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
                     await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
 
-                    var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.SolutionId).ToList();
+                    var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
 
                     // 查询数据
                     foreach (var input in list)
@@ -739,7 +740,7 @@ namespace Finance.Processes
                     }
                     //uph
 
-                    var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.SolutionId).ToList();
+                    var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
                     //uph
                     if (null != listUph)
                     {
@@ -759,7 +760,7 @@ namespace Finance.Processes
                     }
                     //线体
 
-                    var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.SolutionId).ToList();
+                    var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
 
                     //线体数量、共线分摊率
                     if (null != listLine)

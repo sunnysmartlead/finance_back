@@ -6,6 +6,7 @@ using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using System;
@@ -299,7 +300,7 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual async Task<string> GetBomEntersCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdBomEnterSolutionId> SolutionIdAndQuoteSolutionIds)
+        public virtual async Task<string> GetBomEntersCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionIds)
         {
             if (SolutionIdAndQuoteSolutionIds.Count>0)
             {
@@ -308,9 +309,9 @@ namespace Finance.Processes
                     await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
                     await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
                     //有数据的返回
-                    var query = _bomEnterRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.SolutionId).ToList();
+                    var query = _bomEnterRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
 
-                    var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.SolutionId).ToList();
+                    var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
                     foreach (var ListBomEnterItem in query)
                     {
                         BomEnter bomEnter = new BomEnter();

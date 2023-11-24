@@ -256,13 +256,13 @@ namespace Finance.BaseLibrary
         /// 根据当前流程号复制新的流程 AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// </summary>
         /// <returns>结果</returns>
-        public virtual async Task<string> LogisticscostsCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdLogisticscostsSolutionId> SolutionIdAndQuoteSolutionIds)
+        public virtual async Task<string> LogisticscostsCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionIds)
         {
             if (SolutionIdAndQuoteSolutionIds.Count>0) {
                 foreach (var item in SolutionIdAndQuoteSolutionIds)
                 {
                     await _logisticscostRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId ==item.QuoteSolutionId);
-                    var query = _logisticscostRepository.GetAllList(p => p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.SolutionId);
+                    var query = _logisticscostRepository.GetAllList(p => p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId);
                     foreach (var itemQuery in query)
                     {
                         Logisticscost logisticscost = new Logisticscost();

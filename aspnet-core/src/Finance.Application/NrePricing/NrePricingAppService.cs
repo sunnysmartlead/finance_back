@@ -280,7 +280,7 @@ namespace Finance.NerPricing
             {
                 ExperimentItemsModel experiment = await GetReturnExperimentItemsSingle(QuoteAuditFlowId, item.QuoteSolutionId);
                 List<EnvironmentalExperimentFee> environmentalExperimentFees = ObjectMapper.Map<List<EnvironmentalExperimentFee>>(experiment.EnvironmentalExperimentFeeModels);
-                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _resourceEnvironmentalExperimentFee.BulkInsertAsync(environmentalExperimentFees);
             }
         }
@@ -297,7 +297,7 @@ namespace Finance.NerPricing
             {
                 MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
                 List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
-                MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
             }
         }
@@ -3055,7 +3055,7 @@ namespace Finance.NerPricing
             {
                 LaboratoryItemsModel laboratory = await GetProductDepartmentSingle(QuoteAuditFlowId, item.QuoteSolutionId);
                 List<LaboratoryFee> laboratoryExperimentFees = ObjectMapper.Map<List<LaboratoryFee>>(laboratory.laboratoryFeeModels);
-                laboratoryExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                laboratoryExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _resourceLaboratoryFee.BulkInsertAsync(laboratoryExperimentFees);
             }
         }

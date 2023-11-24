@@ -128,7 +128,7 @@ namespace Finance.Entering
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<EnteringElectronic> enteringElectronics= await _configEnteringElectronic.GetAllListAsync(p=>p.AuditFlowId.Equals(QuoteAuditFlowId)&&p.SolutionId.Equals(item.QuoteSolutionId));
-                enteringElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                enteringElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _configEnteringElectronic.BulkInsertAsync(enteringElectronics);
             }           
         }
@@ -144,7 +144,7 @@ namespace Finance.Entering
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<StructureElectronic> structureElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
-                structureElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                structureElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _configStructureElectronic.BulkInsertAsync(structureElectronics);
             }
         }
@@ -160,7 +160,7 @@ namespace Finance.Entering
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<EnteringElectronicCopy> enteringElectronicsCopy = await _configEnteringElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
-                enteringElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                enteringElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _configEnteringElectronicCopy.BulkInsertAsync(enteringElectronicsCopy);
             }
         }
@@ -176,7 +176,7 @@ namespace Finance.Entering
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<StructureElectronicCopy> structureElectronicsCopy = await _configStructureElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
-                structureElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
+                structureElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _configStructureElectronicCopy.BulkInsertAsync(structureElectronicsCopy);
             }
         }
