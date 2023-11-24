@@ -2472,7 +2472,7 @@ namespace Finance.PriceEval
         /// 获取 物流成本汇总表
         /// </summary>
         /// <returns></returns>
-        private async Task<List<ProductionControlInfoListDto>> GetLogisticsCostPrivate(GetLogisticsCostInput input, bool isChange = true)
+        public async Task<List<ProductionControlInfoListDto>> GetLogisticsCostPrivate(GetLogisticsCostInput input, bool isChange = true)
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
 
