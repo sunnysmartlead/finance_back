@@ -9,10 +9,13 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.FinanceParameter;
 using Finance.Infrastructure;
+using Finance.Nre;
+using Finance.NrePricing.Model;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes.ProcessHoursEnterDtos;
 using Finance.ProductDevelopment;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
@@ -82,6 +85,7 @@ namespace Finance.Processes
         private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
+        private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
 
         /// <summary>
         /// .ctor
@@ -102,7 +106,7 @@ namespace Finance.Processes
                       IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
                       IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
                       IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-
+                      IRepository<NreIsSubmit, long> resourceNreIsSubmit,
                       WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
@@ -117,6 +121,7 @@ namespace Finance.Processes
             _processHoursEnterLineRepository = processHoursEnterLineRepository;
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
             _dataInputAppService = dataInputAppService;
+            _resourceNreIsSubmit = resourceNreIsSubmit;
             _resourceSchemeTable = resourceSchemeTable;
             _workflowInstanceAppService = workflowInstanceAppService;
             _foundationHardwareRepository = foundationHardwareRepository;
@@ -298,6 +303,7 @@ namespace Finance.Processes
             }
             //工装
             var queryProcedure = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
+            if (queryProcedure.Count > 0)
             if (queryProcedure.Count > 0)
             {
 
@@ -605,174 +611,180 @@ namespace Finance.Processes
         /// <summary>
         /// 复制流程
         /// </summary>
-        /// <param name="processHoursEnterCopy">复制条件</param>
+        /// AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// <returns>结果</returns>
-        public virtual async Task<string> GetProcessHoursEnterCopyAsync(ProcessHoursEnterCopy processHoursEnterCopy)
+        public virtual async Task<string> ProcessHoursEnterCopyAsync(long AuditFlowId,long AuditFlowNewId, List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionIds)
         {
             // 设置查询条件
-            var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId).ToList();
-            foreach (var item in query)
+            if (SolutionIdAndQuoteSolutionIds.Count>0)
             {
-                _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-            }
-            await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
-            await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
-            await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == processHoursEnterCopy.AuditFlowNewId);
-
-            var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == processHoursEnterCopy.AuditFlowId).ToList();
-
-            // 查询数据
-            foreach (var input in list)
-            {
-
-
-                ProcessHoursEnter entity = new ProcessHoursEnter();
-                entity.ProcessName = input.ProcessName;
-                entity.ProcessNumber = input.ProcessNumber;
-                entity.SolutionId = input.SolutionId;
-                entity.AuditFlowId = processHoursEnterCopy.AuditFlowNewId;
-                entity.DeviceTotalPrice = input.DeviceTotalPrice;
-                entity.HardwareTotalPrice = input.HardwareTotalPrice;
-                entity.SoftwarePrice = input.SoftwarePrice;
-                entity.OpenDrawingSoftware = input.OpenDrawingSoftware;
-                entity.HardwareTotalPrice = input.HardwareDeviceTotalPrice;
-                entity.FixtureName = input.FixtureName;
-                entity.FrockPrice = input.FrockPrice;
-                entity.FixtureNumber = input.FixtureNumber;
-                entity.FrockPrice = input.FrockPrice;
-                entity.FrockName = input.FrockName;
-                entity.FrockNumber = input.FrockNumber;
-                entity.TestLineName = input.TestLineName;
-                entity.TestLineNumber = input.TestLineNumber;
-                entity.TestLinePrice = input.TestLinePrice;
-                entity.DevelopTotalPrice = input.DevelopTotalPrice;
-                entity.TraceabilitySoftware = input.TraceabilitySoftware;
-                entity.TraceabilitySoftwareCost = input.TraceabilitySoftwareCost;
-                entity.CreationTime = DateTime.Now;
-                if (AbpSession.UserId != null)
+                foreach (var itemProcessHoursEnterCopy in SolutionIdAndQuoteSolutionIds)
                 {
-                    entity.CreatorUserId = AbpSession.UserId.Value;
-                    entity.LastModificationTime = DateTime.Now;
-                    entity.LastModifierUserId = AbpSession.UserId.Value;
-                }
-                entity.LastModificationTime = DateTime.Now;
-                entity = await _processHoursEnterRepository.InsertAsync(entity);
-                var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
-
-                var listDevice = _processHoursEnterDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
-
-                //追溯部分(硬件及软件开发费用)
-                var listFrock = _processHoursEnterFrockRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
-
-
-                //工装治具部分
-                var listFixture = _processHoursEnterFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
-
-                var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == input.Id).ToList();
-
-                if (null != listDevice)
-                {
-                    foreach (var DeviceInfoItem in listDevice)
+                    var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
+                    foreach (var item in query)
                     {
-                        ProcessHoursEnterDevice processHoursEnterDevice = new ProcessHoursEnterDevice();
-                        processHoursEnterDevice.ProcessHoursEnterId = foundationDevice;
-                        processHoursEnterDevice.DeviceNumber = DeviceInfoItem.DeviceNumber;
-                        processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
-                        processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
-                        processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
-                        _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                        _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                        _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                        _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
                     }
-                }
-                //追溯部分(硬件及软件开发费用)
-                if (null != listFrock)
-                {
-                    foreach (var hardwareInfoItem in listFrock)
-                    {
-                        ProcessHoursEnterFrock processHoursEnterFrock = new ProcessHoursEnterFrock();
-                        processHoursEnterFrock.ProcessHoursEnterId = foundationDevice;
-                        processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
-                        processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
-                        processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
-                        _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
-                    }
-                }
+                    await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
+                    await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
+                    await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
 
-                //工装治具部分
-                if (null != listFixture)
-                {
-                    foreach (var zoolInfo in listFixture)
-                    {
-                        ProcessHoursEnterFixture processHoursEnterFixture = new ProcessHoursEnterFixture();
-                        processHoursEnterFixture.ProcessHoursEnterId = foundationDevice;
-                        processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
-                        processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
-                        processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
-                        _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
-                    }
-                }
-                if (null != deviceYear)
-                {
-                    foreach (var year in deviceYear)
+                    var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
+
+                    // 查询数据
+                    foreach (var input in list)
                     {
 
-                        ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
 
-                        processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
-                        processHoursEnteritem.LaborHour = year.LaborHour;
-                        processHoursEnteritem.PersonnelNumber = year.PersonnelNumber;
-                        processHoursEnteritem.MachineHour = year.MachineHour;
-                        processHoursEnteritem.ModelCountYearId = year.ModelCountYearId;
-                        processHoursEnteritem.Year = year.Year;
+                        ProcessHoursEnter entity = new ProcessHoursEnter();
+                        entity.ProcessName = input.ProcessName;
+                        entity.ProcessNumber = input.ProcessNumber;
+                        entity.SolutionId = itemProcessHoursEnterCopy.NewSolutionId;
+                        entity.AuditFlowId = AuditFlowNewId;
+                        entity.DeviceTotalPrice = input.DeviceTotalPrice;
+                        entity.HardwareTotalPrice = input.HardwareTotalPrice;
+                        entity.SoftwarePrice = input.SoftwarePrice;
+                        entity.OpenDrawingSoftware = input.OpenDrawingSoftware;
+                        entity.HardwareTotalPrice = input.HardwareDeviceTotalPrice;
+                        entity.FixtureName = input.FixtureName;
+                        entity.FrockPrice = input.FrockPrice;
+                        entity.FixtureNumber = input.FixtureNumber;
+                        entity.FrockPrice = input.FrockPrice;
+                        entity.FrockName = input.FrockName;
+                        entity.FrockNumber = input.FrockNumber;
+                        entity.TestLineName = input.TestLineName;
+                        entity.TestLineNumber = input.TestLineNumber;
+                        entity.TestLinePrice = input.TestLinePrice;
+                        entity.DevelopTotalPrice = input.DevelopTotalPrice;
+                        entity.TraceabilitySoftware = input.TraceabilitySoftware;
+                        entity.TraceabilitySoftwareCost = input.TraceabilitySoftwareCost;
+                        entity.CreationTime = DateTime.Now;
+                        if (AbpSession.UserId != null)
+                        {
+                            entity.CreatorUserId = AbpSession.UserId.Value;
+                            entity.LastModificationTime = DateTime.Now;
+                            entity.LastModifierUserId = AbpSession.UserId.Value;
+                        }
+                        entity.LastModificationTime = DateTime.Now;
+                        entity = await _processHoursEnterRepository.InsertAsync(entity);
+                        var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
 
-                        _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                        var listDevice = _processHoursEnterDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
+
+                        //追溯部分(硬件及软件开发费用)
+                        var listFrock = _processHoursEnterFrockRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
+
+
+                        //工装治具部分
+                        var listFixture = _processHoursEnterFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
+
+                        var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == input.Id).ToList();
+
+                        if (null != listDevice)
+                        {
+                            foreach (var DeviceInfoItem in listDevice)
+                            {
+                                ProcessHoursEnterDevice processHoursEnterDevice = new ProcessHoursEnterDevice();
+                                processHoursEnterDevice.ProcessHoursEnterId = foundationDevice;
+                                processHoursEnterDevice.DeviceNumber = DeviceInfoItem.DeviceNumber;
+                                processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
+                                processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
+                                processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
+                                _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                            }
+                        }
+                        //追溯部分(硬件及软件开发费用)
+                        if (null != listFrock)
+                        {
+                            foreach (var hardwareInfoItem in listFrock)
+                            {
+                                ProcessHoursEnterFrock processHoursEnterFrock = new ProcessHoursEnterFrock();
+                                processHoursEnterFrock.ProcessHoursEnterId = foundationDevice;
+                                processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
+                                processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
+                                processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
+                                _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
+                            }
+                        }
+
+                        //工装治具部分
+                        if (null != listFixture)
+                        {
+                            foreach (var zoolInfo in listFixture)
+                            {
+                                ProcessHoursEnterFixture processHoursEnterFixture = new ProcessHoursEnterFixture();
+                                processHoursEnterFixture.ProcessHoursEnterId = foundationDevice;
+                                processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
+                                processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
+                                processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
+                                _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
+                            }
+                        }
+                        if (null != deviceYear)
+                        {
+                            foreach (var year in deviceYear)
+                            {
+
+                                ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
+
+                                processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
+                                processHoursEnteritem.LaborHour = year.LaborHour;
+                                processHoursEnteritem.PersonnelNumber = year.PersonnelNumber;
+                                processHoursEnteritem.MachineHour = year.MachineHour;
+                                processHoursEnteritem.ModelCountYearId = year.ModelCountYearId;
+                                processHoursEnteritem.Year = year.Year;
+
+                                _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                            }
+                        }
+
+
+                    }
+                    //uph
+
+                    var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
+                    //uph
+                    if (null != listUph)
+                    {
+                        foreach (var item in listUph)
+                        {
+
+                            ProcessHoursEnterUph processHoursEnterUph = new ProcessHoursEnterUph();
+                            processHoursEnterUph.Year = item.Year;
+                            processHoursEnterUph.Uph = item.Uph;
+                            processHoursEnterUph.Value = item.Value;
+                            processHoursEnterUph.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
+                            processHoursEnterUph.AuditFlowId = AuditFlowNewId;
+                            await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
+
+
+                        }
+                    }
+                    //线体
+
+                    var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
+
+                    //线体数量、共线分摊率
+                    if (null != listLine)
+                    {
+                        foreach (var item in listLine)
+                        {
+                            ProcessHoursEnterLine processHoursEnterLine = new ProcessHoursEnterLine();
+                            processHoursEnterLine.ModelCountYearId = item.ModelCountYearId;
+                            processHoursEnterLine.Uph = item.Uph;
+                            processHoursEnterLine.Value = item.Value;
+                            processHoursEnterLine.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
+                            processHoursEnterLine.AuditFlowId = AuditFlowNewId;
+                            await _processHoursEnterLineRepository.InsertAsync(processHoursEnterLine);
+
+
+                        }
                     }
                 }
 
-
             }
-            //uph
-
-            var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == processHoursEnterCopy.AuditFlowId).ToList();
-            //uph
-            if (null != listUph)
-            {
-                foreach (var item in listUph)
-                {
-
-                    ProcessHoursEnterUph processHoursEnterUph = new ProcessHoursEnterUph();
-                    processHoursEnterUph.Year = item.Year;
-                    processHoursEnterUph.Uph = item.Uph;
-                    processHoursEnterUph.Value = item.Value;
-                    processHoursEnterUph.SolutionId = item.SolutionId;
-                    processHoursEnterUph.AuditFlowId = (long)processHoursEnterCopy.AuditFlowNewId;
-                    await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
-
-
-                }
-            }
-            //线体
-
-            var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == processHoursEnterCopy.AuditFlowId).ToList();
-
-            //线体数量、共线分摊率
-            if (null != listLine)
-            {
-                foreach (var item in listLine)
-                {
-                    ProcessHoursEnterLine processHoursEnterLine = new ProcessHoursEnterLine();
-                    processHoursEnterLine.ModelCountYearId = item.ModelCountYearId;
-                    processHoursEnterLine.Uph = item.Uph;
-                    processHoursEnterLine.Value = item.Value;
-                    processHoursEnterLine.SolutionId = item.SolutionId;
-                    processHoursEnterLine.AuditFlowId = processHoursEnterCopy.AuditFlowNewId;
-                    await _processHoursEnterLineRepository.InsertAsync(processHoursEnterLine);
-  
-
-                }
-            }
-
             return "复制成功";
         }
 
@@ -972,15 +984,14 @@ namespace Finance.Processes
         public virtual async Task<String> CreateSubmitAsync(ProcessHoursEnterCreateSubmitInput input)
         {
             //已经录入数量
-            var count = (from a in _processHoursEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
-         ).Select(p => p.SolutionId).Distinct()
-                         select a).ToList();
+            //已经录入数量
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId)  && p.EnumSole.Equals(NreIsSubmitDto.ProcessHoursEnter.ToString()));
+
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - count.Count;
+            int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)
             {
-                return "还有" + quantity + "个方案没有提交，请先提交";
+                return "还有" + quantity + "个方案没有提交，请先保存";
             }
             else
             {
@@ -1153,6 +1164,9 @@ namespace Finance.Processes
 
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.Logisticscost.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.Logisticscost.ToString() });
 
         }
 
@@ -1624,6 +1638,21 @@ namespace Finance.Processes
                     ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(item.ModelCountYearId);
                     //查询制造成本计算参数维护里面的每班正常工作时间*每日班次*月工作天数*稼动率
                     var manufacturingCostInfo = this._manufacturingCostInfoRepository.GetAll().Where(t => t.Year == modelCountYear.Year).ToList();
+                    if (manufacturingCostInfo.Count == 0 )
+                    {
+                        var manufacturingCostInfo1 = this._manufacturingCostInfoRepository.GetAll().Where(y => y.IsDeleted == false).OrderByDescending(t =>t.Year).ToList();
+                        //嫁接率
+                        rateOfMobilization = manufacturingCostInfo1[0].RateOfMobilization;
+                        CapacityrateOfMobilization = manufacturingCostInfo1[0].RateOfMobilization / 100;
+                        //月工作天数
+                        MonthlyWorkingDays = (decimal)manufacturingCostInfo1[0].MonthlyWorkingDays;
+                        //每日班次
+                        DailyShift = (decimal)manufacturingCostInfo1[0].DailyShift;
+                        //每班正常工作时间
+                        WorkingHours = (decimal)manufacturingCostInfo1[0].WorkingHours;
+                        //产能利用率
+                        CapacityUtilizationRate = (decimal)manufacturingCostInfo1[0].CapacityUtilizationRate / 100;
+                    }
                     if (manufacturingCostInfo.Count > 0)
                     {
                         //嫁接率
@@ -3163,6 +3192,9 @@ namespace Finance.Processes
 
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.ProcessHoursEnter.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.ProcessHoursEnter.ToString() });
 
 
 
@@ -3181,6 +3213,19 @@ namespace Finance.Processes
             await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
             await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
             await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
+        }
+
+
+
+        /// <summary>
+        /// 流程退出，对应的数据进行删除
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
+        {
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == AuditFlowId && t.EnumSole == NreIsSubmitDto.ProcessHoursEnter.ToString());
+
+
         }
 
         /// <summary>

@@ -4,8 +4,11 @@ using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Nre;
+using Finance.NrePricing.Model;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using System;
@@ -26,6 +29,7 @@ namespace Finance.Processes
         private readonly IRepository<BomEnterTotal, long> _bomEnterTotalRepository;
         private readonly DataInputAppService _dataInputAppService;
         private readonly IRepository<ModelCountYear, long> _modelCountYearRepository;
+        private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
@@ -45,6 +49,7 @@ namespace Finance.Processes
               IRepository<Solution, long> resourceSchemeTable,
               IRepository<ModelCountYear, long> modelCountYearRepository,
             WorkflowInstanceAppService workflowInstanceAppService,
+             IRepository<NreIsSubmit, long> resourceNreIsSubmit,
             IRepository<BomEnter, long> bomEnterRepository)
 
         {
@@ -57,6 +62,7 @@ namespace Finance.Processes
             _workflowInstanceAppService = workflowInstanceAppService;
 
             _modelCountYearRepository = modelCountYearRepository;
+            _resourceNreIsSubmit = resourceNreIsSubmit;
         }
 
         /// <summary>
@@ -295,76 +301,80 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 复制流程
+        /// 复制流程 AuditFlowId 老流程号  AuditFlowNewId 新流程号  SolutionIdAndQuoteSolutionIds 方案数组
         /// </summary>
-        /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
-        public virtual async Task<string> GetBomEntersCopyAsync(GetBomEntersCopy input)
+        public virtual async Task<string> GetBomEntersCopyAsync(long AuditFlowId, long AuditFlowNewId, List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionIds)
         {
-
-
-            await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
-            await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowNewId);
-            //有数据的返回
-            var query = _bomEnterRepository.GetAllList(p =>
-         p.IsDeleted == false&& p.AuditFlowId == input.AuditFlowId).ToList();
-
-            var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>
-     p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId).ToList();
-            foreach (var ListBomEnterItem in query)
+            if (SolutionIdAndQuoteSolutionIds.Count>0)
             {
-                BomEnter bomEnter = new BomEnter();
-                bomEnter.SolutionId = ListBomEnterItem.SolutionId;
-                bomEnter.AuditFlowId = input.AuditFlowNewId;
-                bomEnter.Classification = ListBomEnterItem.Classification;
-                bomEnter.CreationTime = DateTime.Now;
-                bomEnter.DirectDepreciation = ListBomEnterItem.DirectDepreciation;
-                bomEnter.DirectLaborPrice = ListBomEnterItem.DirectLaborPrice;
-                bomEnter.DirectLineChangeCost = ListBomEnterItem.DirectLineChangeCost;
-                bomEnter.DirectManufacturingCosts = ListBomEnterItem.DirectManufacturingCosts;
-                bomEnter.DirectSummary = ListBomEnterItem.DirectSummary;
-                bomEnter.IndirectDepreciation = ListBomEnterItem.IndirectDepreciation;
-                bomEnter.IndirectLaborPrice = ListBomEnterItem.IndirectLaborPrice;
-                bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
-                bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
-                bomEnter.TotalCost = ListBomEnterItem.TotalCost;
-                bomEnter.Year = ListBomEnterItem.Year;
-                bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
-                bomEnter.Remark = ListBomEnterItem.Remark;
-                if (AbpSession.UserId != null)
+                foreach (var item in SolutionIdAndQuoteSolutionIds)
                 {
-                    bomEnter.CreatorUserId = AbpSession.UserId.Value;
-                    bomEnter.LastModificationTime = DateTime.Now;
-                    bomEnter.LastModifierUserId = AbpSession.UserId.Value;
+                    await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
+                    await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
+                    //有数据的返回
+                    var query = _bomEnterRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
+
+                    var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
+                    foreach (var ListBomEnterItem in query)
+                    {
+                        BomEnter bomEnter = new BomEnter();
+                        bomEnter.SolutionId = item.NewSolutionId;
+                        bomEnter.AuditFlowId = AuditFlowNewId;
+                        bomEnter.Classification = ListBomEnterItem.Classification;
+                        bomEnter.CreationTime = DateTime.Now;
+                        bomEnter.DirectDepreciation = ListBomEnterItem.DirectDepreciation;
+                        bomEnter.DirectLaborPrice = ListBomEnterItem.DirectLaborPrice;
+                        bomEnter.DirectLineChangeCost = ListBomEnterItem.DirectLineChangeCost;
+                        bomEnter.DirectManufacturingCosts = ListBomEnterItem.DirectManufacturingCosts;
+                        bomEnter.DirectSummary = ListBomEnterItem.DirectSummary;
+                        bomEnter.IndirectDepreciation = ListBomEnterItem.IndirectDepreciation;
+                        bomEnter.IndirectLaborPrice = ListBomEnterItem.IndirectLaborPrice;
+                        bomEnter.IndirectManufacturingCosts = ListBomEnterItem.IndirectManufacturingCosts;
+                        bomEnter.IndirectSummary = ListBomEnterItem.IndirectSummary;
+                        bomEnter.TotalCost = ListBomEnterItem.TotalCost;
+                        bomEnter.Year = ListBomEnterItem.Year;
+                        bomEnter.ModelCountYearId = ListBomEnterItem.ModelCountYearId;
+                        bomEnter.Remark = ListBomEnterItem.Remark;
+                        if (AbpSession.UserId != null)
+                        {
+                            bomEnter.CreatorUserId = AbpSession.UserId.Value;
+                            bomEnter.LastModificationTime = DateTime.Now;
+                            bomEnter.LastModifierUserId = AbpSession.UserId.Value;
+                        }
+                        bomEnter.LastModificationTime = DateTime.Now;
+                        await _bomEnterRepository.InsertAsync(bomEnter);
+
+
+
+                    }
+                    foreach (var ListBomEnterTotalItem in queryEnterTotal)
+                    {
+                        BomEnterTotal bomEnterTotal = new BomEnterTotal();
+                        bomEnterTotal.SolutionId = (long)item.NewSolutionId;
+                        bomEnterTotal.AuditFlowId = AuditFlowNewId;
+                        bomEnterTotal.Classification = ListBomEnterTotalItem.Classification;
+                        bomEnterTotal.CreationTime = DateTime.Now;
+                        bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
+                        bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                        bomEnterTotal.ModelCountYearId = ListBomEnterTotalItem.ModelCountYearId;
+                        bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
+                        if (AbpSession.UserId != null)
+                        {
+                            bomEnterTotal.CreatorUserId = AbpSession.UserId.Value;
+                            bomEnterTotal.LastModificationTime = DateTime.Now;
+                            bomEnterTotal.LastModifierUserId = AbpSession.UserId.Value;
+                        }
+                        bomEnterTotal.LastModificationTime = DateTime.Now;
+                        await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
+                    }
+
                 }
-                bomEnter.LastModificationTime = DateTime.Now;
-                await _bomEnterRepository.InsertAsync(bomEnter);
-
-
 
             }
-            foreach (var ListBomEnterTotalItem in queryEnterTotal)
-            {
-                BomEnterTotal bomEnterTotal = new BomEnterTotal();
-                bomEnterTotal.SolutionId = ListBomEnterTotalItem.SolutionId;
-                bomEnterTotal.AuditFlowId = input.AuditFlowNewId;
-                bomEnterTotal.Classification = ListBomEnterTotalItem.Classification;
-                bomEnterTotal.CreationTime = DateTime.Now;
-                bomEnterTotal.TotalCost = ListBomEnterTotalItem.TotalCost;
-                bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
-                bomEnterTotal.ModelCountYearId = ListBomEnterTotalItem.ModelCountYearId;
-                bomEnterTotal.Remark = ListBomEnterTotalItem.Remark;
-                if (AbpSession.UserId != null)
-                {
-                    bomEnterTotal.CreatorUserId = AbpSession.UserId.Value;
-                    bomEnterTotal.LastModificationTime = DateTime.Now;
-                    bomEnterTotal.LastModifierUserId = AbpSession.UserId.Value;
-                }
-                bomEnterTotal.LastModificationTime = DateTime.Now;
-                await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
-            }
 
-            // 数据返回 
+
+            // 数据返回
             return "复制成功";
             }
           
@@ -455,6 +465,9 @@ namespace Finance.Processes
                     await _bomEnterTotalRepository.InsertAsync(bomEnterTotal);
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.COB.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.COB.ToString() });
 
 
         }
@@ -466,16 +479,14 @@ namespace Finance.Processes
         /// <returns></returns>
         public virtual async Task<String> CreateSubmitAsync(CreateSubmitInput input)
         {
-   
-                        var count = (from a in _bomEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
-         ).Select(p => p.SolutionId).Distinct()
-                         select a).ToList();
+
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.COB.ToString()));
+
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - count.Count;
+            int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)
             {
-                return "还有" + quantity + "个方案没有提交，请先提交";
+                return "还有" + quantity + "个方案没有提交，请先保存";
             }
             else
             {
@@ -518,6 +529,17 @@ namespace Finance.Processes
         public virtual async Task DeleteAsync(long id)
         {
             await _bomEnterRepository.DeleteAsync(s => s.Id == id);
+        }
+
+
+
+        /// <summary>
+        /// 流程退出，对应的数据进行删除
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
+        {
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == AuditFlowId && t.EnumSole == NreIsSubmitDto.COB.ToString());
         }
     }
 }

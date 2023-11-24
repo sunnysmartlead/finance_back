@@ -31,6 +31,7 @@ using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
 using LinqKit;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
@@ -44,6 +45,7 @@ using Spire.Xls.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
@@ -135,6 +137,7 @@ namespace Finance.PriceEval
         private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
 
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
+        private readonly IRepository<BomMaterial, long> _bomMaterialRepository;
 
 
         private string errMessage = string.Empty;
@@ -185,7 +188,8 @@ namespace Finance.PriceEval
             IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
             IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-            IRepository<PanelJson, long> panelJsonRepository)
+            IRepository<PanelJson, long> panelJsonRepository,
+            IRepository<BomMaterial, long> bomMaterialRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -235,6 +239,7 @@ namespace Finance.PriceEval
             _processHoursEnterRepository = processHoursEnterRepository;
 
             _panelJsonRepository = panelJsonRepository;
+            _bomMaterialRepository = bomMaterialRepository;
         }
 
 
@@ -1665,22 +1670,43 @@ namespace Finance.PriceEval
                 //月需求量的和
                 var manufacturingCostDirectListMonthlyDemand = dtoList.Sum(p => p.MonthlyDemand);
 
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gm.GradientId == input.GradientId && gm.AuditFlowId == input.AuditFlowId
+                                               && gm.ProductId == solution.Productld
+                                               select gmy).ToListAsync();
+                var gradientModelYearSum = gradientModelYear.Sum(p => p.Count);
+
                 var manufacturingCostDirect = new ManufacturingCostDirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
-                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
+                    //EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
+                    //LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostDirect.Subtotal = manufacturingCostDirect.DirectLabor + manufacturingCostDirect.EquipmentDepreciation + manufacturingCostDirect.LineChangeCost + manufacturingCostDirect.ManufacturingExpenses;
 
                 var manufacturingCostIndirect = new ManufacturingCostIndirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -2173,6 +2199,10 @@ namespace Finance.PriceEval
 
                     if (zf is not null)
                     {
+                        zf.UpDown = upDown;
+                        zf.ManufacturingCostDirect.UpDown = upDown;
+                        zf.ManufacturingCostIndirect.UpDown = upDown;
+
                         return zf;
                     }
                 }
@@ -2357,6 +2387,11 @@ namespace Finance.PriceEval
                 ManufacturingCostIndirect = manufacturingCostIndirect,
                 Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
             };
+
+            dto.UpDown = upDown;
+            dto.ManufacturingCostDirect.UpDown = upDown;
+            dto.ManufacturingCostIndirect.UpDown = upDown;
+
             return dto;
 
             //dto.Round2();//保留两位小数
@@ -3236,7 +3271,6 @@ namespace Finance.PriceEval
         //}
         #endregion
 
-
         #region 方案成本对比表
 
         /// <summary>
@@ -3441,6 +3475,39 @@ namespace Finance.PriceEval
 
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
+        }
+
+        #endregion
+
+        #region 快速核报价_数据复制
+
+        /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetBomImportTemplate()
+        {
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { new Material { SuperType = string.Empty } });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
+        /// 快速核报价：导入BOM成本
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task BomImport(long auditFlowId, [Required] IFormFile excle)
+        {
+            //获取excel数据
+            var stream = excle.OpenReadStream();
+            var rows = MiniExcel.Query<Material>(stream).ToList();
+
+            //删除表中数据
+            _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
+
+            //把excel数据插入表中
+            var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+            await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 
         #endregion

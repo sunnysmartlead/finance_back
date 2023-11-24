@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Domain.Entities.Auditing;
+using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -588,8 +589,14 @@ namespace Finance.PriceEval.Dto
     /// <summary>
     /// 物料
     /// </summary>
-    public class Material : EntityDto<string>
+    public class Material// : EntityDto<string>
     {
+        /// <summary>
+        /// Id
+        /// </summary>
+        [ExcelIgnore]
+        public virtual string Id { get; set; }
+
         /// <summary>
         /// 数量（模组年数量）
         /// </summary>
@@ -603,54 +610,62 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 序号
         /// </summary>
+        [ExcelIgnore]
         public virtual int Index { get; set; }
 
         /// <summary>
         /// 超级大种类
         /// </summary>
+        [ExcelColumn(Index = 0, Name = "超级大种类", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string SuperType { get; set; }
 
         /// <summary>
         /// 物料大类
         /// </summary>
-
+        [ExcelColumn(Index = 5, Name = "物料大类", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string CategoryName { get; set; }
 
         /// <summary>
         /// 物料种类
         /// </summary>
-
+        [ExcelColumn(Index = 4, Name = "物料种类", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string TypeName { get; set; }
 
 
         /// <summary>
         /// SAP（物理编码）
         /// </summary>
+        [ExcelColumn(Index = 1, Name = "SAP（物理编码）", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string Sap { get; set; }
 
         /// <summary>
         /// 材料名称
         /// </summary>
+        [ExcelColumn(Index = 2, Name = "材料名称", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string MaterialName { get; set; }
 
         /// <summary>
         /// 是否客供
         /// </summary>
+        [ExcelColumn(Index = 3, Name = "是否客供", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual bool IsCustomerSupply { get; set; }
 
         /// <summary>
         /// 是否客供
         /// </summary>
+        [ExcelIgnore]
         public virtual string IsCustomerSupplyStr { get; set; }
 
         /// <summary>
         /// 装配数量
         /// </summary>
+        [ExcelColumn(Index = 6, Name = "装配数量", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual double AssemblyCount { get; set; }
 
         /// <summary>
         /// 材料单价（原币）
         /// </summary>
+        [ExcelColumn(Index = 7, Name = "材料单价（原币）", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal MaterialPrice { get; set; }
 
         /// <summary>
@@ -661,11 +676,13 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 币别文本
         /// </summary>
+        [ExcelColumn(Index = 8, Name = "币别", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string CurrencyText { get; set; }
 
         /// <summary>
         /// 汇率
         /// </summary>
+        [ExcelColumn(Index = 9, Name = "汇率", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal ExchangeRate { get; set; }
 
         /// <summary>
@@ -691,21 +708,25 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 材料单价（人民币）
         /// </summary>
+        [ExcelColumn(Index = 10, Name = "材料单价（人民币）", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal MaterialPriceCyn { get; set; }
 
         /// <summary>
         /// 合计金额（人民币）
         /// </summary>
+        [ExcelColumn(Index = 11, Name = "合计金额（人民币）-bom成本", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal TotalMoneyCyn { get; set; }
 
         /// <summary>
         /// 合计金额（人民币）不含客供
         /// </summary>
+        [ExcelColumn(Index = 12, Name = "合计金额（人民币）-不含客供", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal TotalMoneyCynNoCustomerSupply { get; set; }
 
         /// <summary>
         /// 损耗
         /// </summary>
+        [ExcelColumn(Index = 13, Name = "损耗", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal Loss { get; set; }
 
         /// <summary>
@@ -716,41 +737,49 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 材料成本（含损耗）
         /// </summary>
+        [ExcelColumn(Index = 14, Name = "材料成本（含损耗）", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal MaterialCost { get; set; }
 
         /// <summary>
         /// 投入量
         /// </summary>
+        [ExcelColumn(Index = 15, Name = "投入量", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal InputCount { get; set; }
 
         /// <summary>
         /// 采购量
         /// </summary>
+        [ExcelColumn(Index = 16, Name = "采购量", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal PurchaseCount { get; set; }
 
         /// <summary>
         /// MOQ分摊成本
         /// </summary>
+        [ExcelColumn(Index = 17, Name = "MOQ分摊成本", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal MoqShareCount { get; set; }
 
         /// <summary>
         /// MOQ
         /// </summary>
+        [ExcelColumn(Index = 18, Name = "MOQ", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal Moq { get; set; }
 
         /// <summary>
         /// 可用库存
         /// </summary>
+        [ExcelColumn(Index = 19, Name = "可用库存", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual int AvailableInventory { get; set; }
 
         /// <summary>
         /// 备注
         /// </summary>
+        [ExcelColumn(Index = 20, Name = "备注", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual string Remarks { get; set; }
 
         /// <summary>
         /// 修改意见
         /// </summary>
+        [ExcelIgnore]
         public string ModificationComments { get; set; }
     }
 
@@ -759,6 +788,11 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCost : EntityDto<int>
     {
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
         /// <summary>
         /// 修改项Id
         /// </summary>
@@ -811,6 +845,11 @@ namespace Finance.PriceEval.Dto
     public class ManufacturingCostDirect : EntityDto<int>
     {
         /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 直接制造成本：直接人工
         /// </summary>
         public virtual decimal DirectLabor { get; set; }
@@ -857,6 +896,11 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCostIndirect : EntityDto<int>
     {
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
         /// <summary>
         /// 月需求量
         /// </summary>
