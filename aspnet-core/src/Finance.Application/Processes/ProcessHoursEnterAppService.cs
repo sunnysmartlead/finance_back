@@ -9,6 +9,8 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.FinanceParameter;
 using Finance.Infrastructure;
+using Finance.Nre;
+using Finance.NrePricing.Model;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes.ProcessHoursEnterDtos;
@@ -83,6 +85,7 @@ namespace Finance.Processes
         private readonly IRepository<FoundationHardwareItem, long> _foundationHardwareItemRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
+        private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
 
         /// <summary>
         /// .ctor
@@ -103,7 +106,7 @@ namespace Finance.Processes
                       IRepository<FoundationDeviceItem, long> foundationDeviceItemRepository,
                       IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
                       IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-
+                      IRepository<NreIsSubmit, long> resourceNreIsSubmit,
                       WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
@@ -118,6 +121,7 @@ namespace Finance.Processes
             _processHoursEnterLineRepository = processHoursEnterLineRepository;
             _processHoursEnterUphRepository = processHoursEnterUphRepository;
             _dataInputAppService = dataInputAppService;
+            _resourceNreIsSubmit = resourceNreIsSubmit;
             _resourceSchemeTable = resourceSchemeTable;
             _workflowInstanceAppService = workflowInstanceAppService;
             _foundationHardwareRepository = foundationHardwareRepository;
@@ -980,15 +984,14 @@ namespace Finance.Processes
         public virtual async Task<String> CreateSubmitAsync(ProcessHoursEnterCreateSubmitInput input)
         {
             //已经录入数量
-            var count = (from a in _processHoursEnterRepository.GetAllList(p =>
-         p.IsDeleted == false && p.AuditFlowId == input.AuditFlowId
-         ).Select(p => p.SolutionId).Distinct()
-                         select a).ToList();
+            //已经录入数量
+            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId)  && p.EnumSole.Equals(NreIsSubmitDto.ProcessHoursEnter.ToString()));
+
             List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - count.Count;
+            int quantity = result.Count - nreIsSubmits.Count;
             if (quantity > 0)
             {
-                return "还有" + quantity + "个方案没有提交，请先提交";
+                return "还有" + quantity + "个方案没有提交，请先保存";
             }
             else
             {
@@ -1161,6 +1164,9 @@ namespace Finance.Processes
 
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.Logisticscost.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.Logisticscost.ToString() });
 
         }
 
@@ -3186,6 +3192,9 @@ namespace Finance.Processes
 
                 }
             }
+            await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.ProcessHoursEnter.ToString());
+
+            await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.ProcessHoursEnter.ToString() });
 
 
 
@@ -3204,6 +3213,28 @@ namespace Finance.Processes
             await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
             await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
             await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == id);
+        }
+
+
+
+        /// <summary>
+        /// 流程退出，对应的数据进行删除
+        /// </summary>
+        /// <param name="AuditFlowId">流程id</param>
+        public virtual async Task DeleteAuditFlowIdAsync(long AuditFlowId)
+        {
+            var processHoursEnter =_processHoursEnterRepository.GetAll().Where(T =>T.AuditFlowId == AuditFlowId && T.IsDeleted == false).ToList();
+            foreach (var item in processHoursEnter)
+            {
+                await _processHoursEnterRepository.DeleteAsync(s => s.Id == item.Id);
+                await _processHoursEnterFixtureRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterDeviceRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterFrockRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterItemRepository.DeleteAsync(s => s.ProcessHoursEnterId == item.Id);
+            }
+            _processHoursEnterUphRepository.Delete(s => s.AuditFlowId == AuditFlowId);
+            _processHoursEnterLineRepository.Delete(s => s.AuditFlowId == AuditFlowId);
+        
         }
 
         /// <summary>
