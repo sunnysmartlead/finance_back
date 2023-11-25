@@ -2651,7 +2651,7 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus,
                         UnitPrice = (decimal)a.Key.DevicePrice,
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == Status.zy.ToString() ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
+                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
