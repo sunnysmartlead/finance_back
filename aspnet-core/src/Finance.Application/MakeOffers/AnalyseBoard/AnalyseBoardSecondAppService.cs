@@ -24,6 +24,9 @@ using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
+using Finance.PropertyDepartment.Entering.Dto;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -94,7 +97,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     private readonly NrePricingAppService _nrePricingAppService;
-
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
@@ -103,7 +106,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
-        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService)
+        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService, WorkflowInstanceAppService workflowInstanceAppService)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -119,6 +122,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         _nrePricingAppService = nrePricingAppService;
+        _workflowInstanceAppService = workflowInstanceAppService;
     }
 
     /// <summary>
@@ -336,7 +340,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
             else if (!material.SuperType.Equals("电子料") && !material.TypeName.Equals("镜头"))
             {
-                totalStru = material.TotalMoneyCynNoCustomerSupply;
+                totalStru = totalStru + material.TotalMoneyCynNoCustomerSupply;
             }
         }
         //PCBA
@@ -352,17 +356,19 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         //制造成本
         List<ManufacturingCost> QualityList= await _priceEvaluationAppService.GetManufacturingCost(new GetManufacturingCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-        decimal Subtotal = 0;
-
+       
         foreach (ManufacturingCost quality in QualityList)
         {
-            Subtotal = Subtotal + quality.Subtotal;
+            if (quality.CostType.Equals(CostType.Total))
+            {
+                CoreDevice zhiliangCoreDevice = new CoreDevice();
+                zhiliangCoreDevice.ProjectName = "制造成本";
+                zhiliangCoreDevice.Sum = quality.Subtotal;
+                CoreDeviclist.Add(zhiliangCoreDevice);
+            }
+  
         }
 
-        CoreDevice zhiliangCoreDevice = new CoreDevice();
-        zhiliangCoreDevice.ProjectName = "制造成本";
-        zhiliangCoreDevice.Sum = Subtotal;
-        CoreDeviclist.Add(zhiliangCoreDevice);
 
         //损耗成本
         List<LossCost> CostItemList = await _priceEvaluationAppService.GetLossCost(new GetCostItemInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown, });
@@ -409,7 +415,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
-        OtherCostItem otherCostItem = await _priceEvaluationAppService.GetOtherCostItem(new GetOtherCostItemInput
+        ExcelPriceEvaluationTableDto ExcelPriceEvaluationTable = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
         {
             AuditFlowId = input.AuditFlowId,
             GradientId = input.GradientId,
@@ -417,11 +423,31 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             Year = input.Year,
             UpDown = input.UpDown
         });
+        List<OtherCostItem2> otherCostItem2s = ExcelPriceEvaluationTable.OtherCostItem2;
 
-        CoreDevice OtherCostDevice = new CoreDevice();
-        OtherCostDevice.ProjectName = "其他成本";
-        OtherCostDevice.Sum = otherCostItem.Total;
-        CoreDeviclist.Add(OtherCostDevice);
+
+        foreach (OtherCostItem2 otherCostItem in otherCostItem2s)
+        {
+            if (otherCostItem.ItemName== "单颗成本" )
+            {
+                CoreDevice OtherCostDevice = new CoreDevice();
+                OtherCostDevice.ProjectName = "其他成本";
+                OtherCostDevice.Sum = Convert.ToDecimal(otherCostItem.Total);
+                CoreDeviclist.Add(OtherCostDevice);
+            }
+
+        }
+
+        //decimal Cost = 0;
+        //foreach (OtherCostItem2List otherCostItem in otherCostItemList)
+        //{
+        //    Cost = Cost + otherCostItem.Cost;
+        //}
+
+        //CoreDevice OtherCostDevice = new CoreDevice();
+        //OtherCostDevice.ProjectName = "其他成本";
+        //OtherCostDevice.Sum = Cost;
+        //CoreDeviclist.Add(OtherCostDevice);
 
 
         //moq
@@ -694,8 +720,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
             throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
-        }
-
+        }       
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
 

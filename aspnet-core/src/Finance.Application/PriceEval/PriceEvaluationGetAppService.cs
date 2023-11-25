@@ -9,6 +9,7 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
 using Finance.Ext;
@@ -1206,6 +1207,7 @@ namespace Finance.PriceEval
                 UpDown = input.UpDown
             });
 
+            otherCostItem2List.ForEach(p => p.EditId = p.ItemName);
 
             return otherCostItem2List;
         }
@@ -2363,9 +2365,9 @@ namespace Finance.PriceEval
             {
                 MonthlyDemand = monthlyDemand,
                 Id = year,
-                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
+                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
                 EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
-                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
+                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600) + manufacturingCostInfo.ProcessCost,
             };
             manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -3493,10 +3495,22 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetBomImportTemplate2(GetBomCostInput input)
+        {
+            var bom = await GetBomCost(input);
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { bom.First() });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
         /// 快速核报价：导入BOM成本
         /// </summary>
         /// <returns></returns>
-        public virtual async Task BomImport(long auditFlowId, [Required] IFormFile excle)
+        public virtual async Task BomImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
             //获取excel数据
             var stream = excle.OpenReadStream();
@@ -3507,6 +3521,14 @@ namespace Finance.PriceEval
 
             //把excel数据插入表中
             var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+
+            foreach (var item in entity)
+            {
+                item.AuditFlowId = auditFlowId;
+                item.GradientId = gradientId;
+                item.SolutionId = solutionId;
+            }
+
             await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 

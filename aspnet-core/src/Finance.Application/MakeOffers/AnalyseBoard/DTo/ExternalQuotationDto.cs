@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.Ext;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using static Finance.Ext.FriendlyRequiredAttribute;
@@ -8,7 +9,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 对外报价单
 /// </summary>
-public class ExternalQuotationDto
+public class ExternalQuotationDto : ToExamineDto
 {
     /// <summary>
     /// Id
@@ -171,7 +172,7 @@ public class ProductQuotationListDto
     /// <summary>
     /// Id
     /// </summary>
-    public long  Id { get; set; }
+    public long Id { get; set; }
     /// <summary>
     /// 序号
     /// </summary>
@@ -185,7 +186,7 @@ public class ProductQuotationListDto
     /// 年份
     /// </summary>
     [FriendlyRequired("产品报价清单-年份")]
-    public virtual string Year { get; set; }   
+    public virtual string Year { get; set; }
     /// <summary>
     /// 走量
     /// </summary>       
@@ -200,7 +201,7 @@ public class ProductQuotationListDto
     /// 备注
     /// </summary>
     public virtual string Remark { get; set; }
-    
+
 }
 /// <summary>
 /// NRE报价清单交互类
