@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.Ext;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using static Finance.Ext.FriendlyRequiredAttribute;

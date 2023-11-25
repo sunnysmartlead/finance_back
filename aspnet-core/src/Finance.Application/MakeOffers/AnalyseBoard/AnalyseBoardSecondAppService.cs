@@ -24,6 +24,9 @@ using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
+using Finance.PropertyDepartment.Entering.Dto;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -94,7 +97,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     private readonly NrePricingAppService _nrePricingAppService;
-
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
@@ -103,7 +106,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
-        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService)
+        IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService, WorkflowInstanceAppService workflowInstanceAppService)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -119,6 +122,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         _nrePricingAppService = nrePricingAppService;
+        _workflowInstanceAppService = workflowInstanceAppService;
     }
 
     /// <summary>
@@ -702,8 +706,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
             throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
-        }
-
+        }       
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
 
