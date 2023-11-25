@@ -1,10 +1,12 @@
-﻿using Abp.Authorization.Users;
+﻿using Abp.Application.Services.Dto;
+using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
 using Finance.Audit;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
+using Finance.DemandApplyAudit;
 using Finance.Infrastructure;
 using Finance.MakeOffers.AnalyseBoard;
 using Finance.PriceEval;
@@ -12,6 +14,7 @@ using Finance.PriceEval.Dto;
 using Finance.ProjectManagement;
 using Finance.VersionManagement.Dto;
 using Finance.WorkFlows;
+using Finance.WorkFlows.Dto;
 using Microsoft.EntityFrameworkCore;
 using NPOI.Util;
 using System;
@@ -51,10 +54,12 @@ namespace Finance.VersionManagement
         private readonly IRepository<LineInstance, long> _lineInstanceRepository;
         private readonly IRepository<InstanceHistory, long> _instanceHistoryRepository;
         private readonly AuditFlowAppService _auditFlowAppService;
+        private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
+
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -76,6 +81,7 @@ namespace Finance.VersionManagement
             _lineInstanceRepository = lineInstanceRepository;
             _instanceHistoryRepository = instanceHistoryRepository;
             _auditFlowAppService = auditFlowAppService;
+            _pricingTeamRepository = pricingTeamRepository;
         }
 
 
@@ -94,8 +100,9 @@ namespace Finance.VersionManagement
             var data = (from p in _priceEvaluationRepository.GetAll()
                         join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
                         join f in _financeDictionaryDetailRepository.GetAll() on p.PriceEvalType equals f.Id
-                        where p.ProjectName == versionFilterInput.ProjectName
-                        //&& p.QuoteVersion == versionFilterInput.Version
+                        join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
+                        where w.WorkflowState == WorkflowState.Running
+                        //&& p.QuoteVersion == versionFilterInput.Version  
                         select new VersionBasicInfoDto
                         {
                             AuditFlowId = p.AuditFlowId,
@@ -108,7 +115,10 @@ namespace Finance.VersionManagement
                             //FinishedTime = p.FinishedTime
                         }).WhereIf(versionFilterInput.Version != default, p => p.Version == versionFilterInput.Version)
                         .WhereIf(versionFilterInput.DraftStartTime.HasValue, p => p.DraftTime >= versionFilterInput.DraftStartTime)
-                        .WhereIf(versionFilterInput.DraftEndTime.HasValue, p => p.DraftTime >= versionFilterInput.DraftEndTime);
+                        .WhereIf(versionFilterInput.DraftEndTime.HasValue, p => p.DraftTime <= versionFilterInput.DraftEndTime)
+                        .WhereIf(versionFilterInput.AuditFlowId != default, p => p.AuditFlowId == versionFilterInput.AuditFlowId)
+                        .WhereIf(versionFilterInput.ProjectName != default, p => p.ProjectName == versionFilterInput.ProjectName)
+                        .WhereIf(versionFilterInput.Number != default, p => p.Number == versionFilterInput.Number);
 
             var result = await data.ToListAsync();
 
@@ -329,7 +339,9 @@ namespace Finance.VersionManagement
                            //RoleName = 
                            n.CreationTime,
                            n.LastModificationTime,
-                           n.RoleId
+                           n.RoleId,
+                           n.WorkFlowInstanceId,
+                           n.ProcessIdentifier,
                        };
             var result = await data.ToListAsync();
 
@@ -349,12 +361,64 @@ namespace Finance.VersionManagement
                     { LastModifyTime = item.LastModificationTime, StartTime =item. CreationTime } },
 
                 };
+                if (item.NodeInstanceStatus == NodeInstanceStatus.Current)
+                {
+                    dto.ProcessState = PROCESSTYPE.ProcessRunning;
+                }
+
+
                 if (!item.RoleId.IsNullOrWhiteSpace())
                 {
                     var roleNames = string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name));
                     dto.RoleName = roleNames;
                 }
 
+                //获取期望完成时间
+                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == item.WorkFlowInstanceId);
+                if (pricingTeam is not null)
+                {
+                    //dto.ProcessName
+                    if (item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.ElecEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.StructEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.EMCTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.QualityBenchTime;
+                    }
+                    if (item.ProcessIdentifier == "ElectronicUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceElecTime;
+                    }
+                    if (item.ProcessIdentifier == "StructureUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceStructTime;
+                    }
+                    if (item.ProcessIdentifier == "NRE_MoldFeeEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.MouldWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                    {
+                        dto.RequiredTime = pricingTeam.EngineerWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductManageTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductCostInputTime;
+                    }
+                }
 
                 auditFlowOperateReocrdDto.Add(dto);
             }
@@ -604,11 +668,12 @@ namespace Finance.VersionManagement
         /// </summary>
         public async virtual Task<List<ProjectNameAndVersionDto>> GetAllAuditFlowProjectNameAndVersionBySelf()
         {
-            var task = (await _auditFlowAppService.GetAllAuditFlowInfosByTask());
+            //var task = (await _auditFlowAppService.GetAllAuditFlowInfosByTask());
 
             var priceEvaluations = await _priceEvaluationRepository.GetAll().OrderByDescending(p => p.Id).ToListAsync();
 
             var data = (from p in priceEvaluations
+                        where p.ProjectManager == AbpSession.UserId
                         group p by new { p.ProjectCode, p.ProjectName, p.AuditFlowId } into g
                         select new ProjectNameAndVersionDto
                         {
@@ -616,7 +681,9 @@ namespace Finance.VersionManagement
                             ProjectNumber = g.Key.ProjectCode,
                             Versions = g.Select(p => p.QuoteVersion).ToList(),
                             AuditFlowId = g.Key.AuditFlowId
-                        }).Where(p => task.Select(o => o.AuditFlowId).Contains(p.AuditFlowId));
+                        })
+                        //.Where(p => task.Select(o => o.AuditFlowId).Contains(p.AuditFlowId))
+                        ;
 
             return data.ToList();
         }

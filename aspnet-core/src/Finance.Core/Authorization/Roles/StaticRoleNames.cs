@@ -60,8 +60,19 @@ namespace Finance.Authorization.Roles
 
             public const string ProjectSupervisor = "项目课长";
 
+
+            //基础库角色
+
+
             public const string CostSplit = "成本拆分员";//
 
+
+            public const string Bjshb = "报价审核表";
+            public const string Bjdgdgly = "报价单归档管理员";
+            public const string Djkgly = "单价库管理员";
+            public const string Hjsykgly = "环境实验库管理员";
+            public const string EmcSykgly = "EMC实验库管理员";
+            public const string Gcbjckgly = "工程部-基础库管理员";
         }
 
         public static class Tenants

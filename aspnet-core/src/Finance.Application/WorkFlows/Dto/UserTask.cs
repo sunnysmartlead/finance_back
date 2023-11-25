@@ -80,5 +80,10 @@ namespace Finance.WorkFlows.Dto
         /// 重置用户Id
         /// </summary>
         public virtual long ResetUserId { get; set; }
+
+        /// <summary>
+        /// 操作角色
+        /// </summary>
+        internal virtual string RoleId { get; set; }
     }
 }

@@ -5,8 +5,10 @@ using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Linq.Extensions;
 using DynamicExpresso;
+using Finance.Audit;
 using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
+using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.Infrastructure.Dto;
@@ -15,6 +17,7 @@ using Finance.WorkFlows.Dto;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using NPOI.SS.Formula.Functions;
+using NPOI.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,61 +55,44 @@ namespace Finance.WorkFlows
 
         private readonly IRepository<TaskReset, long> _taskResetRepository;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="workflowRepository"></param>
-        /// <param name="nodeRepository"></param>
-        /// <param name="lineRepository"></param>
-        /// <param name="workFlowInstanceRepository"></param>
-        /// <param name="nodeInstanceRepository"></param>
-        /// <param name="lineInstanceRepository"></param>
-        /// <param name="instanceHistoryRepository"></param>
-        /// <param name="financeDictionaryRepository"></param>
-        /// <param name="financeDictionaryDetailRepository"></param>
-        /// <param name="userRoleRepository"></param>
-        /// <param name="roleRepository"></param>
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository,
-            IRepository<WorkflowInstance, long> workFlowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository,
-            IRepository<InstanceHistory, long> instanceHistoryRepository,
-            IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
-            IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository,
-            UserManager userManager, RoleManager roleManager,
-            IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository
-            )
+        private readonly IRepository<Solution, long> _solutionRepository;
+
+        private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
+
+        private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
+
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
             _lineRepository = lineRepository;
-
-
-            _workflowInstanceRepository = workFlowInstanceRepository;
+            _workflowInstanceRepository = workflowInstanceRepository;
             _nodeInstanceRepository = nodeInstanceRepository;
             _lineInstanceRepository = lineInstanceRepository;
-
             _instanceHistoryRepository = instanceHistoryRepository;
-
             _financeDictionaryRepository = financeDictionaryRepository;
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
-
             _userRoleRepository = userRoleRepository;
             _roleRepository = roleRepository;
-
             _userManager = userManager;
             _roleManager = roleManager;
-
             _priceEvaluationRepository = priceEvaluationRepository;
-
             _taskResetRepository = taskResetRepository;
+            _solutionRepository = solutionRepository;
+            _pricingTeamRepository = pricingTeamRepository;
+            _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
         }
+
+
+
 
         /// <summary>
         /// 手动触发贸易合规（手动测试使用时改为public）
         /// </summary>
         /// <returns></returns>
-        public  async Task GG()
+        public async Task GG()
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_贸易合规");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_选择是否报价");
             hg.LastModificationTime = DateTime.UtcNow;
         }
 
@@ -706,6 +692,96 @@ namespace Finance.WorkFlows
             return new PagedResultDto<UserTask>(result.Count, result);
         }
 
+        /// <summary>
+        /// 根据流程Id，获取待办项
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<UserTask>> GetTaskByWorkflowInstanceId(long workflowInstanceId, long? nodeInstanceId = null)
+        {
+            var data = await (from n in _nodeInstanceRepository.GetAll()
+                              join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
+                              where n.WorkFlowInstanceId == workflowInstanceId && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                              select new UserTask
+                              {
+                                  Id = n.Id,
+                                  WorkFlowInstanceId = n.WorkFlowInstanceId,
+                                  WorkFlowName = w.Name,
+                                  Title = w.Title,
+                                  NodeName = n.Name,
+                                  CreationTime = w.CreationTime,
+                                  WorkflowState = w.WorkflowState,
+                                  ProcessIdentifier = n.ProcessIdentifier,
+                                  RoleId = n.RoleId,
+                              }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
+
+
+            foreach (var item in data)
+            {
+                var roleids = item.RoleId.Split(",").Select(p => p.To<int>());
+                var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+                item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
+
+                //查询重置
+                var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
+                foreach (var reset in resets)
+                {
+                    #region 用户权限
+
+                    //获取当前流程方案列表
+                    var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                    //获取核价团队
+                    var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                    //获取项目经理
+                    var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                    //获取核价需求录入保存项
+                    var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+
+                    //项目经理控制的页面
+                    var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+
+                    var deleteUserIds = new List<int>();
+
+                    foreach (var userId in item.TaskUserIds)
+                    {
+                        if (
+                            (!solutionList.Any(p => p.ElecEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                            || (!solutionList.Any(p => p.StructEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                || (pricingTeam == null || pricingTeam.EngineerId != userId && item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                || (pricingTeam == null || pricingTeam.QualityBenchId != userId && item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                || (pricingTeam == null || pricingTeam.EMCId != userId && item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                || (pricingTeam == null || pricingTeam.ProductCostInputId != userId && item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                || (pricingTeam == null || pricingTeam.ProductManageTimeId != userId && item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
+                || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
+                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
+                || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
+                || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+
+                            )
+                        {
+                            deleteUserIds.Add(userId);
+                        }
+                    }
+
+                    foreach (var deleteUserId in deleteUserIds)
+                    {
+                        item.TaskUserIds.Remove(deleteUserId);
+                    }
+
+                    #endregion
+
+                    item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
+                    item.TaskUserIds.Add(reset.TargetUserId.To<int>());
+                }
+
+
+            }
+            return data;
+        }
 
         /// <summary>
         /// 根据当前用户Id 获取已办，基于项目经理过滤
@@ -841,6 +917,8 @@ namespace Finance.WorkFlows
                .Distinct().ToList();
             return new PagedResultDto<UserTask>(count, dto);
         }
+
+
 
         /// <summary>
         /// 根据流程实例Id 获取流程整体状态
@@ -1080,6 +1158,47 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 获取被删除的流程
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<PagedResultDto<WorkflowDeleteDto>> GetWorkflowDelete(GetWorkflowOveredInput input)
+        {
+            //调用OverWorkflow接口归档的流程
+
+            //普通流程的核价原因
+
+            var data = (from w in _workflowInstanceRepository.GetAll()
+                        join n in _nodeInstanceRepository.GetAll() on w.Id equals n.WorkFlowInstanceId
+                        join p in _priceEvaluationRepository.GetAll() on w.Id equals p.AuditFlowId
+                        where n.NodeId == "主流程_归档" && n.Comment.StartsWith("删除流程：")
+                        && w.WorkflowState == WorkflowState.Ended
+                        select new WorkflowDeleteDto
+                        {
+                            AuditFlowId = w.Id,
+                            Title = p.Title,
+                            Number = p.Number,
+                            Version = p.QuoteVersion,
+                            Comment = n.Comment,
+                        })
+                        .Distinct()
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+
+            var count = await data.CountAsync();
+
+            var paged = data.PageBy(input);
+
+            var result = await paged.ToListAsync();
+            foreach (var item in result)
+            {
+                item.Comment = item.Comment.Replace("删除流程：", string.Empty);
+            }
+
+            return new PagedResultDto<WorkflowDeleteDto>(count, result);
+        }
+
+        /// <summary>
         /// 结束流程
         /// </summary>
         /// <returns></returns>
@@ -1088,10 +1207,11 @@ namespace Finance.WorkFlows
             var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
             wf.WorkflowState = WorkflowState.Ended;
 
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name == "主流程_归档");
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId == "主流程_归档");
             node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            node.Comment = $"删除流程：{input.DeleteReason}";
 
-            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
             foreach (var item in nodes)
             {
                 item.NodeInstanceStatus = NodeInstanceStatus.Over;

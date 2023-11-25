@@ -20,6 +20,8 @@ using Microsoft.EntityFrameworkCore;
 using Abp.Json;
 using Finance.NerPricing;
 using Finance.Authorization.Users;
+using Finance.BaseLibrary;
+using Finance.Processes;
 
 namespace Finance.WorkFlows
 {
@@ -47,8 +49,19 @@ namespace Finance.WorkFlows
         private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
-
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository)
+        /// <summary>
+        /// 物流成本服务
+        /// </summary>
+        private readonly LogisticscostAppService _logisticscostAppService;
+        /// <summary>
+        /// 工时工序服务  
+        /// </summary>
+        private readonly ProcessHoursEnterAppService _processHoursEnterAppService;
+        /// <summary>
+        /// COB制造成本服务
+        /// </summary>
+        private readonly BomEnterAppService _bomEnterAppService;
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -68,6 +81,9 @@ namespace Finance.WorkFlows
             _sendEmail = sendEmail;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
             _userRepository = userRepository;
+            _logisticscostAppService = logisticscostAppService;
+            _processHoursEnterAppService = processHoursEnterAppService;
+            _bomEnterAppService = bomEnterAppService;
         }
 
 
@@ -148,7 +164,23 @@ namespace Finance.WorkFlows
                             await _structionBomAppService.ClearStructBomImportState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+                        //如果是流转到物流成本录入退回页面的
+                        if (eventData.Entity.NodeId == "主流程_物流成本录入")
+                        {
+                            await _logisticscostAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
 
+                        //如果是流转到工序工时添加退回页面的
+                        if (eventData.Entity.NodeId == "主流程_工序工时添加")
+                        {
+                            await _processHoursEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
+
+                        //如果是流转到COB制造成本录入退回页面的
+                        if (eventData.Entity.NodeId == "主流程_COB制造成本录入")
+                        {
+                            await _bomEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
+                        }
                         ////如果是流转到主流程_电子BOM匹配修改
                         //if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                         //{
@@ -265,6 +297,7 @@ namespace Finance.WorkFlows
                             await _nrePricingAppService.GetExperimentItemsConfigurationState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+
                         //如果流转到报价看板
                         if (eventData.Entity.NodeId == "主流程_生成报价分析界面选择报价方案")
                         {
@@ -318,46 +351,42 @@ namespace Finance.WorkFlows
 
                         #region 邮件发送
 
-////#if !DEBUG
+#if !DEBUG
 
-//                        SendEmail email = new SendEmail();
-//                        string loginIp = email.GetLoginAddr();
+                        SendEmail email = new SendEmail();
+                        string loginIp = email.GetLoginAddr();
 
-//                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
-//                        {
+                        if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
+                        {
 
-//                            var allAuditFlowInfos = await _auditFlowAppService.GetAllAuditFlowInfosForEmail();
-//                            var tasks = allAuditFlowInfos.Where(p => p.AuditFlowRightDetailList.Any(p => p.Right == RIGHTTYPE.Edit));
-//                            foreach (var task in tasks)
-//                            {
-//                                foreach (var item in task.AuditFlowRightDetailList)
-//                                {
-//                                    //foreach (var userId in item.TaskUserIds)
-//                                    //{
-//                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-//                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 
+                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
+                            foreach (var task in allAuditFlowInfos)
+                            {
+                                //foreach (var userId in task.TaskUserIds)
+                                //{
+                                //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                                var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
 
-//                                    if (userInfo != null)
-//                                    {
-//                                        string emailAddr = userInfo.EmailAddress;
+                                if (userInfo != null)
+                                {
+                                    string emailAddr = userInfo.EmailAddress;
 
-//                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-                                        
-//                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-//                                        string emailBody = "核价报价提醒：您有新的工作流（" + item.ProcessName + "——" + task.AuditFlowTitle + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-//#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-//                                        Task.Run(async () =>
-//                                        {
-//                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), task.AuditFlowTitle, emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-//                                        });
-//#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-//                                    }
-//                                    //}
-//                                }
-//                            }
-//                        }
+                                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
-////#endif
+                                    string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                    string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                    Task.Run(async () =>
+                                    {
+                                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                    });
+#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                }
+                                //}
+                            }
+                        }
+
+#endif
 
                         #endregion
 

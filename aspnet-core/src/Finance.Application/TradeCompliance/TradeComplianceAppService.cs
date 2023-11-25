@@ -399,7 +399,7 @@ namespace Finance.TradeCompliance
             row004.CreateCell(7).SetCellValue("金额");
             row004.CreateCell(8).SetCellValue("物料管制状态分类");
 
-            int index = 0;
+            int index = 1;
             for (int n = 0; n < TradeTable.ProductMaterialInfos.Count; n++)
             {
                 IRow row00n = sheet.CreateRow(4+1+n);

@@ -201,6 +201,53 @@ namespace Finance.PriceEval
 
         #region 核价开始
         /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）：保存
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [AbpAuthorize]
+        public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStartSave(PriceEvaluationStartSaveInput input)
+        {
+            //if (!input.IsSubmit)
+            //{
+            long auid;
+            if (input.NodeInstanceId == default)
+            {
+                auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                {
+                    WorkflowId = WorkFlowCreator.MainFlowId,
+                    Title = input.Title,
+                    FinanceDictionaryDetailId = FinanceConsts.Save,
+                });
+            }
+            else
+            {
+                var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == input.NodeInstanceId);
+                auid = nodeInstance.WorkFlowInstanceId;
+            }
+
+
+            var json = JsonConvert.SerializeObject(input);
+
+            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auid);
+            if (priceEvaluationStartData is null)
+            {
+                await _priceEvaluationStartDataRepository.InsertAsync(new PriceEvaluationStartData
+                {
+                    AuditFlowId = auid,
+                    DataJson = json
+                });
+            }
+            else
+            {
+                priceEvaluationStartData.DataJson = json;
+            }
+
+            return new PriceEvaluationStartResult { AuditFlowId = auid, IsSuccess = true, Message = "添加成功！" };
+            //}
+        }
+
+        /// <summary>
         /// 开始核价：报价核价需求录入界面（第一步）
         /// </summary>
         /// <param name="input"></param>
@@ -1459,6 +1506,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
+        [Obsolete]
         public virtual async Task<ManufacturingCostInput> GetInputManufacturingCost(GetManufacturingCostInputDto input)
         {
             var data = await _allManufacturingCostRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
