@@ -55,11 +55,12 @@ namespace Finance.VersionManagement
         private readonly IRepository<InstanceHistory, long> _instanceHistoryRepository;
         private readonly AuditFlowAppService _auditFlowAppService;
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
+        private readonly IRepository<TaskReset, long> _taskResetRepository;
 
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -82,6 +83,7 @@ namespace Finance.VersionManagement
             _instanceHistoryRepository = instanceHistoryRepository;
             _auditFlowAppService = auditFlowAppService;
             _pricingTeamRepository = pricingTeamRepository;
+            _taskResetRepository = taskResetRepository;
         }
 
 
@@ -326,6 +328,9 @@ namespace Finance.VersionManagement
                        join u in _userRepository.GetAll() on i2.CreatorUserId equals u.Id into u1
                        from u2 in u1.DefaultIfEmpty()
 
+                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
+                       from t2 in t1.DefaultIfEmpty()
+
                        where n.WorkFlowInstanceId == flowId
 
                        select new// AuditFlowOperateReocrdDto
@@ -342,6 +347,7 @@ namespace Finance.VersionManagement
                            n.RoleId,
                            n.WorkFlowInstanceId,
                            n.ProcessIdentifier,
+                           ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime
                        };
             var result = await data.ToListAsync();
 
@@ -359,7 +365,7 @@ namespace Finance.VersionManagement
                     UserName = item.UserName,
                     auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
                     { LastModifyTime = item.LastModificationTime, StartTime =item. CreationTime } },
-
+                    ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
                 };
                 if (item.NodeInstanceStatus == NodeInstanceStatus.Current)
                 {
