@@ -1533,9 +1533,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             xscb = qtcb,
             xssr = qtsr,
             xsml = qtml,
-            GrossMargin = (qtml / qtsr) * 100,
-            ClientGrossMargin = (qtkgml / qtkgsr) * 100,
-            NreGrossMargin = (qtftml / qtftss) * 100
+            GrossMargin =qtsr==0?0: (qtml / qtsr) * 100,
+            ClientGrossMargin =qtkgsr==0?0: (qtkgml / qtkgsr) * 100,
+            NreGrossMargin =qtftss==0?0: (qtftml / qtftss) * 100
         };
         return grossMarginSecondDto;
     }
@@ -2388,6 +2388,27 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return analyseBoardSecondDto;
     }
 
+    public async Task delete(long AuditFlowId, int version, int ntype)
+    {
+        //应陈梦瑶要求增加可改变方案功能，先把老数据删除
+        if (ntype == 0)
+        {
+            await  _solutionQutation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId);
+        }
+
+
+        await _nreQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _deviceQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _sampleQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await  _resourceUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _resourcePooledAnalysisOffers.HardDeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await  _resourceProjectBoardSecondOffers.HardDeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await  _actualUnitPriceOffer.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await  _dynamicUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+    }
+    
     public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
     {
         List<Solution> solutions = isOfferDto.Solutions;
@@ -2407,23 +2428,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
         }
 
-//应陈梦瑶要求增加可改变方案功能，先把老数据删除
-        if (ntype == 0)
-        {
-            await  _solutionQutation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId);
-        }
 
-
-        await _nreQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _deviceQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _sampleQuotation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await  _resourceUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-       await _resourcePooledAnalysisOffers.HardDeleteAsync(p =>
-            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-       await  _resourceProjectBoardSecondOffers.HardDeleteAsync(p =>
-            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-       await  _actualUnitPriceOffer.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-      await  _dynamicUnitPriceOffers.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
 
         if (ntype == 0)
         {
@@ -5786,7 +5791,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
         var gradients = await getGradient(auditFlowId);
-
+        var sos=await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);        
+        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(sos.SolutionListJson);
+        
 
         //获取核价营销相关数据
         var priceEvaluationStartInputResult =
@@ -5795,6 +5802,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<ProductDto> productDtos = new List<ProductDto>();
         foreach (var modelcout in modelcouts)
         {
+           var sol= solutionList.FirstOrDefault(p => p.ModuleName.Equals(modelcout.Product));
+           if (sol is null)
+           {
+               continue;
+           }
             var mcys = modelcout.ModelCountYearList;
 
             foreach (var mcy in mcys)
@@ -5802,34 +5814,32 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 String key = "";
 
 
-                if (mcy.Equals(YearType.FirstHalf))
+                if (mcy.UpDown.Equals(YearType.FirstHalf))
                 {
                     key += "上半年";
                 }
 
-                if (mcy.Equals(YearType.SecondHalf))
+                if (mcy.UpDown.Equals(YearType.SecondHalf))
                 {
                     key += "下半年";
                 }
 
-                if (mcy.Equals(YearType.Year))
+                if (mcy.UpDown.Equals(YearType.Year))
                 {
                     key += "年";
                 }
 
                 string UntilPrice = "";
-                foreach (var gradient in gradients)
-                {
-                    if (mcy.Quantity <= gradient.GradientValue)
-                    {
-                        var list = gsmap[gradient.Id];
-                        UntilPrice = list.FirstOrDefault(p => p.Equals(modelcout.Product)).UnitPrice.ToString();
-                    }
-                }
+
+              var gradid=  GetGradient(mcy.Quantity,gradients);
+              var list = gsmap[gradid];
+              
+              UntilPrice = list.FirstOrDefault(p => p.SolutionId==sol.Id).UnitPrice.ToString();   
+             
 
                 productDtos.Add(new ProductDto()
                 {
-                    ProductName = modelcout.Product,
+                    ProductName = sol.SolutionName,
                     Motion = mcy.Quantity,
                     Year = key,
                     UntilPrice = UntilPrice
@@ -5867,7 +5877,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             
             productDtos.Add(new QuotationNreDto()
                 {
-                    Product = solution.ModuleName,
+                    Product = solution.SolutionName,
                     Pcs = mcs is not null ?mcs.SumQuantity:0,
                     shouban = nresList.Where(p => p.FormName.Equals("手板件费")).Sum(p => p.OfferMoney),
                     moju = nresList.Where(p => p.FormName.Equals("模具费")).Sum(p => p.OfferMoney),

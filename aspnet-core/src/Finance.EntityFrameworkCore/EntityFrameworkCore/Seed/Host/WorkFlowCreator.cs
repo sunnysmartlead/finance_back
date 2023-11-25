@@ -433,7 +433,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价审批录入",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Schj},{FinanceConsts.EvalReason_Lcyp},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xnnj}",
                 },
                 new Line
                 {
@@ -721,7 +721,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价看板",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc}",
                     FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Input}"
                 },
                 new Line
@@ -1088,7 +1088,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryDetailId = FinanceConsts.MybhgSelect_Cobzzcblr,
                     LineType = LineType.Reset,
                 },
-                
+
                 new Line
                 {
                     SoureNodeId = "不合规是否退回",

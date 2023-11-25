@@ -176,7 +176,7 @@ namespace Finance.WorkFlows
                             await _processHoursEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
                         }
 
-                        //如果是流转到CCOB制造成本录入退回页面的
+                        //如果是流转到COB制造成本录入退回页面的
                         if (eventData.Entity.NodeId == "主流程_COB制造成本录入")
                         {
                             await _bomEnterAppService.DeleteAuditFlowIdAsync(eventData.Entity.WorkFlowInstanceId);
@@ -297,6 +297,7 @@ namespace Finance.WorkFlows
                             await _nrePricingAppService.GetExperimentItemsConfigurationState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+
                         //如果流转到报价看板
                         if (eventData.Entity.NodeId == "主流程_生成报价分析界面选择报价方案")
                         {
@@ -358,7 +359,7 @@ namespace Finance.WorkFlows
                         if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                         {
 
-                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId);
+                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
                             foreach (var task in allAuditFlowInfos)
                             {
                                 //foreach (var userId in task.TaskUserIds)

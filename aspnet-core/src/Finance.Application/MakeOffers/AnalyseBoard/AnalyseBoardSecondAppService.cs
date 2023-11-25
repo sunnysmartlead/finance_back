@@ -784,6 +784,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostIsOfferSecondOnlySave(IsOfferSecondDto isOfferDto)
     {
         isOfferDto.IsFirst = true;
+        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId,isOfferDto.version,isOfferDto.ntype);
         //进行报价
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
@@ -798,6 +799,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (isOfferDto.IsOffer)
         {
             isOfferDto.IsFirst = false;
+            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId,isOfferDto.version,isOfferDto.ntype);
+
             //进行报价
             await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
         }
@@ -1030,6 +1033,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         isOfferDto.ntype = 1;
         //进行报价
+        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId,isOfferDto.version,isOfferDto.ntype);
+
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
 
