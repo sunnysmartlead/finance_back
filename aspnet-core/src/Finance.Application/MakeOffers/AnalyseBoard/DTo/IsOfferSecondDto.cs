@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.MakeOffers.AnalyseBoard.Model;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
 
-public class IsOfferSecondDto
+public class IsOfferSecondDto:ToExamineDto
 {
     /// <summary>
     /// 是否报价 true/1 是  false/0 否
@@ -74,4 +75,20 @@ public class IsOfferSecondDto
     /// 仅保存
     /// </summary>
     public bool IsFirst { get; set; }
+}
+
+public class IsDeleteSecondDto
+{
+    /// <summary>
+    /// 仅保存
+    /// </summary>
+    public bool IsFirst { get; set; }
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version{ get; set; }
 }
