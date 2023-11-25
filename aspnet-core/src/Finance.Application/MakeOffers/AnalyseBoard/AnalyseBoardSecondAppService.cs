@@ -336,7 +336,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
             else if (!material.SuperType.Equals("电子料") && !material.TypeName.Equals("镜头"))
             {
-                totalStru = material.TotalMoneyCynNoCustomerSupply;
+                totalStru = totalStru + material.TotalMoneyCynNoCustomerSupply;
             }
         }
         //PCBA
@@ -352,17 +352,19 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         //制造成本
         List<ManufacturingCost> QualityList= await _priceEvaluationAppService.GetManufacturingCost(new GetManufacturingCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-        decimal Subtotal = 0;
-
+       
         foreach (ManufacturingCost quality in QualityList)
         {
-            Subtotal = Subtotal + quality.Subtotal;
+            if (quality.CostType.Equals(CostType.Total))
+            {
+                CoreDevice zhiliangCoreDevice = new CoreDevice();
+                zhiliangCoreDevice.ProjectName = "制造成本";
+                zhiliangCoreDevice.Sum = quality.Subtotal;
+                CoreDeviclist.Add(zhiliangCoreDevice);
+            }
+  
         }
 
-        CoreDevice zhiliangCoreDevice = new CoreDevice();
-        zhiliangCoreDevice.ProjectName = "制造成本";
-        zhiliangCoreDevice.Sum = Subtotal;
-        CoreDeviclist.Add(zhiliangCoreDevice);
 
         //损耗成本
         List<LossCost> CostItemList = await _priceEvaluationAppService.GetLossCost(new GetCostItemInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown, });
@@ -409,7 +411,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
-        OtherCostItem otherCostItem = await _priceEvaluationAppService.GetOtherCostItem(new GetOtherCostItemInput
+        List < OtherCostItem2List> otherCostItemList = await _priceEvaluationAppService.GetOtherCostItem2List(new GetOtherCostItem2ListInput
         {
             AuditFlowId = input.AuditFlowId,
             GradientId = input.GradientId,
@@ -418,9 +420,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             UpDown = input.UpDown
         });
 
+        decimal Cost = 0;
+        foreach (OtherCostItem2List otherCostItem in otherCostItemList)
+        {
+            Cost = Cost + otherCostItem.Cost;
+        }
+
         CoreDevice OtherCostDevice = new CoreDevice();
         OtherCostDevice.ProjectName = "其他成本";
-        OtherCostDevice.Sum = otherCostItem.Total;
+        OtherCostDevice.Sum = Cost;
         CoreDeviclist.Add(OtherCostDevice);
 
 
