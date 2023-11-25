@@ -14,5 +14,10 @@ namespace Finance.WorkFlows.Dto
         /// 流程Id
         /// </summary>
         public virtual long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 删除理由
+        /// </summary>
+        public string DeleteReason { get; set; }
     }
 }
