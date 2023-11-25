@@ -694,9 +694,8 @@ namespace Finance.WorkFlows
         /// <summary>
         /// 根据流程Id，获取待办项
         /// </summary>
-        /// <param name="workflowInstanceId"></param>
         /// <returns></returns>
-        public async virtual Task<List<UserTask>> GetTaskByWorkflowInstanceId(long workflowInstanceId)
+        public async virtual Task<List<UserTask>> GetTaskByWorkflowInstanceId(long workflowInstanceId, long? nodeInstanceId = null)
         {
             var data = await (from n in _nodeInstanceRepository.GetAll()
                               join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
@@ -712,7 +711,7 @@ namespace Finance.WorkFlows
                                   WorkflowState = w.WorkflowState,
                                   ProcessIdentifier = n.ProcessIdentifier,
                                   RoleId = n.RoleId,
-                              }).ToListAsync();
+                              }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
 
 
             foreach (var item in data)

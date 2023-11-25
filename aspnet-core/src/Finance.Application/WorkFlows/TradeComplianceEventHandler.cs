@@ -358,7 +358,7 @@ namespace Finance.WorkFlows
                         if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                         {
 
-                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId);
+                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
                             foreach (var task in allAuditFlowInfos)
                             {
                                 //foreach (var userId in task.TaskUserIds)
