@@ -5506,8 +5506,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         for (int i = 0; i < icount2; i++)
         {
-            long pp= prop.Last();
-            prop.Add(pp+1);
+            long pp = prop.Last();
+            if (pp < 3)
+            {
+                prop.Add(pp + 1);
+            }
         }        
         return prop;
     }
