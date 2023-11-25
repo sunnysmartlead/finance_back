@@ -5509,9 +5509,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new FriendlyException($"version:{numberOfQuotations}版本号最大为3!");
         }
-
         ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p =>
-            p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
+            p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));      
         if (externalQuotation is not null)
         {
             List<ProductExternalQuotationMx> externalQuotationMxs =
@@ -5564,6 +5563,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
+            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
+            string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
+            string iSttring = (i + 1).ToString("D4");
+            externalQuotationDto.RecordNo = year + iSttring;
             externalQuotationDto.AccountName = "浙江舜宇智领技术有限公司";
             externalQuotationDto.DutyParagraph = "91330281MA2816W038";
             externalQuotationDto.BankOfDeposit = "中国农业银行余姚市环城支行";
