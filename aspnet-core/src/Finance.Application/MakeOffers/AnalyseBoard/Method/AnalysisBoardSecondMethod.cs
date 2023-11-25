@@ -5811,7 +5811,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             foreach (var mcy in mcys)
             {
-                String key = "";
+                String key =mcy.Year+ "";
 
 
                 if (mcy.UpDown.Equals(YearType.FirstHalf))
