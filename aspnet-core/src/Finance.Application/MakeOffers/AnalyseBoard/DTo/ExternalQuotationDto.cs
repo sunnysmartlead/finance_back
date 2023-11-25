@@ -9,7 +9,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 对外报价单
 /// </summary>
-public class ExternalQuotationDto: ToExamineDto
+public class ExternalQuotationDto
 {
     /// <summary>
     /// Id

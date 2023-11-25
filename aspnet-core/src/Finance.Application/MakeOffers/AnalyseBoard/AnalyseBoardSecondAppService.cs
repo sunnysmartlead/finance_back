@@ -706,17 +706,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
             throw new FriendlyException($"solutionId:{externalQuotationDto.SolutionId}报价方案ID不存在");
-        }
-        if(externalQuotationDto.IsSubmit)
-        {
-            //嵌入工作流
-            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-            {
-                NodeInstanceId = externalQuotationDto.NodeInstanceId,
-                FinanceDictionaryDetailId =FinanceConsts.Done,
-                Comment = "提交报价单",
-            });
-        }
+        }       
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
 
