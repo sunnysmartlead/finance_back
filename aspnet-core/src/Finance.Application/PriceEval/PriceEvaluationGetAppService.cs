@@ -9,6 +9,7 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
 using Finance.Ext;
@@ -3493,10 +3494,22 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetBomImportTemplate2(GetBomCostInput input)
+        {
+            var bom = await GetBomCost(input);
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { bom.First() });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
         /// 快速核报价：导入BOM成本
         /// </summary>
         /// <returns></returns>
-        public virtual async Task BomImport(long auditFlowId, [Required] IFormFile excle)
+        public virtual async Task BomImport(long auditFlowId, long gradientId, [Required] IFormFile excle)
         {
             //获取excel数据
             var stream = excle.OpenReadStream();
@@ -3507,6 +3520,13 @@ namespace Finance.PriceEval
 
             //把excel数据插入表中
             var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+
+            foreach (var item in entity)
+            {
+                item.AuditFlowId = auditFlowId;
+                item.GradientId = gradientId;
+            }
+
             await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 
