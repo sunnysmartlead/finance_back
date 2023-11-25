@@ -26,6 +26,11 @@ namespace Finance.PriceEval
         public virtual long GradientId { get; set; }
 
         /// <summary>
+        /// 方案表ID
+        /// </summary>
+        public long SolutionId { get; set; }
+
+        /// <summary>
         /// 超级大种类
         /// </summary>
         public virtual string SuperType { get; set; }
