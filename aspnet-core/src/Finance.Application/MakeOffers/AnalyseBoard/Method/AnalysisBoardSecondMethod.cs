@@ -5506,8 +5506,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         for (int i = 0; i < icount2; i++)
         {
-            long pp= prop.Last();
-            prop.Add(pp+1);
+            long pp = prop.Last();
+            if (pp < 3)
+            {
+                prop.Add(pp + 1);
+            }
         }        
         return prop;
     }
@@ -5656,7 +5659,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
         //流程流转
-        if(solutionQuotations.Count== i+1)
+        if(solutionQuotations.Count== i+1&& externalQuotationDto.IsSubmit)
         {
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
