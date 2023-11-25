@@ -2,6 +2,7 @@
 using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,12 @@ namespace Finance.PriceEval
         /// 审批流程主表ID
         /// </summary>
         public virtual long AuditFlowId { get; set; }
+
+        /// <summary>
+        /// 梯度Id
+        /// </summary>
+        [Required]
+        public virtual long GradientId { get; set; }
 
         /// <summary>
         /// 超级大种类
