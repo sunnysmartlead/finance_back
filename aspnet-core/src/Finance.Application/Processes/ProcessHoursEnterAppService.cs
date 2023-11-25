@@ -1944,15 +1944,66 @@ namespace Finance.Processes
                 if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count==3)
                 {
                     CreateCell(row3, 2, FoundationDeviceItemlist[0].DeviceName, wk);
-                    CreateCell(row3, 3, FoundationDeviceItemlist[0].DeviceStatus, wk);
+                    if (null != FoundationDeviceItemlist[0].DeviceStatus)
+                    {
+                        var entityDictionary = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[0].DeviceStatus.ToString());
+                        if (null != entityDictionary)
+                        {
+                            CreateCell(row3, 3, entityDictionary.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 3, "", wk);
+
+                        }
+                    }
+                    else {
+
+                        CreateCell(row3, 3, "", wk);
+                    }
+               
                     CreateCell(row3, 4, FoundationDeviceItemlist[0].DevicePrice, wk);
                     CreateCell(row3, 5, FoundationDeviceItemlist[0].DeviceProvider, wk);
                     CreateCell(row3, 6, FoundationDeviceItemlist[1].DeviceName, wk);
-                    CreateCell(row3, 7, FoundationDeviceItemlist[1].DeviceStatus, wk);
+                    if (null != FoundationDeviceItemlist[1].DeviceStatus)
+                    {
+                        var entityDictionary1 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[1].DeviceStatus.ToString());
+                        if (null != entityDictionary1)
+                        {
+                            CreateCell(row3, 7, entityDictionary1.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 7, "", wk);
+
+                        }
+                    }
+                    else {
+                        CreateCell(row3, 7, "", wk);
+                    }
                     CreateCell(row3, 8, FoundationDeviceItemlist[1].DevicePrice, wk);
                     CreateCell(row3, 9, FoundationDeviceItemlist[1].DeviceProvider, wk);
                     CreateCell(row3, 10, FoundationDeviceItemlist[2].DeviceName, wk);
-                    CreateCell(row3, 11, FoundationDeviceItemlist[2].DeviceStatus, wk);
+                    if (null != FoundationDeviceItemlist[2].DeviceStatus)
+                    {
+                        var entityDictionary2 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[2].DeviceStatus.ToString());
+                        if (null != entityDictionary2)
+                        {
+                            CreateCell(row3, 11, entityDictionary2.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 11, "", wk);
+
+                        }
+                    }
+                    else {
+
+                        CreateCell(row3, 11, "", wk);
+                    }
                     CreateCell(row3, 12, FoundationDeviceItemlist[2].DevicePrice, wk);
                     CreateCell(row3, 13, FoundationDeviceItemlist[2].DeviceProvider, wk);
                 }
@@ -2052,11 +2103,49 @@ namespace Finance.Processes
                 if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count == 2)
                 {
                     CreateCell(row3, 2, FoundationDeviceItemlist[0].HardwareName, wk);
-                    CreateCell(row3, 3, FoundationDeviceItemlist[0].HardwareState, wk);
+                    if (null != FoundationDeviceItemlist[0].HardwareState)
+                    {
+                        var entityDictionary2 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[0].HardwareState.ToString());
+                        if (null != entityDictionary2)
+                        {
+                            CreateCell(row3, 3, entityDictionary2.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 3, "", wk);
+
+                        }
+                    }
+                    else
+                    {
+                        CreateCell(row3, 3, "", wk);
+                    }
+
                     CreateCell(row3, 4, FoundationDeviceItemlist[0].HardwarePrice.ToString(), wk);
                     CreateCell(row3, 5, FoundationDeviceItemlist[0].HardwareBusiness, wk);
                     CreateCell(row3, 6, FoundationDeviceItemlist[1].HardwareName, wk);
-                    CreateCell(row3, 7, FoundationDeviceItemlist[1].HardwareState, wk);
+
+                    if (null != FoundationDeviceItemlist[1].HardwareState)
+                    {
+                        var entityDictionary4 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[1].HardwareState.ToString());
+                        if (null != entityDictionary4)
+                        {
+                            CreateCell(row3, 7, entityDictionary4.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 7, "", wk);
+
+                        }
+                    }
+                    else
+                    {
+                        CreateCell(row3, 7, "", wk);
+                    }
+
+
                     CreateCell(row3, 8, FoundationDeviceItemlist[1].HardwarePrice.ToString(), wk);
                     CreateCell(row3, 9, FoundationDeviceItemlist[1].HardwareBusiness, wk);
                 }
@@ -2073,11 +2162,29 @@ namespace Finance.Processes
                 {
                     CreateCell(row3, 11, item.TraceabilitySoftwareCost.ToString(), wk);
                 }
-                else {
+                else
+                {
                     CreateCell(row3, 11, null, wk);
                 }
                 CreateCell(row3, 12, item.SoftwareName, wk);
-                CreateCell(row3, 13, item.SoftwareState, wk);
+                if (null != item.SoftwareState)
+                {
+                    var entityDictionary3 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == item.SoftwareState.ToString());
+                    if (null != entityDictionary3)
+                    {
+                        CreateCell(row3, 13, entityDictionary3.DisplayName, wk);
+
+                    }
+                    else
+                    {
+                        CreateCell(row3, 13, "", wk);
+
+                    }
+                }
+                else {
+
+                    CreateCell(row3, 13, "", wk);
+                }
                 CreateCell(row3, 14, item.SoftwarePrice.ToString(), wk);
                 if (null != item.SoftwareName)
                 {
@@ -2177,11 +2284,47 @@ namespace Finance.Processes
                 if (null != FoundationDeviceItemlist && FoundationDeviceItemlist.Count == 2)
                 {
                     CreateCell(row3, 2, FoundationDeviceItemlist[0].FixtureName, wk);
-                    CreateCell(row3, 3, FoundationDeviceItemlist[0].FixtureState, wk);
+                    if (null != FoundationDeviceItemlist[0].FixtureState)
+                    {
+
+
+                        var entityDictionary3 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[0].FixtureState.ToString());
+                        if (null != entityDictionary3)
+                        {
+                            CreateCell(row3, 3, entityDictionary3.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 3, "", wk);
+
+                        }
+                    }
+                    else {
+                        CreateCell(row3, 3, "", wk);
+
+                    }
                     CreateCell(row3, 4, FoundationDeviceItemlist[0].FixturePrice.ToString(), wk);
                     CreateCell(row3, 5, FoundationDeviceItemlist[0].FixtureProvider, wk);
                     CreateCell(row3, 6, FoundationDeviceItemlist[1].FixtureName, wk);
-                    CreateCell(row3, 7, FoundationDeviceItemlist[1].FixtureState, wk);
+                    if (null != FoundationDeviceItemlist[1].FixtureState)
+                    {
+                        var entityDictionary4 = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == FoundationDeviceItemlist[1].FixtureState.ToString());
+                        if (null != entityDictionary4)
+                        {
+                            CreateCell(row3, 7, entityDictionary4.DisplayName, wk);
+
+                        }
+                        else
+                        {
+                            CreateCell(row3, 7, "", wk);
+
+                        }
+                    }
+                    else {
+                        CreateCell(row3, 7, "", wk);
+
+                    }
                     CreateCell(row3, 8, FoundationDeviceItemlist[1].FixturePrice.ToString(), wk);
                     CreateCell(row3, 9, FoundationDeviceItemlist[1].FixtureProvider, wk);
                 }
