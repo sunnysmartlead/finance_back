@@ -363,14 +363,16 @@ namespace Finance.WorkFlows
                             //发邮件给拥有这个流程的项目经理
                             #region 邮件发送
 
-#if !DEBUG
+                            //#if !DEBUG
                             SendEmail email = new SendEmail();
                             string loginIp = email.GetLoginAddr();
 
                             if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                             {
                                 var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
-                                var role = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+                                var role = await _roleRepository.FirstOrDefaultAsync(p =>
+                                p.Name == StaticRoleNames.Host.FinanceTableAdmin || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                        || p.Name == StaticRoleNames.Host.Bjdgdgly);
                                 var userIds = await _userRoleRepository.GetAll().Where(p => p.RoleId == role.Id).Select(p => p.UserId).ToListAsync();
 
                                 if (priceEvaluation != null)
@@ -398,7 +400,7 @@ namespace Finance.WorkFlows
                                     }
                                 }
                             }
-#endif
+                            //#endif
                             #endregion
                         }
                         else
