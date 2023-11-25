@@ -1207,6 +1207,7 @@ namespace Finance.PriceEval
                 UpDown = input.UpDown
             });
 
+            otherCostItem2List.ForEach(p => p.EditId = p.ItemName);
 
             return otherCostItem2List;
         }
@@ -3509,7 +3510,7 @@ namespace Finance.PriceEval
         /// 快速核报价：导入BOM成本
         /// </summary>
         /// <returns></returns>
-        public virtual async Task BomImport(long auditFlowId, long gradientId, [Required] IFormFile excle)
+        public virtual async Task BomImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
             //获取excel数据
             var stream = excle.OpenReadStream();
@@ -3525,6 +3526,7 @@ namespace Finance.PriceEval
             {
                 item.AuditFlowId = auditFlowId;
                 item.GradientId = gradientId;
+                item.SolutionId = solutionId;
             }
 
             await _bomMaterialRepository.BulkInsertAsync(entity);
