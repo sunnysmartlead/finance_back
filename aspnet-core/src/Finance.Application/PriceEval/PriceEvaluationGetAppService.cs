@@ -2365,9 +2365,9 @@ namespace Finance.PriceEval
             {
                 MonthlyDemand = monthlyDemand,
                 Id = year,
-                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
+                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
                 EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
-                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
+                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600) + manufacturingCostInfo.ProcessCost,
             };
             manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
