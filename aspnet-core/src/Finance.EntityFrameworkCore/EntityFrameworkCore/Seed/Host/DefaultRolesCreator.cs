@@ -79,6 +79,15 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new Role(tenantId, StaticRoleNames.Host.FinanceTableAdmin, StaticRoleNames.Host.FinanceTableAdmin) { IsStatic = true, IsDefault = false },
                 new Role(tenantId, StaticRoleNames.Host.EvalTableAdmin, StaticRoleNames.Host.EvalTableAdmin) { IsStatic = true, IsDefault = false },
                 new Role(tenantId, StaticRoleNames.Host.CostSplit, StaticRoleNames.Host.CostSplit) { IsStatic = true, IsDefault = false },
+           
+                //新增的基础库
+                new Role(tenantId, StaticRoleNames.Host.Bjshb, StaticRoleNames.Host.Bjshb) { IsStatic = true, IsDefault = false },
+                new Role(tenantId, StaticRoleNames.Host.Bjdgdgly, StaticRoleNames.Host.Bjdgdgly) { IsStatic = true, IsDefault = false },
+                new Role(tenantId, StaticRoleNames.Host.Djkgly, StaticRoleNames.Host.Djkgly) { IsStatic = true, IsDefault = false },
+                new Role(tenantId, StaticRoleNames.Host.Hjsykgly, StaticRoleNames.Host.Hjsykgly) { IsStatic = true, IsDefault = false },
+                new Role(tenantId, StaticRoleNames.Host.EmcSykgly, StaticRoleNames.Host.EmcSykgly) { IsStatic = true, IsDefault = false },
+                new Role(tenantId, StaticRoleNames.Host.Gcbjckgly, StaticRoleNames.Host.Gcbjckgly) { IsStatic = true, IsDefault = false },
+
             };
 
             var roles = _context.Roles.Select(p => p.Name).ToList();

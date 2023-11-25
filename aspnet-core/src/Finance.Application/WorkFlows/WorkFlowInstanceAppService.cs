@@ -17,6 +17,7 @@ using Finance.WorkFlows.Dto;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using NPOI.SS.Formula.Functions;
+using NPOI.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -694,9 +695,8 @@ namespace Finance.WorkFlows
         /// <summary>
         /// 根据流程Id，获取待办项
         /// </summary>
-        /// <param name="workflowInstanceId"></param>
         /// <returns></returns>
-        public async virtual Task<List<UserTask>> GetTaskByWorkflowInstanceId(long workflowInstanceId)
+        public async virtual Task<List<UserTask>> GetTaskByWorkflowInstanceId(long workflowInstanceId, long? nodeInstanceId = null)
         {
             var data = await (from n in _nodeInstanceRepository.GetAll()
                               join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
@@ -712,7 +712,7 @@ namespace Finance.WorkFlows
                                   WorkflowState = w.WorkflowState,
                                   ProcessIdentifier = n.ProcessIdentifier,
                                   RoleId = n.RoleId,
-                              }).ToListAsync();
+                              }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
 
 
             foreach (var item in data)
@@ -1158,6 +1158,47 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 获取被删除的流程
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+
+        public async virtual Task<PagedResultDto<WorkflowDeleteDto>> GetWorkflowDelete(GetWorkflowOveredInput input)
+        {
+            //调用OverWorkflow接口归档的流程
+
+            //普通流程的核价原因
+
+            var data = (from w in _workflowInstanceRepository.GetAll()
+                        join n in _nodeInstanceRepository.GetAll() on w.Id equals n.WorkFlowInstanceId
+                        join p in _priceEvaluationRepository.GetAll() on w.Id equals p.AuditFlowId
+                        where n.NodeId == "主流程_归档" && n.Comment.StartsWith("删除流程：")
+                        && w.WorkflowState == WorkflowState.Ended
+                        select new WorkflowDeleteDto
+                        {
+                            AuditFlowId = w.Id,
+                            Title = p.Title,
+                            Number = p.Number,
+                            Version = p.QuoteVersion,
+                            Comment = n.Comment,
+                        })
+                        .Distinct()
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+
+            var count = await data.CountAsync();
+
+            var paged = data.PageBy(input);
+
+            var result = await paged.ToListAsync();
+            foreach (var item in result)
+            {
+                item.Comment = item.Comment.Replace("删除流程：", string.Empty);
+            }
+
+            return new PagedResultDto<WorkflowDeleteDto>(count, result);
+        }
+
+        /// <summary>
         /// 结束流程
         /// </summary>
         /// <returns></returns>
@@ -1166,10 +1207,11 @@ namespace Finance.WorkFlows
             var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
             wf.WorkflowState = WorkflowState.Ended;
 
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name == "主流程_归档");
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId == "主流程_归档");
             node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            node.Comment = $"删除流程：{input.DeleteReason}";
 
-            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.Name != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
             foreach (var item in nodes)
             {
                 item.NodeInstanceStatus = NodeInstanceStatus.Over;
