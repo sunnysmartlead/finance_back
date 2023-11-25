@@ -5628,6 +5628,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
         nreQuotationLists.ForEach(p => p.ExternalQuotationId = id);
         await _NreQuotationList.BulkInsertAsync(nreQuotationLists);
+
+        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
+        //流程流转
+        if(solutionQuotations.Count== i)
+        {
+
+        }
     }
 
     /// <summary>
