@@ -22,6 +22,8 @@ using Finance.NerPricing;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.Processes;
+using Abp.Authorization.Users;
+using Finance.Authorization.Roles;
 
 namespace Finance.WorkFlows
 {
@@ -49,6 +51,8 @@ namespace Finance.WorkFlows
         private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
+        private readonly IRepository<Role, int> _roleRepository;
         /// <summary>
         /// 物流成本服务
         /// </summary>
@@ -66,7 +70,7 @@ namespace Finance.WorkFlows
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
 
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -90,6 +94,8 @@ namespace Finance.WorkFlows
             _processHoursEnterAppService = processHoursEnterAppService;
             _bomEnterAppService = bomEnterAppService;
             _priceEvaluationRepository = priceEvaluationRepository;
+            _userRoleRepository = userRoleRepository;
+            _roleRepository = roleRepository;
         }
 
 
@@ -357,34 +363,42 @@ namespace Finance.WorkFlows
                             //发邮件给拥有这个流程的项目经理
                             #region 邮件发送
 
-
+#if !DEBUG
                             SendEmail email = new SendEmail();
                             string loginIp = email.GetLoginAddr();
 
                             if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                             {
                                 var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                var role = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+                                var userIds = await _userRoleRepository.GetAll().Where(p => p.RoleId == role.Id).Select(p => p.UserId).ToListAsync();
 
-                                var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == priceEvaluation.ProjectManager);
-
-                                if (userInfo != null)
+                                if (priceEvaluation != null)
                                 {
-                                    string emailAddr = userInfo.EmailAddress;
+                                    userIds.Add(priceEvaluation.ProjectManager);
+                                }
+                                foreach (var userId in userIds)
+                                {
+                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
 
-                                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-                                    string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                    string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    Task.Run(async () =>
+                                    if (userInfo != null)
                                     {
-                                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                    });
+                                        string emailAddr = userInfo.EmailAddress;
+
+                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+
+                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                        string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                        Task.Run(async () =>
+                                        {
+                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        });
 #pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                    }
                                 }
                             }
-
-
+#endif
                             #endregion
                         }
                         else
@@ -394,7 +408,7 @@ namespace Finance.WorkFlows
 
                             #region 邮件发送
 
-
+#if !DEBUG
                             SendEmail email = new SendEmail();
                             string loginIp = email.GetLoginAddr();
 
@@ -428,7 +442,7 @@ namespace Finance.WorkFlows
                                 }
                             }
 
-
+#endif
                             #endregion
                         }
 
