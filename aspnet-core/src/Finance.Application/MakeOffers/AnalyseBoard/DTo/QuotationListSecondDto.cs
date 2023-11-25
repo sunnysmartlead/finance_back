@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.MakeOffers.AnalyseBoard.Model;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
@@ -7,7 +8,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 报价表  交互类
 /// </summary>
-public class QuotationListSecondDto
+public class QuotationListSecondDto:ToExamineDto
 {
     /// <summary>
     /// 查询日期
