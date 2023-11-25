@@ -220,7 +220,7 @@ namespace Finance.WorkFlows
                                 {
                                     NodeInstanceId = eventData.Entity.Id,
                                     FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
-                                    Comment = "系统判断不合规"
+                                    Comment = "贸易合规判断异常"
                                 });
                             }
 
@@ -362,27 +362,27 @@ namespace Finance.WorkFlows
                             var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
                             foreach (var task in allAuditFlowInfos)
                             {
-                                //foreach (var userId in task.TaskUserIds)
-                                //{
-                                //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-                                var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
-
-                                if (userInfo != null)
+                                foreach (var userId in task.TaskUserIds)
                                 {
-                                    string emailAddr = userInfo.EmailAddress;
+                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
 
-                                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-                                    string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                    string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    Task.Run(async () =>
+                                    if (userInfo != null)
                                     {
-                                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                    });
+                                        string emailAddr = userInfo.EmailAddress;
+
+                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+
+                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                        string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                        Task.Run(async () =>
+                                        {
+                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        });
 #pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                    }
                                 }
-                                //}
                             }
                         }
 
