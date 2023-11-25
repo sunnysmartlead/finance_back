@@ -127,10 +127,10 @@ namespace Finance.Entering
         {
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
-                List<EnteringElectronic> enteringElectronics= await _configEnteringElectronic.GetAllListAsync(p=>p.AuditFlowId.Equals(QuoteAuditFlowId)&&p.SolutionId.Equals(item.QuoteSolutionId));
+                List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 enteringElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
                 await _configEnteringElectronic.BulkInsertAsync(enteringElectronics);
-            }           
+            }
         }
         /// <summary>
         /// 结构单价录入快速核报价
@@ -271,7 +271,7 @@ namespace Finance.Entering
                                     long id = electronicDto.Id;
                                     int index = electronicDtos.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
                                     electronicDto = await _resourceElectronicStructuralMethod.ElectronicBom(item.SolutionId, item.ProductId, auditFlowId, elecBom.ElectronicId);
-                                    electronicDto.Id= id;
+                                    electronicDto.Id = id;
                                     electronicDtos[index] = electronicDto;
                                 }
                             }
@@ -720,20 +720,45 @@ namespace Finance.Entering
                 //重置状态
                 await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
             }
+
+            //电子bom单价审核 并且是同意
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.ElecBomPriceCheck && toExamineDto.Opinion == FinanceConsts.ElectronicBomEvalSelect_Yes)
+            {
+                var result = await GetElectronicIsAllEntering(toExamineDto.AuditFlowId);
+                //判断是否全部提交
+                if (!result)
+                {
+                    throw new FriendlyException("电子BOM尚未提交完毕，不可流转！");
+                }
+            }
+
             //结构bom单价审核 并且是拒绝
             if (toExamineDto.BomCheckType == BOMCHECKTYPE.StructBomPriceCheck && toExamineDto.Opinion != FinanceConsts.StructBomEvalSelect_Yes)
             {
                 //重置状态
                 await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
             }
+
+            // 结构bom单价审核 并且是同意
+            if (toExamineDto.BomCheckType == BOMCHECKTYPE.StructBomPriceCheck && toExamineDto.Opinion == FinanceConsts.StructBomEvalSelect_Yes)
+            {
+                var result = await GetStructuralIsAllEntering(toExamineDto.AuditFlowId);
+                //判断是否全部提交
+                if (!result)
+                {
+                    throw new FriendlyException("结构BOM尚未提交完毕，不可流转！");
+                }
+            }
+
             //bom单价审核 并且是拒绝
             if (toExamineDto.BomCheckType == BOMCHECKTYPE.BomPriceCheck && toExamineDto.Opinion != FinanceConsts.BomEvalSelect_Yes)
             {
                 //重置状态
-                if(toExamineDto.Opinion == FinanceConsts.BomEvalSelect_Dzbomppxg)await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
+                if (toExamineDto.Opinion == FinanceConsts.BomEvalSelect_Dzbomppxg) await GetElectronicConfigurationStateCertain(toExamineDto.ElectronicsUnitPriceId);
                 //重置状态
                 if (toExamineDto.Opinion == FinanceConsts.BomEvalSelect_Jgbomppxg) await GetStructuralConfigurationStateCertain(toExamineDto.StructureUnitPriceId);
             }
+
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
             {
@@ -752,7 +777,7 @@ namespace Finance.Entering
             await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
-            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy,false);
+            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy, false);
         }
         /// <summary>
         /// 结构单价复制
@@ -945,7 +970,7 @@ namespace Finance.Entering
             {
                 foreach (ConstructionModelCopy item in structuralMemberEnteringModel.StructuralMaterialEntering)
                 {
-                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));                                      
+                    StructureElectronicCopy structureElectronic = await _configStructureElectronicCopy.FirstOrDefaultAsync(p => p.SolutionId.Equals(item.SolutionId) && p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.StructureId.Equals(item.StructureId));
                     structureElectronic.MOQ = item.MOQ;//MOQ
                     //structureElectronic.PeopleId = AbpSession.GetUserId(); //确认人 Id
                     structureElectronic.Currency = item.Currency;//币种              
