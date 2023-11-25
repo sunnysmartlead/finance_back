@@ -505,6 +505,11 @@ namespace Finance.PriceEval.Dto
     public class OtherCostItem2List
     {
         /// <summary>
+        /// 修改项Id
+        /// </summary>
+        public virtual string EditId { get; set; }
+
+        /// <summary>
         /// 费用大类
         /// </summary>
         public virtual string CostType { get; set; }
