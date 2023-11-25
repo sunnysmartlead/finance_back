@@ -5563,7 +5563,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
+            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit);
             string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
             string iSttring = (i + 1).ToString("D4");
             externalQuotationDto.RecordNo = year + iSttring;
@@ -5610,7 +5610,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             throw new FriendlyException("报价已经超过三次,不可继续流转");
         }
 
-        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
+        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit);
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
         externalQuotation.RecordNo = year + iSttring;
