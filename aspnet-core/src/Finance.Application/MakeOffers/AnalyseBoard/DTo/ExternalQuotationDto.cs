@@ -185,7 +185,7 @@ public class ProductQuotationListDto
     /// 年份
     /// </summary>
     [FriendlyRequired("产品报价清单-年份")]
-    public virtual long Year { get; set; }   
+    public virtual string Year { get; set; }   
     /// <summary>
     /// 走量
     /// </summary>       

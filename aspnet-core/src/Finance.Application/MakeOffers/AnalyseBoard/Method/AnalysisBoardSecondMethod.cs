@@ -5544,7 +5544,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 {
                     SerialNumber = index + 1,
                     ProductName = a.ProductName,
-                    Year = long.Parse(a.Year),
+                    Year = a.Year,
                     TravelVolume = a.Motion,
                     UnitPrice = decimal.Parse(a.UntilPrice)
                 }).ToList();
@@ -5640,7 +5640,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                {
                    SerialNumber = index + 1,
                    ProductName = a.ProductName,
-                   Year = long.Parse(a.Year),
+                   Year = a.Year,
                    TravelVolume = a.Motion,
                    UnitPrice = decimal.Parse(a.UntilPrice)
                }).ToList();
