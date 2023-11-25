@@ -2557,7 +2557,8 @@ namespace Finance.NerPricing
                 modify.HandPieceCostTotal = modify.HandPieceCost.Sum(p => p.Cost);
                 //模具费用
                 //List<MouldInventory> mouldInventories = await _resourceMouldInventory.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                modify.MouldInventory = (await GetInitialResourcesManagementSingle(auditFlowId, solutionId)).MouldInventoryModels;
+                modify.MouldInventory = (await GetInitialResourcesManagementSingle(auditFlowId, solutionId))?.MouldInventoryModels;
+                if (modify.MouldInventory is null) modify.MouldInventory = new();
                 foreach (MouldInventoryModel item in modify.MouldInventory)
                 {
                     User user = await _userRepository.FirstOrDefaultAsync(p => p.Id == item.PeopleId);
@@ -2646,12 +2647,12 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice, m.DeviceStatus }).Select(
                     a => new ProductionEquipmentCostModel
                     {
-                        Id = processHoursEnterDevices.Where(p => p.DeviceName == a.Key.DeviceName && p.DevicePrice == a.Key.DevicePrice && p.DeviceStatus == a.Key.DeviceStatus).Select(p => p.Id).FirstOrDefault(),
-                        EquipmentName = a.Key.DeviceName,
-                        DeviceStatus = a.Key.DeviceStatus,
-                        UnitPrice = (decimal)a.Key.DevicePrice,
+                        Id = processHoursEnterDevices.Where(p => p.DeviceName == (a.Key.DeviceName ?? string.Empty) && p.DevicePrice == (a.Key.DevicePrice ?? 0M) && p.DeviceStatus ==(a.Key.DeviceStatus ?? string.Empty)).Select(p => p.Id).FirstOrDefault(),
+                        EquipmentName = a.Key.DeviceName??string.Empty,
+                        DeviceStatus = a.Key.DeviceStatus ?? string.Empty,
+                        UnitPrice = (decimal)(a.Key.DevicePrice ?? 0M),
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * NumberOfLines) : (decimal)(a.Key.DevicePrice * a.Sum(c => c.DeviceNumber) * UphAndValuesd),
+                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd) ) ,
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
