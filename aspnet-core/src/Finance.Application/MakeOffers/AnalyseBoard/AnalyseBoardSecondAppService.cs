@@ -802,6 +802,22 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
+    /// 报价分析看板 删除 只有报价分析看板仅保存的情况下才能删除
+    /// </summary>
+    /// <param name="isOfferDto"></param>
+    /// <returns></returns>
+    public async Task PostIsOfferSecondDelete(IsDeleteSecondDto isOfferDto)
+    {
+        if (isOfferDto.IsFirst)
+        {
+            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId,isOfferDto.version,0);
+        }
+        else
+        {
+            throw new FriendlyException("已经提交流程不能删除");
+        }
+    }
+    /// <summary>
     /// 报价分析看板 仅保存
     /// </summary>
     /// <param name="isOfferDto"></param>
@@ -948,6 +964,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
                 quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 3, 0);
         }
+        
+          //嵌入工作流
+                /*await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    NodeInstanceId = quotationListSecondDto.NodeInstanceId,
+                    FinanceDictionaryDetailId = quotationListSecondDto.Opinion,
+                    Comment = quotationListSecondDto.Comment,
+                });*/
+        
     }
 
     /// <summary>
@@ -1301,7 +1326,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
                     FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
-                    IFormFile fileOfferhejia = new FormFile(hejia, 0, hejia.Length, FileName, FileName);
+                    IFormFile fileOfferhejia = new FormFile(hejia, 1024, hejia.Length, FileName, FileName);
                     FileUploadOutputDto fileUploadOutputDtoOfferhejia =
                         await _fileCommonService.UploadFile(fileOfferhejia);
                     //核价表的路径和名称保存到
