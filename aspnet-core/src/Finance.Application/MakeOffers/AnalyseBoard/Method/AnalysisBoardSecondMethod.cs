@@ -22,7 +22,10 @@ using Finance.PriceEval.Dto;
 using Finance.Processes;
 using Finance.ProductDevelopment;
 using Finance.ProductDevelopment.Dto;
+using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
+using Finance.WorkFlows.Dto;
+using Finance.WorkFlows;
 using Interface.Expends;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.EventSource;
@@ -156,6 +159,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     private readonly IRepository<NreQuotationList, long> _NreQuotationList;
 
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+
     public AnalysisBoardSecondMethod(IRepository<ModelCountYear, long> modelCountYear,
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<ModelCount, long> modelCount,
@@ -183,7 +189,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<GrossMarginForm, long> resourceGrossMarginForm,
         IRepository<ExternalQuotation, long> externalQuotation,
         IRepository<ProductExternalQuotationMx, long> externalQuotationMx,
-        IRepository<NreQuotationList, long> nreQuotationList)
+        IRepository<NreQuotationList, long> nreQuotationList,
+        WorkflowInstanceAppService workflowInstanceAppService)
     {
         _resourceProjectBoardOffers = resourceProjectBoardOffers;
         _dynamicUnitPriceOffers = dynamicUnitPriceOffers;
@@ -212,6 +219,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _externalQuotation = externalQuotation;
         _externalQuotationMx = externalQuotationMx;
         _NreQuotationList = nreQuotationList;
+        _workflowInstanceAppService = workflowInstanceAppService;
     }
 
     public async Task<AnalyseBoardSecondDto> PostStatementAnalysisBoardSecond(
@@ -5633,7 +5641,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         //流程流转
         if(solutionQuotations.Count== i)
         {
-
+            //嵌入工作流
+            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+            {
+                NodeInstanceId = externalQuotationDto.NodeInstanceId,
+                FinanceDictionaryDetailId = externalQuotationDto.Opinion,
+                Comment = externalQuotationDto.Comment,
+            });
         }
     }
 
