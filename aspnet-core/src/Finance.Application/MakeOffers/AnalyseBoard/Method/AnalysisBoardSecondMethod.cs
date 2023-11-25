@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.EventSource;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using test;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
@@ -5484,7 +5485,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
-        return externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
+        List<long> prop= externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
+        long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.IsSubmit);
+        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
+        if(solutionQuotations.Count()==0) throw new FriendlyException("报价看板的组合方案未查询到");
+        var icount =Convert.ToDecimal( ii / solutionQuotations.Count());
+        int icount2=Convert.ToInt32(Math.Floor(icount).ToString());
+        if (prop.Count == 0)
+        {
+            prop = new();
+            prop.Add(1);
+        }
+        for (int i = 0; i < icount2; i++)
+        {
+            long pp= prop.Last();
+            prop.Add(pp+1);
+        }        
+        return prop;
     }
 
     internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
@@ -5563,7 +5580,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit);
+            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit&&p.NumberOfQuotations.Equals(numberOfQuotations));
             string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
             string iSttring = (i + 1).ToString("D4");
             externalQuotationDto.RecordNo = year + iSttring;
@@ -5610,7 +5627,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             throw new FriendlyException("报价已经超过三次,不可继续流转");
         }
 
-        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit);
+        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit && p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
         externalQuotation.RecordNo = year + iSttring;
