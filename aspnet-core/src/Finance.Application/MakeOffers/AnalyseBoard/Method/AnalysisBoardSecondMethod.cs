@@ -5656,7 +5656,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
         //流程流转
-        if(solutionQuotations.Count== i)
+        if(solutionQuotations.Count== i+1)
         {
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
