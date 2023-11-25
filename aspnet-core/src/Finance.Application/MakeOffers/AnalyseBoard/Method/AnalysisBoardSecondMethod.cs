@@ -5623,36 +5623,39 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
-    ///  下载对外报价单
+    ///  下载对外报价单-流
     /// </summary>
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
-        long numberOfQuotations)
+        long numberOfQuotations,bool ntype=false)
     {
         List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations,1);
         List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations,1);
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
-        external.ProductQuotationListDtos = productDtos.Select((a, index) =>
-                new ProductQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.ProductName,
-                    Year = long.Parse(a.Year),
-                    TravelVolume = a.Motion,
-                    UnitPrice = decimal.Parse(a.UntilPrice)
-                }).ToList();
-        external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
-                new NreQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.Product,
-                    HandmadePartsFee = a.shouban,
-                    MyPropMoldCosterty = a.moju,
-                    CostOfToolingAndFixtures = a.gzyj,
-                    ExperimentalFees = a.sy,
-                    RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                }).ToList();
+        if(ntype)
+        {
+            external.ProductQuotationListDtos = productDtos.Select((a, index) =>
+               new ProductQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.ProductName,
+                   Year = long.Parse(a.Year),
+                   TravelVolume = a.Motion,
+                   UnitPrice = decimal.Parse(a.UntilPrice)
+               }).ToList();
+            external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+                    new NreQuotationListDto()
+                    {
+                        SerialNumber = index + 1,
+                        ProductName = a.Product,
+                        HandmadePartsFee = a.shouban,
+                        MyPropMoldCosterty = a.moju,
+                        CostOfToolingAndFixtures = a.gzyj,
+                        ExperimentalFees = a.sy,
+                        RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+                    }).ToList();
+        }       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
@@ -5671,7 +5674,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
-    ///  下载对外报价单-流
+    ///  下载对外报价单
     /// </summary>
     /// <returns></returns>
     internal async Task<FileResult> DownloadExternalQuotation(long auditFlowId, long solutionId,
