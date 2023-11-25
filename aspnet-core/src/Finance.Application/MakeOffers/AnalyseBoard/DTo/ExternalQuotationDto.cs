@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.Ext;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using static Finance.Ext.FriendlyRequiredAttribute;
@@ -8,7 +9,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 对外报价单
 /// </summary>
-public class ExternalQuotationDto
+public class ExternalQuotationDto: ToExamineDto
 {
     /// <summary>
     /// Id
