@@ -415,7 +415,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         CoreDeviclist.Add(logisticsCosDevice);
 
         //其他成本
-        List < OtherCostItem2List> otherCostItemList = await _priceEvaluationAppService.GetOtherCostItem2List(new GetOtherCostItem2ListInput
+        ExcelPriceEvaluationTableDto ExcelPriceEvaluationTable = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
         {
             AuditFlowId = input.AuditFlowId,
             GradientId = input.GradientId,
@@ -423,17 +423,31 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             Year = input.Year,
             UpDown = input.UpDown
         });
+        List<OtherCostItem2> otherCostItem2s = ExcelPriceEvaluationTable.OtherCostItem2;
 
-        decimal Cost = 0;
-        foreach (OtherCostItem2List otherCostItem in otherCostItemList)
+
+        foreach (OtherCostItem2 otherCostItem in otherCostItem2s)
         {
-            Cost = Cost + otherCostItem.Cost;
+            if (otherCostItem.ItemName== "单颗成本" )
+            {
+                CoreDevice OtherCostDevice = new CoreDevice();
+                OtherCostDevice.ProjectName = "其他成本";
+                OtherCostDevice.Sum = Convert.ToDecimal(otherCostItem.Total);
+                CoreDeviclist.Add(OtherCostDevice);
+            }
+
         }
 
-        CoreDevice OtherCostDevice = new CoreDevice();
-        OtherCostDevice.ProjectName = "其他成本";
-        OtherCostDevice.Sum = Cost;
-        CoreDeviclist.Add(OtherCostDevice);
+        //decimal Cost = 0;
+        //foreach (OtherCostItem2List otherCostItem in otherCostItemList)
+        //{
+        //    Cost = Cost + otherCostItem.Cost;
+        //}
+
+        //CoreDevice OtherCostDevice = new CoreDevice();
+        //OtherCostDevice.ProjectName = "其他成本";
+        //OtherCostDevice.Sum = Cost;
+        //CoreDeviclist.Add(OtherCostDevice);
 
 
         //moq
