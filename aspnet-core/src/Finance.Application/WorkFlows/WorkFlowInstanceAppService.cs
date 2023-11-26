@@ -16,6 +16,7 @@ using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using System;
@@ -629,7 +630,10 @@ namespace Finance.WorkFlows
             //获取角色在未归档的工作流实例里活动的节点
             var node = _nodeInstanceRepository.GetAll()
                 .Join(_workflowInstanceRepository.GetAll(), n => n.WorkFlowInstanceId, w => w.Id, (n, w) => new { n, w })
-                .Where(p => p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current);
+                .Where(p =>
+                (p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current)
+                || (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
+                );
 
 
             //取入内存中
@@ -667,7 +671,6 @@ namespace Finance.WorkFlows
                     dto = dto.Where(p => false);
                 }
             }
-
 
             var roles = dto.SelectMany(p => p.RoleId).Select(p => p.To<long>()).Distinct();
 
