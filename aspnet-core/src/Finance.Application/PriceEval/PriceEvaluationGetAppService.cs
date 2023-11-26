@@ -3532,6 +3532,32 @@ namespace Finance.PriceEval
             await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 
+        /// <summary>
+        /// 快速核报价：导入核价表
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, long year, YearType upDown, [Required] IFormFile excle)
+        {
+            //获取excel数据
+            var stream = excle.OpenReadStream();
+            var rows = MiniExcel.Query<Material>(stream).ToList();
+
+            //删除表中数据
+            _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
+
+            //把excel数据插入表中
+            var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+
+            foreach (var item in entity)
+            {
+                item.AuditFlowId = auditFlowId;
+                item.GradientId = gradientId;
+                item.SolutionId = solutionId;
+            }
+
+            await _bomMaterialRepository.BulkInsertAsync(entity);
+        }
+
         #endregion
     }
 }
