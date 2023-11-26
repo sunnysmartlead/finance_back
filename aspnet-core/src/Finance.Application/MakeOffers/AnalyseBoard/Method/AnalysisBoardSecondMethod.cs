@@ -6022,8 +6022,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
         long i = await _externalQuotation.CountAsync(p =>
-            p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) &&
-            p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit &&
+            p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.IsSubmit &&
             p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
@@ -6068,8 +6067,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
         if(ntype)
         {
-            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1,1);
-            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1,1);
+            List<ProductDto> productDtos = await GetProductList(auditFlowId,(int)solutionId,(int)numberOfQuotations, 1);
+            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)solutionId,(int)numberOfQuotations, 1);
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
                new ProductQuotationListDto()
                {
