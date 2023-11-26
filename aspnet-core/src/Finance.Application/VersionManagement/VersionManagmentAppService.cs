@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Finance.Ext;
 
 namespace Finance.VersionManagement
 {
@@ -358,6 +359,8 @@ namespace Finance.VersionManagement
             {
                 var dto = new AuditFlowOperateReocrdDto
                 {
+                    Title = item.ProcessName.GetTitle(),
+                    TypeName = item.ProcessName.GetTypeName(),
                     ProjectName = item.ProjectName,
                     Version = item.Version,
                     ProcessName = item.ProcessName,
@@ -429,7 +432,8 @@ namespace Finance.VersionManagement
                 auditFlowOperateReocrdDto.Add(dto);
             }
 
-            return auditFlowOperateReocrdDto;
+
+            return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
             #region 一开逻辑
 
             //string projectName = null;
