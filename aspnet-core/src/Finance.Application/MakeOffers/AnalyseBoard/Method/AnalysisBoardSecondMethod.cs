@@ -6179,9 +6179,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version, int ntype)
     {
         List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
-        var nres = await getNreForData(processId, version, ntype);
-
-        managerApprovalOfferDto.nre = nres.FirstOrDefault(p => p.solutionName.Equals("汇总"));
+       
         var nres = await _nreQuotation.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.SolutionId != null && p.ntype == ntype);
         var nresmap = nres.GroupBy(p => p.SolutionId).ToDictionary(r => r.Key, x => x.Select(e => e).ToList());
