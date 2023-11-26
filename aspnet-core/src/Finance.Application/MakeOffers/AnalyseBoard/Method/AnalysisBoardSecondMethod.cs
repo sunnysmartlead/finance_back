@@ -5971,7 +5971,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            long i = await _externalQuotation.CountAsync(p =>p.CreationTime.ToString("yy") == DateTime.Now.ToString("yy") && p.CreationTime.ToString("MM") == DateTime.Now.ToString("MM"));
+            var now = DateTime.Now;
+            var year1 = now.ToString("yy");
+            var month = now.ToString("MM");
+
+            var ppp = await _externalQuotation.GetAllListAsync();
+            long i = ppp.Where(p => p.CreationTime.Year.ToString().EndsWith(year1)
+                && p.CreationTime.Month.ToString().EndsWith(month)).Count();                 
             string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
             string iSttring = (i + 1).ToString("D4");
             externalQuotationDto.RecordNo = year + iSttring;
