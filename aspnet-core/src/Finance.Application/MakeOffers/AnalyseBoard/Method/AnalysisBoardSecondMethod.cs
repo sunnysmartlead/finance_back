@@ -6068,8 +6068,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
         if(ntype)
         {
-            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1);
-            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1);
+            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1,1);
+            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1,1);
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
                new ProductQuotationListDto()
                {
