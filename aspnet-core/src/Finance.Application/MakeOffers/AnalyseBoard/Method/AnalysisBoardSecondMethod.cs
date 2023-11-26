@@ -4506,7 +4506,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 var nre = nres[i];
                 list.Add(new NreExcel()
                 {
-                    solutionName = solution.SolutionName,
+                    solutionName = solution.Product,
                     Index = i + "",
                     CostName = nre.FormName,
                     PricingMoney = nre.PricingMoney.ToString(),
@@ -5738,7 +5738,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
         pp.pricingMessageSecondModels = await GetPriceCost(solutions, processId);
-
+       
 
         //报价策略梯度
         List<BiddingStrategySecondModel> BiddingStrategySecondModels = new();
