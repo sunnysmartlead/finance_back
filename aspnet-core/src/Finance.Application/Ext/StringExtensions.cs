@@ -108,7 +108,7 @@ namespace Finance.Ext
         /// 根据界面名称获取标题
         /// </summary>
         /// <returns></returns>
-        public static string GetTitle(string projectName)
+        public static string GetTitle(this string projectName)
         {
             switch (projectName)
             {
@@ -161,7 +161,7 @@ namespace Finance.Ext
         /// 根据界面名称获取标题
         /// </summary>
         /// <returns></returns>
-        public static string GetTypeName(string projectName)
+        public static string GetTypeName(this string projectName)
         {
             switch (projectName)
             {
@@ -212,6 +212,65 @@ namespace Finance.Ext
                 case "归档": return "报价归档";
 
                 default: return string.Empty;
+
+            }
+        }
+
+        /// <summary>
+        /// 根据界面名称获取排序
+        /// </summary>
+        /// <returns></returns>
+        public static int GetTypeNameSort(this string projectName)
+        {
+            switch (projectName)
+            {
+                case "开始": return 1;
+                case "核价需求录入": return 2;
+                case "核价审批录入": return 3;
+                case "TR审核": return 4;
+
+                case "上传电子BOM": return 5;
+                case "电子BOM审核": return 6;
+                case "上传结构BOM": return 7;
+                case "结构BOM审核": return 8;
+                case "电子BOM匹配修改": return 9;
+                case "电子BOM单价审核": return 10;
+                case "定制结构件": return 11;
+                case "结构BOM匹配修改": return 12;
+                case "结构BOM单价审核": return 13;
+                case "BOM成本审核": return 14;
+                case "查看每个方案初版BOM成本": return 15;
+                case "工序工时添加": return 16;
+                case "COB制造成本录入": return 17;
+                case "物流成本录入": return 18;
+
+                case "NRE模具费录入": return 19;
+                case "模具费审核": return 20;
+                case "NRE_可靠性实验费录入": return 21;
+                case "NRE_可靠性实验费审核": return 22;
+                case "NRE_EMC实验费录入": return 23;
+                case "NRE_EMC实验费审核": return 24;
+                case "NRE手板件": return 25;
+
+                case "贸易合规": return 26;
+                case "不合规是否退回": return 27;
+                case "核价看板": return 28;
+                case "项目部课长审核": return 29;
+                case "财务审核": return 30;
+                case "项目部长查看核价表": return 31;
+                case "核心器件成本NRE费用拆分": return 32;
+
+                case "选择是否报价": return 33;
+                case "审批报价策略与核价表": return 34;
+                case "报价单": return 35;
+                case "报价审批表": return 36;
+                case "报价反馈": return 37;
+                case "确认中标金额": return 38;
+                case "总经理查看中标金额": return 39;
+
+                case "归档": return 40;
+
+                default: return 999;
 
             }
         }
