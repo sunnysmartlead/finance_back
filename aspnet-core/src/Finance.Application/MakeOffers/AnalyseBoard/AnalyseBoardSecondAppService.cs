@@ -354,67 +354,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         StruCoreDevice.Sum = totalStru;
         CoreDeviclist.Add(StruCoreDevice);
 
-        //制造成本
-        List<ManufacturingCost> QualityList= await _priceEvaluationAppService.GetManufacturingCost(new GetManufacturingCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
-       
-        foreach (ManufacturingCost quality in QualityList)
-        {
-            if (quality.CostType.Equals(CostType.Total))
-            {
-                CoreDevice zhiliangCoreDevice = new CoreDevice();
-                zhiliangCoreDevice.ProjectName = "制造成本";
-                zhiliangCoreDevice.Sum = quality.Subtotal;
-                CoreDeviclist.Add(zhiliangCoreDevice);
-            }
-  
-        }
 
-
-        //损耗成本
-        List<LossCost> CostItemList = await _priceEvaluationAppService.GetLossCost(new GetCostItemInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown, });
-        decimal WastageCost = 0;
-
-        foreach (LossCost costItem in CostItemList)
-        {
-            WastageCost = WastageCost + costItem.WastageCost;
-        }
-
-        CoreDevice lossCostCoreDevice = new CoreDevice();
-        lossCostCoreDevice.ProjectName = "损耗成本";
-        lossCostCoreDevice.Sum = WastageCost;
-
-        CoreDeviclist.Add(lossCostCoreDevice);
-
-        //质量成本
-        QualityCostListDto qualityCost = await _priceEvaluationAppService.GetQualityCost(new GetOtherCostItemInput
-        {
-            AuditFlowId = input.AuditFlowId,
-            GradientId = input.GradientId,
-            SolutionId = input.SolutionId,
-            Year = input.Year,
-            UpDown = input.UpDown
-        });
-        CoreDevice qualityCosDevice = new CoreDevice();
-        qualityCosDevice.ProjectName = "质量成本";
-        qualityCosDevice.Sum = qualityCost.QualityCost;
-        CoreDeviclist.Add(qualityCosDevice);
-
-        //物流成本
-        List<ProductionControlInfoListDto> dataList = await _priceEvaluationAppService.GetLogisticsCostPrivate(new GetLogisticsCostInput { AuditFlowId = input.AuditFlowId, Year = input.Year, UpDown = input.UpDown, GradientId = input.GradientId, SolutionId = input.SolutionId }, true);
-        decimal PerTotalLogisticsCost = 0;
-        foreach (ProductionControlInfoListDto data in dataList)
-        {
-            PerTotalLogisticsCost = PerTotalLogisticsCost + data.PerTotalLogisticsCost;
-        }
-
-        CoreDevice logisticsCosDevice = new CoreDevice();
-        logisticsCosDevice.ProjectName = "物流成本";
-        logisticsCosDevice.Sum = PerTotalLogisticsCost;
-
-
-        CoreDeviclist.Add(logisticsCosDevice);
-
-        //其他成本
         ExcelPriceEvaluationTableDto ExcelPriceEvaluationTable = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
         {
             AuditFlowId = input.AuditFlowId,
@@ -423,6 +363,42 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             Year = input.Year,
             UpDown = input.UpDown
         });
+        //制造成本
+        List<ManufacturingCostDto2> QualityList = ExcelPriceEvaluationTable.ManufacturingCostDto;
+        foreach (ManufacturingCostDto2 Quality in QualityList)
+        {
+            if (Quality.CostType.Equals(CostType.Total))
+            {
+                CoreDevice zhiliangCoreDevice = new CoreDevice();
+                zhiliangCoreDevice.ProjectName = "制造成本";
+                zhiliangCoreDevice.Sum = Quality.Subtotal;
+                CoreDeviclist.Add(zhiliangCoreDevice);
+            }
+
+        }
+
+        //损耗成本
+        CoreDevice lossCostCoreDevice = new CoreDevice();
+        lossCostCoreDevice.ProjectName = "损耗成本";
+        lossCostCoreDevice.Sum = ExcelPriceEvaluationTable.LossCount;
+        CoreDeviclist.Add(lossCostCoreDevice);
+
+        //质量成本
+        CoreDevice qualityCosDevice = new CoreDevice();
+        qualityCosDevice.ProjectName = "质量成本";
+        qualityCosDevice.Sum = ExcelPriceEvaluationTable.QualityCost;
+        CoreDeviclist.Add(qualityCosDevice);
+
+        //物流成本
+        CoreDevice logisticsCosDevice = new CoreDevice();
+        logisticsCosDevice.ProjectName = "物流成本";
+        logisticsCosDevice.Sum = ExcelPriceEvaluationTable.LogisticsFee;
+        CoreDeviclist.Add(logisticsCosDevice);
+
+
+
+        //其他成本
+
         List<OtherCostItem2> otherCostItem2s = ExcelPriceEvaluationTable.OtherCostItem2;
 
 
@@ -437,17 +413,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             }
 
         }
-
-        //decimal Cost = 0;
-        //foreach (OtherCostItem2List otherCostItem in otherCostItemList)
-        //{
-        //    Cost = Cost + otherCostItem.Cost;
-        //}
-
-        //CoreDevice OtherCostDevice = new CoreDevice();
-        //OtherCostDevice.ProjectName = "其他成本";
-        //OtherCostDevice.Sum = Cost;
-        //CoreDeviclist.Add(OtherCostDevice);
 
 
         //moq
@@ -802,6 +767,22 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
+    /// 报价分析看板 删除 只有报价分析看板仅保存的情况下才能删除
+    /// </summary>
+    /// <param name="isOfferDto"></param>
+    /// <returns></returns>
+    public async Task PostIsOfferSecondDelete(IsDeleteSecondDto isOfferDto)
+    {
+        if (isOfferDto.IsFirst)
+        {
+            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId,isOfferDto.version,0);
+        }
+        else
+        {
+            throw new FriendlyException("已经提交流程不能删除");
+        }
+    }
+    /// <summary>
     /// 报价分析看板 仅保存
     /// </summary>
     /// <param name="isOfferDto"></param>
@@ -948,6 +929,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
                 quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 3, 0);
         }
+        
+          //嵌入工作流
+                /*await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                {
+                    NodeInstanceId = quotationListSecondDto.NodeInstanceId,
+                    FinanceDictionaryDetailId = quotationListSecondDto.Opinion,
+                    Comment = quotationListSecondDto.Comment,
+                });*/
+        
     }
 
     /// <summary>
@@ -1298,10 +1288,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                             SolutionId = solution.Id,
                             GradientId = gradient.Id
                         });
-
-
+                    MemoryStream newhejia=new MemoryStream(hejia.ToArray());
+                   
                     FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
-                    IFormFile fileOfferhejia = new FormFile(hejia, 0, hejia.Length, FileName, FileName);
+                    IFormFile fileOfferhejia = new FormFile(newhejia, 0, newhejia.Length, FileName, FileName);
                     FileUploadOutputDto fileUploadOutputDtoOfferhejia =
                         await _fileCommonService.UploadFile(fileOfferhejia);
                     //核价表的路径和名称保存到
@@ -1371,9 +1361,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                             GradientId = gradient.Id
                         });
 
-
+                    MemoryStream newhejia=new MemoryStream(hejia.ToArray());
+                   
                     FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
-                    IFormFile fileOfferhejia = new FormFile(hejia, 0, hejia.Length, FileName, FileName);
+                    IFormFile fileOfferhejia = new FormFile(newhejia, 0, newhejia.Length, FileName, FileName);
                     FileUploadOutputDto fileUploadOutputDtoOfferhejia =
                         await _fileCommonService.UploadFile(fileOfferhejia);
                     //核价表的路径和名称保存到
