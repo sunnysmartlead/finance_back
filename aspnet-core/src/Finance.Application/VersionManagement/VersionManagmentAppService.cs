@@ -175,7 +175,6 @@ namespace Finance.VersionManagement
         /// <summary>
         /// 获取系统版本操作记录
         /// </summary>
-        /// <param name="flowId"></param>
         /// <returns></returns>
         public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrd(long flowId)
         {
@@ -370,6 +369,129 @@ namespace Finance.VersionManagement
             //}
 
             #endregion
+        }
+
+        /// <summary>
+        /// 获取系统版本操作记录（根据流程实例Id）
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrdByNodeInstanceId(long flowId,long nodeInstanceId)
+        {
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
+
+            var data = from n in _nodeInstanceRepository.GetAll()
+
+                       join i in _instanceHistoryRepository.GetAll() on n.Id equals i.NodeInstanceId into i1
+                       from i2 in i1.DefaultIfEmpty()
+
+                       join u in _userRepository.GetAll() on i2.CreatorUserId equals u.Id into u1
+                       from u2 in u1.DefaultIfEmpty()
+
+                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
+                       from t2 in t1.DefaultIfEmpty()
+
+                       where n.WorkFlowInstanceId == flowId && n.Id == nodeInstanceId
+
+                       select new// AuditFlowOperateReocrdDto
+                       {
+                           ProjectName = priceEvaluation.ProjectName,
+                           Version = priceEvaluation.QuoteVersion,
+                           ProcessName = n.Name,
+                           //ProcessState = n.NodeInstanceStatus,
+                           n.NodeInstanceStatus,
+                           UserName = u2.Name,
+                           //RoleName = 
+                           n.CreationTime,
+                           n.LastModificationTime,
+                           n.RoleId,
+                           n.WorkFlowInstanceId,
+                           n.ProcessIdentifier,
+                           ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime
+                       };
+            var result = await data.ToListAsync();
+
+            var roles = await _roleRepository.GetAllListAsync();
+
+            var auditFlowOperateReocrdDto = new List<AuditFlowOperateReocrdDto>();
+            foreach (var item in result)
+            {
+                var dto = new AuditFlowOperateReocrdDto
+                {
+                    Title = item.ProcessName.GetTitle(),
+                    TypeName = item.ProcessName.GetTypeName(),
+                    ProjectName = item.ProjectName,
+                    Version = item.Version,
+                    ProcessName = item.ProcessName,
+                    ProcessState = item.UserName.IsNullOrWhiteSpace() ? PROCESSTYPE.ProcessNoStart : PROCESSTYPE.ProcessFinished,
+                    UserName = item.UserName,
+                    auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
+                    { LastModifyTime = item.LastModificationTime, StartTime =item. CreationTime } },
+                    ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
+                };
+                if (item.NodeInstanceStatus == NodeInstanceStatus.Current)
+                {
+                    dto.ProcessState = PROCESSTYPE.ProcessRunning;
+                }
+
+
+                if (!item.RoleId.IsNullOrWhiteSpace())
+                {
+                    var roleNames = string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name));
+                    dto.RoleName = roleNames;
+                }
+
+                //获取期望完成时间
+                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == item.WorkFlowInstanceId);
+                if (pricingTeam is not null)
+                {
+                    //dto.ProcessName
+                    if (item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.ElecEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.StructEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.EMCTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.QualityBenchTime;
+                    }
+                    if (item.ProcessIdentifier == "ElectronicUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceElecTime;
+                    }
+                    if (item.ProcessIdentifier == "StructureUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceStructTime;
+                    }
+                    if (item.ProcessIdentifier == "NRE_MoldFeeEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.MouldWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                    {
+                        dto.RequiredTime = pricingTeam.EngineerWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductManageTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductCostInputTime;
+                    }
+                }
+
+                auditFlowOperateReocrdDto.Add(dto);
+            }
+
+
+            return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
         }
 
         /// <summary>
