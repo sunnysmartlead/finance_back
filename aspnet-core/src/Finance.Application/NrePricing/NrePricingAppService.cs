@@ -733,6 +733,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<PricingFormDto> FastQueryNreExecl(long auditFlowId, long solutionId)
         {
             AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
@@ -2748,7 +2749,7 @@ namespace Finance.NerPricing
                 {
                     modify.USDAllCost = modify.RMBAllCost;
                 }
-                //手板件费用修改项
+                //手板件费用修改项[
                 modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //模具费用修改项
                 modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
