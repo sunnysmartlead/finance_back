@@ -5762,7 +5762,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 gradient = gtsl.gradient,
                 Price = gtsl.OfferUnitPrice,
                 TotallifeCyclegrossMargin = gtsl.OfferGrossMargin,
-                ClientGrossMargin = gtsl.OfferClientGrossMargin,
+                ClientGrossMargin = gtsl.ClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
@@ -5866,10 +5866,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _financeAuditQuotationList.UpdateAsync(auditQuotationList);
     }
 
-    internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId)
+    internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId,long solutionId)
     {
         List<ExternalQuotation> externalQuotations =
-            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
         List<long> prop = externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
         long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsSubmit);
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
@@ -6062,36 +6062,35 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
-        long numberOfQuotations, bool ntype = false)
-    {
+        long numberOfQuotations,bool ntype=false)    {
+       
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
-        if (ntype)
+        if(ntype)
         {
-            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1,1);
-            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1,1);
+            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1);
+            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1);
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
-                new ProductQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.ProductName,
-                    Year = a.Year,
-                    TravelVolume = a.Motion,
-                    UnitPrice = decimal.Parse(a.UntilPrice)
-                }).ToList();
+               new ProductQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.ProductName,
+                   Year = a.Year,
+                   TravelVolume = a.Motion,
+                   UnitPrice = decimal.Parse(a.UntilPrice)
+               }).ToList();
             external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
-                new NreQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.Product,
-                    HandmadePartsFee = a.shouban,
-                    MyPropMoldCosterty = a.moju,
-                    CostOfToolingAndFixtures = a.gzyj,
-                    ExperimentalFees = a.sy,
-                    RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                }).ToList();
-        }
-
+                    new NreQuotationListDto()
+                    {
+                        SerialNumber = index + 1,
+                        ProductName = a.Product,
+                        HandmadePartsFee = a.shouban,
+                        MyPropMoldCosterty = a.moju,
+                        CostOfToolingAndFixtures = a.gzyj,
+                        ExperimentalFees = a.sy,
+                        RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+                    }).ToList();
+        }       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;

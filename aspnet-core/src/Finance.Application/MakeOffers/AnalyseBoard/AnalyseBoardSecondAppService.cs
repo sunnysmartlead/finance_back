@@ -664,13 +664,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 根据流程号查询对外报价单的版本号
+    ///  根据流程号查询对外报价单的版本号
     /// </summary>
     /// <param name="auditFlowId"></param>
+    /// <param name="solutionId"></param>
     /// <returns></returns>
-    public async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId)
+    public async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId, long solutionId)
     {
-        return await _analysisBoardSecondMethod.GetExternalQuotationNumberOfQuotations(auditFlowId);
+        return await _analysisBoardSecondMethod.GetExternalQuotationNumberOfQuotations(auditFlowId, solutionId);
     }
 
     /// <summary>
