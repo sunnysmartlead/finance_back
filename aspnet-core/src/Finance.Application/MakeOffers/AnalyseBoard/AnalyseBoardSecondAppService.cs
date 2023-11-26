@@ -177,18 +177,18 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品
+    /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品  报价反馈1、报价分析看板0
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version)
+    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version,int ntype)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
         {
-            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, 0);
+            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version,  ntype);
         }
         catch (Exception e)
         {
