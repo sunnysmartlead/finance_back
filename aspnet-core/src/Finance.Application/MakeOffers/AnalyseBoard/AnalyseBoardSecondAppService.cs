@@ -1582,7 +1582,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version, int ntype)
     {
-        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntype);
+        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntype,0);
     }
 
     /// <summary>
@@ -1593,7 +1593,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version, int ntype)
     {
-        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, ntype);
+        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, ntype,0);
     }
 
     /// <summary>
