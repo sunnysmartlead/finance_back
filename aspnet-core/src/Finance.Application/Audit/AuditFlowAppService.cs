@@ -286,6 +286,10 @@ namespace Finance.Audit
             var generalManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.GeneralManager);
             var isGeneralManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
 
+            // 成本拆分员
+            var costSplit = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.CostSplit);
+            var isCostSplit = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
+
 
             return list
 
@@ -299,7 +303,10 @@ namespace Finance.Audit
                 .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
 
                 //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
-                .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
+                .WhereIf((!isGeneralManager), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
+
+                //如果当前用户不是【成本拆分员】，就把【核心器件成本NRE费用拆分】页面过滤掉
+                .WhereIf((!isCostSplit), p => p.ProcessName != "核心器件成本NRE费用拆分" || p.IsReset)
 
                 .ToList();
         }
