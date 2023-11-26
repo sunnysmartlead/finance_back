@@ -3615,6 +3615,58 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             messageModels.Add(motionMessageModel);
         }
+        
+        //实际数量
+        var modelcounts = priceEvaluationStartInputResult.ModelCount;
+        List<YearValue> sjsls = new();
+        for (int i = 0; i < modelcounts.Count; i++)
+        {
+            var modelcount = modelcounts[i];
+            var mcyls = modelcount.ModelCountYearList;
+            List<YearValue> sjslsnew = new();
+            foreach (var mcyl in mcyls)
+            {
+                string key = mcyl.Year.ToString();
+                var ud = mcyl.UpDown;
+                if (ud.Equals(YearType.FirstHalf))
+                {
+                    key += "上半年";
+                }
+
+                if (ud.Equals(YearType.SecondHalf))
+                {
+                    key += "下半年";
+                }
+
+                if (ud.Equals(YearType.Year))
+                {
+                    key += "年";
+                }
+
+                YearValue yearValue = new()
+                {
+                    key = key,
+                    value = mcyl.Quantity
+                };
+                sjslsnew.Add(yearValue);
+            }
+
+            if (i == 0)
+            {
+                sjsls = sjslsnew;
+            }
+            else
+            {
+                sjsls = hebing(sjsls, sjslsnew);
+            }
+        }
+
+        MotionMessageSecondModel sjsl = new MotionMessageSecondModel()
+        {
+            MessageName = "实际数量(K)"
+        };
+        sjsl.YearValues = sjsls;
+        messageModels.Add(sjsl);
 
         List<MotionGradientSecondModel> mess = new List<MotionGradientSecondModel>();
 
@@ -3713,7 +3765,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 gradient = gtsl.gradient,
                 Price = gtsl.OfferUnitPrice,
                 TotallifeCyclegrossMargin = gtsl.OfferGrossMargin,
-                ClientGrossMargin = gtsl.ClientGrossMargin,
+                ClientGrossMargin = gtsl.OfferClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
@@ -3776,13 +3828,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            OfferForm = _financeDictionaryDetailRepository
+            OfferForm =(string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
+                ? ""
+                :  _financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
             SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
             ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
-            ForSale = _financeDictionaryDetailRepository
+            ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                                      ? ""
+                                      :_financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
-            modeOfTrade = _financeDictionaryDetailRepository
+            modeOfTrade = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))
+                ? ""
+                :_financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
             PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
             ExchangeRate = hl, //汇率
@@ -3822,7 +3880,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<IActionResult> DownloadAuditQuotationList(long auditFlowId, int version, int ntype)
     {
-        var sol =
+         var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
         List<Solution> solutions = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson);
 
@@ -3943,6 +4001,57 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             messageModels.Add(motionMessageModel);
         }
+        //实际数量
+        var modelcounts = priceEvaluationStartInputResult.ModelCount;
+        List<YearValue> sjsls = new();
+        for (int i = 0; i < modelcounts.Count; i++)
+        {
+            var modelcount = modelcounts[i];
+            var mcyls = modelcount.ModelCountYearList;
+            List<YearValue> sjslsnew = new();
+            foreach (var mcyl in mcyls)
+            {
+                string key = mcyl.Year.ToString();
+                var ud = mcyl.UpDown;
+                if (ud.Equals(YearType.FirstHalf))
+                {
+                    key += "上半年";
+                }
+
+                if (ud.Equals(YearType.SecondHalf))
+                {
+                    key += "下半年";
+                }
+
+                if (ud.Equals(YearType.Year))
+                {
+                    key += "年";
+                }
+
+                YearValue yearValue = new()
+                {
+                    key = key,
+                    value = mcyl.Quantity
+                };
+                sjslsnew.Add(yearValue);
+            }
+
+            if (i == 0)
+            {
+                sjsls = sjslsnew;
+            }
+            else
+            {
+                sjsls = hebing(sjsls, sjslsnew);
+            }
+        }
+
+        MotionMessageSecondModel sjsl = new MotionMessageSecondModel()
+        {
+            MessageName = "实际数量(K)"
+        };
+        sjsl.YearValues = sjsls;
+        messageModels.Add(sjsl);
 
         List<MotionGradientSecondModel> mess = new List<MotionGradientSecondModel>();
 
@@ -4097,6 +4206,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
+
+
         var value = new
         {
             Date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
@@ -4104,13 +4215,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
             DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-            OfferForm = _financeDictionaryDetailRepository
+            OfferForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
+                ? ""
+                : _financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType)).DisplayName, //报价形式
             SopTime = priceEvaluationStartInputResult.SopTime, //SOP时间
             ProjectCycle = priceEvaluationStartInputResult.ProjectCycle, //项目生命周期
-            ForSale = _financeDictionaryDetailRepository
+            ForSale = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                ? ""
+                :_financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.SalesType)).DisplayName, //销售类型
-            modeOfTrade = _financeDictionaryDetailRepository
+            modeOfTrade = (string.IsNullOrEmpty(priceEvaluationStartInputResult.TradeMode))
+                ? ""
+                :_financeDictionaryDetailRepository
                 .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TradeMode)).DisplayName, //贸易方式
             PaymentMethod = priceEvaluationStartInputResult.PaymentMethod, //付款方式
             ExchangeRate = hl, //汇率
@@ -4278,7 +4395,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Versions = priceEvaluationStartInputResult.QuoteVersion, //版本
                 DirectCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
                 TerminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
-                OfferForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.SalesType))
+                OfferForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
                     ? ""
                     : _financeDictionaryDetailRepository
                         .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.PriceEvalType))
@@ -5666,7 +5783,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 gradient = gtsl.gradient,
                 Price = gtsl.OfferUnitPrice,
                 TotallifeCyclegrossMargin = gtsl.OfferGrossMargin,
-                ClientGrossMargin = gtsl.ClientGrossMargin,
+                ClientGrossMargin = gtsl.OfferClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
