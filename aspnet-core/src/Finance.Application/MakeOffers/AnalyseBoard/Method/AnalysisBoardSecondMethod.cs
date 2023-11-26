@@ -3215,10 +3215,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             List<NreQuotation> nreQuotations = nre.models;
             List<DeviceQuotation> deviceQuotations = nre.devices;
+           var collinearAllocationRate= nre.collinearAllocationRate;
+            var numberLine=nre.numberLine;
             foreach (var nreQuotation in nreQuotations)
             {
                 nreQuotation.version = version;
                 nreQuotation.ntype = ntype;
+                nreQuotation.numberLine = numberLine;
+                nreQuotation.collinearAllocationRate = collinearAllocationRate;
                 _nreQuotation.InsertAsync(nreQuotation);
             }
 
