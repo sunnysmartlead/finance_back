@@ -5884,10 +5884,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _financeAuditQuotationList.UpdateAsync(auditQuotationList);
     }
 
-    internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId)
+    internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId,long solutionId)
     {
         List<ExternalQuotation> externalQuotations =
-            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
         List<long> prop = externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
         long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsSubmit);
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
