@@ -331,6 +331,14 @@ namespace Finance.WorkFlows
 
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
 
+
+            //设置任务重置
+            var taskResets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == input.NodeInstanceId);
+            foreach (var taskReset in taskResets)
+            {
+                taskReset.IsActive = false;
+            }
+
             //给业务节点增加历史记录
             await _instanceHistoryRepository.InsertAsync(new InstanceHistory
             {
