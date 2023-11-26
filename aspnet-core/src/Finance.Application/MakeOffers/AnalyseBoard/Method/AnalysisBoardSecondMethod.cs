@@ -4506,7 +4506,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 var nre = nres[i];
                 list.Add(new NreExcel()
                 {
-                    solutionName = solution.SolutionName,
+                    solutionName = solution.Product,
                     Index = i + "",
                     CostName = nre.FormName,
                     PricingMoney = nre.PricingMoney.ToString(),
@@ -5738,7 +5738,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
         pp.pricingMessageSecondModels = await GetPriceCost(solutions, processId);
-
+       
 
         //报价策略梯度
         List<BiddingStrategySecondModel> BiddingStrategySecondModels = new();
@@ -5762,7 +5762,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 gradient = gtsl.gradient,
                 Price = gtsl.OfferUnitPrice,
                 TotallifeCyclegrossMargin = gtsl.OfferGrossMargin,
-                ClientGrossMargin = gtsl.ClientGrossMargin,
+                ClientGrossMargin = gtsl.OfferClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
@@ -6068,8 +6068,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
         if(ntype)
         {
-            List<ProductDto> productDtos = await GetProductList(auditFlowId,(int)solutionId,(int)numberOfQuotations, 1);
-            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)solutionId,(int)numberOfQuotations, 1);
+            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1,1);
+            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1,1);
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
                new ProductQuotationListDto()
                {
