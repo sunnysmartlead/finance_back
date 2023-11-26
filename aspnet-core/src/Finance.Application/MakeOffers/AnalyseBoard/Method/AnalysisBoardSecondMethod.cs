@@ -2608,7 +2608,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
         else
         {
-            if (ntype == 1 && time >= 3)
+            if (ntype == 0 && time > 3)
             {
                 throw new UserFriendlyException("本流程报价提交次数已经到顶");
             }
