@@ -690,8 +690,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         }
 
-        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 0);
-        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 0);
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 0,0);
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 0,0);
 
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations,
             productDtos, quotationNreDtos);
@@ -1580,9 +1580,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     ///  <param name="version">0报价看板数据，1报价反馈数据</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version, int ntype)
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version, int ntime,int type)
     {
-        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntype,0);
+        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntime,type);
     }
 
     /// <summary>
@@ -1591,9 +1591,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version, int ntype)
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version,int time ,int type)
     {
-        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, ntype,0);
+        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, time,type);
     }
 
     /// <summary>
