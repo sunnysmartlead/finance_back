@@ -6152,20 +6152,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 }
 
                 string UntilPrice = "";
-
-                var gradid = GetGradient(mcy.Quantity, gradients);
-                var list = gsmap[gradid];
-
-                UntilPrice = list.FirstOrDefault(p => p.SolutionId == sol.Id).UnitPrice.ToString();
-
-
-                productDtos.Add(new ProductDto()
+                foreach (var gradient in gradients)
                 {
-                    ProductName = sol.Product,
-                    Motion = gradients.FirstOrDefault(p => p.Id == gradid).GradientValue,
-                    Year = key,
-                    UntilPrice = UntilPrice
-                });
+                    UntilPrice = gsp.FirstOrDefault(p => p.SolutionId == sol.Id&&p.Gradientid==gradient.Id).UnitPrice.ToString();
+                    productDtos.Add(new ProductDto()
+                    {
+                        ProductName = sol.Product,
+                        Motion = gradient.GradientValue,
+                        Year = key,
+                        UntilPrice = UntilPrice
+                    });
+                }
             }
         }
 
@@ -6182,7 +6179,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version, int ntype)
     {
         List<QuotationNreDto> productDtos = new List<QuotationNreDto>();
+        var nres = await getNreForData(processId, version, ntype);
 
+        managerApprovalOfferDto.nre = nres.FirstOrDefault(p => p.solutionName.Equals("汇总"));
         var nres = await _nreQuotation.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.SolutionId != null && p.ntype == ntype);
         var nresmap = nres.GroupBy(p => p.SolutionId).ToDictionary(r => r.Key, x => x.Select(e => e).ToList());
