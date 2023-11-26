@@ -5828,7 +5828,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 UnitPrice = sjslss.OfferUnitPrice,
                 SolutionId = sjslss.SolutionId
             });
-            model.SopCost = niandu.AverageCost[0].value;
+            var AverageCost=niandu.AverageCost.OrderBy(p => p.key).ToList();
+            model.SopCost = AverageCost[0].value;
+            var GrossMargin=niandu.GrossMargin.OrderBy(p => p.key).ToList();
+            model.SopGrossMargin=GrossMargin[0].value;
             model.FullLifeCyclecost = niandu.AverageCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
             model.SalesRevenue = niandu.SalesRevenue.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
             model.SellingCost = niandu.SellingCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
