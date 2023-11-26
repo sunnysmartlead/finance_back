@@ -3348,6 +3348,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 if (ma.TypeName.Equals("Sensor芯片"))
                 {
                     PartsSecondModel Sensor = new();
+                    Sensor.SolutionName = solution.Product;
                     Sensor.PartsName = "Sensor芯片"; //核心部件
                     Sensor.Model = ma.MaterialName; //型号（材料名称）
                     Sensor.Type = _financeDictionaryDetailRepository
@@ -3359,6 +3360,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 if (ma.TypeName.Equals("镜头"))
                 {
                     PartsSecondModel Sensor = new();
+                    Sensor.SolutionName = solution.Product;
                     Sensor.PartsName = "镜头"; //核心部件
                     Sensor.Model = ma.MaterialName; //型号（材料名称）
                     Sensor.Type = _financeDictionaryDetailRepository
@@ -3370,6 +3372,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 if (ma.TypeName.Equals("芯片IC——ISP"))
                 {
                     PartsSecondModel Sensor = new();
+                    Sensor.SolutionName = solution.Product;
                     Sensor.PartsName = "芯片IC——ISP"; //核心部件
                     Sensor.Model = ma.MaterialName; //型号（材料名称）
                     Sensor.Type = _financeDictionaryDetailRepository
@@ -3380,7 +3383,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
                 if (ma.TypeName.Equals("串行芯片"))
                 {
+                    
                     PartsSecondModel Sensor = new();
+                    Sensor.SolutionName = solution.Product;
+
                     Sensor.PartsName = "串行芯片"; //核心部件
                     Sensor.Model = ma.MaterialName; //型号（材料名称）
                     Sensor.Type = _financeDictionaryDetailRepository
@@ -3392,6 +3398,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 if (ma.TypeName.Equals("线束"))
                 {
                     PartsSecondModel Sensor = new();
+                    Sensor.SolutionName = solution.Product;
+
                     Sensor.PartsName = "线束"; //核心部件
                     Sensor.Model = ma.MaterialName; //型号（材料名称）
                     Sensor.Type = _financeDictionaryDetailRepository
@@ -5636,7 +5644,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             model.SellingCost = niandu.SellingCost.FirstOrDefault(p => p.key.Equals("全生命周期")).value;
             BiddingStrategySecondModelsAct.Add(model);
         }
-
+        var sampless = await getSampleForData(processId, solutions, version, ntype);
+        pp.SampleOffer = sampless;
         pp.BiddingStrategySecondModelsAct = BiddingStrategySecondModelsAct;
 
 

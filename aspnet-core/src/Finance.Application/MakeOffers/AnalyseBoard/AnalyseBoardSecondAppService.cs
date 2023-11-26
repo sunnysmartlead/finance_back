@@ -1288,10 +1288,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                             SolutionId = solution.Id,
                             GradientId = gradient.Id
                         });
-
-
+                    MemoryStream newhejia=new MemoryStream(hejia.ToArray());
+                   
                     FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
-                    IFormFile fileOfferhejia = new FormFile(hejia, 1024, hejia.Length, FileName, FileName);
+                    IFormFile fileOfferhejia = new FormFile(newhejia, 0, newhejia.Length, FileName, FileName);
                     FileUploadOutputDto fileUploadOutputDtoOfferhejia =
                         await _fileCommonService.UploadFile(fileOfferhejia);
                     //核价表的路径和名称保存到
@@ -1361,9 +1361,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                             GradientId = gradient.Id
                         });
 
-
+                    MemoryStream newhejia=new MemoryStream(hejia.ToArray());
+                   
                     FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表.xlsx";
-                    IFormFile fileOfferhejia = new FormFile(hejia, 0, hejia.Length, FileName, FileName);
+                    IFormFile fileOfferhejia = new FormFile(newhejia, 0, newhejia.Length, FileName, FileName);
                     FileUploadOutputDto fileUploadOutputDtoOfferhejia =
                         await _fileCommonService.UploadFile(fileOfferhejia);
                     //核价表的路径和名称保存到
