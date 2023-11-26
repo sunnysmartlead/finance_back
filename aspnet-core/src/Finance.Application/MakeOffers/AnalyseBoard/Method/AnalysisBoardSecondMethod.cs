@@ -5868,10 +5868,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            long i = await _externalQuotation.CountAsync(p =>
-                p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) &&
-                p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit &&
-                p.NumberOfQuotations.Equals(numberOfQuotations));
+            long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId)&&p.SolutionId.Equals(externalQuotationDto.SolutionId)&&p.IsSubmit&&p.NumberOfQuotations.Equals(numberOfQuotations));
             string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
             string iSttring = (i + 1).ToString("D4");
             externalQuotationDto.RecordNo = year + iSttring;
@@ -5918,10 +5915,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             throw new FriendlyException("报价已经超过三次,不可继续流转");
         }
 
-        long i = await _externalQuotation.CountAsync(p =>
-            p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) &&
-            p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit &&
-            p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
+        long i = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.SolutionId.Equals(externalQuotationDto.SolutionId) && p.IsSubmit && p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
         string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
         string iSttring = (i + 1).ToString("D4");
         externalQuotation.RecordNo = year + iSttring;
@@ -5942,7 +5936,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
         //流程流转
-        if (solutionQuotations.Count == i + 1 && externalQuotationDto.IsSubmit)
+        if(solutionQuotations.Count== i+1&& externalQuotationDto.IsSubmit)
         {
             //嵌入工作流
             await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
@@ -5959,36 +5953,35 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
-        long numberOfQuotations, bool ntype = false)
-    {
+        long numberOfQuotations,bool ntype=false)    {
+       
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
-        if (ntype)
+        if(ntype)
         {
             List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)numberOfQuotations, 1);
             List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)numberOfQuotations, 1);
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
-                new ProductQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.ProductName,
-                    Year = a.Year,
-                    TravelVolume = a.Motion,
-                    UnitPrice = decimal.Parse(a.UntilPrice)
-                }).ToList();
+               new ProductQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.ProductName,
+                   Year = a.Year,
+                   TravelVolume = a.Motion,
+                   UnitPrice = decimal.Parse(a.UntilPrice)
+               }).ToList();
             external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
-                new NreQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.Product,
-                    HandmadePartsFee = a.shouban,
-                    MyPropMoldCosterty = a.moju,
-                    CostOfToolingAndFixtures = a.gzyj,
-                    ExperimentalFees = a.sy,
-                    RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                }).ToList();
-        }
-
+                    new NreQuotationListDto()
+                    {
+                        SerialNumber = index + 1,
+                        ProductName = a.Product,
+                        HandmadePartsFee = a.shouban,
+                        MyPropMoldCosterty = a.moju,
+                        CostOfToolingAndFixtures = a.gzyj,
+                        ExperimentalFees = a.sy,
+                        RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+                    }).ToList();
+        }       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
