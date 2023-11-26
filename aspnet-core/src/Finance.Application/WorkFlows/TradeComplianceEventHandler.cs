@@ -309,6 +309,15 @@ namespace Finance.WorkFlows
                             await _nrePricingAppService.GetExperimentItemsConfigurationState(eventData.Entity.WorkFlowInstanceId);
                         }
 
+                        if (eventData.Entity.NodeId == "主流程_核心器件成本NRE费用拆分")
+                        {
+                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                            {
+                                NodeInstanceId = eventData.Entity.Id,
+                                FinanceDictionaryDetailId = FinanceConsts.Done,
+                                Comment = "系统自动流转：核心器件成本NRE费用拆分"
+                            });
+                        }
 
                         //如果流转到报价看板
                         if (eventData.Entity.NodeId == "主流程_生成报价分析界面选择报价方案")
