@@ -2553,25 +2553,25 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         //应陈梦瑶要求增加可改变方案功能，先把老数据删除
         if (ntype == 0)
         {
-            await _solutionQutation.HardDeleteAsync(p => p.version == version && p.AuditFlowId == AuditFlowId);
+             _solutionQutation.HardDelete(p => p.version == version && p.AuditFlowId == AuditFlowId);
         }
 
 
-        await _nreQuotation.HardDeleteAsync(p =>
+         _nreQuotation.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _deviceQuotation.HardDeleteAsync(p =>
+         _deviceQuotation.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _sampleQuotation.HardDeleteAsync(p =>
+         _sampleQuotation.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _resourceUnitPriceOffers.HardDeleteAsync(p =>
+         _resourceUnitPriceOffers.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _resourcePooledAnalysisOffers.HardDeleteAsync(p =>
+         _resourcePooledAnalysisOffers.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _resourceProjectBoardSecondOffers.HardDeleteAsync(p =>
+         _resourceProjectBoardSecondOffers.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _actualUnitPriceOffer.HardDeleteAsync(p =>
+         _actualUnitPriceOffer.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-        await _dynamicUnitPriceOffers.HardDeleteAsync(p =>
+         _dynamicUnitPriceOffers.HardDelete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
 

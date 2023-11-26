@@ -801,7 +801,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         if (isOfferDto.IsFirst)
         {
-            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+             _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         }
         else
         {
