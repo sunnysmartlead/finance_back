@@ -366,6 +366,7 @@ namespace Finance.WorkFlows
                             //#if !DEBUG
                             SendEmail email = new SendEmail();
                             string loginIp = email.GetLoginAddr();
+                            var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
                             //if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
                             //{
@@ -387,15 +388,15 @@ namespace Finance.WorkFlows
                                 if (userInfo != null)
                                 {
                                     string emailAddr = userInfo.EmailAddress;
-
-                                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
                                     string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
                                     string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
 
                                     try
                                     {
-                                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        if (!emailAddr.Contains("@qq.com"))
+                                        {
+                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                        }
                                     }
                                     catch (Exception)
                                     {
