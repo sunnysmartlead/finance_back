@@ -769,7 +769,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <summary>
     /// 报价分析看板 删除 只有报价分析看板仅保存的情况下才能删除
     /// </summary>
-    /// <param name="isOfferDto"></param>
+    /// <param name="isOfferDto">version  AuditFlowId必传</param>
     /// <returns></returns>
     public async Task PostIsOfferSecondDelete(IsDeleteSecondDto isOfferDto)
     {
@@ -1094,7 +1094,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<ManagerApprovalOfferDto> GeQuotationFeedbacktManagerOne(long auditFlowId, int version)
+    public async Task<ManagerApprovalOfferDto> GetQuotationFeedbacktManagerOne(long auditFlowId, int version)
     {
         SolutionQuotation sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);

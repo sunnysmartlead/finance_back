@@ -90,10 +90,11 @@ namespace Finance.WorkFlows
         /// 手动触发贸易合规（手动测试使用时改为public）
         /// </summary>
         /// <returns></returns>
-        public async Task GG()
+        public async Task GG(long id)
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_选择是否报价");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_归档");
             hg.LastModificationTime = DateTime.UtcNow;
+            hg.NodeInstanceStatus = NodeInstanceStatus.Current;
         }
 
         private async Task TestLine(long id, long id2)
@@ -801,7 +802,7 @@ namespace Finance.WorkFlows
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
-                        || n.Name == "总经理查看中标金额"
+                        || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -1204,18 +1205,18 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task OverWorkflow(OverWorkflowInput input)
         {
-            var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
-            wf.WorkflowState = WorkflowState.Ended;
+            //var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
+            //wf.WorkflowState = WorkflowState.Ended;
 
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId == "主流程_归档");
             node.NodeInstanceStatus = NodeInstanceStatus.Current;
             node.Comment = $"删除流程：{input.DeleteReason}";
 
-            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
-            foreach (var item in nodes)
-            {
-                item.NodeInstanceStatus = NodeInstanceStatus.Over;
-            }
+            //var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            //foreach (var item in nodes)
+            //{
+            //    item.NodeInstanceStatus = NodeInstanceStatus.Over;
+            //}
         }
 
 

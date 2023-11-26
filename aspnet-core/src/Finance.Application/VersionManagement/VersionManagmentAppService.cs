@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Finance.Ext;
 
 namespace Finance.VersionManagement
 {
@@ -87,11 +88,6 @@ namespace Finance.VersionManagement
         }
 
 
-
-
-
-
-
         /// <summary>
         /// 获取系统版本
         /// </summary>
@@ -101,10 +97,11 @@ namespace Finance.VersionManagement
         {
             var data = (from p in _priceEvaluationRepository.GetAll()
                         join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
-                        join f in _financeDictionaryDetailRepository.GetAll() on p.PriceEvalType equals f.Id
+                        join n in _nodeInstanceRepository.GetAll() on p.AuditFlowId equals n.WorkFlowInstanceId
+                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id
                         join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
                         where w.WorkflowState == WorkflowState.Running
-                        //&& p.QuoteVersion == versionFilterInput.Version  
+                        && n.NodeId == "主流程_核价需求录入"
                         select new VersionBasicInfoDto
                         {
                             AuditFlowId = p.AuditFlowId,
@@ -131,190 +128,53 @@ namespace Finance.VersionManagement
                 IsSuccess = true,
                 Message = "查询成功"
             };
+        }
 
-            #region 一开逻辑
-            //VersionManageListDto versionManageListDto = new();
-            //List<VersionManageDto> versionManages = new();
+        /// <summary>
+        /// 获取系统版本（自己是项目经理的）
+        /// </summary>
+        /// <param name="versionFilterInput"></param>
+        /// <returns></returns>
+        public async virtual Task<VersionManageListDto> GetVersionInfosSelf(VersionFilterInputDto versionFilterInput)
+        {
+            var data = (from p in _priceEvaluationRepository.GetAll()
+                        join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
+                        join n in _nodeInstanceRepository.GetAll() on p.AuditFlowId equals n.WorkFlowInstanceId
+                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id
+                        join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
+                        where w.WorkflowState == WorkflowState.Running
+                        && n.NodeId == "主流程_核价需求录入" && p.ProjectManager == AbpSession.UserId
+                        select new VersionBasicInfoDto
+                        {
+                            AuditFlowId = p.AuditFlowId,
+                            ProjectName = p.ProjectName,
+                            Version = p.QuoteVersion,
+                            Number = p.Number,
+                            ProjectManager = u.Name,
+                            QuoteTypeName = f.DisplayName,
+                            DraftTime = p.DraftDate,
+                            //FinishedTime = p.FinishedTime
+                        }).WhereIf(versionFilterInput.Version != default, p => p.Version == versionFilterInput.Version)
+                        .WhereIf(versionFilterInput.DraftStartTime.HasValue, p => p.DraftTime >= versionFilterInput.DraftStartTime)
+                        .WhereIf(versionFilterInput.DraftEndTime.HasValue, p => p.DraftTime <= versionFilterInput.DraftEndTime)
+                        .WhereIf(versionFilterInput.AuditFlowId != default, p => p.AuditFlowId == versionFilterInput.AuditFlowId)
+                        .WhereIf(versionFilterInput.ProjectName != default, p => p.ProjectName == versionFilterInput.ProjectName)
+                        .WhereIf(versionFilterInput.Number != default, p => p.Number == versionFilterInput.Number);
 
-            //List<long> lastFlowIds = new();
+            var result = await data.ToListAsync();
 
-            ////通过流程开始时间查询到的流程Id
-            //List<long> flowIdsByDraftTime = new();
-            ////通过流程结束时间查询到的流程Id
-            //List<long> flowIdsByFinishedTime = new();
-            ////通过项目名称查询到的流程Id
-            //List<long> flowIdsByProject = new();
-            ////通过流程编号查询到的流程Id
-            //List<long> flowIdByNumber = new();
-            ////输入的流程Id
-            //List<long> flowIdByInput = new();
-
-            //try
-            //{
-            //    if (versionFilterInput.DraftStartTime != null || versionFilterInput.DraftEndTime != null)
-            //    {
-            //        flowIdsByDraftTime = await this.GetAllAuditFlowByDraftTime(versionFilterInput);
-            //    }
-
-            //    if (versionFilterInput.FinishedStartTime != null || versionFilterInput.FinishedEndTime != null)
-            //    {
-            //        flowIdsByFinishedTime = await this.GetAllAuditFlowByFinishedTime(versionFilterInput);
-            //    }
-
-            //    if (versionFilterInput.ProjectName != null)
-            //    {
-            //        List<int> versions;
-            //        if (versionFilterInput.Version == 0)
-            //        {
-            //            versions = await this.GetAllAuditFlowVersion(versionFilterInput.ProjectName);
-            //            foreach (var version in versions)
-            //            {
-            //                versionFilterInput.Version = version;
-            //                flowIdsByProject.Add(await this.GetAuditFlowIdByVersion(versionFilterInput));
-            //            }
-            //        }
-            //        else
-            //        {
-            //            flowIdsByProject.Add(await this.GetAuditFlowIdByVersion(versionFilterInput));
-            //        }
-            //    }
-
-            //    if (versionFilterInput.Number != null)
-            //    {
-            //        var flowInfos = await _priceEvaluationRepository.GetAllListAsync(p => p.Number == versionFilterInput.Number);
-            //        if (flowInfos.Count > 0)
-            //        {
-            //            flowIdByNumber.Add(flowInfos.FirstOrDefault().AuditFlowId);
-            //        }
-            //    }
-
-            //    if(versionFilterInput.AuditFlowId > 0)
-            //    {
-            //        flowIdByInput.Add(versionFilterInput.AuditFlowId);
-            //    }
-
-            //    //判断是否有时间条件或项目名称条件获得得Id
-            //    if (flowIdsByProject.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdsByProject;
-            //    }
-
-            //    if (flowIdsByDraftTime.Count > 0 && lastFlowIds.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdsByDraftTime.Intersect(lastFlowIds).ToList();
-            //    }
-            //    else if(flowIdsByDraftTime.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdsByDraftTime;
-            //    }
-
-            //    if (flowIdsByFinishedTime.Count > 0 && lastFlowIds.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdsByFinishedTime.Intersect(lastFlowIds).ToList(); 
-            //    }
-            //    else if (flowIdsByFinishedTime.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdsByFinishedTime;
-            //    }
-
-            //    //判断单据编号获得的Id 是否不等于0
-            //    if (lastFlowIds.Count > 0 && flowIdByNumber.Count > 0)
-            //    {
-            //        lastFlowIds = lastFlowIds.Intersect(flowIdByNumber).ToList();
-            //    }
-            //    else if (flowIdByNumber.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdByNumber;
-            //    }
-
-            //    //判断输入的流程Id 是否不等于0
-            //    if (lastFlowIds.Count > 0 && flowIdByInput.Count > 0)
-            //    {
-            //        lastFlowIds = lastFlowIds.Intersect(flowIdByInput).ToList();
-            //    }
-            //    else if (flowIdByInput.Count > 0)
-            //    {
-            //        lastFlowIds = flowIdByInput;
-            //    }
-
-            //    if (lastFlowIds.Count > 0)
-            //    {
-            //        foreach (var flowId in lastFlowIds)
-            //        {
-            //            string flowTitle = null;
-            //            var flow = await _auditFlowRepository.SingleAsync(p => p.Id == flowId);
-            //            //if(flow.LastModificationTime is null)
-            //            //{
-            //            //    throw new FriendlyException("核价还未完成");
-            //            //}
-            //            VersionManageDto versionManage = new VersionManageDto();
-            //            var priceInfo = await _priceEvaluationRepository.SingleAsync(p => p.AuditFlowId == flowId);
-
-            //            var priceEvaluations = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == flowId);
-            //            if (priceEvaluations.Count > 0)
-            //            {
-            //                flowTitle = priceEvaluations.FirstOrDefault().Title;
-            //            }
-            //            else
-            //            {
-            //                throw new FriendlyException("找不到对应核价需求信息！");
-            //            }
-            //            long projectManagerId = _projectManager == 0 ? priceEvaluations.FirstOrDefault().ProjectManager : _projectManager;
-            //            User usrInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == projectManagerId);                    
-            //            string quoteType = priceEvaluations.FirstOrDefault().QuotationType;
-            //            string quoteTypeName = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == quoteType).DisplayName;
-            //            versionManage.VersionBasicInfo = new()
-            //            {
-            //                AuditFlowId = flowId,
-            //                ProjectName = flow.QuoteProjectName,
-            //                Version = flow.QuoteVersion,
-            //                Number = priceInfo.Number,
-            //                ProjectManager =usrInfo != null? usrInfo.Name:"",
-            //                QuoteTypeName=quoteTypeName,
-            //                DraftTime = flow.CreationTime,
-            //                FinishedTime = flow.LastModificationTime
-            //            };
-            //            if (flow.LastModificationTime is null)
-            //            {
-            //                versionManage.PriceEvaluationTableList = null;
-            //            }
-            //            else
-            //            { 
-            //                versionManage.PriceEvaluationTableList = new();
-
-            //                var modelList = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == flowId);
-            //                GetPriceEvaluationTableResultInput resultInput = new();
-            //                foreach (var productId in modelList)
-            //                {
-            //                    resultInput.AuditFlowId = flowId;
-            //                    resultInput.ProductId = productId.Id;
-            //                    resultInput.IsAll = false;
-            //                    versionManage.PriceEvaluationTableList.Add(await _priceEvaluationAppService.GetPriceEvaluationTableResult(resultInput));
-
-            //                    resultInput.IsAll = true;
-            //                    versionManage.PriceEvaluationTableList.Add(await _priceEvaluationAppService.GetPriceEvaluationTableResult(resultInput));
-            //                }
-            //                versionManage.QuotationTable = await _analyseBoardAppService.GetQuotationList(flowId);
-            //            }
-
-
-            //            versionManages.Add(versionManage);
-            //        }
-            //    }
-            //    versionManageListDto.VersionManageList = versionManages;
-            //}
-            //catch (Exception ex)
-            //{
-            //    throw new FriendlyException("获取核价表版本信息失败，原因：" + ex.Message);
-            //}
-            //return versionManageListDto;
-            #endregion
+            var dto = result.Select(p => new VersionManageDto { VersionBasicInfo = p });
+            return new VersionManageListDto
+            {
+                VersionManageList = dto.ToList(),
+                IsSuccess = true,
+                Message = "查询成功"
+            };
         }
 
         /// <summary>
         /// 获取系统版本操作记录
         /// </summary>
-        /// <param name="flowId"></param>
         /// <returns></returns>
         public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrd(long flowId)
         {
@@ -358,6 +218,8 @@ namespace Finance.VersionManagement
             {
                 var dto = new AuditFlowOperateReocrdDto
                 {
+                    Title = item.ProcessName.GetTitle(),
+                    TypeName = item.ProcessName.GetTypeName(),
                     ProjectName = item.ProjectName,
                     Version = item.Version,
                     ProcessName = item.ProcessName,
@@ -429,7 +291,8 @@ namespace Finance.VersionManagement
                 auditFlowOperateReocrdDto.Add(dto);
             }
 
-            return auditFlowOperateReocrdDto;
+
+            return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
             #region 一开逻辑
 
             //string projectName = null;
@@ -506,6 +369,129 @@ namespace Finance.VersionManagement
             //}
 
             #endregion
+        }
+
+        /// <summary>
+        /// 获取系统版本操作记录（根据流程实例Id）
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrdByNodeInstanceId(long flowId,long nodeInstanceId)
+        {
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
+
+            var data = from n in _nodeInstanceRepository.GetAll()
+
+                       join i in _instanceHistoryRepository.GetAll() on n.Id equals i.NodeInstanceId into i1
+                       from i2 in i1.DefaultIfEmpty()
+
+                       join u in _userRepository.GetAll() on i2.CreatorUserId equals u.Id into u1
+                       from u2 in u1.DefaultIfEmpty()
+
+                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
+                       from t2 in t1.DefaultIfEmpty()
+
+                       where n.WorkFlowInstanceId == flowId && n.Id == nodeInstanceId
+
+                       select new// AuditFlowOperateReocrdDto
+                       {
+                           ProjectName = priceEvaluation.ProjectName,
+                           Version = priceEvaluation.QuoteVersion,
+                           ProcessName = n.Name,
+                           //ProcessState = n.NodeInstanceStatus,
+                           n.NodeInstanceStatus,
+                           UserName = u2.Name,
+                           //RoleName = 
+                           n.CreationTime,
+                           n.LastModificationTime,
+                           n.RoleId,
+                           n.WorkFlowInstanceId,
+                           n.ProcessIdentifier,
+                           ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime
+                       };
+            var result = await data.ToListAsync();
+
+            var roles = await _roleRepository.GetAllListAsync();
+
+            var auditFlowOperateReocrdDto = new List<AuditFlowOperateReocrdDto>();
+            foreach (var item in result)
+            {
+                var dto = new AuditFlowOperateReocrdDto
+                {
+                    Title = item.ProcessName.GetTitle(),
+                    TypeName = item.ProcessName.GetTypeName(),
+                    ProjectName = item.ProjectName,
+                    Version = item.Version,
+                    ProcessName = item.ProcessName,
+                    ProcessState = item.UserName.IsNullOrWhiteSpace() ? PROCESSTYPE.ProcessNoStart : PROCESSTYPE.ProcessFinished,
+                    UserName = item.UserName,
+                    auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
+                    { LastModifyTime = item.LastModificationTime, StartTime =item. CreationTime } },
+                    ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
+                };
+                if (item.NodeInstanceStatus == NodeInstanceStatus.Current)
+                {
+                    dto.ProcessState = PROCESSTYPE.ProcessRunning;
+                }
+
+
+                if (!item.RoleId.IsNullOrWhiteSpace())
+                {
+                    var roleNames = string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name));
+                    dto.RoleName = roleNames;
+                }
+
+                //获取期望完成时间
+                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == item.WorkFlowInstanceId);
+                if (pricingTeam is not null)
+                {
+                    //dto.ProcessName
+                    if (item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.ElecEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                    {
+                        dto.RequiredTime = pricingTeam.StructEngineerTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.EMCTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                    {
+                        dto.RequiredTime = pricingTeam.QualityBenchTime;
+                    }
+                    if (item.ProcessIdentifier == "ElectronicUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceElecTime;
+                    }
+                    if (item.ProcessIdentifier == "StructureUnitPriceEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.ResourceStructTime;
+                    }
+                    if (item.ProcessIdentifier == "NRE_MoldFeeEntry")
+                    {
+                        dto.RequiredTime = pricingTeam.MouldWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                    {
+                        dto.RequiredTime = pricingTeam.EngineerWorkHourTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductManageTime;
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                    {
+                        dto.RequiredTime = pricingTeam.ProductCostInputTime;
+                    }
+                }
+
+                auditFlowOperateReocrdDto.Add(dto);
+            }
+
+
+            return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
         }
 
         /// <summary>
