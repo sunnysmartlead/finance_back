@@ -6050,13 +6050,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
         long numberOfQuotations, bool ntype = false)
     {
-
+        List<ProductDto> productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
+        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
         ExternalQuotationDto external =
-            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, null, null);
+            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
         if (ntype)
         {
-            List<ProductDto> productDtos = await GetProductList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 1);
-            List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 1);
+            
             external.ProductQuotationListDtos = productDtos.Select((a, index) =>
                new ProductQuotationListDto()
                {
