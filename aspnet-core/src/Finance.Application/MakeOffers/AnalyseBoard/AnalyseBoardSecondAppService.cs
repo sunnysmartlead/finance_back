@@ -1074,7 +1074,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         isOfferDto.ntype = 1;
         //进行报价
-        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
+        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 1);
 
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }

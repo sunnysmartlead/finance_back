@@ -2553,25 +2553,25 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         //应陈梦瑶要求增加可改变方案功能，先把老数据删除
         if (ntype == 0)
         {
-             _solutionQutation.HardDelete(p => p.version == version && p.AuditFlowId == AuditFlowId);
+             _solutionQutation.Delete(p => p.version == version && p.AuditFlowId == AuditFlowId);
         }
 
 
-         _nreQuotation.HardDelete(p =>
+         _nreQuotation.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _deviceQuotation.HardDelete(p =>
+         _deviceQuotation.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _sampleQuotation.HardDelete(p =>
+         _sampleQuotation.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _resourceUnitPriceOffers.HardDelete(p =>
+         _resourceUnitPriceOffers.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _resourcePooledAnalysisOffers.HardDelete(p =>
+         _resourcePooledAnalysisOffers.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _resourceProjectBoardSecondOffers.HardDelete(p =>
+         _resourceProjectBoardSecondOffers.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _actualUnitPriceOffer.HardDelete(p =>
+         _actualUnitPriceOffer.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
-         _dynamicUnitPriceOffers.HardDelete(p =>
+         _dynamicUnitPriceOffers.Delete(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
 
