@@ -770,8 +770,17 @@ namespace Finance.WorkFlows
                 || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
                 || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
                 || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
+
                 || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
                 || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+
+                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
+
+                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "QuotationApprovalForm")
+
+                || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
+                || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
+                ) ))
 
                             )
                         {
@@ -813,7 +822,8 @@ namespace Finance.WorkFlows
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
-                        || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分"
+                        || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
+                        || n.Name == "生成报价分析界面选择报价方案"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
