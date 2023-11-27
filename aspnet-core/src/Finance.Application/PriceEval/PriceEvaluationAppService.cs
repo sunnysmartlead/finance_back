@@ -857,6 +857,12 @@ namespace Finance.PriceEval
                 item.ProductTypeName = dictionaryDetail.DisplayName;
             }
 
+            //var node = await _nodeInstanceRepository
+            //    .FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+
+            //priceEvaluationDto.NodeInstanceId = node.Id;
+            //priceEvaluationDto.Opinion = priceEvaluation.Opinion;
+
             return priceEvaluationDto;
         }
 

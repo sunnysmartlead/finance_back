@@ -331,9 +331,6 @@ namespace Finance.Entering
             await ProcessAntiShaking("PostElectronicMaterialEntering", electronicDto);
             if (electronicDto.IsSubmit)
             {
-                //激活电子BOM单价审核
-                await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
-
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
                 //判断是否全部提交
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
@@ -345,6 +342,11 @@ namespace Finance.Entering
                         FinanceDictionaryDetailId = electronicDto.Opinion,
                         Comment = electronicDto.Comment,
                     });
+                }
+                else 
+                {
+                    //激活电子BOM单价审核
+                    await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
                 }
             }
             else
@@ -538,9 +540,6 @@ namespace Finance.Entering
             await ProcessAntiShaking("PostStructuralMemberEntering", structuralMemberEnteringModel);
             if (structuralMemberEnteringModel.IsSubmit)
             {
-                //激活结构BOM单价审核
-                await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
-
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
                 //判断有没有全部提交完
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
@@ -552,6 +551,11 @@ namespace Finance.Entering
                         FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
                         Comment = structuralMemberEnteringModel.Comment,
                     });
+                }
+                else
+                {
+                    //激活结构BOM单价审核
+                    await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
                 }
             }
             else

@@ -16,7 +16,7 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class PriceEvaluationStartInputResult : PriceEvaluationStartInput
     {
-       
+
 
         /// <summary>
         /// 上传的文件信息（只有Id和FileName有值）
@@ -47,6 +47,11 @@ namespace Finance.PriceEval.Dto
         ///// 审批评论
         ///// </summary>
         //public virtual string Comment { get; set; }
+
+        /// <summary>
+        /// 引用流程的ID（引用流程快速核价）
+        /// </summary>
+        public virtual long? QuickQuoteAuditFlowId { get; set; }
 
         /// <summary>
         /// 标题
@@ -393,7 +398,7 @@ namespace Finance.PriceEval.Dto
         /// 国家类型
         /// </summary>
         //[Required]
-        public virtual string CountryType { get; set;}
+        public virtual string CountryType { get; set; }
 
         /// <summary>
         /// 要求核价完成时间
