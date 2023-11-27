@@ -2653,7 +2653,7 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus ?? string.Empty,
                         UnitPrice = (decimal)(a.Key.DevicePrice ?? 0M),
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd) ) ,
+                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd / 100) ) ,
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
@@ -2666,7 +2666,7 @@ namespace Finance.NerPricing
                                                                                                   DeviceStatus = t.DeviceStatus,
                                                                                                   UnitPrice = t.UnitPrice,
                                                                                                   Number = t.Number,
-                                                                                                  Cost = t.Cost / 100,
+                                                                                                  Cost = t.Cost,
                                                                                                   DeviceStatusName = p != null ? p.DisplayName : ""
                                                                                               }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
