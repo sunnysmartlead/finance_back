@@ -1532,12 +1532,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             kgrev.value = (kgup) * gradient.GradientValue *
                           (1 - crm.AnnualRebateRequirements / 100) *
                           (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
-            kgSalesRevenue.Add(rev);
+            kgSalesRevenue.Add(kgrev);
             //客供佣金（千元）
             YearValue kgcom = new();
             kgcom.value = kgup * gradient.GradientValue *
                           (crm.CommissionRate / 100); //单价*数量*年度佣金比例
-            kgcommission.Add(com);
+            kgcommission.Add(kgcom);
             //客供销售毛利
             YearValue kgmar = new();
             kgmar.value = kgrev.value - kgsell.value - kgcom.value; //销售收入-销售成本-佣金
@@ -1845,12 +1845,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             kgrev.value = (kgup) * num.value *
                           (1 - crm.AnnualRebateRequirements / 100) *
                           (1 - crm.OneTimeDiscountRate / 100); //单价*数量*（1-年度返利要求）*（1-一次性折让率）
-            kgSalesRevenue.Add(rev);
+            kgSalesRevenue.Add(kgrev);
             //客供佣金（千元）
             YearValue kgcom = new();
             kgcom.value = kgup * num.value *
                           (crm.CommissionRate / 100); //单价*数量*年度佣金比例
-            kgcommission.Add(com);
+            kgcommission.Add(kgcom);
             //客供销售毛利
             YearValue kgmar = new();
             kgmar.value = kgrev.value - kgsell.value - kgcom.value; //销售收入-销售成本-佣金

@@ -87,6 +87,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// 报价方案组合
     /// </summary>
     private readonly IRepository<SolutionQuotation, long> _solutionQutation;
+    /// <summary>
+    /// 核价相关
+    /// </summary>
+    private readonly IRepository<PriceEvaluation, long> _priceEvaluation;
 
     /// <summary>
     /// 归档文件列表实体类
@@ -112,6 +116,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService,
         PriceEvaluationAppService priceEvaluationAppService,
         IUserAppService userAppService,
+        IRepository<PriceEvaluation, long> priceEvaluation,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
@@ -124,6 +129,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _resourceSchemeTable = resourceSchemeTable;
         _flowAppService = flowAppService;
         _fileCommonService = fileCommonService;
+        _priceEvaluation=priceEvaluation;
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
         _priceEvaluationAppService = priceEvaluationAppService;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
@@ -1509,8 +1515,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
         else
         {
-            List<RoleDto> PM = Roles.Items.Where(p => p.Name.Equals(Host.ProjectManager)|| p.Name.Equals(Host.FinanceTableAdmin)).ToList(); //项目经理
-            if (PM.Count is not 0)
+          var userid=  AbpSession.GetUserId();
+          var price=  await _priceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+         var ProjectManager= price.ProjectManager;//相关项目经理
+        var CreatorUserId= price.CreatorUserId;//相关业务员  
+        //只有相关人员和总经理才能看相关文档
+         
+          List<RoleDto> PM = Roles.Items.Where(p =>  p.Name.Equals(Host.FinanceTableAdmin)).ToList(); //项目经理
+            if (PM.Count is not 0||ProjectManager==userid)
             {
                 if (auditFlowId is not null)
                 {
@@ -1523,8 +1535,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 }
             }
 
-            List<RoleDto> salesDepartment = Roles.Items.Where(p => p.Name.Equals(Host.SalesMan)|| p.Name.Equals(Host.EvalTableAdmin)).ToList(); //营销部-业务员
-            if (salesDepartment.Count is not 0)
+            List<RoleDto> salesDepartment = Roles.Items.Where(p =>  p.Name.Equals(Host.EvalTableAdmin)).ToList(); //营销部-业务员
+            if (salesDepartment.Count is not 0 || CreatorUserId==userid)
             {
                 if (auditFlowId is not null)
                 {
@@ -1537,8 +1549,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                         await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表"));
                 }
             }
-            List<RoleDto> bjdDepartment = Roles.Items.Where(p => p.Name.Equals(Host.SalesMan)|| p.Name.Equals(Host.Bjdgdgly)).ToList(); //营销部-业务员
-            if (salesDepartment.Count is not 0)
+            List<RoleDto> bjdDepartment = Roles.Items.Where(p => p.Name.Equals(Host.Bjdgdgly)).ToList(); //营销部-业务员
+            if (bjdDepartment.Count is not 0 || CreatorUserId==userid)
             {
                 if (auditFlowId is not null)
                 {
