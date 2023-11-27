@@ -1322,7 +1322,6 @@ namespace Finance.PriceEval
 
             var customerTargetPrice = await _customerTargetPriceRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
 
-
             var sopYear = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId).MinAsync(p => p.Year);
             var data = await GetAllData(input);
 
@@ -1581,6 +1580,22 @@ namespace Finance.PriceEval
                             return item.InputCount;
                         }
                     }
+
+                    #region 快速核报价：数据复制
+
+                    //把导入的BOM信息读取进来
+                    var bomMaterial = await _bomMaterialRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId);
+
+                    var bomDto = ObjectMapper.Map<List<Material>>(bomMaterial);
+
+                    for (int i = 0; i < bomDto.Count; i++)
+                    {
+                        bomDto[i].Id = $"import{i}";
+                        bomDto[i].Year = year;
+                    }
+                    electronicAndStructureList.AddRange(bomDto);
+                    #endregion
 
                     return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
                         .SelectMany(p => p).ToList();
@@ -3514,7 +3529,7 @@ namespace Finance.PriceEval
         {
             //获取excel数据
             var stream = excle.OpenReadStream();
-            var rows = MiniExcel.Query<Material>(stream).ToList();
+            var rows = MiniExcel.Query<Material>(stream).Where(p => !p.SuperType.IsNullOrWhiteSpace()).ToList();
 
             //删除表中数据
             _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
