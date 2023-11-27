@@ -966,7 +966,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public async Task<ProjectManagementModel> GetReturnProjectManagementSingle(long auditFlowId, long solutionId)
+        public async Task<ProjectManagementModel> GetReturnProjectManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -3061,24 +3061,35 @@ namespace Finance.NerPricing
                 await _resourceLaboratoryFee.BulkInsertAsync(laboratoryExperimentFees);
             }
         }
-        ///// <summary>
-        ///// 手板件、差旅、其他快速核报价
-        ///// </summary>
-        ///// <param name="AuditFlowId"></param>
-        ///// <param name="QuoteAuditFlowId"></param>
-        ///// <param name="solutionIdAndQuoteSolutionIds"></param>
-        ///// <returns></returns>
-        //internal async Task FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
-        //{
-        //    foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
-        //    {
-        //        MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
-        //        List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
-        //        MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
-        //        await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
-        //    }
-        //}
+        /// <summary>
+        /// 手板件、差旅、其他快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostProjectManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                ProjectManagementModel projectManagementModel = await GetReturnProjectManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                //手板件
+                List<HandPieceCost> handPieceCosts = ObjectMapper.Map<List<HandPieceCost>>(projectManagementModel.HandPieceCost);
+                handPieceCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceHandPieceCost.BulkInsertAsync(handPieceCosts);
+
+                //其他费用
+                List<RestsCost> restsCosts = ObjectMapper.Map<List<RestsCost>>(projectManagementModel.RestsCost);
+                restsCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceRestsCost.BulkInsertAsync(restsCosts);
+
+                //差旅费
+                List<TravelExpense> travelExpenses = ObjectMapper.Map<List<TravelExpense>>(projectManagementModel.TravelExpense);
+                travelExpenses.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceTravelExpense.BulkInsertAsync(travelExpenses);
+            }
+        }
 
 
-    }
+        }
 }

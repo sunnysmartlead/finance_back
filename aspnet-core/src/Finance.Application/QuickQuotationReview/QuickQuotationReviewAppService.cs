@@ -76,6 +76,8 @@ namespace Finance.QuickQuotationReview
         /// <returns></returns>    
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInputQuoteFlow input)
         {
+            input.QuickQuoteAuditFlowId = input.QuoteAuditFlowId;
+
             //核价需求录入
             PriceEvaluationStartResult priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStart(input);
             dto dto = new dto
@@ -106,6 +108,12 @@ namespace Finance.QuickQuotationReview
             await _resourceEnteringAppService.FastPostElectronicMaterialEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //结构单价录入复制表
             await _resourceEnteringAppService.FastPostStructuralMemberEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+
+            //NREEMC实验费
+            await _nrePricingAppService.FastPostEmcItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //NRE手板件、其他、差旅费
+            await _nrePricingAppService.FastPostProjectManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+
             return priceEvaluationStartResult;
         }
         public class dto

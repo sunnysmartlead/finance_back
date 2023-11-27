@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Caching;
 using Abp.Runtime.Session;
 using Finance.Audit;
 using Finance.Authorization.Users;
@@ -80,6 +81,7 @@ namespace Finance.Entering
         internal readonly AuditFlowAppService _flowAppService;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<User, long> _userRepository;
+        private readonly ICacheManager _cacheManager;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -97,7 +99,8 @@ namespace Finance.Entering
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
             WorkflowInstanceAppService workflowInstanceAppService,
-            IRepository<User, long> user)
+            IRepository<User, long> user,
+            ICacheManager cacheManager)
         {
             _resourceModelCount = modelCount;
             _resourceModelCountYear = modelCountYear;
@@ -114,6 +117,7 @@ namespace Finance.Entering
             _configStructBomDifferent = structBomDifferent;
             _workflowInstanceAppService = workflowInstanceAppService;
             _userRepository = user;
+            _cacheManager = cacheManager;
         }
         #region 快速核报价
         /// <summary>
@@ -324,11 +328,9 @@ namespace Finance.Entering
         /// <returns></returns>
         public async Task PostElectronicMaterialEntering(SubmitElectronicDto electronicDto)
         {
+            await ProcessAntiShaking("PostElectronicMaterialEntering", electronicDto);
             if (electronicDto.IsSubmit)
             {
-                //激活电子BOM单价审核
-                await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
-
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
                 //判断是否全部提交
                 if (await this.GetElectronicIsAllEntering(electronicDto.AuditFlowId, electronicDto))
@@ -340,6 +342,11 @@ namespace Finance.Entering
                         FinanceDictionaryDetailId = electronicDto.Opinion,
                         Comment = electronicDto.Comment,
                     });
+                }
+                else 
+                {
+                    //激活电子BOM单价审核
+                    await _workflowInstanceAppService.ActivateElectronicBomEval(electronicDto.AuditFlowId);
                 }
             }
             else
@@ -530,11 +537,9 @@ namespace Finance.Entering
         /// <returns></returns>        
         public async Task PostStructuralMemberEntering(StructuralMemberEnteringModel structuralMemberEnteringModel)
         {
+            await ProcessAntiShaking("PostStructuralMemberEntering", structuralMemberEnteringModel);
             if (structuralMemberEnteringModel.IsSubmit)
             {
-                //激活结构BOM单价审核
-                await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
-
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
                 //判断有没有全部提交完
                 if (await this.GetStructuralIsAllEntering(structuralMemberEnteringModel.AuditFlowId, structuralMemberEnteringModel))
@@ -546,6 +551,11 @@ namespace Finance.Entering
                         FinanceDictionaryDetailId = structuralMemberEnteringModel.Opinion,
                         Comment = structuralMemberEnteringModel.Comment,
                     });
+                }
+                else
+                {
+                    //激活结构BOM单价审核
+                    await _workflowInstanceAppService.ActivateStructBomEval(structuralMemberEnteringModel.AuditFlowId);
                 }
             }
             else
@@ -999,6 +1009,29 @@ namespace Finance.Entering
             {
                 throw new FriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 提交防抖
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="object"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        public async Task ProcessAntiShaking(string name, object @object)
+        {
+            #region 流程防抖
+            var cacheJson = JsonConvert.SerializeObject(@object);
+            var code = cacheJson.GetHashCode().ToString();
+            var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
+            if (cache is null)
+            {
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, 0));
+            }
+            else
+            {
+                throw new FriendlyException($"您重复提交了数据！");
+            }
+            #endregion
         }
     }
 
