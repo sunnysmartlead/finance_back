@@ -76,6 +76,8 @@ namespace Finance.QuickQuotationReview
         /// <returns></returns>    
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInputQuoteFlow input)
         {
+            input.QuickQuoteAuditFlowId = input.QuoteAuditFlowId;
+
             //核价需求录入
             PriceEvaluationStartResult priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStart(input);
             dto dto = new dto

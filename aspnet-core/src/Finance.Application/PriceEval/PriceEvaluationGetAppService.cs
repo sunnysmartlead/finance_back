@@ -37,8 +37,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
+using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
 using Spire.Pdf.Exporting.XPS.Schema;
@@ -3513,7 +3515,7 @@ namespace Finance.PriceEval
         /// 快速核报价：获取BOM成本导入模板
         /// </summary>
         /// <returns></returns>
-        public virtual async Task<FileResult> GetBomImportTemplate2(GetBomCostInput input)
+        private async Task<FileResult> GetBomImportTemplate2(GetBomCostInput input)
         {
             var bom = await GetBomCost(input);
             var memoryStream = new MemoryStream();
@@ -3547,30 +3549,39 @@ namespace Finance.PriceEval
             await _bomMaterialRepository.BulkInsertAsync(entity);
         }
 
+
+        /// <summary>
+        /// 获取 bom成本上传的BOM成本
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<Material>> GetImportBomCost(long auditFlowId, long gradientId, long solutionId)
+        {
+            //把导入的BOM信息读取进来
+            var bomMaterial = await _bomMaterialRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId
+            && p.GradientId == gradientId && p.SolutionId == solutionId);
+
+            var bomDto = ObjectMapper.Map<List<Material>>(bomMaterial);
+
+            for (int i = 0; i < bomDto.Count; i++)
+            {
+                bomDto[i].Id = $"import{i}";
+            }
+            return bomDto;
+        }
+
         /// <summary>
         /// 快速核报价：导入核价表
         /// </summary>
         /// <returns></returns>
-        public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, long year, YearType upDown, [Required] IFormFile excle)
+        public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
-            //获取excel数据
             var stream = excle.OpenReadStream();
-            var rows = MiniExcel.Query<Material>(stream).ToList();
-
-            //删除表中数据
-            _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
-
-            //把excel数据插入表中
-            var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
-
-            foreach (var item in entity)
-            {
-                item.AuditFlowId = auditFlowId;
-                item.GradientId = gradientId;
-                item.SolutionId = solutionId;
-            }
-
-            await _bomMaterialRepository.BulkInsertAsync(entity);
+            //await filename.CopyToAsync(memoryStream);
+            //memoryStream.Position = 0;
+            // 创建工作簿
+            var workbook = new XSSFWorkbook(stream);
+            // 获取第一个工作表
+            var sheet = workbook.GetSheetAt(0).GetMaterials();
         }
 
         #endregion
