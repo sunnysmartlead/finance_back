@@ -1137,7 +1137,12 @@ namespace Finance.NerPricing
         [AbpAuthorize]
         public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)
         {
-
+            await ProcessAntiShaking("PostResourcesManagementSingle", price);
+            if(price?.ResourcesManagementModels?.MouldInventory?.Id==0)
+            {
+              int prop=await  _resourceMouldInventory.CountAsync(p=>p.AuditFlowId.Equals(price.AuditFlowId)&&p.SolutionId.Equals(price.ResourcesManagementModels.SolutionId)&&p.StructuralId.Equals(price.ResourcesManagementModels.MouldInventory.StructuralId));
+              if(prop!=0) throw new FriendlyException("此条数据已被其他人员录入,请刷新获取最新数据!");
+            }
             ResourcesManagementModel resourcesManagementModel = new();
             resourcesManagementModel = price.ResourcesManagementModels;
             MouldInventory MouldInventorys = ObjectMapper.Map<MouldInventory>(resourcesManagementModel.MouldInventory);
@@ -3034,7 +3039,7 @@ namespace Finance.NerPricing
             var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
             if (cache is null)
             {
-                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 0, 3));
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, 0));
             }
             else
             {
