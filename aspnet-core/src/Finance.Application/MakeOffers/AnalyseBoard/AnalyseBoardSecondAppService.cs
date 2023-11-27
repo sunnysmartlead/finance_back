@@ -801,7 +801,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         if (isOfferDto.IsFirst)
         {
-            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+             _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         }
         else
         {
@@ -817,7 +817,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostIsOfferSecondOnlySave(IsOfferSecondDto isOfferDto)
     {
         isOfferDto.IsFirst = true;
-        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
+        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         //进行报价
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
@@ -1073,8 +1073,18 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostQuotationFeedback(IsOfferSecondDto isOfferDto)
     {
         isOfferDto.ntype = 1;
+        SolutionQuotation solutionQuotation =
+            await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == isOfferDto.AuditFlowId && p.version ==  isOfferDto.version);
+        if (solutionQuotation is null)
+        {
+            throw new UserFriendlyException("请选择报价方案");
+        }
+
+        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+
+        isOfferDto.Solutions = solutionList;
         //进行报价
-        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
+        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 1);
 
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
@@ -1499,7 +1509,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
         else
         {
-            List<RoleDto> PM = Roles.Items.Where(p => p.Name.Equals(Host.ProjectManager)).ToList(); //项目经理
+            List<RoleDto> PM = Roles.Items.Where(p => p.Name.Equals(Host.ProjectManager)|| p.Name.Equals(Host.FinanceTableAdmin)).ToList(); //项目经理
             if (PM.Count is not 0)
             {
                 if (auditFlowId is not null)
@@ -1513,13 +1523,27 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 }
             }
 
-            List<RoleDto> salesDepartment = Roles.Items.Where(p => p.Name.Equals(Host.SalesMan)).ToList(); //营销部-业务员
+            List<RoleDto> salesDepartment = Roles.Items.Where(p => p.Name.Equals(Host.SalesMan)|| p.Name.Equals(Host.EvalTableAdmin)).ToList(); //营销部-业务员
             if (salesDepartment.Count is not 0)
             {
                 if (auditFlowId is not null)
                 {
                     downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p =>
                         p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审核表"));
+                }
+                else
+                {
+                    downloadListSaves =
+                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表"));
+                }
+            }
+            List<RoleDto> bjdDepartment = Roles.Items.Where(p => p.Name.Equals(Host.SalesMan)|| p.Name.Equals(Host.Bjdgdgly)).ToList(); //营销部-业务员
+            if (salesDepartment.Count is not 0)
+            {
+                if (auditFlowId is not null)
+                {
+                    downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p =>
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价单"));
                 }
                 else
                 {
