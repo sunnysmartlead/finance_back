@@ -3079,7 +3079,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 sampleQuotation.version = version;
                 sampleQuotation.ntype = ntype;
-                _sampleQuotation.InsertAsync(sampleQuotation);
+                await _sampleQuotation.InsertOrUpdateAsync(sampleQuotation);
             }
         }
     }
@@ -3192,14 +3192,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 nreQuotation.ntype = ntype;
                 nreQuotation.numberLine = numberLine;
                 nreQuotation.collinearAllocationRate = collinearAllocationRate;
-                _nreQuotation.InsertAsync(nreQuotation);
+                await _nreQuotation.InsertOrUpdateAsync(nreQuotation);
             }
 
             foreach (var deviceQuotation in deviceQuotations)
             {
                 deviceQuotation.version = version;
                 deviceQuotation.ntype = ntype;
-                _deviceQuotation.InsertAsync(deviceQuotation);
+                await _deviceQuotation.InsertOrUpdateAsync(deviceQuotation);
             }
         }
     }
