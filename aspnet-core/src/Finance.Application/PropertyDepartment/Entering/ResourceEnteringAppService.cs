@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Caching;
 using Abp.Runtime.Session;
 using Finance.Audit;
 using Finance.Authorization.Users;
@@ -80,6 +81,7 @@ namespace Finance.Entering
         internal readonly AuditFlowAppService _flowAppService;
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<User, long> _userRepository;
+        private readonly ICacheManager _cacheManager;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -97,7 +99,8 @@ namespace Finance.Entering
             IRepository<ElecBomDifferent, long> elecBomDifferent,
             IRepository<StructBomDifferent, long> structBomDifferent,
             WorkflowInstanceAppService workflowInstanceAppService,
-            IRepository<User, long> user)
+            IRepository<User, long> user,
+            ICacheManager cacheManager)
         {
             _resourceModelCount = modelCount;
             _resourceModelCountYear = modelCountYear;
@@ -114,6 +117,7 @@ namespace Finance.Entering
             _configStructBomDifferent = structBomDifferent;
             _workflowInstanceAppService = workflowInstanceAppService;
             _userRepository = user;
+            _cacheManager = cacheManager;
         }
         #region 快速核报价
         /// <summary>
@@ -324,6 +328,7 @@ namespace Finance.Entering
         /// <returns></returns>
         public async Task PostElectronicMaterialEntering(SubmitElectronicDto electronicDto)
         {
+            await ProcessAntiShaking("PostElectronicMaterialEntering", electronicDto);
             if (electronicDto.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
@@ -532,6 +537,7 @@ namespace Finance.Entering
         /// <returns></returns>        
         public async Task PostStructuralMemberEntering(StructuralMemberEnteringModel structuralMemberEnteringModel)
         {
+            await ProcessAntiShaking("PostStructuralMemberEntering", structuralMemberEnteringModel);
             if (structuralMemberEnteringModel.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
@@ -1003,6 +1009,29 @@ namespace Finance.Entering
             {
                 throw new FriendlyException(e.Message);
             }
+        }
+        /// <summary>
+        /// 提交防抖
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="object"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        public async Task ProcessAntiShaking(string name, object @object)
+        {
+            #region 流程防抖
+            var cacheJson = JsonConvert.SerializeObject(@object);
+            var code = cacheJson.GetHashCode().ToString();
+            var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
+            if (cache is null)
+            {
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, 0));
+            }
+            else
+            {
+                throw new FriendlyException($"您重复提交了数据！");
+            }
+            #endregion
         }
     }
 
