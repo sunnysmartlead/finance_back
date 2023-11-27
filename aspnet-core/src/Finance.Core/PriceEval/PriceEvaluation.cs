@@ -360,5 +360,10 @@ namespace Finance.PriceEval
         /// </summary>
         [Column(TypeName = "CLOB")]
         public virtual string BomIsCustomerSupplyJson { get; set;}
+
+        /// <summary>
+        /// 引用流程的ID（引用流程快速核价）
+        /// </summary>
+        public virtual long? QuickQuoteAuditFlowId { get; set; }
     }
 }
