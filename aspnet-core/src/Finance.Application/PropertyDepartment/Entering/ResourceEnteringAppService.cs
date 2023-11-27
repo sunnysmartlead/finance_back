@@ -329,6 +329,11 @@ namespace Finance.Entering
         public async Task PostElectronicMaterialEntering(SubmitElectronicDto electronicDto)
         {
             await ProcessAntiShaking("PostElectronicMaterialEntering", electronicDto);
+            if (electronicDto?.ElectronicDtoList[0].Id==0)
+            {
+              int prop= await _configEnteringElectronic.CountAsync(p => p.AuditFlowId.Equals(electronicDto.AuditFlowId) && p.SolutionId.Equals(electronicDto.ElectronicDtoList[0].Id)&&p.ElectronicId.Equals(electronicDto.ElectronicDtoList[0].ElectronicId));
+              if(prop!=0) throw new FriendlyException("此条数据已被其他人录入,请刷新获取最新值!!");
+            }
             if (electronicDto.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
@@ -538,6 +543,11 @@ namespace Finance.Entering
         public async Task PostStructuralMemberEntering(StructuralMemberEnteringModel structuralMemberEnteringModel)
         {
             await ProcessAntiShaking("PostStructuralMemberEntering", structuralMemberEnteringModel);
+            if (structuralMemberEnteringModel?.StructuralMaterialEntering[0].Id == 0)
+            {
+                int prop = await _configStructureElectronic.CountAsync(p => p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.SolutionId.Equals(structuralMemberEnteringModel.StructuralMaterialEntering[0].Id) && p.StructureId.Equals(structuralMemberEnteringModel.StructuralMaterialEntering[0].StructureId));
+                if (prop != 0) throw new FriendlyException("此条数据已被其他人录入,请刷新获取最新值!!");
+            }
             if (structuralMemberEnteringModel.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);
