@@ -124,17 +124,17 @@ namespace Finance.QuickQuotationReview
             //NRE模具费
             await _nrePricingAppService.FastPostResourcesManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //电子BOM录入复制表
-            await _electronicBomAppService.FastPostElectronicEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            List<BomIdAndQuoteBomId> electronicBomIdAndQuoteBomIds =  await _electronicBomAppService.FastPostElectronicEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //结构录入
-            await _structionBomAppService.FastPostStruralEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            List<BomIdAndQuoteBomId> structionBomIdAndQuoteBomIds = await _structionBomAppService.FastPostStruralEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //电子单价录入
-            await _resourceEnteringAppService.FastPostElectronicMaterialEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            await _resourceEnteringAppService.FastPostElectronicMaterialEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId, electronicBomIdAndQuoteBomIds);
             //结构单价录入
-            await _resourceEnteringAppService.FastPostStructuralMemberEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            await _resourceEnteringAppService.FastPostStructuralMemberEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId, structionBomIdAndQuoteBomIds);
             //电子单价录入复制表
-            await _resourceEnteringAppService.FastPostElectronicMaterialEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            await _resourceEnteringAppService.FastPostElectronicMaterialEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId, electronicBomIdAndQuoteBomIds);
             //结构单价录入复制表
-            await _resourceEnteringAppService.FastPostStructuralMemberEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            await _resourceEnteringAppService.FastPostStructuralMemberEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId, structionBomIdAndQuoteBomIds);
             //电子bak录入复制表
             await _electronicBomAppService.FastPostElectronicEnteringCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //电子BOM两次上传差异化表
