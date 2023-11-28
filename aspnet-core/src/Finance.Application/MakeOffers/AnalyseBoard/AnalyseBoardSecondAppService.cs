@@ -1045,6 +1045,59 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
+    /// 报价审批表保存
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task PostQuotationApproved(QuotationListSecondDto quotationListSecondDto)
+    {
+        _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
+    }
+
+    /// <summary>
+    /// 获取报价审批表列表
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task<List<AuditQuotationList>> GetQuotationList(long auditFlowId, int version)
+    {
+       return await _analysisBoardSecondMethod.GetQuotationList( auditFlowId, version);
+    }
+    
+    
+    /// <summary>
+    ///  根据id下载报价审批Excel    
+    /// </summary>
+    /// <param name="Id"></param>
+    /// <param name="FileName"></param>
+    /// <returns></returns>
+    public async Task<IActionResult> GetDownloadAuditQuotationExcel(long id)
+    {
+    
+        try
+        {
+            
+            return await _analysisBoardSecondMethod.GetQuotationExcel(id);
+        }
+        catch (Exception e)
+        {
+            throw new UserFriendlyException(e.Message);
+        }
+    }
+    /// <summary>
+    /// 根据id获取报价审批表
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task<QuotationListSecondDto> GetQuotation(long id)
+    {
+        return await _analysisBoardSecondMethod.GetQuotation(  id);
+    }
+    
+    /// <summary>
     /// 营销部报价保存/修改
     /// </summary>
     /// <param name="auditFlowId">必输</param>
