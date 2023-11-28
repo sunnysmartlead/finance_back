@@ -757,7 +757,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         long numberOfQuotations)
     {
         return await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlowId, solutionId,
-            numberOfQuotations, true);
+            numberOfQuotations);
     }
 
     /// <summary>
