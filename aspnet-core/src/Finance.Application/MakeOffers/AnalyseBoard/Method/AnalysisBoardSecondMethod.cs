@@ -6082,45 +6082,21 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
-        long numberOfQuotations, bool ntype = false)
+        long numberOfQuotations)
     {
         List<ProductDto> productDtos = new();
         List<QuotationNreDto> quotationNreDtos = new();
         try
         {
-            productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
-            quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
+            productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 0);//为了流测试成功，待明天改正
+            quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 0);//为了流测试成功，待明天改正
         }
         catch (Exception)
         {
             throw new FriendlyException("获取报价看板部分发生错误");
         }     
         ExternalQuotationDto external =
-            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
-        if (ntype)
-        {
-            
-            external.ProductQuotationListDtos = productDtos.Select((a, index) =>
-               new ProductQuotationListDto()
-               {
-                   SerialNumber = index + 1,
-                   ProductName = a.ProductName,
-                   Year = a.Year,
-                   TravelVolume = a.Motion,
-                   UnitPrice = decimal.Parse(a.UntilPrice)
-               }).ToList();
-            external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
-                    new NreQuotationListDto()
-                    {
-                        SerialNumber = index + 1,
-                        ProductName = a.Product,
-                        HandmadePartsFee = a.shouban,
-                        MyPropMoldCosterty = a.moju,
-                        CostOfToolingAndFixtures = a.gzyj,
-                        ExperimentalFees = a.sy,
-                        RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                    }).ToList();
-        }
+            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
