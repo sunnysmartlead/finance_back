@@ -27,7 +27,7 @@ namespace Finance.MakeOffers
         /// <summary>
         /// 手板件费
         /// </summary>
-        public virtual decimal HandmadePartsFee { get;}
+        public virtual decimal HandmadePartsFee { get; set; }
         /// <summary>
         /// 模具费
         /// </summary>

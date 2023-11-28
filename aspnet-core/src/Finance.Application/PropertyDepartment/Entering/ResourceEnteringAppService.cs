@@ -422,7 +422,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        internal async Task GetElectronicConfigurationState(long auditFlowId)
+        public async Task GetElectronicConfigurationState(long auditFlowId)
         {
             if (auditFlowId == 0) throw new FriendlyException("电子单价录入退回重置状态流程id不能为0");
             List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -634,7 +634,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        internal async Task GetStructuralConfigurationState(long auditFlowId)
+        public async Task GetStructuralConfigurationState(long auditFlowId)
         {
             if (auditFlowId == 0) throw new FriendlyException("结构件单价录入退回重置状态流程id不能为0");
             List<StructureElectronic> enteringElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
