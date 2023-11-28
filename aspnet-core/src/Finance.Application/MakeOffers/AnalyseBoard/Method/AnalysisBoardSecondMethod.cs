@@ -558,7 +558,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             xsmls.Add(ml);
             GrossMarginModel mll = new GrossMarginModel();
             mll.GrossMargin = gro;
-            mll.GrossMarginNumber = ml.GrossMarginNumber / zsr;
+            mll.GrossMarginNumber = (ml.GrossMarginNumber / zsr)*100;
             mlls.Add(mll);
         }
 
