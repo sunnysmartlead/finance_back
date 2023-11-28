@@ -862,6 +862,17 @@ namespace Finance.PriceEval
 
             async Task<List<OtherCostItem2>> GetData(int year, YearType upDown, decimal quantity)
             {
+                #region 快速核报价：上传
+
+                var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                 && p.Year == year && p.UpDown == upDown);
+                if (fuOtherCostItem2.Any())
+                {
+                    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                }
+
+                #endregion
+
                 //修改项
                 var getUpdateItemOtherCosts = await GetUpdateItemOtherCost(new GetUpdateItemInput
                 {
@@ -1453,6 +1464,16 @@ namespace Finance.PriceEval
 
                 async Task<List<Material>> GetData(int year, YearType upDown)
                 {
+                    #region 快速核报价：上传
+
+                    var fuBom = await _fu_BomRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == year && p.UpDown == upDown);
+                    if (fuBom.Any())
+                    {
+                        return ObjectMapper.Map<List<Material>>(fuBom);
+                    }
+
+                    #endregion
                     var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
                                                    join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
                                                    where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == productId && gmy.Year == year && gmy.UpDown == upDown
@@ -1884,6 +1905,7 @@ namespace Finance.PriceEval
             }
             else
             {
+
                 var entity = await GetData(input, gradient, solution.Productld, isChange);
 
 
@@ -1909,6 +1931,18 @@ namespace Finance.PriceEval
         }
         async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
+            #region 快速核报价：上传
+
+            var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (fuManufacturing.Any())
+            {
+                return ObjectMapper.Map<List<ManufacturingCost>>(fuManufacturing);
+            }
+
+            #endregion
+
+
             #region 获取组测
 
             var dto = await GetGroupTest(input.Year, input.UpDown, input, gradient, sProductld, isChange);
@@ -1971,9 +2005,6 @@ namespace Finance.PriceEval
 
             if (inputDto.Year == PriceEvalConsts.AllYear)
             {
-
-
-
                 var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == inputDto.GradientId);
                 var gradientValue = gradient.GradientValue.ToString();
 
@@ -2227,6 +2258,18 @@ namespace Finance.PriceEval
 
         async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
+            #region 快速核报价：上传
+
+            //筛选组测
+            var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == input.Year && p.UpDown == input.UpDown && p.CostType == CostType.GroupTest);
+            if (fuManufacturing.Any())
+            {
+                return ObjectMapper.Map<ManufacturingCost>(fuManufacturing);
+            }
+
+            #endregion
+
             if (isChange)
             {
                 //取得修改项
@@ -2569,6 +2612,18 @@ namespace Finance.PriceEval
 
             async Task<List<ProductionControlInfoListDto>> GetData(GetLogisticsCostInput inputDto, Solution solution, string gradientValue)
             {
+
+                #region 快速核报价：上传
+
+                var fuLogisticsCost = await _fu_LogisticsCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
+                 && p.Year == inputDto.Year.ToString() && p.UpDown == inputDto.UpDown);
+                if (fuLogisticsCost.Any())
+                {
+                    return ObjectMapper.Map<List<ProductionControlInfoListDto>>(fuLogisticsCost);
+                }
+
+                #endregion
+
                 var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
                                                join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
                                                where gm.AuditFlowId == inputDto.AuditFlowId && gm.GradientId == inputDto.GradientId && gm.ProductId == solution.Productld && gmy.Year == inputDto.Year && gmy.UpDown == inputDto.UpDown
@@ -2797,6 +2852,19 @@ namespace Finance.PriceEval
         private async Task<QualityCostListDto> GetQualityCostPrivate(GetOtherCostItemInput input, List<Material> electronicAndStructureList
          , decimal logisticsFee, decimal manufacturingCostSubtotal, bool isChange = true)
         {
+
+            #region 快速核报价：上传
+
+            var fuQualityCostListDto = await _fu_QualityCostListDtoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (fuQualityCostListDto is not null)
+            {
+                return ObjectMapper.Map<QualityCostListDto>(fuQualityCostListDto);
+            }
+
+            #endregion
+
+
             if (isChange)
             {
                 //取得修改项
