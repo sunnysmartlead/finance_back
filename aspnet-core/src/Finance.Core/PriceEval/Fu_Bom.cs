@@ -43,6 +43,11 @@ namespace Finance.PriceEval
         public virtual decimal Year { get; set; }
 
         /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 超级大种类
         /// </summary>
         public virtual string SuperType { get; set; }
@@ -185,6 +190,11 @@ namespace Finance.PriceEval
         public virtual int Tid { get; set; }
 
         /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
         /// 年份上下
         /// </summary>
         public virtual YearType UpDown { get; set; }
@@ -314,6 +324,16 @@ namespace Finance.PriceEval
         /// 方案表ID
         /// </summary>
         public long SolutionId { get; set; }
+
+        /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 本表的原Id
@@ -471,6 +491,16 @@ namespace Finance.PriceEval
         /// 方案表ID
         /// </summary>
         public long SolutionId { get; set; }
+
+        /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 本表的原Id

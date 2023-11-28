@@ -58,6 +58,7 @@ namespace Finance.Ext
                 {
                     Id = $"import{rowIndex}",
                     Year = year,
+                    UpDown = upDonw,
                     SuperType = row.Cells[1].ToString(),
                     CategoryName = row.Cells[2].ToString(),
                     TypeName = row.Cells[3].ToString(),
@@ -99,6 +100,7 @@ namespace Finance.Ext
                 var dto = new ManufacturingCost
                 {
                     Id = year,
+                    Year = year,
                     UpDown = upDonw,
                     CostItem = row.Cells[0].ToString(),
                     ManufacturingCostDirect = new ManufacturingCostDirect
@@ -157,6 +159,8 @@ namespace Finance.Ext
                 yield return new LossCost
                 {
                     Id = year,
+                    Year = year,
+                    UpDown = upDonw,
                     EditId = i.ToString(),
                     Name = nameRow.Cells[i].ToString(),
                     WastageCost = lossRow.Cells[i].ToString().ToDecimal(),
@@ -216,6 +220,8 @@ namespace Finance.Ext
             return new OtherCostItem
             {
                 Id = year,
+                Year = year,
+                UpDown = upDonw,
                 Fixture = row.Cells[7].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].ToString().ToDecimal(),
                 LogisticsFee = row.Cells[8].ToString().ToDecimal(),
                 ProductCategory = row.Cells[9].ToString(),
