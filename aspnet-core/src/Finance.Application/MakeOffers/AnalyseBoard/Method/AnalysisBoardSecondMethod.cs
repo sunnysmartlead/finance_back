@@ -5920,7 +5920,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.ProductQuotationListDtos =ObjectMapper.Map<List<ProductQuotationListDto>>(productDtos);
             externalQuotationDto.ProductQuotationListDtos.Select(p => {
                 ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
-                .FirstOrDefault(m=>m.ProductName.Equals(p.ProductName)&&m.Year.Equals(p.Year)&&m.TravelVolume.Equals(p.TravelVolume)&&m.UnitPrice.Equals(p.UnitPrice));
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.Year==p.Year&&m.TravelVolume==p.TravelVolume&&m.UnitPrice==p.UnitPrice);
                 if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
                 return p;
             }).ToList();
@@ -5930,7 +5930,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.NreQuotationListDtos.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
-                .FirstOrDefault(m=>m.ProductName.Equals(p.ProductName)&&m.TravelVolume.Equals(p.TravelVolume)&&m.HandmadePartsFee.Equals(p.HandmadePartsFee)&&m.MyPropMoldCosterty.Equals(p.MyPropMoldCosterty)&&m.CostOfToolingAndFixtures.Equals(p.CostOfToolingAndFixtures)&&m.ExperimentalFees.Equals(p.ExperimentalFees)&&m.RDExpenses.Equals(p.RDExpenses));
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.TravelVolume==p.TravelVolume&&m.HandmadePartsFee==p.HandmadePartsFee&&m.MyPropMoldCosterty==p.MyPropMoldCosterty&&m.CostOfToolingAndFixtures==p.CostOfToolingAndFixtures&&m.ExperimentalFees==p.ExperimentalFees&&m.RDExpenses==p.RDExpenses);
                 if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
                 return p;
             }).ToList();

@@ -209,6 +209,52 @@ namespace Finance.Ext
 
             return result;
         }
+
+        /// <summary>
+        /// 刷新指定实体的序列
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <typeparam name="TPrimaryKey"></typeparam>
+        /// <param name="repository"></param>
+        /// <returns></returns>
+        public static async Task RefreshSequence<TEntity, TPrimaryKey>(this IRepository<TEntity, TPrimaryKey> repository)
+       where TEntity : class, IEntity<TPrimaryKey>
+       where TPrimaryKey : struct, IEquatable<TPrimaryKey>
+        {
+            var dbContext = repository.GetDbContext();
+            var sqlModel = @"
+            DECLARE
+            vnumber NUMBER;
+            nnumber NUMBER;
+            BEGIN
+            SELECT ((SELECT max(""Id"") FROM ""{0}"") -
+            ""SQ_{0}"".nextval)
+            INTO vnumber
+            FROM dual;
+            IF vnumber > 0 THEN
+            EXECUTE IMMEDIATE 'ALTER SEQUENCE ""SQ_{0}"" INCREMENT BY ' ||
+            vnumber;
+            SELECT ""SQ_{0}"".nextval INTO nnumber FROM dual;
+            EXECUTE IMMEDIATE 'ALTER SEQUENCE ""SQ_{0}"" INCREMENT BY 1 cache 20';
+            END IF;
+            END;";
+            var list2 = $"{typeof(TEntity).Name}".Split(",").Select(p => p.Replace("\r\n", string.Empty)).ToList();
+
+            var list = list2.Select(p => p.Replace("SQ_", string.Empty)).Select(p => new { p, sql = string.Format(sqlModel, p) });
+            foreach (var item in list)
+            {
+                try
+                {
+                    // 执行SQL语句
+                    var result = await dbContext.Database.ExecuteSqlRawAsync(item.sql);
+                }
+                catch (Exception e)
+                {
+
+                }
+            }
+
+        }
     }
 
 

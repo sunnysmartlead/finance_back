@@ -176,11 +176,13 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task FastPostElectronicMaterialEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
+            await _configEnteringElectronicCopy.RefreshSequence();
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<EnteringElectronicCopy> enteringElectronicsCopy = await _configEnteringElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 enteringElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                enteringElectronicsCopy.Select(p => {
+                enteringElectronicsCopy.Select(p =>
+                {
                     BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBoms.FirstOrDefault(m => m.QuoteBomId.Equals(p.ElectronicId));
                     if (bomIdAndQuoteBomId is null) throw new FriendlyException("电子单价复制表复制数据时候未找到对应的ElectronicId");
                     p.ElectronicId = bomIdAndQuoteBomId.NewBomId;
@@ -199,6 +201,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task FastPostStructuralMemberEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
+            await _configStructureElectronicCopy.RefreshSequence();
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<StructureElectronicCopy> structureElectronicsCopy = await _configStructureElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
