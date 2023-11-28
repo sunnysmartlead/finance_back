@@ -1183,7 +1183,7 @@ namespace Finance.NerPricing
         /// 资源部模具费录入  退回重置状态
         /// </summary>
         /// <returns></returns>
-        internal async Task GetResourcesManagementConfigurationState(long auditFlowId)
+        public async Task GetResourcesManagementConfigurationState(long auditFlowId)
         {
             if (auditFlowId == 0) throw new FriendlyException("资源部模具费录入退回重置状态流程id不能为0");
             //await _resourceNreIsSubmit.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString()));
