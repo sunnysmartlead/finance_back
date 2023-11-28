@@ -5,12 +5,14 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
+using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
 using Finance.Audit.Dto;
+using Finance.Authorization.Roles;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
 using Finance.FinanceMaintain;
@@ -34,6 +36,7 @@ using Finance.WorkFlows.Dto;
 using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using NPOI.HPSF;
 using NPOI.HSSF.Util;
@@ -74,6 +77,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     private readonly FileCommonService _fileCommonService;
 
+    private readonly IRepository<Role> _roleRepository;
+
     private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
 
     /// <summary>
@@ -82,11 +87,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public readonly PriceEvaluationAppService _priceEvaluationAppService;
 
     private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
+    private readonly IRepository<UserRole, long> _userRoleRepository;
 
     /// <summary>
     /// 报价方案组合
     /// </summary>
     private readonly IRepository<SolutionQuotation, long> _solutionQutation;
+
     /// <summary>
     /// 核价相关
     /// </summary>
@@ -116,6 +123,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationGetAppService,
         PriceEvaluationAppService priceEvaluationAppService,
         IUserAppService userAppService,
+        IRepository<Role> roleRepository,
+        IRepository<UserRole, long> userRoleRepository,
         IRepository<PriceEvaluation, long> priceEvaluation,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<SolutionQuotation, long> solutionQutation,
@@ -128,12 +137,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _financeAuditQuotationList = financeAuditQuotationList;
         _resourceSchemeTable = resourceSchemeTable;
         _flowAppService = flowAppService;
+        _roleRepository = roleRepository;
         _fileCommonService = fileCommonService;
-        _priceEvaluation=priceEvaluation;
+        _priceEvaluation = priceEvaluation;
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
         _priceEvaluationAppService = priceEvaluationAppService;
         _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
         _solutionQutation = solutionQutation;
+        _userRoleRepository = userRoleRepository;
         _financeDownloadListSave = financeDownloadListSave;
         _nreQuotation = nreQuotation;
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
@@ -189,12 +200,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version,int ntype)
+    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version, int ntype)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
         {
-            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version,  ntype);
+            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
         }
         catch (Exception e)
         {
@@ -695,8 +706,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         }
+
         List<ProductDto> productDtos = new();
-        List<QuotationNreDto> quotationNreDtos=new();
+        List<QuotationNreDto> quotationNreDtos = new();
         try
         {
             productDtos = await GetProductList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 0);
@@ -705,7 +717,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         catch (Exception)
         {
             throw new FriendlyException("获取报价看板部分发生错误");
-        }     
+        }
+
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations,
             productDtos, quotationNreDtos);
     }
@@ -814,7 +827,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         if (isOfferDto.IsFirst)
         {
-             _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+            _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         }
         else
         {
@@ -996,7 +1009,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         try
         {
-            return await _analysisBoardSecondMethod.DownloadAuditQuotationList(auditFlowId, version, 0);
+            var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+            int ntype = isQuotation ? 1 : 0;
+            return await _analysisBoardSecondMethod.DownloadAuditQuotationList(auditFlowId, version, ntype);
         }
         catch (Exception e)
         {
@@ -1087,7 +1102,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         isOfferDto.ntype = 1;
         SolutionQuotation solutionQuotation =
-            await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == isOfferDto.AuditFlowId && p.version ==  isOfferDto.version);
+            await _solutionQutation.FirstOrDefaultAsync(p =>
+                p.AuditFlowId == isOfferDto.AuditFlowId && p.version == isOfferDto.version);
         if (solutionQuotation is null)
         {
             throw new UserFriendlyException("请选择报价方案");
@@ -1522,52 +1538,70 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
         else
         {
-          var userid=  AbpSession.GetUserId();
-          var price=  await _priceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-         var ProjectManager= price.ProjectManager;//相关项目经理
-        var CreatorUserId= price.CreatorUserId;//相关业务员  
-        //只有相关人员和总经理才能看相关文档
-         
-          List<RoleDto> PM = Roles.Items.Where(p =>  p.Name.Equals(Host.FinanceTableAdmin)).ToList(); //项目经理
-            if (PM.Count is not 0||ProjectManager==userid)
+            var userid = AbpSession.GetUserId();
+            var price = await _priceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            var ProjectManager = price.ProjectManager; //相关项目经理
+            var CreatorUserId = price.CreatorUserId; //相关业务员  
+            //只有相关人员和总经理才能看相关文档
+            var HJ = await _roleRepository.GetAllListAsync(p =>
+                p.Name == StaticRoleNames.Host.FinanceTableAdmin
+            );
+            var HJuserIds = await _userRoleRepository.GetAll().Where(p => HJ.Select(p => p.Id).Contains(p.RoleId))
+                .Select(p => p.UserId).ToListAsync();
+            //财务部-核价表归档管理员 
+            if (HJuserIds.Contains(userid) || ProjectManager == userid)
             {
                 if (auditFlowId is not null)
                 {
-                    downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p =>
-                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("核价表"));
+                    downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("核价表")));
                 }
                 else
                 {
-                    downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("核价表"));
+                    downloadListSaves.AddRange(
+                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("核价表")));
                 }
             }
 
-            List<RoleDto> salesDepartment = Roles.Items.Where(p =>  p.Name.Equals(Host.EvalTableAdmin)).ToList(); //营销部-业务员
-            if (salesDepartment.Count is not 0 || CreatorUserId==userid)
+            //只有相关人员和总经理才能看相关文档
+            var bj = await _roleRepository.GetAllListAsync(p =>
+                p.Name == StaticRoleNames.Host.EvalTableAdmin
+            );
+            var bjuserIds = await _userRoleRepository.GetAll().Where(p => bj.Select(p => p.Id).Contains(p.RoleId))
+                .Select(p => p.UserId).ToListAsync();
+            //只有相关人员和总经理才能看相关文档
+
+            //营销部-业务员
+            if (bjuserIds.Contains(userid) || CreatorUserId == userid)
             {
                 if (auditFlowId is not null)
                 {
-                    downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p =>
-                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审核表"));
+                    downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审批表")));
                 }
                 else
                 {
-                    downloadListSaves =
-                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表"));
+                    downloadListSaves.AddRange(
+                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表")));
                 }
             }
-            List<RoleDto> bjdDepartment = Roles.Items.Where(p => p.Name.Equals(Host.Bjdgdgly)).ToList(); //营销部-业务员
-            if (bjdDepartment.Count is not 0 || CreatorUserId==userid)
+
+            var bjd = await _roleRepository.GetAllListAsync(p =>
+                p.Name == StaticRoleNames.Host.Bjdgdgly
+            );
+            var bjduserIds = await _userRoleRepository.GetAll().Where(p => bjd.Select(p => p.Id).Contains(p.RoleId))
+                .Select(p => p.UserId).ToListAsync();
+            if (bjduserIds.Contains(userid) || CreatorUserId == userid)
             {
                 if (auditFlowId is not null)
                 {
-                    downloadListSaves = await _financeDownloadListSave.GetAllListAsync(p =>
-                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价单"));
+                    downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价单")));
                 }
                 else
                 {
-                    downloadListSaves =
-                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表"));
+                    downloadListSaves.AddRange(
+                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价单")));
                 }
             }
         }
@@ -1623,9 +1657,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     ///  <param name="version">0报价看板数据，1报价反馈数据</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version, int ntime,int type)
+    public async Task<List<ProductDto>> GetProductList(long auditFlowId, int version, int ntime, int type)
     {
-        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntime,type);
+        return await _analysisBoardSecondMethod.GetProductList(auditFlowId, version, ntime, type);
     }
 
     /// <summary>
@@ -1634,9 +1668,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version">报价方案版本</param>
     /// </summary>
     /// <returns></returns>
-    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version,int time ,int type)
+    public async Task<List<QuotationNreDto>> GetNREList(long auditFlowId, int version, int time, int type)
     {
-        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, time,type);
+        return await _analysisBoardSecondMethod.GetNREList(auditFlowId, version, time, type);
     }
 
     /// <summary>
