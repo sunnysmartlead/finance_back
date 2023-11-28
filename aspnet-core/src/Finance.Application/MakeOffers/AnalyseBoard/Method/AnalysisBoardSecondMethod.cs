@@ -5949,7 +5949,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.NreQuotationListDtos.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
-                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.TravelVolume==p.TravelVolume&&m.HandmadePartsFee==p.HandmadePartsFee&&m.MyPropMoldCosterty==p.MyPropMoldCosterty&&m.CostOfToolingAndFixtures==p.CostOfToolingAndFixtures&&m.ExperimentalFees==p.ExperimentalFees&&m.RDExpenses==p.RDExpenses);
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.HandmadePartsFee==p.HandmadePartsFee&&m.MyPropMoldCosterty==p.MyPropMoldCosterty&&m.CostOfToolingAndFixtures==p.CostOfToolingAndFixtures&&m.ExperimentalFees==p.ExperimentalFees&&m.RDExpenses==p.RDExpenses);
                 if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
                 return p;
             }).ToList();
