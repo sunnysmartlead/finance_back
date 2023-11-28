@@ -211,7 +211,17 @@ namespace Finance.Audit
 
 
             //项目经理控制的页面
-            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, 
+                FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine,
+                FinanceConsts.PriceEvaluationBoard };
+
+            //拥有能看归档的角色的用户
+            var role = await _roleRepository.GetAllListAsync(p =>
+                            p.Name == StaticRoleNames.Host.FinanceTableAdmin 
+                            || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+
 
             return list
 
@@ -261,6 +271,13 @@ namespace Finance.Audit
                 p => p.ProcessIdentifier != "QuoteApproval" || p.ProcessIdentifier != "QuoteFeedback" || p.ProcessIdentifier != "BidWinningConfirmation"
                 || p.IsReset
                 )
+
+                //归档，如果当前用户不是该流程的发起人、项目经理，或归档管理员，就过滤
+                .WhereIf(projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
+                && (!userIds.Contains(AbpSession.UserId.Value)),
+                
+                p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
+
 
                 .ToList();
         }

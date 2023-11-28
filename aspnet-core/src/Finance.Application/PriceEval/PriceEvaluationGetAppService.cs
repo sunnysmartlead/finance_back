@@ -3581,9 +3581,15 @@ namespace Finance.PriceEval
             var workbook = new XSSFWorkbook(stream);
 
             // 获取第一个工作表
-            var sheet = workbook.GetSheetAt(0).GetMaterials().ToList();
+            var materials = workbook.GetSheetAt(0).GetMaterials().ToList();
+            var manufacturingCosts = workbook.GetSheetAt(0).GetManufacturingCosts().ToList();
+            var lossCosts = workbook.GetSheetAt(0).GetLossCosts().ToList();
+            var otherCostItem2s = workbook.GetSheetAt(0).GetOtherCostItem2s().ToList();
+            var otherCostItems = workbook.GetSheetAt(0).GetOtherCostItems();
+            var qualityCostListDto = workbook.GetSheetAt(0).GetQualityCostListDto();
+            var logisticsCosts = workbook.GetSheetAt(0).GetLogisticsCosts();
 
-            
+
 
         }
 

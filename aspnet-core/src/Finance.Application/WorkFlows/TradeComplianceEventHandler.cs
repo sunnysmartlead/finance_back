@@ -153,16 +153,16 @@ namespace Finance.WorkFlows
                         }
 
                         //如果是自动生成相关的流转页面
-                        var autoFlows = new List<string> { "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
-                        if (autoFlows.Contains(eventData.Entity.NodeId))
-                        {
-                            await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
-                            {
-                                NodeInstanceId = eventData.Entity.Id,
-                                FinanceDictionaryDetailId = FinanceConsts.Done,
-                                Comment = "系统自动流转"
-                            });
-                        }
+                        //var autoFlows = new List<string> { "主流程_系统生成报价审批表报价单" };//"主流程_生成报价分析界面选择报价方案",
+                        //if (autoFlows.Contains(eventData.Entity.NodeId))
+                        //{
+                        //    await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                        //    {
+                        //        NodeInstanceId = eventData.Entity.Id,
+                        //        FinanceDictionaryDetailId = FinanceConsts.Done,
+                        //        Comment = "系统自动流转"
+                        //    });
+                        //}
 
                         //如果是流转到电子BOM退回页面的
                         if (eventData.Entity.NodeId == "主流程_上传电子BOM")
@@ -388,6 +388,11 @@ namespace Finance.WorkFlows
                             if (priceEvaluation != null)
                             {
                                 userIds.Add(priceEvaluation.ProjectManager);
+                                if (priceEvaluation.CreatorUserId.HasValue 
+                                    && priceEvaluation.CreatorUserId != priceEvaluation.ProjectManager)
+                                {
+                                    userIds.Add(priceEvaluation.CreatorUserId.Value);
+                                }
                             }
                             userIds = userIds.Distinct().ToList();
                             foreach (var userId in userIds)
