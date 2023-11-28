@@ -98,11 +98,6 @@ namespace Finance.WorkFlows
             _roleRepository = roleRepository;
         }
 
-
-
-
-
-
         /// <summary>
         /// 贸易合规等节点被激活时触发
         /// </summary>
