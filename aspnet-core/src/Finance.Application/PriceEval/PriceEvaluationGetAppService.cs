@@ -3576,12 +3576,15 @@ namespace Finance.PriceEval
         public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
             var stream = excle.OpenReadStream();
-            //await filename.CopyToAsync(memoryStream);
-            //memoryStream.Position = 0;
+
             // 创建工作簿
             var workbook = new XSSFWorkbook(stream);
+
             // 获取第一个工作表
-            var sheet = workbook.GetSheetAt(0).GetMaterials();
+            var sheet = workbook.GetSheetAt(0).GetMaterials().ToList();
+
+            
+
         }
 
         #endregion

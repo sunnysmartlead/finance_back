@@ -36,6 +36,10 @@ namespace Finance.MakeOffers.AnalyseBoard.Method
             configuration.CreateMap<GradientGrossCalculate, GradientGrossMarginCalculateModel>();
             configuration.CreateMap<GradientGrossMarginCalculateModel, GradientGrossCalculate>();
 
+            configuration.CreateMap<ProductDto, ProductQuotationListDto>();
+
+            configuration.CreateMap<QuotationNreDto, NreQuotationListDto>();
+
         }
     }
 }

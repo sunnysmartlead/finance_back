@@ -126,15 +126,22 @@ namespace Finance.Entering
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBoms"></param>
         /// <returns></returns>
-        internal async Task FastPostElectronicMaterialEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task FastPostElectronicMaterialEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<EnteringElectronic> enteringElectronics = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 enteringElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                enteringElectronics.Select(p => {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBoms.FirstOrDefault(m => m.QuoteBomId.Equals(p.ElectronicId));
+                    if(bomIdAndQuoteBomId is null) throw new FriendlyException("电子单价录入复制数据时候未找到对应的ElectronicId");
+                    p.ElectronicId = bomIdAndQuoteBomId.NewBomId;
+                    return p;
+                }).ToList();
                 await _configEnteringElectronic.BulkInsertAsync(enteringElectronics);
-            }
+            }           
         }
         /// <summary>
         /// 结构单价录入快速核报价
@@ -142,13 +149,20 @@ namespace Finance.Entering
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBoms"></param>
         /// <returns></returns>
-        internal async Task FastPostStructuralMemberEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task FastPostStructuralMemberEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<StructureElectronic> structureElectronics = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 structureElectronics.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                structureElectronics.Select(p => {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBoms.FirstOrDefault(m => m.QuoteBomId.Equals(p.StructureId));
+                    if (bomIdAndQuoteBomId is null) throw new FriendlyException("结构单价录入复制数据时候未找到对应的StructureId");
+                    p.StructureId = bomIdAndQuoteBomId.NewBomId;
+                    return p;
+                }).ToList();
                 await _configStructureElectronic.BulkInsertAsync(structureElectronics);
             }
         }
@@ -158,13 +172,22 @@ namespace Finance.Entering
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBoms"></param>
         /// <returns></returns>
-        internal async Task FastPostElectronicMaterialEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task FastPostElectronicMaterialEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
+            await _configEnteringElectronicCopy.RefreshSequence();
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<EnteringElectronicCopy> enteringElectronicsCopy = await _configEnteringElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 enteringElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                enteringElectronicsCopy.Select(p =>
+                {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBoms.FirstOrDefault(m => m.QuoteBomId.Equals(p.ElectronicId));
+                    if (bomIdAndQuoteBomId is null) throw new FriendlyException("电子单价复制表复制数据时候未找到对应的ElectronicId");
+                    p.ElectronicId = bomIdAndQuoteBomId.NewBomId;
+                    return p;
+                }).ToList();
                 await _configEnteringElectronicCopy.BulkInsertAsync(enteringElectronicsCopy);
             }
         }
@@ -174,13 +197,21 @@ namespace Finance.Entering
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBoms"></param>
         /// <returns></returns>
-        internal async Task FastPostStructuralMemberEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task FastPostStructuralMemberEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBoms)
         {
+            await _configStructureElectronicCopy.RefreshSequence();
             foreach (var item in solutionIdAndQuoteSolutionIds)
             {
                 List<StructureElectronicCopy> structureElectronicsCopy = await _configStructureElectronicCopy.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
                 structureElectronicsCopy.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                structureElectronicsCopy.Select(p => {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBoms.FirstOrDefault(m => m.QuoteBomId.Equals(p.StructureId));
+                    if (bomIdAndQuoteBomId is null) throw new FriendlyException("结构单价复制表复制数据时候未找到对应的StructureId");
+                    p.StructureId = bomIdAndQuoteBomId.NewBomId;
+                    return p;
+                }).ToList();
                 await _configStructureElectronicCopy.BulkInsertAsync(structureElectronicsCopy);
             }
         }
@@ -329,6 +360,11 @@ namespace Finance.Entering
         public async Task PostElectronicMaterialEntering(SubmitElectronicDto electronicDto)
         {
             await ProcessAntiShaking("PostElectronicMaterialEntering", electronicDto);
+            if (electronicDto?.ElectronicDtoList[0].Id==0)
+            {
+              int prop= await _configEnteringElectronic.CountAsync(p => p.AuditFlowId.Equals(electronicDto.AuditFlowId) && p.SolutionId.Equals(electronicDto.ElectronicDtoList[0].Id)&&p.ElectronicId.Equals(electronicDto.ElectronicDtoList[0].ElectronicId));
+              if(prop!=0) throw new FriendlyException("此条数据已被其他人录入,请刷新获取最新值!!");
+            }
             if (electronicDto.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitElectronicMaterialEntering(electronicDto);
@@ -538,6 +574,11 @@ namespace Finance.Entering
         public async Task PostStructuralMemberEntering(StructuralMemberEnteringModel structuralMemberEnteringModel)
         {
             await ProcessAntiShaking("PostStructuralMemberEntering", structuralMemberEnteringModel);
+            if (structuralMemberEnteringModel?.StructuralMaterialEntering[0].Id == 0)
+            {
+                int prop = await _configStructureElectronic.CountAsync(p => p.AuditFlowId.Equals(structuralMemberEnteringModel.AuditFlowId) && p.SolutionId.Equals(structuralMemberEnteringModel.StructuralMaterialEntering[0].Id) && p.StructureId.Equals(structuralMemberEnteringModel.StructuralMaterialEntering[0].StructureId));
+                if (prop != 0) throw new FriendlyException("此条数据已被其他人录入,请刷新获取最新值!!");
+            }
             if (structuralMemberEnteringModel.IsSubmit)
             {
                 await _resourceElectronicStructuralMethod.SubmitStructuralMemberEntering(structuralMemberEnteringModel);

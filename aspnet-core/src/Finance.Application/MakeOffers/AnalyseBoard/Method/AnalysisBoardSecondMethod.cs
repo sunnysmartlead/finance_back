@@ -5912,14 +5912,29 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<ProductExternalQuotationMx> externalQuotationMxs =
                 await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             List<NreQuotationList> nreQuotationLists =
-                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));        
+
+
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos =
-                ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
+            externalQuotationDto.ProductQuotationListDtos =ObjectMapper.Map<List<ProductQuotationListDto>>(productDtos);
+            externalQuotationDto.ProductQuotationListDtos.Select(p => {
+                ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.Year==p.Year&&m.TravelVolume==p.TravelVolume&&m.UnitPrice==p.UnitPrice);
+                if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
+                return p;
+            }).ToList();
+
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos =
-                ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
+            externalQuotationDto.NreQuotationListDtos =ObjectMapper.Map<List<NreQuotationListDto>>(quotationNreDtos);
+            externalQuotationDto.NreQuotationListDtos.Select(p =>
+            {
+                NreQuotationList nreQuotationList = nreQuotationLists
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.TravelVolume==p.TravelVolume&&m.HandmadePartsFee==p.HandmadePartsFee&&m.MyPropMoldCosterty==p.MyPropMoldCosterty&&m.CostOfToolingAndFixtures==p.CostOfToolingAndFixtures&&m.ExperimentalFees==p.ExperimentalFees&&m.RDExpenses==p.RDExpenses);
+                if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
+                return p;
+            }).ToList();
+
         }
         else
         {
@@ -6050,8 +6065,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
         long numberOfQuotations, bool ntype = false)
     {
-        List<ProductDto> productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
-        List<QuotationNreDto> quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
+        List<ProductDto> productDtos = new();
+        List<QuotationNreDto> quotationNreDtos = new();
+        try
+        {
+            productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
+            quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 1);//为了流测试成功，待明天改正
+        }
+        catch (Exception)
+        {
+            throw new FriendlyException("获取报价看板部分发生错误");
+        }     
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
         if (ntype)
