@@ -5921,7 +5921,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.ProductQuotationListDtos.Select(p => {
                 ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
                 .FirstOrDefault(m=>m.ProductName.Equals(p.ProductName)&&m.Year.Equals(p.Year)&&m.TravelVolume.Equals(p.TravelVolume)&&m.UnitPrice.Equals(p.UnitPrice));
-                if (externalQuotationMxs is not null) p.Remark = productExternalQuotationMx.Remark;
+                if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
                 return p;
             }).ToList();
 
