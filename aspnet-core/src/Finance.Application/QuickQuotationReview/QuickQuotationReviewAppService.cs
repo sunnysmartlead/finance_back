@@ -94,15 +94,15 @@ namespace Finance.QuickQuotationReview
 
             //核价需求录入
             PriceEvaluationStartResult priceEvaluationStartResult = new();
-            if(input.Opinion.Equals(FinanceConsts.Save))
+            if(input.IsSubmit)
             {
-                PriceEvaluationStartSaveInput priceEvaluationStartSaveInpu = ObjectMapper.Map<PriceEvaluationStartSaveInput>(input);
-                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStartSave(priceEvaluationStartSaveInpu);
-                //return priceEvaluationStartResult;
+                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStart(input);
             }
             else
             {
-                priceEvaluationStartResult=await _priceEvaluationAppService.PriceEvaluationStart(input);
+                PriceEvaluationStartSaveInput priceEvaluationStartSaveInpu = ObjectMapper.Map<PriceEvaluationStartSaveInput>(input);
+                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStartSave(priceEvaluationStartSaveInpu);
+                return priceEvaluationStartResult;              
             }                
             dto dto = new dto
             {
