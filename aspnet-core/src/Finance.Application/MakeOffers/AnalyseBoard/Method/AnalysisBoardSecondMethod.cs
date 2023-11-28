@@ -5912,14 +5912,29 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<ProductExternalQuotationMx> externalQuotationMxs =
                 await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             List<NreQuotationList> nreQuotationLists =
-                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));        
+
+
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos =
-                ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
+            externalQuotationDto.ProductQuotationListDtos =ObjectMapper.Map<List<ProductQuotationListDto>>(productDtos);
+            externalQuotationDto.ProductQuotationListDtos.Select(p => {
+                ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
+                .FirstOrDefault(m=>m.ProductName.Equals(p.ProductName)&&m.Year.Equals(p.Year)&&m.TravelVolume.Equals(p.TravelVolume)&&m.UnitPrice.Equals(p.UnitPrice));
+                if (externalQuotationMxs is not null) p.Remark = productExternalQuotationMx.Remark;
+                return p;
+            }).ToList();
+
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos =
-                ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
+            externalQuotationDto.NreQuotationListDtos =ObjectMapper.Map<List<NreQuotationListDto>>(quotationNreDtos);
+            externalQuotationDto.NreQuotationListDtos.Select(p =>
+            {
+                NreQuotationList nreQuotationList = nreQuotationLists
+                .FirstOrDefault(m=>m.ProductName.Equals(p.ProductName)&&m.TravelVolume.Equals(p.TravelVolume)&&m.HandmadePartsFee.Equals(p.HandmadePartsFee)&&m.MyPropMoldCosterty.Equals(p.MyPropMoldCosterty)&&m.CostOfToolingAndFixtures.Equals(p.CostOfToolingAndFixtures)&&m.ExperimentalFees.Equals(p.ExperimentalFees)&&m.RDExpenses.Equals(p.RDExpenses));
+                if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
+                return p;
+            }).ToList();
+
         }
         else
         {
