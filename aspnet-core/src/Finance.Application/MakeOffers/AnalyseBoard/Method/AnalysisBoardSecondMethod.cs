@@ -5917,7 +5917,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos =ObjectMapper.Map<List<ProductQuotationListDto>>(productDtos);
+            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+               new ProductQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.ProductName,
+                   Year = a.Year,
+                   TravelVolume = a.Motion,
+                   UnitPrice = decimal.Parse(a.UntilPrice)
+               }).ToList();
+
             externalQuotationDto.ProductQuotationListDtos.Select(p => {
                 ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
                 .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.Year==p.Year&&m.TravelVolume==p.TravelVolume&&m.UnitPrice==p.UnitPrice);
@@ -5926,7 +5935,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
 
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos =ObjectMapper.Map<List<NreQuotationListDto>>(quotationNreDtos);
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+               new NreQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.Product,
+                   HandmadePartsFee = a.shouban,
+                   MyPropMoldCosterty = a.moju,
+                   CostOfToolingAndFixtures = a.gzyj,
+                   ExperimentalFees = a.sy,
+                   RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+               }).ToList();
             externalQuotationDto.NreQuotationListDtos.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
