@@ -3600,8 +3600,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
-            try
-            {
+            auditFlowId = 196;
+            gradientId = 285;
+            solutionId = 236;
+            //try
+            //{
                 //读取方案Id
                 var solution = await _solutionRepository.GetAsync(solutionId);
 
@@ -3678,11 +3681,11 @@ namespace Finance.PriceEval
                     var logisticsCostsEntity = ObjectMapper.Map<List<Fu_LogisticsCost>>(logisticsCosts);
                     await _fu_LogisticsCostRepository.BulkInsertAsync(logisticsCostsEntity);
                 }
-            }
-            catch (Exception e)
-            {
-                throw new FriendlyException($"核价表读取错误：{e.Message}");
-            }
+            //}
+            //catch (Exception e)
+            //{
+            //    throw new FriendlyException($"核价表读取错误：{e.Message}");
+            //}
 
         }
 

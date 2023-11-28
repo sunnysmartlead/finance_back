@@ -363,8 +363,12 @@ namespace Finance
 
             //快速核报价_核价看板：直接上传
             configuration.CreateMap<Fu_Bom, Material>()
-                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
-                .ReverseMap();
+                
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid));
+
+            configuration.CreateMap<Material, Fu_Bom>()
+                .ForMember(p => p.Id, p => p.Ignore())
+                .ForMember(p => p.Tid, p => p.MapFrom(o => o.Id));
 
             configuration.CreateMap<Fu_ManufacturingCost, ManufacturingCost>()
                 .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
@@ -377,7 +381,7 @@ namespace Finance
                     LineChangeCost = o.DLineChangeCost,
                     ManufacturingExpenses = o.DManufacturingExpenses,
                     Subtotal = o.DSubtotal,
-                     
+
                 }))
                 .ForMember(p => p.ManufacturingCostIndirect, p => p.MapFrom(o => new ManufacturingCostIndirect
                 {
