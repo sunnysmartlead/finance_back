@@ -376,5 +376,10 @@ namespace Finance.PriceEval.Dto
         /// 核价原因
         /// </summary>
         public virtual string Reason { get; set; }
+
+        /// <summary>
+        /// 引用流程的ID（引用流程快速核价）
+        /// </summary>
+        public virtual long? QuickQuoteAuditFlowId { get; set; }
     }
 }
