@@ -59,7 +59,7 @@ namespace Finance.TradeCompliance
                 }
                 else
                 {
-                    if (input.Country == "其他国家")
+                    if (input.Id == 149)
                     {
                         entity.NationalType = input.NationalType;
                         entity.Rate = input.Rate;
