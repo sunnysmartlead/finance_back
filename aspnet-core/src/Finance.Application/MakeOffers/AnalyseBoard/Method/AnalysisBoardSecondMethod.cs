@@ -3855,7 +3855,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             Sop = Sop
         };
         */
-        var value = getApp(auditFlowId, version, ntype);
+        var value =await getApp(auditFlowId, version, ntype);
+        /*var downList =
+            await _financeAuditQuotationList.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
+        var down = downList.OrderByDescending(p => p.ntype).FirstOrDefault();
+        ;
+        var value=    JsonConvert.DeserializeObject<ExcelApprovalDto>(down.AuditQuotationListJson);*/
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
         var pricetype = priceEvaluationStartInputResult.PriceEvalType;
@@ -4295,47 +4300,48 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         var Au = await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
             p.Id == id);
-     var AuditFlowId=   Au.AuditFlowId;
-     var value = JsonConvert.DeserializeObject<ExcelApprovalDto>(Au.ExcelQuotationListJson);
-     var priceEvaluationStartInputResult =
-         await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
-     try
-     {
-         using (var memoryStream = new MemoryStream())
-         {
-             //判断是否是仅含样品
-             var pricetype = priceEvaluationStartInputResult.PriceEvalType;
-             if ("PriceEvalType_Sample".Equals(pricetype))
-             {
-                 MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—仅含样品.xlsx", value);
-                 return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-                 {
-                     FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
-                 };
-             }
-             else if (priceEvaluationStartInputResult.IsHasSample == true)
-             {
-                 MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—含样品.xlsx", value);
-                 return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-                 {
-                     FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
-                 };
-             }
-             else
-             {
-                 MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—不含样品.xlsx", value);
-                 return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-                 {
-                     FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
-                 };
-             }
-         }
-     }
-     catch (Exception e)
-     {
-         throw new FriendlyException(e.Message);
-     }
+        var AuditFlowId = Au.AuditFlowId;
+        var value = JsonConvert.DeserializeObject<ExcelApprovalDto>(Au.AuditQuotationListJson);
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        try
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                //判断是否是仅含样品
+                var pricetype = priceEvaluationStartInputResult.PriceEvalType;
+                if ("PriceEvalType_Sample".Equals(pricetype))
+                {
+                    MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—仅含样品.xlsx", value);
+                    return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+                    {
+                        FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+                    };
+                }
+                else if (priceEvaluationStartInputResult.IsHasSample == true)
+                {
+                    MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—含样品.xlsx", value);
+                    return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+                    {
+                        FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+                    };
+                }
+                else
+                {
+                    MiniExcel.SaveAsByTemplate(memoryStream, "wwwroot/Excel/报价审批表模板—不含样品.xlsx", value);
+                    return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
+                    {
+                        FileDownloadName = "报价审批表" + DateTime.Now.ToString("yyyyMMddHHssmm") + ".xlsx"
+                    };
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw new FriendlyException(e.Message);
+        }
     }
+
     /// <summary>
     /// 下载成本信息表二开
     /// </summary>
@@ -5918,13 +5924,13 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return pp;
     }
 
-    public async Task PostQuotationApproved(QuotationListSecondDto quotationListSecondDto)
+    public async Task PostQuotationApproved(ExcelApprovalDto quotationListSecondDto)
     {
         var auditFlowId = quotationListSecondDto.AuditFlowId;
         var version = quotationListSecondDto.version;
         var isQuotation = await getQuotation(auditFlowId, version);
         int type = isQuotation ? 1 : 0;
-      var excel=  await getAppExcel(auditFlowId, version,type);
+        var excel = await getAppExcel(auditFlowId, version, type);
         var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version);
         var ntype = dowm.Max(p => p.ntype);
@@ -5936,7 +5942,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             AuditFlowId = auditFlowId,
             ntype = ntype + 1,
             version = version,
-            ExcelQuotationListJson = excelcontent,
             AuditQuotationListJson = content
         });
     }
@@ -5952,16 +5957,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return list;
     }
+
     /// <summary>
     /// 根据获取审批
     /// </summary>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetQuotation(long id)
+    public async Task<ExcelApprovalDto> GetQuotation(long id)
     {
         var Au = await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
             p.Id == id);
 
-        return JsonConvert.DeserializeObject<QuotationListSecondDto>(Au.AuditQuotationListJson);
+        return JsonConvert.DeserializeObject<ExcelApprovalDto>(Au.AuditQuotationListJson);
     }
 
     /// <summary>
@@ -6433,7 +6439,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         ProductName = solution.Product,
                         Motion = gradient.GradientValue,
                         Year = key,
-                        UntilPrice = (UntilPrice * (1 -( dto.AnnualDeclineRate / 100))).ToString()
+                        UntilPrice = (UntilPrice * (1 - (dto.AnnualDeclineRate / 100))).ToString()
                     });
                 }
             }
@@ -6865,14 +6871,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         };
         return value;
     }
-    
-    
-    
-    
-    
-    
-    
-     public async Task<ExcelApprovalDto> getAppExcel(long auditFlowId, int version, int ntype)
+
+
+    public async Task<ExcelApprovalDto> getAppExcel(long auditFlowId, int version, int ntype)
     {
         var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
@@ -7238,5 +7239,4 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         };
         return value;
     }
-    
 }

@@ -6,6 +6,16 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 public class ExcelApprovalDto
 {
     /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
+
+    /// <summary>
+    /// 流程号Id
+    /// </summary> 
+    public long AuditFlowId { get; set; }
+
+    /// <summary>
     /// 日期
     /// </summary>
     public string Date { get; set; }
@@ -50,12 +60,12 @@ public class ExcelApprovalDto
     /// </summary>
     public string ForSale { get; set; }
 
-   
-    
+
     /// <summary>
     /// 币种
     /// </summary>
     public string bz { get; set; }
+
     /// <summary>
     /// 贸易方式
     /// </summary>
@@ -75,14 +85,16 @@ public class ExcelApprovalDto
     /// (项目名称
     /// </summary>
     public string ProjectName { get; set; }
- /// <summary>
+
+    /// <summary>
     /// (NRE信息
     /// </summary>
     public List<NreExcel> nres { get; set; }
+
     /// <summary>
     /// (本次报价增加客供料毛利率
     /// </summary>
-    public  List<PartsSecondModel> componenSocondModels { get; set; }
+    public List<PartsSecondModel> componenSocondModels { get; set; }
 
     /// <summary>
     /// (内部核价
@@ -102,10 +114,10 @@ public class ExcelApprovalDto
     /// <summary>
     /// (报价策略
     /// </summary>
-    public  List<BiddingStrategySecondModel> BiddingStrategySecondModels { get; set; }
+    public List<BiddingStrategySecondModel> BiddingStrategySecondModels { get; set; }
 
     /// <summary>
     /// 走量
     /// </summary>
-    public  List<SopSecondModel> Sop { get; set; }
+    public List<SopSecondModel> Sop { get; set; }
 }
