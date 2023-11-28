@@ -706,21 +706,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         }
-
-        List<ProductDto> productDtos = new();
-        List<QuotationNreDto> quotationNreDtos = new();
-        try
-        {
-            productDtos = await GetProductList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 0);
-            quotationNreDtos = await GetNREList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 0);
-        }
-        catch (Exception)
-        {
-            throw new FriendlyException("获取报价看板部分发生错误");
-        }
-
-        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations,
-            productDtos, quotationNreDtos);
+       
+        return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
     }
 
     /// <summary>
@@ -770,7 +757,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         long numberOfQuotations)
     {
         return await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlowId, solutionId,
-            numberOfQuotations, true);
+            numberOfQuotations);
     }
 
     /// <summary>

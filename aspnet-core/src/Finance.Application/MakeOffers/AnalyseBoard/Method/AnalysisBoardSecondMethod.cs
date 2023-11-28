@@ -5891,8 +5891,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     internal async Task<List<long>> GetExternalQuotationNumberOfQuotations(long auditFlowId, long solutionId)
     {
         List<ExternalQuotation> externalQuotations =
-            await _externalQuotation.GetAllListAsync(p =>
-                p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
         List<long> prop = externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
         long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsSubmit);
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
@@ -5918,8 +5917,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
-        long numberOfQuotations, List<ProductDto> productDtos, List<QuotationNreDto> quotationNreDtos)
-    {
+        long numberOfQuotations)
+    {     
         ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -5939,7 +5938,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new FriendlyException($"version:{numberOfQuotations}版本号最大为3!");
         }
-
+        List<ProductDto> productDtos = new();
+        List<QuotationNreDto> quotationNreDtos = new();
+        try
+        {
+            productDtos = await GetProductList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 0);
+            quotationNreDtos = await GetNREList(auditFlowId, (int)solutionId, (int)numberOfQuotations, 0);
+        }
+        catch (Exception)
+        {
+            throw new FriendlyException("获取报价看板部分发生错误");
+        }
         ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p =>
             p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
         if (externalQuotation is not null)
@@ -5947,33 +5956,44 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<ProductExternalQuotationMx> externalQuotationMxs =
                 await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             List<NreQuotationList> nreQuotationLists =
-                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
+                await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));        
 
 
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos =
-                ObjectMapper.Map<List<ProductQuotationListDto>>(productDtos);
-            externalQuotationDto.ProductQuotationListDtos.Select(p =>
-            {
+            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+               new ProductQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.ProductName,
+                   Year = a.Year,
+                   TravelVolume = a.Motion,
+                   UnitPrice = decimal.Parse(a.UntilPrice)
+               }).ToList();
+
+            externalQuotationDto.ProductQuotationListDtos.Select(p => {
                 ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
-                    .FirstOrDefault(m =>
-                        m.ProductName == p.ProductName && m.Year == p.Year && m.TravelVolume == p.TravelVolume &&
-                        m.UnitPrice == p.UnitPrice);
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.Year==p.Year&&m.TravelVolume==p.TravelVolume&&m.UnitPrice==p.UnitPrice);
                 if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
                 return p;
             }).ToList();
 
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(quotationNreDtos);
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+               new NreQuotationListDto()
+               {
+                   SerialNumber = index + 1,
+                   ProductName = a.Product,
+                   HandmadePartsFee = a.shouban,
+                   MyPropMoldCosterty = a.moju,
+                   CostOfToolingAndFixtures = a.gzyj,
+                   ExperimentalFees = a.sy,
+                   RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+               }).ToList();
             externalQuotationDto.NreQuotationListDtos.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
-                    .FirstOrDefault(m =>
-                        m.ProductName == p.ProductName && m.TravelVolume == p.TravelVolume &&
-                        m.HandmadePartsFee == p.HandmadePartsFee && m.MyPropMoldCosterty == p.MyPropMoldCosterty &&
-                        m.CostOfToolingAndFixtures == p.CostOfToolingAndFixtures &&
-                        m.ExperimentalFees == p.ExperimentalFees && m.RDExpenses == p.RDExpenses);
+                .FirstOrDefault(m=>m.ProductName==p.ProductName&&m.HandmadePartsFee==p.HandmadePartsFee&&m.MyPropMoldCosterty==p.MyPropMoldCosterty&&m.CostOfToolingAndFixtures==p.CostOfToolingAndFixtures&&m.ExperimentalFees==p.ExperimentalFees&&m.RDExpenses==p.RDExpenses);
                 if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
                 return p;
             }).ToList();
@@ -6022,7 +6042,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             var ppp = await _externalQuotation.GetAllListAsync();
             long i = ppp.Where(p => p.CreationTime.Year.ToString().EndsWith(year1)
-                                    && p.CreationTime.Month.ToString().EndsWith(month)).Count();
+                && p.CreationTime.Month.ToString().EndsWith(month)).Count();                 
             string year = DateTime.Now.ToString("yy") + DateTime.Now.ToString("MM");
             string iSttring = (i + 1).ToString("D4");
             externalQuotationDto.RecordNo = year + iSttring;
@@ -6071,7 +6091,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         long i = await _externalQuotation.CountAsync(p =>
             p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.IsSubmit &&
-            p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
+            p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));     
         ExternalQuotation prop = await _externalQuotation.BulkInsertOrUpdateAsync(externalQuotation);
         long id = prop.Id;
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
@@ -6105,46 +6125,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// </summary>
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
-        long numberOfQuotations, bool ntype = false)
-    {
-        List<ProductDto> productDtos = new();
-        List<QuotationNreDto> quotationNreDtos = new();
-        try
-        {
-            productDtos = await GetProductList(auditFlowId, solutionId, (int)numberOfQuotations, 1); //为了流测试成功，待明天改正
-            quotationNreDtos = await GetNREList(auditFlowId, solutionId, (int)numberOfQuotations, 1); //为了流测试成功，待明天改正
-        }
-        catch (Exception)
-        {
-            throw new FriendlyException("获取报价看板部分发生错误");
-        }
-
+        long numberOfQuotations)
+    {      
         ExternalQuotationDto external =
-            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations, productDtos, quotationNreDtos);
-        if (ntype)
-        {
-            external.ProductQuotationListDtos = productDtos.Select((a, index) =>
-                new ProductQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.ProductName,
-                    Year = a.Year,
-                    TravelVolume = a.Motion,
-                    UnitPrice = decimal.Parse(a.UntilPrice)
-                }).ToList();
-            external.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
-                new NreQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.Product,
-                    HandmadePartsFee = a.shouban,
-                    MyPropMoldCosterty = a.moju,
-                    CostOfToolingAndFixtures = a.gzyj,
-                    ExperimentalFees = a.sy,
-                    RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                }).ToList();
-        }
-
+            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
@@ -6172,7 +6156,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         MemoryStream memoryStream = await DownloadExternalQuotationStream(auditFlowId, solutionId, numberOfQuotations);
 
         return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-            { FileDownloadName = "报价单下载.xlsx" };
+        { FileDownloadName = "报价单下载.xlsx" };
     }
 
     /// <summary>
@@ -6211,15 +6195,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     GradientValue = gradient.GradientValue,
                     Product = product,
                     solutionAndprices = (from solution in solutions
-                        select new SolutionAndprice()
-                        {
-                            solutionName = solution.SolutionName,
-                            SolutionId = solution.Id,
-                            Number = 1,
-                            Price = 100,
-                            ExchangeRate = 1,
-                            nsum = 12
-                        }).ToList()
+                                         select new SolutionAndprice()
+                                         {
+                                             solutionName = solution.SolutionName,
+                                             SolutionId = solution.Id,
+                                             Number = 1,
+                                             Price = 100,
+                                             ExchangeRate = 1,
+                                             nsum = 12
+                                         }).ToList()
                 });
             }
         }
@@ -6232,12 +6216,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             "合计"
         };
         List<NreExpense> nres = (from nrerr in nree
-            select new NreExpense()
-            {
-                nre = nrerr,
-                price = 100,
-                remark = "12"
-            }).ToList();
+                                 select new NreExpense()
+                                 {
+                                     nre = nrerr,
+                                     price = 100,
+                                     remark = "12"
+                                 }).ToList();
         coreComponentAndNreDto.nres = nres;
         coreComponentAndNreDto.ProductAndGradients = ProductAndGradients;
         return coreComponentAndNreDto;

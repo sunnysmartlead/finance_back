@@ -93,9 +93,9 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async Task GG(long id)
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_归档");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
-            hg.NodeInstanceStatus = NodeInstanceStatus.Current;
+            //hg.NodeInstanceStatus = NodeInstanceStatus.Current;
         }
 
         private async Task TestLine(long id, long id2)
@@ -659,11 +659,10 @@ namespace Finance.WorkFlows
             //是否筛选
             if (isFilter)
             {
-
                 if (roleIds.Any())
                 {
-                    dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
-                                                                                //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                    //判断两个集合是否存在交集（不过滤归档）
+                    dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds) || p.NodeType == NodeType.End)
                      .Where(p => p.NodeType != NodeType.End || p.OperatedUserIds.IsNullOrWhiteSpace() || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
                 }
                 else
@@ -780,7 +779,7 @@ namespace Finance.WorkFlows
 
                 || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
                 || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
-                ) ))
+                )))
 
                             )
                         {
