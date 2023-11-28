@@ -59,11 +59,23 @@ namespace Finance.TradeCompliance
                 }
                 else
                 {
-                    entity.NationalType = input.NationalType;
-                    entity.Country = input.Country;
-                    entity.Rate = input.Rate;
-                    await _countryLibraryRepository.UpdateAsync(entity);
-                    await CreateLog("修改了贸易合规国家库1条", LogType.CountryLib);
+                    if (input.Country == "其他国家")
+                    {
+                        entity.NationalType = input.NationalType;
+                        entity.Rate = input.Rate;
+                        await _countryLibraryRepository.UpdateAsync(entity);
+                        await CreateLog("修改了贸易合规国家库1条", LogType.CountryLib);
+ 
+                    }
+                    else
+                    {
+                        entity.NationalType = input.NationalType;
+                        entity.Country = input.Country;
+                        entity.Rate = input.Rate;
+                        await _countryLibraryRepository.UpdateAsync(entity);
+                        await CreateLog("修改了贸易合规国家库1条", LogType.CountryLib);
+                    }
+                    
                 }
             }
             catch (Exception e)
@@ -79,8 +91,16 @@ namespace Finance.TradeCompliance
         /// <returns></returns>
         public virtual async Task DeleteCountryLibrary(long id)
         {
-            await _countryLibraryRepository.DeleteAsync(id);
-            await CreateLog("删除了贸易合规国家库1条", LogType.CountryLib);
+            if (id == 149)
+            {
+                throw new FriendlyException("其他国家禁止删除！");
+            }
+            else 
+            {
+                await _countryLibraryRepository.DeleteAsync(id);
+                await CreateLog("删除了贸易合规国家库1条", LogType.CountryLib);
+            }
+         
         }
 
         /// <summary>
