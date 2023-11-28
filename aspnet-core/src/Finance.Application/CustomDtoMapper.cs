@@ -357,6 +357,8 @@ namespace Finance
 
             configuration.CreateMap<Material, BomMaterial>().ReverseMap();
 
+            //快速核报价使用额外的映射关系
+            configuration.CreateMap<PriceEvaluationStartInputQuoteFlow, PriceEvaluationStartSaveInput>();
         }
     }
 }

@@ -79,7 +79,16 @@ namespace Finance.QuickQuotationReview
             input.QuickQuoteAuditFlowId = input.QuoteAuditFlowId;
 
             //核价需求录入
-            PriceEvaluationStartResult priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStart(input);
+            PriceEvaluationStartResult priceEvaluationStartResult = new();
+            if(input.Opinion.Equals(FinanceConsts.Save))
+            {
+                PriceEvaluationStartSaveInput priceEvaluationStartSaveInpu = ObjectMapper.Map<PriceEvaluationStartSaveInput>(input);
+                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStartSave(priceEvaluationStartSaveInpu);
+            }
+            else
+            {
+                priceEvaluationStartResult=await _priceEvaluationAppService.PriceEvaluationStart(input);
+            }                
             dto dto = new dto
             {
                 NewAuditFlowId = priceEvaluationStartResult.AuditFlowId,
