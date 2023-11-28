@@ -830,6 +830,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostIsOfferSecondOnlySave(IsOfferSecondDto isOfferDto)
     {
         isOfferDto.IsFirst = true;
+        var result= await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId,isOfferDto.Solutions,isOfferDto.ntime);
+        if (result)
+        {
+            throw new FriendlyException($"此报价方案组合已存在");
+        }
         await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         //进行报价
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
@@ -845,6 +850,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (isOfferDto.IsOffer)
         {
             isOfferDto.IsFirst = false;
+          var result= await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId,isOfferDto.Solutions,isOfferDto.ntime);
+          if (result)
+          {
+              throw new FriendlyException($"此报价方案组合已存在");
+          }
             await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
 
             //进行报价
@@ -855,6 +865,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             await this.GetDownloadListSaveNoQuotation(isOfferDto.AuditFlowId);
         }
     }
+    
 
     public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
     {
