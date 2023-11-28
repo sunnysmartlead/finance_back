@@ -37,6 +37,7 @@ using System.Linq;
 using System.Text;
 using Finance.PriceEval.Dto.ProjectSelf;
 using Finance.TradeCompliance.Dto;
+using NPOI.SS.Formula.Functions;
 
 namespace Finance
 {
@@ -359,6 +360,53 @@ namespace Finance
 
             //快速核报价使用额外的映射关系
             configuration.CreateMap<PriceEvaluationStartInputQuoteFlow, PriceEvaluationStartSaveInput>();
+
+            //快速核报价_核价看板：直接上传
+            configuration.CreateMap<Fu_Bom, Material>()
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_ManufacturingCost, ManufacturingCost>()
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
+                .ForMember(p => p.ManufacturingCostDirect, p => p.MapFrom(o => new ManufacturingCostDirect
+                {
+                    Id = o.Did,
+                    UpDown = o.DUpDown,
+                    DirectLabor = o.DDirectLabor,
+                    EquipmentDepreciation = o.DEquipmentDepreciation,
+                    LineChangeCost = o.DLineChangeCost,
+                    ManufacturingExpenses = o.DManufacturingExpenses,
+                    Subtotal = o.DSubtotal,
+                     
+                }))
+                .ForMember(p => p.ManufacturingCostIndirect, p => p.MapFrom(o => new ManufacturingCostIndirect
+                {
+                    Id = o.Iid,
+                    UpDown = o.IUpDown,
+                    DirectLabor = o.IDirectLabor,
+                    EquipmentDepreciation = o.IEquipmentDepreciation,
+                    ManufacturingExpenses = o.IManufacturingExpenses,
+                    Subtotal = o.ISubtotal,
+                }))
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_LossCost, LossCost>()
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_OtherCostItem2, OtherCostItem2>()
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_OtherCostItem, OtherCostItem>()
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_QualityCostListDto, QualityCostListDto>()
+                .ReverseMap();
+
+            configuration.CreateMap<Fu_LogisticsCost, ProductionControlInfoListDto>()
+                .ReverseMap();
+
         }
     }
 }

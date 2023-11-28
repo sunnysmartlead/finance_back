@@ -142,6 +142,15 @@ namespace Finance.PriceEval
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
         private readonly IRepository<BomMaterial, long> _bomMaterialRepository;
 
+        //快速核报价：直接上传
+
+        private readonly IRepository<Fu_Bom, long> _fu_BomRepository;
+        private readonly IRepository<Fu_ManufacturingCost, long> _fu_ManufacturingCostRepository;
+        private readonly IRepository<Fu_LossCost, long> _fu_LossCostRepository;
+        private readonly IRepository<Fu_OtherCostItem2, long> _fu_OtherCostItem2Repository;
+        private readonly IRepository<Fu_OtherCostItem, long> _fu_OtherCostItemRepository;
+        private readonly IRepository<Fu_QualityCostListDto, long> _fu_QualityCostListDtoRepository;
+        private readonly IRepository<Fu_LogisticsCost, long> _fu_LogisticsCostRepository;
 
         private string errMessage = string.Empty;
 
@@ -192,7 +201,15 @@ namespace Finance.PriceEval
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
             IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
             IRepository<PanelJson, long> panelJsonRepository,
-            IRepository<BomMaterial, long> bomMaterialRepository)
+            IRepository<BomMaterial, long> bomMaterialRepository,
+
+            IRepository<Fu_Bom, long> fu_BomRepository,
+          IRepository<Fu_ManufacturingCost, long> fu_ManufacturingCostRepository,
+          IRepository<Fu_LossCost, long> fu_LossCostRepository,
+         IRepository<Fu_OtherCostItem2, long> fu_OtherCostItem2Repository,
+         IRepository<Fu_OtherCostItem, long> fu_OtherCostItemRepository,
+         IRepository<Fu_QualityCostListDto, long> fu_QualityCostListDtoRepository,
+         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -243,6 +260,14 @@ namespace Finance.PriceEval
 
             _panelJsonRepository = panelJsonRepository;
             _bomMaterialRepository = bomMaterialRepository;
+
+            fu_BomRepository = _fu_BomRepository;
+            fu_ManufacturingCostRepository = _fu_ManufacturingCostRepository;
+            fu_LossCostRepository = _fu_LossCostRepository;
+            fu_OtherCostItem2Repository = _fu_OtherCostItem2Repository;
+            fu_OtherCostItemRepository = _fu_OtherCostItemRepository;
+            fu_QualityCostListDtoRepository = _fu_QualityCostListDtoRepository;
+            fu_LogisticsCostRepository = _fu_LogisticsCostRepository;
         }
 
 
@@ -3619,7 +3644,30 @@ namespace Finance.PriceEval
                 var qualityCostListDto = workbook.GetSheet(sheetName).GetQualityCostListDto(modelCountYear.Year, modelCountYear.UpDown);
 
                 //物流成本汇总
-                var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown);
+                var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+
+                //Dto转换
+
+                // BOM
+                var materialsEntity = ObjectMapper.Map<List<Fu_Bom>>(materials);
+
+                //制造成本
+                var manufacturingCostsEntity = ObjectMapper.Map<List<Fu_ManufacturingCost>>(manufacturingCosts);
+
+                //损耗成本
+                var lossCostsEntity = ObjectMapper.Map<List<Fu_LossCost>>(lossCosts);
+
+                //其他成本项目2
+                var otherCostItem2sEntity = ObjectMapper.Map<List<Fu_OtherCostItem2>>(otherCostItem2s);
+
+                //其他成本
+                var otherCostItemsEntity = ObjectMapper.Map<Fu_OtherCostItem>(otherCostItems);
+
+                //质量成本
+                var qualityCostListDtoEntity = ObjectMapper.Map<Fu_QualityCostListDto>(qualityCostListDto);
+
+                //物流成本汇总
+                var logisticsCostsEntity = ObjectMapper.Map<List<Fu_LogisticsCost>>(logisticsCosts);
 
             }
 

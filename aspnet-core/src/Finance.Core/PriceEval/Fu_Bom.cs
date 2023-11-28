@@ -214,10 +214,6 @@ namespace Finance.PriceEval
         /// </summary>
         public virtual decimal GradientKy { get; set; }
 
-        /// <summary>
-        /// 月需求量
-        /// </summary>
-        internal decimal MonthlyDemand { get; set; }
 
         #region 直接制造成本
 
@@ -273,11 +269,6 @@ namespace Finance.PriceEval
         public virtual YearType IUpDown { get; set; }
 
         /// <summary>
-        /// 月需求量
-        /// </summary>
-        internal decimal IMonthlyDemand { get; set; }
-
-        /// <summary>
         /// 间接制造成本：直接人工
         /// </summary>
         public virtual decimal IDirectLabor { get; set; }
@@ -298,7 +289,7 @@ namespace Finance.PriceEval
         public virtual decimal ISubtotal { get; set; }
 
         #endregion
-        
+
 
         /// <summary>
         /// 合计
@@ -567,12 +558,12 @@ namespace Finance.PriceEval
         /// <summary>
         /// 年份
         /// </summary>
-        internal virtual int Year { get; set; }
+        public virtual int Year { get; set; }
 
         /// <summary>
         /// 年份类型
         /// </summary>
-        internal virtual YearType UpDown { get; set; }
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 产品类别
