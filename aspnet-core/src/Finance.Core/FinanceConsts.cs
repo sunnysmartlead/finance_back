@@ -617,6 +617,21 @@ namespace Finance
         public const string EvalReason_Xmbg = "EvalReason_Xmbg";
 
         /// <summary>
+        /// 其他引用流程
+        /// </summary>
+        public const string EvalReason_Qtyylc = "EvalReason_Qtyylc";
+
+        /// <summary>
+        /// 本年年降
+        /// </summary>
+        public const string EvalReason_Bnnj = "EvalReason_Bnnj";
+
+        /// <summary>
+        /// 推广样品
+        /// </summary>
+        public const string EvalReason_Tgyp = "EvalReason_Tgyp";
+
+        /// <summary>
         /// 首次核价
         /// </summary>
         public const string EvalReason_Schj = "EvalReason_Schj";
