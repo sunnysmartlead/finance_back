@@ -2,8 +2,10 @@
 using Abp.Extensions;
 using Castle.MicroKernel.SubSystems.Conversion;
 using Finance.FinanceMaintain;
+using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using NPOI.HSSF.Record.AutoFilter;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using Spire.Pdf.Exporting.XPS.Schema;
@@ -41,9 +43,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取BOM成本
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static IEnumerable<Material> GetMaterials(this ISheet sheet)
+        public static IEnumerable<Material> GetMaterials(this ISheet sheet, int year, YearType upDonw)
         {
             //获取核价表结束的行
             var bomEndRow = sheet.GetBomEndRow();
@@ -55,6 +56,8 @@ namespace Finance.Ext
 
                 yield return new Material
                 {
+                    Id = $"import{rowIndex}",
+                    Year = year,
                     SuperType = row.Cells[1].ToString(),
                     CategoryName = row.Cells[2].ToString(),
                     TypeName = row.Cells[3].ToString(),
@@ -83,9 +86,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取制造成本
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static IEnumerable<ManufacturingCost> GetManufacturingCosts(this ISheet sheet)
+        public static IEnumerable<ManufacturingCost> GetManufacturingCosts(this ISheet sheet, int year, YearType upDonw)
         {
             //获取制造成本开始和结束的行
             var startRow = GetManufacturingCostStartEndRow(sheet);
@@ -96,9 +98,13 @@ namespace Finance.Ext
 
                 var dto = new ManufacturingCost
                 {
+                    Id = year,
+                    UpDown = upDonw,
                     CostItem = row.Cells[0].ToString(),
                     ManufacturingCostDirect = new ManufacturingCostDirect
                     {
+                        Id = year,
+                        UpDown = upDonw,
                         DirectLabor = row.Cells[7].ToString().ToDecimal(),
                         EquipmentDepreciation = row.Cells[8].ToString().ToDecimal(),
                         LineChangeCost = row.Cells[9].ToString().ToDecimal(),
@@ -107,6 +113,8 @@ namespace Finance.Ext
                     },
                     ManufacturingCostIndirect = new ManufacturingCostIndirect
                     {
+                        Id = year,
+                        UpDown = upDonw,
                         DirectLabor = row.Cells[12].ToString().ToDecimal(),
                         EquipmentDepreciation = row.Cells[13].ToString().ToDecimal(),
                         ManufacturingExpenses = row.Cells[14].ToString().ToDecimal(),
@@ -115,6 +123,18 @@ namespace Finance.Ext
                     Subtotal = row.Cells[16].ToString().ToDecimal(),
                 };
 
+
+                dto.CostType = dto.CostItem switch
+                {
+                    PriceEvalConsts.GroupTest => CostType.GroupTest,
+                    PriceEvalConsts.SMT => CostType.SMT,
+                    PriceEvalConsts.COB => CostType.COB,
+                    PriceEvalConsts.Total => CostType.Total,
+                    PriceEvalConsts.Other => CostType.Other,
+                    _ => throw new FriendlyException($"核价表的制造成本类型不正确。错误的成本类型为：{dto.CostItem}"),
+                };
+                dto.EditId = dto.CostType.ToString();
+
                 yield return dto;
             }
         }
@@ -122,9 +142,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取损耗成本
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static IEnumerable<LossCost> GetLossCosts(this ISheet sheet)
+        public static IEnumerable<LossCost> GetLossCosts(this ISheet sheet, int year, YearType upDonw)
         {
             //获取损耗成本开始和结束的行
             var startRow = GetLossCostStartEndRow(sheet);
@@ -137,6 +156,8 @@ namespace Finance.Ext
             {
                 yield return new LossCost
                 {
+                    Id = year,
+                    EditId = i.ToString(),
                     Name = nameRow.Cells[i].ToString(),
                     WastageCost = lossRow.Cells[i].ToString().ToDecimal(),
                     MoqShareCount = moqRow.Cells[i].ToString().ToDecimal(),
@@ -147,9 +168,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取其他成本项目2
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static IEnumerable<OtherCostItem2> GetOtherCostItem2s(this ISheet sheet)
+        public static IEnumerable<OtherCostItem2> GetOtherCostItem2s(this ISheet sheet, int year, YearType upDonw, decimal quantity)
         {
             //获取其他成本项目2开始和结束的行
             var startRow = GetOtherCostItem2StartEndRow(sheet);
@@ -160,6 +180,9 @@ namespace Finance.Ext
 
                 yield return new OtherCostItem2
                 {
+                    Year = year,
+                    UpDown = upDonw,
+                    Quantity = quantity,
                     ItemName = row.Cells[0].ToString(),
                     Total = row.Cells[7].NumericCellValue.To<decimal>(),
                     MoldCosts = row.Cells[8].NumericCellValue.To<decimal>(),
@@ -182,9 +205,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取其他成本项目
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static OtherCostItem GetOtherCostItems(this ISheet sheet)
+        public static OtherCostItem GetOtherCostItems(this ISheet sheet, int year, YearType upDonw)
         {
             //获取其他成本项目2开始和结束的行
             var startRow = GetOtherCostItem2StartEndRow(sheet);
@@ -193,6 +215,7 @@ namespace Finance.Ext
 
             return new OtherCostItem
             {
+                Id = year,
                 Fixture = row.Cells[7].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].ToString().ToDecimal(),
                 LogisticsFee = row.Cells[8].ToString().ToDecimal(),
                 ProductCategory = row.Cells[9].ToString(),
@@ -208,9 +231,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取质量成本
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static QualityCostListDto GetQualityCostListDto(this ISheet sheet)
+        public static QualityCostListDto GetQualityCostListDto(this ISheet sheet, int year, YearType upDonw)
         {
             //获取其他成本项目2开始和结束的行
             var startRow = GetOtherCostItem2StartEndRow(sheet);
@@ -219,6 +241,9 @@ namespace Finance.Ext
 
             return new QualityCostListDto
             {
+                Year = year,
+                UpDown = upDonw,
+                EditId = UpdateItemType.QualityCost.ToString(),
                 ProductCategory = row.Cells[9].ToString(),
                 CostProportion = row.Cells[10].ToString().Replace("%", string.Empty).ToDecimal(),
                 QualityCost = row.Cells[11].ToString().ToDecimal(),
@@ -228,9 +253,8 @@ namespace Finance.Ext
         /// <summary>
         /// 获取物流成本汇总表
         /// </summary>
-        /// <param name="sheet"></param>
         /// <returns></returns>
-        public static IEnumerable<ProductionControlInfoListDto> GetLogisticsCosts(this ISheet sheet)
+        public static IEnumerable<ProductionControlInfoListDto> GetLogisticsCosts(this ISheet sheet, int year, YearType upDonw)
         {
             //获取其他成本项目2开始和结束的行
             var startRow = GetOtherCostItem2StartEndRow(sheet);
@@ -239,6 +263,9 @@ namespace Finance.Ext
 
             yield return new ProductionControlInfoListDto
             {
+                Year = year.ToString(),
+                UpDown = upDonw,
+                EditId = "logisticsCost",
                 PerTotalLogisticsCost = row.Cells[8].ToString().ToDecimal(),
             };
         }

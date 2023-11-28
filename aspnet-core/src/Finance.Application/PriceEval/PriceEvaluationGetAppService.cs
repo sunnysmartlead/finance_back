@@ -3575,21 +3575,53 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
         {
+            //读取方案Id
+            var solution = await _solutionRepository.GetAsync(solutionId);
+
+            //读取零件Id
+            var productId = solution.Productld;
+
+            //获取全部年份
+            var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.ProductId == productId);
+
+            //把文件写入流中
             var stream = excle.OpenReadStream();
 
             // 创建工作簿
             var workbook = new XSSFWorkbook(stream);
 
-            // 获取第一个工作表
-            var materials = workbook.GetSheetAt(0).GetMaterials().ToList();
-            var manufacturingCosts = workbook.GetSheetAt(0).GetManufacturingCosts().ToList();
-            var lossCosts = workbook.GetSheetAt(0).GetLossCosts().ToList();
-            var otherCostItem2s = workbook.GetSheetAt(0).GetOtherCostItem2s().ToList();
-            var otherCostItems = workbook.GetSheetAt(0).GetOtherCostItems();
-            var qualityCostListDto = workbook.GetSheetAt(0).GetQualityCostListDto();
-            var logisticsCosts = workbook.GetSheetAt(0).GetLogisticsCosts();
+            //获取全部梯度
+            var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                           join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                           where gmy.AuditFlowId == auditFlowId && gm.ProductId == productId && gm.GradientId == gradientId
+                                           select gmy).ToListAsync();
 
+            foreach (var modelCountYear in modelCountYears)
+            {
+                var sheetName = $"{modelCountYear.Year}{GetYearName(modelCountYear.UpDown)}";
 
+                // BOM
+                var materials = workbook.GetSheet(sheetName).GetMaterials(modelCountYear.Year, modelCountYear.UpDown).ToList();
+
+                //制造成本
+                var manufacturingCosts = workbook.GetSheet(sheetName).GetManufacturingCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+
+                //损耗成本
+                var lossCosts = workbook.GetSheet(sheetName).GetLossCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+
+                //其他成本项目2
+                var otherCostItem2s = workbook.GetSheet(sheetName).GetOtherCostItem2s(modelCountYear.Year, modelCountYear.UpDown, gradientModelYear.FirstOrDefault(p => p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown).Count).ToList();
+
+                //其他成本
+                var otherCostItems = workbook.GetSheet(sheetName).GetOtherCostItems(modelCountYear.Year, modelCountYear.UpDown);
+
+                //质量成本
+                var qualityCostListDto = workbook.GetSheet(sheetName).GetQualityCostListDto(modelCountYear.Year, modelCountYear.UpDown);
+
+                //物流成本汇总
+                var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown);
+
+            }
 
         }
 
