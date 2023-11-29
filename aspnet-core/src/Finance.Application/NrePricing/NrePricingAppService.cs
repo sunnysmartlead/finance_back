@@ -2138,6 +2138,9 @@ namespace Finance.NerPricing
         {
             try
             {
+                //判断快速核报价直接上传是否有数据
+                PricingFormDto pricingForm = await FastQueryNreExecl(auditFlowId, solutionId);
+                if (pricingForm is not null) return pricingForm;
                 PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
                 List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
                 PricingFormDto pricingFormDto = new();
