@@ -755,6 +755,7 @@ namespace Finance.Processes
                             processHoursEnterUph.Year = item.Year;
                             processHoursEnterUph.Uph = item.Uph;
                             processHoursEnterUph.Value = item.Value;
+                            processHoursEnterUph.ModelCountYearId = item.ModelCountYearId;
                             processHoursEnterUph.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
                             processHoursEnterUph.AuditFlowId = AuditFlowNewId;
                             await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);
