@@ -210,7 +210,7 @@ namespace Finance.WorkFlows
                             //直接上传快速核价流程的核价原因
                             var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
 
-                            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价需求录入");
+                            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == eventData.Entity.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
 
                             //只判断不是直接上传快速核价的流程
                             if (!list.Contains(node.FinanceDictionaryDetailId))
