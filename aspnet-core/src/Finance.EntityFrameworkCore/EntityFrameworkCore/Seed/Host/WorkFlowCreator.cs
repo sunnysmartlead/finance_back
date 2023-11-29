@@ -857,6 +857,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "审批报价策略与核价表",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.EvalFeedback_Bjxysp,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {
@@ -864,6 +865,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "生成报价分析界面选择报价方案",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.EvalFeedback_Bjsdjsjj,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {
@@ -892,6 +894,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "生成报价分析界面选择报价方案",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {
