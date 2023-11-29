@@ -2261,9 +2261,9 @@ namespace Finance.PriceEval
             #region 快速核报价：上传
 
             //筛选组测
-            var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
-             && p.Year == input.Year && p.UpDown == input.UpDown && p.CostType == CostType.GroupTest);
-            if (fuManufacturing.Any())
+            var fuManufacturing = await _fu_ManufacturingCostRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == year && p.UpDown == upDown && p.CostType == CostType.GroupTest);
+            if (fuManufacturing is not null)
             {
                 return ObjectMapper.Map<ManufacturingCost>(fuManufacturing);
             }
@@ -3785,6 +3785,29 @@ namespace Finance.PriceEval
             catch (Exception e)
             {
                 throw new FriendlyException($"核价表读取错误：{e.Message}");
+            }
+
+        }
+
+        /// <summary>
+        /// 获取当前快速核报价流程（直接上传）是否已上传核价表
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetIsUplpadEvalTable(GetIsUplpadEvalTableInput input)
+        {
+            //全生命周期处理
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId);
+
+                return fuBom;
+            }
+            else
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                return fuBom;
             }
 
         }
