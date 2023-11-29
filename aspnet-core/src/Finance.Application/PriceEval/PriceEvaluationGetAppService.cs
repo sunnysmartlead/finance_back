@@ -3696,32 +3696,22 @@ namespace Finance.PriceEval
 
                 foreach (var modelCountYear in modelCountYears)
                 {
+                    //Get sheet name
                     var sheetName = $"{modelCountYear.Year}{GetYearName(modelCountYear.UpDown)}";
 
-                    // BOM
-                    var materials = workbook.GetSheet(sheetName).GetMaterials(modelCountYear.Year, modelCountYear.UpDown).ToList();
-
-                    //制造成本
-                    var manufacturingCosts = workbook.GetSheet(sheetName).GetManufacturingCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
-
-                    //损耗成本
-                    var lossCosts = workbook.GetSheet(sheetName).GetLossCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
-
-                    //其他成本项目2
-                    var otherCostItem2s = workbook.GetSheet(sheetName).GetOtherCostItem2s(modelCountYear.Year, modelCountYear.UpDown, gradientModelYear.FirstOrDefault(p => p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown).Count).ToList();
-
-                    //其他成本
-                    var otherCostItems = workbook.GetSheet(sheetName).GetOtherCostItems(modelCountYear.Year, modelCountYear.UpDown);
-
-                    //质量成本
-                    var qualityCostListDto = workbook.GetSheet(sheetName).GetQualityCostListDto(modelCountYear.Year, modelCountYear.UpDown);
-
-                    //物流成本汇总
-                    var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+                    //删除已有数据
+                    await _fu_BomRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_ManufacturingCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_LossCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_OtherCostItem2Repository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_OtherCostItemRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_QualityCostListDtoRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_LogisticsCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year.ToString() && p.UpDown == modelCountYear.UpDown);
 
                     //Dto转换
 
                     // BOM
+                    var materials = workbook.GetSheet(sheetName).GetMaterials(modelCountYear.Year, modelCountYear.UpDown).ToList();
                     var materialsEntity = ObjectMapper.Map<List<Fu_Bom>>(materials);
                     materialsEntity.ForEach(p =>
                     {
@@ -3732,6 +3722,7 @@ namespace Finance.PriceEval
                     await _fu_BomRepository.BulkInsertAsync(materialsEntity);
 
                     //制造成本
+                    var manufacturingCosts = workbook.GetSheet(sheetName).GetManufacturingCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
                     var manufacturingCostsEntity = ObjectMapper.Map<List<Fu_ManufacturingCost>>(manufacturingCosts);
                     manufacturingCostsEntity.ForEach(p =>
                     {
@@ -3742,6 +3733,7 @@ namespace Finance.PriceEval
                     await _fu_ManufacturingCostRepository.BulkInsertAsync(manufacturingCostsEntity);
 
                     //损耗成本
+                    var lossCosts = workbook.GetSheet(sheetName).GetLossCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
                     var lossCostsEntity = ObjectMapper.Map<List<Fu_LossCost>>(lossCosts);
                     lossCostsEntity.ForEach(p =>
                     {
@@ -3752,6 +3744,7 @@ namespace Finance.PriceEval
                     await _fu_LossCostRepository.BulkInsertAsync(lossCostsEntity);
 
                     //其他成本项目2
+                    var otherCostItem2s = workbook.GetSheet(sheetName).GetOtherCostItem2s(modelCountYear.Year, modelCountYear.UpDown, gradientModelYear.FirstOrDefault(p => p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown).Count).ToList();
                     var otherCostItem2sEntity = ObjectMapper.Map<List<Fu_OtherCostItem2>>(otherCostItem2s);
                     otherCostItem2sEntity.ForEach(p =>
                     {
@@ -3762,6 +3755,7 @@ namespace Finance.PriceEval
                     await _fu_OtherCostItem2Repository.BulkInsertAsync(otherCostItem2sEntity);
 
                     //其他成本
+                    var otherCostItems = workbook.GetSheet(sheetName).GetOtherCostItems(modelCountYear.Year, modelCountYear.UpDown);
                     var otherCostItemsEntity = ObjectMapper.Map<Fu_OtherCostItem>(otherCostItems);
                     otherCostItemsEntity.AuditFlowId = auditFlowId;
                     otherCostItemsEntity.SolutionId = solutionId;
@@ -3769,6 +3763,7 @@ namespace Finance.PriceEval
                     await _fu_OtherCostItemRepository.InsertAsync(otherCostItemsEntity);
 
                     //质量成本
+                    var qualityCostListDto = workbook.GetSheet(sheetName).GetQualityCostListDto(modelCountYear.Year, modelCountYear.UpDown);
                     var qualityCostListDtoEntity = ObjectMapper.Map<Fu_QualityCostListDto>(qualityCostListDto);
                     qualityCostListDtoEntity.AuditFlowId = auditFlowId;
                     qualityCostListDtoEntity.SolutionId = solutionId;
@@ -3776,6 +3771,7 @@ namespace Finance.PriceEval
                     await _fu_QualityCostListDtoRepository.InsertAsync(qualityCostListDtoEntity);
 
                     //物流成本汇总
+                    var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
                     var logisticsCostsEntity = ObjectMapper.Map<List<Fu_LogisticsCost>>(logisticsCosts);
                     logisticsCostsEntity.ForEach(p =>
                     {
