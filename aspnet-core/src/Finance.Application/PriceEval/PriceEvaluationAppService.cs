@@ -136,11 +136,25 @@ namespace Finance.PriceEval
            IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
            IRepository<PanelJson, long> panelJsonRepository,
            IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository,
-           IRepository<BomMaterial, long> bomMaterialRepository)
+           IRepository<BomMaterial, long> bomMaterialRepository,
+           IRepository<Fu_Bom, long> fu_BomRepository,
+          IRepository<Fu_ManufacturingCost, long> fu_ManufacturingCostRepository,
+          IRepository<Fu_LossCost, long> fu_LossCostRepository,
+         IRepository<Fu_OtherCostItem2, long> fu_OtherCostItem2Repository,
+         IRepository<Fu_OtherCostItem, long> fu_OtherCostItemRepository,
+         IRepository<Fu_QualityCostListDto, long> fu_QualityCostListDtoRepository,
+         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
-                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository, bomMaterialRepository)
+                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository, bomMaterialRepository,
+                  fu_BomRepository,
+         fu_ManufacturingCostRepository,
+          fu_LossCostRepository,
+          fu_OtherCostItem2Repository,
+          fu_OtherCostItemRepository,
+          fu_QualityCostListDtoRepository,
+        fu_LogisticsCostRepository)
         {
             _cacheManager = cacheManager;
             _nodeInstanceRepository = nodeInstanceRepository;
@@ -856,6 +870,12 @@ namespace Finance.PriceEval
                 var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == item.ProductType);
                 item.ProductTypeName = dictionaryDetail.DisplayName;
             }
+
+            //var node = await _nodeInstanceRepository
+            //    .FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+
+            //priceEvaluationDto.NodeInstanceId = node.Id;
+            //priceEvaluationDto.Opinion = priceEvaluation.Opinion;
 
             return priceEvaluationDto;
         }

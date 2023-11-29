@@ -733,6 +733,7 @@ namespace Finance.NerPricing
         /// <param name="auditFlowId"></param>
         /// <param name="solutionId"></param>
         /// <returns></returns>
+        [HttpGet]
         public async Task<PricingFormDto> FastQueryNreExecl(long auditFlowId, long solutionId)
         {
             AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
@@ -965,7 +966,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
-        public async Task<ProjectManagementModel> GetReturnProjectManagementSingle(long auditFlowId, long solutionId)
+        public async Task<ProjectManagementModel> GetReturnProjectManagementSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try
             {
@@ -1136,7 +1137,12 @@ namespace Finance.NerPricing
         [AbpAuthorize]
         public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)
         {
-
+            await ProcessAntiShaking("PostResourcesManagementSingle", price);
+            if(price?.ResourcesManagementModels?.MouldInventory?.Id==0)
+            {
+              int prop=await  _resourceMouldInventory.CountAsync(p=>p.AuditFlowId.Equals(price.AuditFlowId)&&p.SolutionId.Equals(price.ResourcesManagementModels.SolutionId)&&p.StructuralId.Equals(price.ResourcesManagementModels.MouldInventory.StructuralId));
+              if(prop!=0) throw new FriendlyException("此条数据已被其他人员录入,请刷新获取最新数据!");
+            }
             ResourcesManagementModel resourcesManagementModel = new();
             resourcesManagementModel = price.ResourcesManagementModels;
             MouldInventory MouldInventorys = ObjectMapper.Map<MouldInventory>(resourcesManagementModel.MouldInventory);
@@ -1177,7 +1183,7 @@ namespace Finance.NerPricing
         /// 资源部模具费录入  退回重置状态
         /// </summary>
         /// <returns></returns>
-        internal async Task GetResourcesManagementConfigurationState(long auditFlowId)
+        public async Task GetResourcesManagementConfigurationState(long auditFlowId)
         {
             if (auditFlowId == 0) throw new FriendlyException("资源部模具费录入退回重置状态流程id不能为0");
             //await _resourceNreIsSubmit.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ResourcesManagement.ToString()));
@@ -2132,9 +2138,15 @@ namespace Finance.NerPricing
         {
             try
             {
-                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 PricingFormDto pricingFormDto = new();
+                if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null)
+                {
+                    pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
+                    return pricingFormDto;
+                }             
+                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);         
                 pricingFormDto = ObjectMapper.Map<PricingFormDto>(await GetPricingForm(auditFlowId, solutionId));
                 //替换被修改项的值
                 //手板件费用
@@ -2652,7 +2664,7 @@ namespace Finance.NerPricing
                         DeviceStatus = a.Key.DeviceStatus ?? string.Empty,
                         UnitPrice = (decimal)(a.Key.DevicePrice ?? 0M),
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd) ) ,
+                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd / 100) ) ,
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
@@ -2665,7 +2677,7 @@ namespace Finance.NerPricing
                                                                                                   DeviceStatus = t.DeviceStatus,
                                                                                                   UnitPrice = t.UnitPrice,
                                                                                                   Number = t.Number,
-                                                                                                  Cost = t.Cost / 100,
+                                                                                                  Cost = t.Cost,
                                                                                                   DeviceStatusName = p != null ? p.DisplayName : ""
                                                                                               }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
@@ -2748,7 +2760,7 @@ namespace Finance.NerPricing
                 {
                     modify.USDAllCost = modify.RMBAllCost;
                 }
-                //手板件费用修改项
+                //手板件费用修改项[
                 modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //模具费用修改项
                 modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
@@ -3033,7 +3045,7 @@ namespace Finance.NerPricing
             var cache = await _cacheManager.GetCache(name).GetOrDefaultAsync(code);
             if (cache is null)
             {
-                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 0, 3));
+                await _cacheManager.GetCache(name).SetAsync(code, code, new TimeSpan(0, 1, 0));
             }
             else
             {
@@ -3060,24 +3072,35 @@ namespace Finance.NerPricing
                 await _resourceLaboratoryFee.BulkInsertAsync(laboratoryExperimentFees);
             }
         }
-        ///// <summary>
-        ///// 手板件、差旅、其他快速核报价
-        ///// </summary>
-        ///// <param name="AuditFlowId"></param>
-        ///// <param name="QuoteAuditFlowId"></param>
-        ///// <param name="solutionIdAndQuoteSolutionIds"></param>
-        ///// <returns></returns>
-        //internal async Task FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
-        //{
-        //    foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
-        //    {
-        //        MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
-        //        List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
-        //        MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.SolutionId; return p; }).ToList();
-        //        await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
-        //    }
-        //}
+        /// <summary>
+        /// 手板件、差旅、其他快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostProjectManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                ProjectManagementModel projectManagementModel = await GetReturnProjectManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                //手板件
+                List<HandPieceCost> handPieceCosts = ObjectMapper.Map<List<HandPieceCost>>(projectManagementModel.HandPieceCost);
+                handPieceCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceHandPieceCost.BulkInsertAsync(handPieceCosts);
+
+                //其他费用
+                List<RestsCost> restsCosts = ObjectMapper.Map<List<RestsCost>>(projectManagementModel.RestsCost);
+                restsCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceRestsCost.BulkInsertAsync(restsCosts);
+
+                //差旅费
+                List<TravelExpense> travelExpenses = ObjectMapper.Map<List<TravelExpense>>(projectManagementModel.TravelExpense);
+                travelExpenses.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _resourceTravelExpense.BulkInsertAsync(travelExpenses);
+            }
+        }
 
 
-    }
+        }
 }

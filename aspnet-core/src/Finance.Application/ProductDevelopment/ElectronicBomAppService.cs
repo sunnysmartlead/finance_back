@@ -14,6 +14,7 @@ using Finance.PriceEval.Dto;
 using Finance.ProductDevelopment.Dto;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
@@ -89,10 +90,91 @@ namespace Finance.ProductDevelopment
             _resourceSchemeTable = resourceSchemeTable;
         }
 
+        #region 快速核报价
+        /// <summary>
+        /// 电子录入快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task<List<BomIdAndQuoteBomId>> FastPostElectronicEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
 
+            List<BomIdAndQuoteBomId> list = new List<BomIdAndQuoteBomId>();
 
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<ElectronicBomInfo> Electronics = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                foreach (var item2 in Electronics)
+                {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = new BomIdAndQuoteBomId();
+                    bomIdAndQuoteBomId.QuoteBomId = item2.Id;
+                    item2.AuditFlowId = AuditFlowId;
+                    item2.Id = 0;
+                    item2.SolutionId = item.NewSolutionId;
 
+                    long newElcBomInfoId = await _electronicBomInfoRepository.InsertAndGetIdAsync(item2);
+                    bomIdAndQuoteBomId.NewBomId = newElcBomInfoId;
+                    list.Add(bomIdAndQuoteBomId);
+                }
 
+            }
+            return list;
+        }
+       
+        /// <summary>
+        /// 电子bak录入复制表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostElectronicEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<ElectronicBomInfoBak> enteringElectronicsBak = await _electronicBomInfoBakRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                enteringElectronicsBak.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _electronicBomInfoBakRepository.BulkInsertAsync(enteringElectronicsBak);
+            }
+        }
+
+        /// <summary>
+        /// 电子BOM两次上传差异化表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostElectronicDifferCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<ElecBomDifferent> enteringElectronicsDiffer = await _elecBomDifferentRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                enteringElectronicsDiffer.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _elecBomDifferentRepository.BulkInsertAsync(enteringElectronicsDiffer);
+            }
+        }
+
+        /// <summary>
+        /// 拼版表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostBoardCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<BoardInfo> boardInfos = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                boardInfos.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _boardInfoRepository.BulkInsertAsync(boardInfos);
+            }
+        }
+
+        #endregion
 
 
         /// <summary>

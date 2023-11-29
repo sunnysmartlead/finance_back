@@ -16,6 +16,7 @@ using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using NPOI.Util;
 using System;
@@ -90,10 +91,11 @@ namespace Finance.WorkFlows
         /// 手动触发贸易合规（手动测试使用时改为public）
         /// </summary>
         /// <returns></returns>
-        public async Task GG()
+        public async Task GG(long id)
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == 499 && p.NodeId == "主流程_选择是否报价");
+            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_贸易合规");
             hg.LastModificationTime = DateTime.UtcNow;
+            //hg.NodeInstanceStatus = NodeInstanceStatus.Current;
         }
 
         private async Task TestLine(long id, long id2)
@@ -329,6 +331,14 @@ namespace Finance.WorkFlows
             #endregion
 
             changeNode.FinanceDictionaryDetailId = input.FinanceDictionaryDetailId;
+
+
+            //设置任务重置
+            var taskResets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == input.NodeInstanceId);
+            foreach (var taskReset in taskResets)
+            {
+                taskReset.IsActive = false;
+            }
 
             //给业务节点增加历史记录
             await _instanceHistoryRepository.InsertAsync(new InstanceHistory
@@ -620,7 +630,10 @@ namespace Finance.WorkFlows
             //获取角色在未归档的工作流实例里活动的节点
             var node = _nodeInstanceRepository.GetAll()
                 .Join(_workflowInstanceRepository.GetAll(), n => n.WorkFlowInstanceId, w => w.Id, (n, w) => new { n, w })
-                .Where(p => p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current);
+                .Where(p =>
+                (p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current)
+                || (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
+                );
 
 
             //取入内存中
@@ -646,11 +659,10 @@ namespace Finance.WorkFlows
             //是否筛选
             if (isFilter)
             {
-
                 if (roleIds.Any())
                 {
-                    dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds))//判断两个集合是否存在交集
-                                                                                //.Where(p => p.NodeType == NodeType.End && p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
+                    //判断两个集合是否存在交集（不过滤归档）
+                    dto = dto.Where(p => p.RoleId.ToHashSet().Overlaps(roleIds) || p.NodeType == NodeType.End)
                      .Where(p => p.NodeType != NodeType.End || p.OperatedUserIds.IsNullOrWhiteSpace() || !p.OperatedUserIds.StrToList().Select(o => o.To<long>()).Contains(AbpSession.UserId.Value));
                 }
                 else
@@ -658,7 +670,6 @@ namespace Finance.WorkFlows
                     dto = dto.Where(p => false);
                 }
             }
-
 
             var roles = dto.SelectMany(p => p.RoleId).Select(p => p.To<long>()).Distinct();
 
@@ -758,8 +769,17 @@ namespace Finance.WorkFlows
                 || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
                 || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
                 || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
+
                 || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
                 || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+
+                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
+
+                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "QuotationApprovalForm")
+
+                || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
+                || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
+                )))
 
                             )
                         {
@@ -801,7 +821,8 @@ namespace Finance.WorkFlows
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
-                        || n.Name == "总经理查看中标金额"
+                        || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
+                        || n.Name == "生成报价分析界面选择报价方案"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -1204,18 +1225,18 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task OverWorkflow(OverWorkflowInput input)
         {
-            var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
-            wf.WorkflowState = WorkflowState.Ended;
+            //var wf = await _workflowInstanceRepository.GetAsync(input.AuditFlowId);
+            //wf.WorkflowState = WorkflowState.Ended;
 
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId == "主流程_归档");
             node.NodeInstanceStatus = NodeInstanceStatus.Current;
             node.Comment = $"删除流程：{input.DeleteReason}";
 
-            var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
-            foreach (var item in nodes)
-            {
-                item.NodeInstanceStatus = NodeInstanceStatus.Over;
-            }
+            //var nodes = await _nodeInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == input.AuditFlowId && p.NodeId != "主流程_归档" && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            //foreach (var item in nodes)
+            //{
+            //    item.NodeInstanceStatus = NodeInstanceStatus.Over;
+            //}
         }
 
 

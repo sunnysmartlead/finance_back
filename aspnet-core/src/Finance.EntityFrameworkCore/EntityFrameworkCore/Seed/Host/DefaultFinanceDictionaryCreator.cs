@@ -214,7 +214,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qt, DisplayName="其他",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Jdcbpg, DisplayName="节点成本预估",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xmbg, DisplayName="项目变更",},
-
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtyylc, DisplayName="其他引用流程",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Bnnj, DisplayName="本年年降",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Tgyp, DisplayName="推广样品",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Schj, DisplayName="首次核价",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Lcyp, DisplayName="量产样品",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xnnj, DisplayName="下年年降",},

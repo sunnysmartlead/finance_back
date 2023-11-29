@@ -367,4 +367,17 @@ namespace Finance.PropertyDepartment.DemandApplyAudit.Dto
         /// </summary>
         public long QuoteSolutionId { get; set; }
     }
+
+    //快速核价报价 方案和引用用方案
+    public class BomIdAndQuoteBomId
+    {
+        /// <summary>
+        /// Bom表ID
+        /// </summary>
+        public long NewBomId { get; set; }
+        /// <summary>
+        /// 引用流程的的BOM表ID
+        /// </summary>
+        public long QuoteBomId { get; set; }
+    }
 }

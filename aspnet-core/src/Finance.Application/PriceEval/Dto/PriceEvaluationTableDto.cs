@@ -350,6 +350,16 @@ namespace Finance.PriceEval.Dto
     public class OtherCostItem : EntityDto<int>
     {
         /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 夹具
         /// </summary>
         public virtual decimal? Fixture { get; set; }
@@ -567,6 +577,16 @@ namespace Finance.PriceEval.Dto
     public class LossCost : EntityDto<int>
     {
         /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
+
+        /// <summary>
         /// 修改项Id
         /// </summary>
         public virtual string EditId { get; set; }
@@ -605,12 +625,17 @@ namespace Finance.PriceEval.Dto
         /// <summary>
         /// 数量（模组年数量）
         /// </summary>
-        internal virtual decimal Quantity { get; set; }
+        public virtual decimal Quantity { get; set; }
 
         /// <summary>
         /// 年份
         /// </summary>
-        internal virtual decimal Year { get; set; }
+        public virtual decimal Year { get; set; }
+
+        /// <summary>
+        /// 年份上下
+        /// </summary>
+        public virtual YearType UpDown { get; set; }
 
         /// <summary>
         /// 序号
@@ -793,6 +818,11 @@ namespace Finance.PriceEval.Dto
     /// </summary>
     public class ManufacturingCost : EntityDto<int>
     {
+        /// <summary>
+        /// 年份
+        /// </summary>
+        public virtual int Year { get; set; }
+
         /// <summary>
         /// 年份上下
         /// </summary>

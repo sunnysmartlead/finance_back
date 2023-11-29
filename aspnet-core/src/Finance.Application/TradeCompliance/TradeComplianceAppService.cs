@@ -133,9 +133,15 @@ namespace Finance.TradeCompliance
                                    join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
                                    select b.Country).ToList();
 
-                tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.Count > 0 ? countryList.FirstOrDefault() : null;
-
-
+                if (countryList.Count > 0)
+                {
+                    tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.FirstOrDefault();
+                }
+                else
+                {
+                    var country = await _countryLibraryRepository.GetAllListAsync(p => p.Id == 149);
+                    tradeComplianceCheckDto.TradeComplianceCheck.Country = country.FirstOrDefault().Country;
+                }
 
 
                 //存入部分合规信息生成ID

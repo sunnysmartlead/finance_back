@@ -211,7 +211,17 @@ namespace Finance.Audit
 
 
             //项目经理控制的页面
-            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, 
+                FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine,
+                FinanceConsts.PriceEvaluationBoard };
+
+            //拥有能看归档的角色的用户
+            var role = await _roleRepository.GetAllListAsync(p =>
+                            p.Name == StaticRoleNames.Host.FinanceTableAdmin 
+                            || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+
 
             return list
 
@@ -250,6 +260,25 @@ namespace Finance.Audit
 
                 || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
 
+                //报价单，必须是发起核价需求录入的人才能看到
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != "ExternalQuotation" || p.IsReset)
+
+                //报价审批表，必须是发起核价需求录入的人才能看到
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != "QuotationApprovalForm" || p.IsReset)
+
+                //如果当前用户是本流程的项目经理，就把【审批报价策略与核价表】、【报价反馈】、【确认中标金额】页面过滤掉
+                .WhereIf(projectPm == null || projectPm.ProjectManager == AbpSession.UserId,
+                p => p.ProcessIdentifier != "QuoteApproval" || p.ProcessIdentifier != "QuoteFeedback" || p.ProcessIdentifier != "BidWinningConfirmation"
+                || p.IsReset
+                )
+
+                //归档，如果当前用户不是该流程的发起人、项目经理，或归档管理员，就过滤
+                .WhereIf(projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
+                && (!userIds.Contains(AbpSession.UserId.Value)),
+                
+                p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
+
+
                 .ToList();
         }
 
@@ -262,6 +291,9 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
+            //核价需求录入
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
             //贸易合规审核员
             var tradeComplianceAuditor = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
             var isTradeComplianceAuditor = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
@@ -286,20 +318,47 @@ namespace Finance.Audit
             var generalManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.GeneralManager);
             var isGeneralManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
 
+            // 成本拆分员
+            var costSplit = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.CostSplit);
+            var isCostSplit = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
+
 
             return list
 
-                //如果当前用户不是贸易合规审核员，就把贸易合规页面过滤掉
-                .WhereIf(!isTradeComplianceAuditor, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+                //如果当前用户不是本流程的项目经理或流程发起人（业务员），就把开始页面过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "开始" || p.IsReset)
 
-                //如果当前用户不是【项目管理部-项目经理】或【市场部-项目经理】，就把【查看每个方案初版BOM成本】页面过滤掉
-                .WhereIf((!isProjectManager) || (!isMarketProjectManager), p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
+                //如果当前用户不是贸易合规审核员，或该流程的项目经理，就把贸易合规页面过滤掉
+                .WhereIf((priceEvaluation == null) || (!isTradeComplianceAuditor) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
 
-                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】，就把【项目部长查看核价表】页面过滤掉
-                .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
+                //如果当前用户不是流程发起人（业务员），就把【生成报价分析界面选择报价方案】过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId, p => p.ProcessName != "生成报价分析界面选择报价方案" || p.IsReset)
+
+                ////如果当前用户不是流程发起人（业务员），就把【报价审批表】过滤掉
+                //.WhereIf(priceEvaluation.CreatorUserId != AbpSession.UserId, p => p.ProcessName != "报价审批表" || p.IsReset)
+
+                ////如果当前用户不是流程发起人（业务员），就把【报价单】过滤掉
+                //.WhereIf(priceEvaluation.CreatorUserId != AbpSession.UserId, p => p.ProcessName != "报价单" || p.IsReset)
+
+                //如果当前用户不是本流程的项目经理，就把【查看每个方案初版BOM成本】页面过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
+
+                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】或该流传的项目经理，就把【项目部长查看核价表】页面过滤掉
+                .WhereIf((priceEvaluation == null) || (!isMarketProjectMinister) || (!isProjectMinister) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
 
                 //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
-                .WhereIf((!isMarketProjectMinister) || (!isProjectMinister), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
+                .WhereIf((!isGeneralManager), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
+
+                //如果当前用户不是【成本拆分员】或本流程的项目经理，就把【核心器件成本NRE费用拆分】页面过滤掉
+                .WhereIf((priceEvaluation == null) || (!isCostSplit) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "核心器件成本NRE费用拆分" || p.IsReset)
+
+                //如果当前用户是本流程的项目经理，就把【审批报价策略与核价表】、【生成报价分析界面选择报价方案】、【选择是否报价】、
+                //【报价反馈】、【确认中标金额】、【报价单】、【报价审批表】、【总经理查看中标金额】、【归档】页面过滤掉
+                .WhereIf((priceEvaluation != null) && priceEvaluation.ProjectManager == AbpSession.UserId, p => p.ProcessIdentifier != "QuoteApproval"
+                || p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.ProcessIdentifier != "QuoteFeedback"
+                || p.ProcessIdentifier != "BidWinningConfirmation" || p.ProcessIdentifier != "ExternalQuotation"
+                || p.ProcessIdentifier != "QuotationApprovalForm" || p.ProcessIdentifier != "ConfirmWinningBid" || p.ProcessIdentifier != "ArchiveEnd"
+                || p.IsReset)
 
                 .ToList();
         }
