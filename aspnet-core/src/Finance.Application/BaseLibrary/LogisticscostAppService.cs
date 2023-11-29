@@ -266,7 +266,7 @@ namespace Finance.BaseLibrary
                 foreach (var item in SolutionIdAndQuoteSolutionIds)
                 {
                     await _logisticscostRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId ==item.QuoteSolutionId);
-                    var query = _logisticscostRepository.GetAllList(p => p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId);
+                    var query = _logisticscostRepository.GetAllList(p => p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.QuoteSolutionId);
                     foreach (var itemQuery in query)
                     {
                         Logisticscost logisticscost = new Logisticscost();

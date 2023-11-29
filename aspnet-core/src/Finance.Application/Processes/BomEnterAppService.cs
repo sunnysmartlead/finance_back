@@ -310,12 +310,12 @@ namespace Finance.Processes
             {
                 foreach (var item in SolutionIdAndQuoteSolutionIds)
                 {
-                    await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
-                    await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.QuoteSolutionId);
+                    await _bomEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.NewSolutionId);
+                    await _bomEnterTotalRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == item.NewSolutionId);
                     //有数据的返回
-                    var query = _bomEnterRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
+                    var query = _bomEnterRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.QuoteSolutionId).ToList();
 
-                    var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.NewSolutionId).ToList();
+                    var queryEnterTotal = _bomEnterTotalRepository.GetAllList(p =>p.IsDeleted == false && p.AuditFlowId == AuditFlowId && p.SolutionId == item.QuoteSolutionId).ToList();
                     foreach (var ListBomEnterItem in query)
                     {
                         BomEnter bomEnter = new BomEnter();
