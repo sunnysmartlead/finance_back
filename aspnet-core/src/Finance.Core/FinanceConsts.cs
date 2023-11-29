@@ -925,12 +925,12 @@ namespace Finance
         /// <summary>
         /// 核价看板选项 退回到【结构BOM单价审核】
         /// </summary>
-        public const string HjkbSelect_Jgbomdjsh = "HjkbSelect_Nreemcsyflr";
+        public const string HjkbSelect_Jgbomdjsh = "HjkbSelect_Jgbomdjsh";
 
         /// <summary>
         /// 核价看板选项 退回到【电子BOM单价审核】
         /// </summary>
-        public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Nreemcsyflr";
+        public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Dzbomdjsh";
 
         /// <summary>
         /// 核价看板选项 退回到【核价审批录入】
