@@ -3790,5 +3790,36 @@ namespace Finance.PriceEval
         }
 
         #endregion
+
+        #region 快速核报价：数据复制对应
+
+
+        /// <summary>
+        /// 获取模组Id
+        /// </summary>
+        /// <param name="newAuditFlowId">新的流程号</param>
+        /// <param name="oldProductId">被引用流程的模组Id</param>
+        /// <returns>新流程对应的模组Id</returns>
+        public async Task<long> GetProductId(long newAuditFlowId, long oldProductId)
+        {
+            var m = await _modelCountRepository.FirstOrDefaultAsync(p => p.Id == oldProductId);
+            var nm = await _modelCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.SumQuantity == m.SumQuantity);
+            return nm.Id;
+        }
+
+        /// <summary>
+        /// 获取梯度Id
+        /// </summary>
+        /// <param name="newAuditFlowId">新的流程号</param>
+        /// <param name="oldGradientId">被引用流程的的梯度Id</param>
+        /// <returns>新流程对应的梯度Id</returns>
+        public async Task<long> GetGradient(long newAuditFlowId, long oldGradientId)
+        {
+            var g = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == oldGradientId);
+            var ng = await _gradientRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.GradientValue == g.GradientValue);
+            return ng.Id;
+        }
+
+        #endregion
     }
 }
