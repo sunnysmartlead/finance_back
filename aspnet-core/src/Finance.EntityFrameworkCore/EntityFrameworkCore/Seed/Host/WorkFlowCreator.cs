@@ -721,7 +721,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价看板",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj},{FinanceConsts.EvalReason_Qtyylc}",
                     FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Input}"
                 },
                 new Line
