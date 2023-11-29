@@ -365,6 +365,9 @@ namespace Finance.WorkFlows
 
 
                             //发邮件给拥有这个流程的项目经理
+                            if (false)
+                            {
+
                             #region 邮件发送
 
                             //#if !DEBUG
@@ -372,8 +375,7 @@ namespace Finance.WorkFlows
                             string loginIp = email.GetLoginAddr();
                             var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
-                            //if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
-                            //{
+
                             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
                             var role = await _roleRepository.GetAllListAsync(p =>
                             p.Name == StaticRoleNames.Host.FinanceTableAdmin || p.Name == StaticRoleNames.Host.EvalTableAdmin
@@ -383,7 +385,7 @@ namespace Finance.WorkFlows
                             if (priceEvaluation != null)
                             {
                                 userIds.Add(priceEvaluation.ProjectManager);
-                                if (priceEvaluation.CreatorUserId.HasValue 
+                                if (priceEvaluation.CreatorUserId.HasValue
                                     && priceEvaluation.CreatorUserId != priceEvaluation.ProjectManager)
                                 {
                                     userIds.Add(priceEvaluation.CreatorUserId.Value);
@@ -410,38 +412,25 @@ namespace Finance.WorkFlows
                                     catch (Exception)
                                     {
                                     }
-
-
-                                    #region 嵌套
-
-
-                                    //#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    //                                    Task.Run(async () =>
-                                    //                                    {
-
-                                    //                                    });
-                                    //#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                    #endregion
                                 }
-
                             }
-                            //}
-                            //#endif
+
                             #endregion
+                        }
                         }
                         else
                         {
 
+                            if (false)
+                            {
 
 
                             #region 邮件发送
 
-                            //#if !DEBUG
                             SendEmail email = new SendEmail();
                             string loginIp = email.GetLoginAddr();
 
-                            //if (loginIp.Equals(FinanceConsts.AliServer_In_IP))
-                            //{
+
 
                             var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
                             foreach (var task in allAuditFlowInfos)
@@ -468,10 +457,9 @@ namespace Finance.WorkFlows
                                     }
                                 }
                             }
-                            //}
 
-                            //#endif
                             #endregion
+                        }
                         }
 
                     }

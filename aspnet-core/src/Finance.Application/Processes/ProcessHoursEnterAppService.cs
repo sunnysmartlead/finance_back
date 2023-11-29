@@ -620,18 +620,18 @@ namespace Finance.Processes
             {
                 foreach (var itemProcessHoursEnterCopy in SolutionIdAndQuoteSolutionIds)
                 {
-                    var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
+                    var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
                     foreach (var item in query)
                     {
                         _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
                         _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
                         _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
                     }
-                    await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
-                    await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
-                    await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId);
+                    await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
+                    await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
+                    await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
 
-                    var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
+                    var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
 
                     // 查询数据
                     foreach (var input in list)
@@ -755,6 +755,7 @@ namespace Finance.Processes
                             processHoursEnterUph.Year = item.Year;
                             processHoursEnterUph.Uph = item.Uph;
                             processHoursEnterUph.Value = item.Value;
+                            processHoursEnterUph.ModelCountYearId = item.ModelCountYearId;
                             processHoursEnterUph.SolutionId = (long)itemProcessHoursEnterCopy.NewSolutionId;
                             processHoursEnterUph.AuditFlowId = AuditFlowNewId;
                             await _processHoursEnterUphRepository.InsertAsync(processHoursEnterUph);

@@ -114,8 +114,8 @@ namespace Finance.ProductDevelopment
                     item2.Id = 0;
                     item2.SolutionId = item.NewSolutionId;
 
-                    ElectronicBomInfo newElcBomInfo = await _electronicBomInfoRepository.InsertAsync(item2);
-                    bomIdAndQuoteBomId.NewBomId = newElcBomInfo.Id;
+                    long newElcBomInfoId = await _electronicBomInfoRepository.InsertAndGetIdAsync(item2);
+                    bomIdAndQuoteBomId.NewBomId = newElcBomInfoId;
                     list.Add(bomIdAndQuoteBomId);
                 }
 

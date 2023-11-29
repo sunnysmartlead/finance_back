@@ -6042,7 +6042,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     internal async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
         long numberOfQuotations)
-    {
+    {     
         ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
@@ -6062,7 +6062,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new FriendlyException($"version:{numberOfQuotations}版本号最大为3!");
         }
-
         List<ProductDto> productDtos = new();
         List<QuotationNreDto> quotationNreDtos = new();
         try
@@ -6074,7 +6073,6 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new FriendlyException("获取报价看板部分发生错误");
         }
-
         ExternalQuotation externalQuotation = externalQuotations.FirstOrDefault(p =>
             p.SolutionId.Equals(solutionId) && p.NumberOfQuotations.Equals(numberOfQuotations));
         if (externalQuotation is not null)
@@ -6259,9 +6257,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     internal async Task<MemoryStream> DownloadExternalQuotationStream(long auditFlowId, long solutionId,
         long numberOfQuotations)
-    {
+    {      
         ExternalQuotationDto external =
-            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
+            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);       
         external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
         {
             p.SerialNumber = index + 1;

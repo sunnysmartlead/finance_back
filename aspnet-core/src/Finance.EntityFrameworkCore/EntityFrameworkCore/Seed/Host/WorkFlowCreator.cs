@@ -433,7 +433,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价审批录入",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Schj},{FinanceConsts.EvalReason_Lcyp},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xnnj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Schj},{FinanceConsts.EvalReason_Lcyp},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xnnj},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj}",
                 },
                 new Line
                 {
@@ -721,7 +721,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价看板",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Qtyylc}",
                     FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Input}"
                 },
                 new Line
@@ -857,6 +857,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "审批报价策略与核价表",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.EvalFeedback_Bjxysp,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {
@@ -864,6 +865,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "生成报价分析界面选择报价方案",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.EvalFeedback_Bjsdjsjj,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {
@@ -892,6 +894,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     TargetNodeId = "生成报价分析界面选择报价方案",
                     Index = 0,
                     FinanceDictionaryDetailId = FinanceConsts.YesOrNo_No,
+                    LineType = LineType.Reset,
                 },
                 new Line
                 {

@@ -2138,9 +2138,15 @@ namespace Finance.NerPricing
         {
             try
             {
-                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+                AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 PricingFormDto pricingFormDto = new();
+                if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null)
+                {
+                    pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
+                    return pricingFormDto;
+                }             
+                PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);         
                 pricingFormDto = ObjectMapper.Map<PricingFormDto>(await GetPricingForm(auditFlowId, solutionId));
                 //替换被修改项的值
                 //手板件费用

@@ -108,8 +108,8 @@ namespace Finance.ProductDevelopment
                     item2.Id = 0;
                     item2.SolutionId = item.NewSolutionId;
 
-                    StructureBomInfo newStructureBomInfo = await _structureBomInfoRepository.InsertAsync(item2);
-                    bomIdAndQuoteBomId.NewBomId = newStructureBomInfo.Id;
+                    long newStructureBomInfoId = await _structureBomInfoRepository.InsertAndGetIdAsync(item2);
+                    bomIdAndQuoteBomId.NewBomId = newStructureBomInfoId;
                     list.Add(bomIdAndQuoteBomId);
                 }
 
