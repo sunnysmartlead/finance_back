@@ -706,7 +706,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{solutionId}报价方案ID不存在");
         }
-       
+
         return await _analysisBoardSecondMethod.GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
     }
 
@@ -830,11 +830,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostIsOfferSecondOnlySave(IsOfferSecondDto isOfferDto)
     {
         isOfferDto.IsFirst = true;
-        var result= await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId,isOfferDto.Solutions,isOfferDto.ntime);
+        var result =
+            await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,
+                isOfferDto.ntime);
         if (result)
         {
             throw new FriendlyException($"此报价方案组合已存在");
         }
+
         await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         //进行报价
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
@@ -850,11 +853,14 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         if (isOfferDto.IsOffer)
         {
             isOfferDto.IsFirst = false;
-          var result= await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId,isOfferDto.Solutions,isOfferDto.ntime);
-          if (result)
-          {
-              throw new FriendlyException($"此报价方案组合已存在");
-          }
+            var result =
+                await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,
+                    isOfferDto.ntime);
+            if (result)
+            {
+                throw new FriendlyException($"此报价方案组合已存在");
+            }
+
             await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
 
             //进行报价
@@ -865,7 +871,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             await this.GetDownloadListSaveNoQuotation(isOfferDto.AuditFlowId);
         }
     }
-    
+
 
     public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
     {
@@ -1042,6 +1048,71 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
         }
+    }
+
+    /// <summary>
+    /// 第一次进报价审批表
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task<ExcelApprovalDto> GetQuotationApproved(long auditFlowId, int version)
+    {
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+        int ntype = isQuotation ? 1 : 0;
+        return await _analysisBoardSecondMethod.getAppExcel(auditFlowId, version, ntype);
+    }
+
+    /// <summary>
+    /// 报价审批表保存
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task PostQuotationApproved(ExcelApprovalDto quotationListSecondDto)
+    {
+        _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
+    }
+
+    /// <summary>
+    /// 获取报价审批表列表
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task<List<AuditQuotationList>> GetQuotationList(long auditFlowId, int version)
+    {
+        return await _analysisBoardSecondMethod.GetQuotationList(auditFlowId, version);
+    }
+
+
+    /// <summary>
+    ///  根据id下载报价审批Excel    
+    /// </summary>
+    /// <param name="Id"></param>
+    /// <param name="FileName"></param>
+    /// <returns></returns>
+    public async Task<IActionResult> GetDownloadAuditQuotationExcel(long id)
+    {
+        try
+        {
+            return await _analysisBoardSecondMethod.GetQuotationExcel(id);
+        }
+        catch (Exception e)
+        {
+            throw new UserFriendlyException(e.Message);
+        }
+    }
+
+    /// <summary>
+    /// 根据id获取报价审批表
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
+    public async Task<ExcelApprovalDto> GetQuotation(long id)
+    {
+        return await _analysisBoardSecondMethod.GetQuotation(id);
     }
 
     /// <summary>
