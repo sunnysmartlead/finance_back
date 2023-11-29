@@ -1158,6 +1158,12 @@ namespace Finance.WorkFlows
                 throw new FriendlyException($"必须填写退回原因！");
             }
 
+            //只要审批意见里存在退回到核价需求录入的
+            if (input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Input))
+            {
+                throw new FriendlyException($"核价看板不允许退回到核价需求录入！");
+            }
+
             #endregion
 
             #region 同意
