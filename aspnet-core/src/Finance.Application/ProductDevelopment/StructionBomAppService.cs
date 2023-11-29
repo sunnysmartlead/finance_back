@@ -105,11 +105,11 @@ namespace Finance.ProductDevelopment
                     BomIdAndQuoteBomId bomIdAndQuoteBomId = new BomIdAndQuoteBomId();
                     bomIdAndQuoteBomId.QuoteBomId = item2.Id;
                     item2.AuditFlowId = AuditFlowId;
-                    //item2.Id = 0;
+                    item2.Id = 0;
                     item2.SolutionId = item.NewSolutionId;
 
-                    StructureBomInfo newStructureBomInfo = await _structureBomInfoRepository.InsertAsync(item2);
-                    bomIdAndQuoteBomId.NewBomId = newStructureBomInfo.Id;
+                    long newStructureBomInfoId = await _structureBomInfoRepository.InsertAndGetIdAsync(item2);
+                    bomIdAndQuoteBomId.NewBomId = newStructureBomInfoId;
                     list.Add(bomIdAndQuoteBomId);
                 }
 
