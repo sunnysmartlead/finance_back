@@ -42,6 +42,7 @@ using NPOI.HPSF;
 using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
+using Finance.Ext;
 
 namespace Finance.MakeOffers.AnalyseBoard;
 
@@ -717,6 +718,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     [HttpPost]
     public async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
+        await externalQuotationDto.ProcessAntiShaking("SaveExternalQuotation");
         //暂时注释 等报价看板完成之后放开
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
         solutionQuotations = solutionQuotations.Where(p => p.Id == externalQuotationDto.SolutionId).ToList();
@@ -727,7 +729,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
-
     /// <summary>
     /// 根据流程号获取报价目录
     /// </summary>
