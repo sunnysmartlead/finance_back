@@ -66,6 +66,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// </summary>
         private readonly FileCommonService _fileCommonService;
         /// <summary>
+        /// 营销部录入审核
+        /// </summary>
+        private PriceEvaluationGetAppService _priceEvaluationAppService;
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="resourcePricingTeam"></param>
@@ -76,7 +80,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="fileManagementRepository"></param>
         /// <param name="workflowInstanceAppService"></param>
         /// <param name="fileCommonService"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService)
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationAppService)
         {
             _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
@@ -86,6 +90,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _fileManagementRepository = fileManagementRepository;
             _workflowInstanceAppService = workflowInstanceAppService;
             _fileCommonService = fileCommonService;
+            _priceEvaluationAppService = priceEvaluationAppService;
         }
         #region 快速核报价内容
         /// <summary>
@@ -151,7 +156,12 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             #region 方案表
             // 营销部审核 方案表
             List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
-            schemeTables.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; return p; }).ToList();
+            schemeTables.Select(async p => { 
+              p.AuditFlowId = AuditFlowId; 
+              p.Id = 0;
+              p.Productld=await _priceEvaluationAppService.GetProductId(AuditFlowId,p.Productld);
+             return p; 
+            }).ToList();
             schemeTables = await _resourceSchemeTable.BulkInsertAsync(schemeTables);          
             #endregion
             #region 设计方案
