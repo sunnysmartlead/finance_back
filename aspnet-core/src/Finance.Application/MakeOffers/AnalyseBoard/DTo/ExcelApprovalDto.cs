@@ -13,52 +13,52 @@ public class ExcelApprovalDto
     /// <summary>
     /// 流程号Id
     /// </summary> 
-    public long AuditFlowId { get; set; }
+    public long auditFlowId { get; set; }
 
     /// <summary>
     /// 日期
     /// </summary>
-    public string Date { get; set; }
+    public string date { get; set; }
 
     /// <summary>
     /// 记录编号
     /// </summary>
-    public string RecordNumber { get; set; }
+    public string recordNumber { get; set; }
 
     /// <summary>
     /// 版本
     /// </summary>
-    public int Versions { get; set; }
+    public int versions { get; set; }
 
     /// <summary>
     /// 直接客户名称
     /// </summary>
-    public string DirectCustomerName { get; set; }
+    public string directCustomerName { get; set; }
 
     /// <summary>
     /// 终端客户名称
     /// </summary>
-    public string TerminalCustomerName { get; set; }
+    public string terminalCustomerName { get; set; }
 
     /// <summary>
     /// (报价形式
     /// </summary>
-    public string OfferForm { get; set; }
+    public string offerForm { get; set; }
 
     /// <summary>
     /// SOP时间
     /// </summary>
-    public int SopTime { get; set; }
+    public int sopTime { get; set; }
 
     /// <summary>
     /// 项目生命周期
     /// </summary>
-    public int ProjectCycle { get; set; }
+    public int projectCycle { get; set; }
 
     /// <summary>
     /// 销售类型
     /// </summary>
-    public string ForSale { get; set; }
+    public string forSale { get; set; }
 
 
     /// <summary>
@@ -74,17 +74,17 @@ public class ExcelApprovalDto
     /// <summary>
     /// 付款方式
     /// </summary>
-    public string PaymentMethod { get; set; }
+    public string paymentMethod { get; set; }
 
     /// <summary>
     /// (汇率
     /// </summary>
-    public decimal ExchangeRate { get; set; }
+    public decimal exchangeRate { get; set; }
 
     /// <summary>
     /// (项目名称
     /// </summary>
-    public string ProjectName { get; set; }
+    public string projectName { get; set; }
 
     /// <summary>
     /// (NRE信息
@@ -114,10 +114,10 @@ public class ExcelApprovalDto
     /// <summary>
     /// (报价策略
     /// </summary>
-    public List<BiddingStrategySecondModel> BiddingStrategySecondModels { get; set; }
+    public List<BiddingStrategySecondModel> biddingStrategySecondModels { get; set; }
 
     /// <summary>
     /// 走量
     /// </summary>
-    public List<SopSecondModel> Sop { get; set; }
+    public List<SopSecondModel> sop { get; set; }
 }
