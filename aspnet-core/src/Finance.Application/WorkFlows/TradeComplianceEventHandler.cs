@@ -24,6 +24,8 @@ using Finance.BaseLibrary;
 using Finance.Processes;
 using Abp.Authorization.Users;
 using Finance.Authorization.Roles;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
+using Spire.Pdf.Exporting.XPS.Schema;
 
 namespace Finance.WorkFlows
 {
@@ -68,9 +70,10 @@ namespace Finance.WorkFlows
 
 
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -96,6 +99,7 @@ namespace Finance.WorkFlows
             _priceEvaluationRepository = priceEvaluationRepository;
             _userRoleRepository = userRoleRepository;
             _roleRepository = roleRepository;
+            _nodeInstanceRepository = nodeInstanceRepository;
         }
 
         /// <summary>
@@ -203,37 +207,44 @@ namespace Finance.WorkFlows
                         //如果是流转到主流程_核价看板
                         if (eventData.Entity.NodeId == "主流程_核价看板")
                         {
-                            #region  流转到核价看板前判断贸易合规
-                            try
+                            //直接上传快速核价流程的核价原因
+                            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+                            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == eventData.Entity.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+
+                            //只判断不是直接上传快速核价的流程
+                            if (!list.Contains(node.FinanceDictionaryDetailId))
                             {
-                                var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
-                                if (isOk)
+                                #region  流转到核价看板前判断贸易合规
+                                try
                                 {
-                                    await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                    var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
+                                    if (isOk)
+                                    {
+                                        await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                    }
+                                    else
+                                    {
+                                        await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                        {
+                                            NodeInstanceId = eventData.Entity.Id,
+                                            FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
+                                            Comment = "系统判断不合规"
+                                        });
+                                    }
                                 }
-                                else
+                                catch (Exception)
                                 {
                                     await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
                                     {
                                         NodeInstanceId = eventData.Entity.Id,
                                         FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
-                                        Comment = "系统判断不合规"
+                                        Comment = "贸易合规判断异常"
                                     });
                                 }
+
+                                #endregion
                             }
-                            catch (Exception)
-                            {
-                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
-                                {
-                                    NodeInstanceId = eventData.Entity.Id,
-                                    FinanceDictionaryDetailId = FinanceConsts.HjkbSelect_Bhg,
-                                    Comment = "贸易合规判断异常"
-                                });
-                            }
-
-                            #endregion
-
-
                         }
 
                         //如果流转到核价看板之后，就缓存核价看板的全部信息

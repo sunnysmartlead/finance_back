@@ -261,8 +261,15 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价需求录入");
                 if (list.Contains(node.FinanceDictionaryDetailId))
                 {
-                    var kanBan = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价看板");
-                    kanBan.NodeInstanceStatus = NodeInstanceStatus.Current;
+                    if (auditEntering.Opinion == FinanceConsts.YesOrNo_Yes)
+                    {
+                        var kanBan = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价看板");
+                        kanBan.NodeInstanceStatus = NodeInstanceStatus.Current;
+                    }
+                    else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                    {
+                        throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
+                    }
                 }
                 else
                 {
@@ -276,8 +283,6 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     });
                     #endregion
                 }
-
-
             }
             catch (Exception ex)
             {
