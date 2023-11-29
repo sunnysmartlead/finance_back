@@ -363,7 +363,6 @@ namespace Finance
 
             //快速核报价_核价看板：直接上传
             configuration.CreateMap<Fu_Bom, Material>()
-                
                 .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid));
 
             configuration.CreateMap<Material, Fu_Bom>()
@@ -391,26 +390,51 @@ namespace Finance
                     EquipmentDepreciation = o.IEquipmentDepreciation,
                     ManufacturingExpenses = o.IManufacturingExpenses,
                     Subtotal = o.ISubtotal,
-                }))
-                .ReverseMap();
+                }));
+
+            configuration.CreateMap<ManufacturingCost, Fu_ManufacturingCost>()
+                .ForMember(p => p.Id, p => p.Ignore())
+                .ForMember(p => p.Tid, p => p.MapFrom(o => o.Id))
+
+                .ForMember(p => p.Did, p => p.MapFrom(o => o.ManufacturingCostDirect.Id))
+                .ForMember(p => p.DUpDown, p => p.MapFrom(o => o.ManufacturingCostDirect.UpDown))
+                .ForMember(p => p.DDirectLabor, p => p.MapFrom(o => o.ManufacturingCostDirect.DirectLabor))
+                .ForMember(p => p.DEquipmentDepreciation, p => p.MapFrom(o => o.ManufacturingCostDirect.EquipmentDepreciation))
+                .ForMember(p => p.DLineChangeCost, p => p.MapFrom(o => o.ManufacturingCostDirect.LineChangeCost))
+                .ForMember(p => p.DManufacturingExpenses, p => p.MapFrom(o => o.ManufacturingCostDirect.ManufacturingExpenses))
+                .ForMember(p => p.DSubtotal, p => p.MapFrom(o => o.ManufacturingCostDirect.Subtotal))
+
+                .ForMember(p => p.Iid, p => p.MapFrom(o => o.ManufacturingCostIndirect.Id))
+                .ForMember(p => p.IUpDown, p => p.MapFrom(o => o.ManufacturingCostIndirect.UpDown))
+                .ForMember(p => p.IDirectLabor, p => p.MapFrom(o => o.ManufacturingCostIndirect.DirectLabor))
+                .ForMember(p => p.IEquipmentDepreciation, p => p.MapFrom(o => o.ManufacturingCostIndirect.EquipmentDepreciation))
+                .ForMember(p => p.IManufacturingExpenses, p => p.MapFrom(o => o.ManufacturingCostIndirect.ManufacturingExpenses))
+                .ForMember(p => p.ISubtotal, p => p.MapFrom(o => o.ManufacturingCostIndirect.Subtotal));
 
             configuration.CreateMap<Fu_LossCost, LossCost>()
-                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
-                .ReverseMap();
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid));
 
-            configuration.CreateMap<Fu_OtherCostItem2, OtherCostItem2>()
-                .ReverseMap();
+            configuration.CreateMap<LossCost, Fu_LossCost>()
+                .ForMember(p => p.Id, p => p.Ignore())
+                .ForMember(p => p.Tid, p => p.MapFrom(o => o.Id));
+
+            configuration.CreateMap<Fu_OtherCostItem2, OtherCostItem2>();
+            configuration.CreateMap<OtherCostItem2, Fu_OtherCostItem2>()
+                .ForMember(p => p.Id, p => p.Ignore());
 
             configuration.CreateMap<Fu_OtherCostItem, OtherCostItem>()
-                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid))
-                .ReverseMap();
+                .ForMember(p => p.Id, p => p.MapFrom(o => o.Tid));
+            configuration.CreateMap<OtherCostItem, Fu_OtherCostItem>()
+                .ForMember(p => p.Id, p => p.Ignore())
+                .ForMember(p => p.Tid, p => p.MapFrom(o => o.Id));
 
-            configuration.CreateMap<Fu_QualityCostListDto, QualityCostListDto>()
-                .ReverseMap();
+            configuration.CreateMap<Fu_QualityCostListDto, QualityCostListDto>();
+            configuration.CreateMap<QualityCostListDto, Fu_QualityCostListDto>()
+                .ForMember(p => p.Id, p => p.Ignore());
 
-            configuration.CreateMap<Fu_LogisticsCost, ProductionControlInfoListDto>()
-                .ReverseMap();
-
+            configuration.CreateMap<Fu_LogisticsCost, ProductionControlInfoListDto>();
+            configuration.CreateMap<ProductionControlInfoListDto, Fu_LogisticsCost>()
+                .ForMember(p => p.Id, p => p.Ignore());
         }
     }
 }
