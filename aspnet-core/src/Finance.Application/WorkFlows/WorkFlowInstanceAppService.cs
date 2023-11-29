@@ -120,6 +120,28 @@ namespace Finance.WorkFlows
             }
         }
 
+        /// <summary>
+        /// 刷新线的激活条件
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaLineJiHuo()
+        {
+            var data = await (from l in _lineRepository.GetAll()
+                              join i in _lineInstanceRepository.GetAll() on l.Id equals i.LineId
+                              where l.FinanceDictionaryDetailId != i.FinanceDictionaryDetailId
+                              select new
+                              {
+                                  i.Id,
+                                  l.FinanceDictionaryDetailId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _lineInstanceRepository.GetAsync(item.Id);
+                l.FinanceDictionaryDetailId = item.FinanceDictionaryDetailId;
+            }
+        }
+
         private async Task TestLine(long id, long id2)
         {
             var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
