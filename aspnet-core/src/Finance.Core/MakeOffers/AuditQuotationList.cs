@@ -34,7 +34,7 @@ namespace Finance.MakeOffers
         /// </summary>
         public int ntype { get; set; }
         /// <summary>
-        /// 1 类别  0报价分析看板，1报价反馈
+        /// 1 类别  2报价审批表，3上轮单价
         /// </summary>
         public int nsource { get; set; }
 

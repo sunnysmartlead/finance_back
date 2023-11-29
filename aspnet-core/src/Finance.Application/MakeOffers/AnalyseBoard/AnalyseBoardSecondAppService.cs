@@ -729,6 +729,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         await _analysisBoardSecondMethod.SaveExternalQuotation(externalQuotationDto);
     }
+
     /// <summary>
     /// 根据流程号获取报价目录
     /// </summary>
@@ -866,6 +867,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
             //进行报价
             await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+            var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+            _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
         }
         else
         {
@@ -876,7 +879,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
     public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
     {
-        await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+        var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+        _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
     }
 
     /// <summary>
@@ -886,7 +890,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task<List<SoltionGradPrice>> GetSoltionGradPriceList(long auditFlowId, int version, int ntype)
     {
-        return await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, ntype);
+        var spsc = await _analysisBoardSecondMethod.getSpc(auditFlowId, version);
+        if (spsc is null || spsc.Count == 0)
+        {
+            return await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, ntype);
+        }
+
+        return spsc;
     }
 
     /// <summary>
@@ -903,15 +913,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 1, 1);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId, version, 0);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<ManagerApprovalOfferDto>(au.AuditQuotationListJson);
-        }
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId, version, 0);
     }
 
     /// <summary>
@@ -953,15 +955,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 2, 0);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 0);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
-        }
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 0);
     }
 
     /// <summary>
@@ -1038,17 +1032,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
-
-
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 0, 0);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId, version, 0);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
-        }
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+        int ntype = isQuotation ? 1 : 0;
+        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId, version, ntype);
     }
 
     /// <summary>
@@ -1186,6 +1172,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 1);
 
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
+        var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 1);
+        _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
     }
 
 
@@ -1237,16 +1225,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+        int ntype = isQuotation ? 1 : 0;
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 1, 1);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId, version, 1);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<ManagerApprovalOfferDto>(au.AuditQuotationListJson);
-        }
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId, version, ntype);
     }
 
     /// <summary>
@@ -1288,15 +1270,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 2, 1);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 1);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
-        }
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+        int ntype = isQuotation ? 1 : 0;
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, ntype);
     }
 
     /// <summary>
@@ -1338,15 +1314,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 2, 1);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 1);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
-        }
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 1);
     }
 
     /// <summary>
@@ -1363,15 +1331,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(auditFlowId, version, 2, 1);
-        if (au is null)
-        {
-            return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 1);
-        }
-        else
-        {
-            return JsonConvert.DeserializeObject<QuotationListSecondDto>(au.AuditQuotationListJson);
-        }
+
+        return await _analysisBoardSecondMethod.GetManagerApprovalOfferTwo(auditFlowId, version, 1);
     }
 
     /// <summary>
