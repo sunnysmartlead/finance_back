@@ -98,6 +98,28 @@ namespace Finance.WorkFlows
             //hg.NodeInstanceStatus = NodeInstanceStatus.Current;
         }
 
+        /// <summary>
+        /// 刷新退回线
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaTuiHui()
+        {
+            var data = await (from l in _lineRepository.GetAll()
+                              join i in _lineInstanceRepository.GetAll() on l.Id equals i.LineId
+                              where l.LineType != i.LineType
+                              select new
+                              {
+                                  i.Id,
+                                  l.LineType
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _lineInstanceRepository.GetAsync(item.Id);
+                l.LineType = item.LineType;
+            }
+        }
+
         private async Task TestLine(long id, long id2)
         {
             var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
