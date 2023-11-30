@@ -63,6 +63,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
 
+    private readonly IRepository<FileManagement, long> _fileManagementRepository;
+
     /// <summary>
     /// 营销部审核中方案表
     /// </summary>
@@ -116,7 +118,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     private readonly NrePricingAppService _nrePricingAppService;
-    private readonly WorkflowInstanceAppService _workflowInstanceAppService;   
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
@@ -127,6 +129,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<Role> roleRepository,
         IRepository<UserRole, long> userRoleRepository,
         IRepository<PriceEvaluation, long> priceEvaluation,
+        IRepository<FileManagement, long> fileManagementRepository,
         IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
@@ -135,6 +138,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
+        _fileManagementRepository = fileManagementRepository;
         _financeAuditQuotationList = financeAuditQuotationList;
         _resourceSchemeTable = resourceSchemeTable;
         _flowAppService = flowAppService;
@@ -151,7 +155,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         _nrePricingAppService = nrePricingAppService;
         _userAppService = userAppService;
-        _workflowInstanceAppService = workflowInstanceAppService;       
+        _workflowInstanceAppService = workflowInstanceAppService;
     }
 
     /// <summary>
@@ -700,7 +704,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
         long numberOfQuotations)
     {
-
         //如果是样品核价，就自动流转报价单进已办
         PriceEvaluation priceEvaluation = await _priceEvaluation
             .FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
@@ -708,8 +711,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException("当前核价类型为样品核价,报价单查询无效!");
         }
-            //暂时注释 等报价看板完成之后放开
-            List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
+
+        //暂时注释 等报价看板完成之后放开
+        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
         solutionQuotations = solutionQuotations.Where(p => p.Id == solutionId).ToList();
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
@@ -739,7 +743,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 根据流程号获取报价目录
+    /// 根据流程号获取报价方案目录
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
@@ -790,7 +794,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
     }
 
-    ///// <summary>
+    /*///// <summary>
     ///  审核的保存
     /// </summary>
     /// <param name="quotationListDto"></param>
@@ -813,7 +817,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 AuditQuotationListJson = JsonConvert.SerializeObject(analyseBoardSecondDto),
             });
         }
-    }
+    }*/
 
     /// <summary>
     /// 报价分析看板 删除 只有报价分析看板仅保存的情况下才能删除
@@ -875,8 +879,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
             //进行报价
             await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
-            var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 0);
-            _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
         }
         else
         {
@@ -885,26 +887,33 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
 
-    public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
+    /*public async Task PostIsOffer(IsOfferSecondDto isOfferDto)
     {
         var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
-    }
+    }*/
 
     /// <summary>
-    /// 获取对应单价  ntype 报价分析看板0 ，报价反馈1
+    /// 获取对应单价  ntype 上轮报价0 ，本轮报价
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<List<SoltionGradPrice>> GetSoltionGradPriceList(long auditFlowId, int version, int ntype)
+    public async Task<List<SoltionGradPrice>> GetSoltionGradPriceList(long auditFlowId, int version, int type)
     {
-        var spsc = await _analysisBoardSecondMethod.getSpc(auditFlowId, version);
-        if (spsc is null || spsc.Count == 0)
+        if (type == 1)
         {
-            return await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, ntype);
+            return await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, 1);
         }
+        else
+        {
+            var spsc = await _analysisBoardSecondMethod.getSpc(auditFlowId, version);
+            if (spsc is null || spsc.Count == 0)
+            {
+                return await _analysisBoardSecondMethod.GetSoltionGradPriceList(auditFlowId, version, 0);
+            }
 
-        return spsc;
+            return spsc;
+        }
     }
 
     /// <summary>
@@ -920,6 +929,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
+
+        var spc = await GetSoltionGradPriceList(auditFlowId, version, 1);
+        _analysisBoardSecondMethod.UpdateOrInsert(auditFlowId, version, spc);
 
         return await _analysisBoardSecondMethod.GetManagerApprovalOfferOne(auditFlowId, version, 0);
     }
@@ -1031,7 +1043,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<QuotationListSecondDto> GetQuotationApprovedMarketing(long auditFlowId, int version)
+    public async Task<ExcelApprovalDto> GetQuotationApprovedMarketing(long auditFlowId, int version)
 
     {
         SolutionQuotation sol =
@@ -1040,9 +1052,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
+
         var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
         int ntype = isQuotation ? 1 : 0;
+        return await _analysisBoardSecondMethod.getAppExcel(auditFlowId, version, ntype);
+        /*
         return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId, version, ntype);
+    */
     }
 
     /// <summary>
@@ -1137,7 +1153,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
 
-    /// <summary>
+    /*/// <summary>
     /// 用于测试，没有任何意义
     /// </summary>
     /// <param name="auditFlowId"></param>
@@ -1155,7 +1171,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
         return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId, version, 1);
         ;
-    }
+    }*/
 
     /// <summary>
     /// 报价反馈 保存
@@ -1180,8 +1196,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 1);
 
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
-        var spc = await GetSoltionGradPriceList(isOfferDto.AuditFlowId, isOfferDto.version, 1);
-        _analysisBoardSecondMethod.UpdateOrInsert(isOfferDto.AuditFlowId, isOfferDto.version, spc);
     }
 
 
@@ -1233,6 +1247,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
+
+        var spc = await GetSoltionGradPriceList(auditFlowId, version, 1);
+        _analysisBoardSecondMethod.UpdateOrInsert(auditFlowId, version, spc);
         var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
         int ntype = isQuotation ? 1 : 0;
 
@@ -1344,7 +1361,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 报价审核表 审批
+    /// 归档
     /// </summary>
     /// <param name="quotationListDto"></param>
     /// <returns></returns>
@@ -1362,7 +1379,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 归档文件列表保存
+    /// 不报价归档文件列表保存
     /// </summary>
     /// <returns></returns>
     public async Task GetDownloadListSaveNoQuotation(long auditFlow)
@@ -1437,7 +1454,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 归档文件列表保存
+    /// 报价归档文件列表保存
     /// </summary>
     /// <returns></returns>
     public async Task GetDownloadListSave(long auditFlow)
@@ -1531,6 +1548,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     FileName = "版本" + sol.version + "报价审批表", FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
+                if (sol.Productld != 0)
+                {
+                    await _financeDownloadListSave.InsertAsync(new DownloadListSave()
+                    {
+                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "", ProductId = 0,
+                        FileName = "版本" + sol.version + "附件", FilePath = sol.Product,
+                        FileId = sol.Productld
+                    });
+                }
+
                 //对外报价单
                 MemoryStream dwbjd =
                     await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlow, sol.Id,
@@ -1617,11 +1645,15 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
                         p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审批表")));
+                    downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("附件")));
                 }
                 else
                 {
                     downloadListSaves.AddRange(
                         await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("报价审核表")));
+                    downloadListSaves.AddRange(
+                        await _financeDownloadListSave.GetAllListAsync(p => p.FileName.Contains("附件")));
                 }
             }
 
@@ -1753,5 +1785,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                   pricingFormDto.TravelExpenseTotal + pricingFormDto.RestsCostTotal,
         };
         return nreExpense;
+    }
+
+
+    /// <summary>
+    /// 上传结构料模板
+    /// </summary>
+    /// <param name="file"></param>
+    /// <returns></returns>
+    public async Task<FileUploadOutputDto> UploadFile(IFormFile file)
+    {
+        FileUploadOutputDto fileUploadOutput = await _fileCommonService.UploadFile(file);
+        return fileUploadOutput;
     }
 }

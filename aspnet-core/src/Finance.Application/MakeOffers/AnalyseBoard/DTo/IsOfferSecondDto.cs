@@ -20,7 +20,14 @@ public class IsOfferSecondDto:ToExamineDto
     /// </summary> 
     public long AuditFlowId { get; set; }
 
-
+    /// <summary>
+    /// 附件id
+    /// </summary>
+    public long Productld { get; set; }
+    /// <summary>
+    /// 附件url
+    /// </summary>
+    public string Product { get; set; }
     /// <summary>
     /// Nre相关
     /// </summary>
