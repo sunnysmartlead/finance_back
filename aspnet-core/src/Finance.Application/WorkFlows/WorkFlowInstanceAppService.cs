@@ -120,6 +120,28 @@ namespace Finance.WorkFlows
             }
         }
 
+        /// <summary>
+        /// 刷新线的激活条件
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaLineJiHuo()
+        {
+            var data = await (from l in _lineRepository.GetAll()
+                              join i in _lineInstanceRepository.GetAll() on l.Id equals i.LineId
+                              where l.FinanceDictionaryDetailId != i.FinanceDictionaryDetailId
+                              select new
+                              {
+                                  i.Id,
+                                  l.FinanceDictionaryDetailId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _lineInstanceRepository.GetAsync(item.Id);
+                l.FinanceDictionaryDetailId = item.FinanceDictionaryDetailId;
+            }
+        }
+
         private async Task TestLine(long id, long id2)
         {
             var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
@@ -1134,6 +1156,12 @@ namespace Finance.WorkFlows
             if (input.FinanceDictionaryDetailIds.Any(p => p != FinanceConsts.HjkbSelect_Yes) && input.Comment.IsNullOrWhiteSpace())
             {
                 throw new FriendlyException($"必须填写退回原因！");
+            }
+
+            //只要审批意见里存在退回到核价需求录入的
+            if (input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Input))
+            {
+                throw new FriendlyException($"核价看板不允许退回到核价需求录入！");
             }
 
             #endregion

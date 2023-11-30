@@ -482,13 +482,16 @@ namespace Finance.PriceEval
         /// <returns>项目核价表</returns>
         public async virtual Task<ExcelPriceEvaluationTableDto> GetPriceEvaluationTable(GetPriceEvaluationTableInput input)
         {
-            var json = await _panelJsonRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
             && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == input.InputCount
-            && p.Year == input.Year && p.UpDown == input.UpDown);
-            if (json is not null)
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.DataJson).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
             {
-                return json.DataJson.FromJsonString<ExcelPriceEvaluationTableDto>();
+                return json.FromJsonString<ExcelPriceEvaluationTableDto>();
             }
+            #endregion
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
 
@@ -1061,6 +1064,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<OtherCostItem2List>> GetOtherCostItem2List(GetOtherCostItem2ListInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.OtherCostItem2List).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<OtherCostItem2List>>();
+            }
+            #endregion
+
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var shareCount = await _shareCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
@@ -1261,6 +1274,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<LossCost>> GetLossCostNoChange(GetCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LossCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<LossCost>>();
+            }
+            #endregion
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
             return await this.GetLossCostByMaterial(input.Year, electronicAndStructureList, input, false);
@@ -1273,6 +1296,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<LossCost>> GetLossCost(GetCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LossCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<LossCost>>();
+            }
+            #endregion
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
             return await this.GetLossCostByMaterial(input.Year, electronicAndStructureList, input);
@@ -1355,6 +1388,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<Material>> GetBomCost(GetBomCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.BomCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<Material>>();
+            }
+            #endregion
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
 
@@ -1678,6 +1721,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCostNoChange(GetManufacturingCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.ManufacturingCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ManufacturingCost>>();
+            }
+            #endregion
+
             return await GetManufacturingCostPrivate(input, false);
         }
 
@@ -1688,6 +1741,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCost(GetManufacturingCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.ManufacturingCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ManufacturingCost>>();
+            }
+            #endregion
+
             return await GetManufacturingCostPrivate(input);
         }
 
@@ -2261,9 +2324,9 @@ namespace Finance.PriceEval
             #region 快速核报价：上传
 
             //筛选组测
-            var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
-             && p.Year == input.Year && p.UpDown == input.UpDown && p.CostType == CostType.GroupTest);
-            if (fuManufacturing.Any())
+            var fuManufacturing = await _fu_ManufacturingCostRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == year && p.UpDown == upDown && p.CostType == CostType.GroupTest);
+            if (fuManufacturing is not null)
             {
                 return ObjectMapper.Map<ManufacturingCost>(fuManufacturing);
             }
@@ -2542,6 +2605,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ProductionControlInfoListDto>> GetLogisticsCostNoChange(GetLogisticsCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LogisticsCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ProductionControlInfoListDto>>();
+            }
+            #endregion
+
             return await GetLogisticsCostPrivate(input, false);
         }
 
@@ -2552,6 +2625,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ProductionControlInfoListDto>> GetLogisticsCost(GetLogisticsCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LogisticsCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ProductionControlInfoListDto>>();
+            }
+            #endregion
+
             return await GetLogisticsCostPrivate(input);
         }
 
@@ -2697,6 +2780,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<QualityCostListDto> GetQualityCostNoChange(GetOtherCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.QualityCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<QualityCostListDto>();
+            }
+            #endregion
+
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 return await GetQualityCostPrivate(input);
@@ -2714,6 +2807,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<QualityCostListDto> GetQualityCost(GetOtherCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.QualityCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<QualityCostListDto>();
+            }
+            #endregion
+
             return await GetQualityCostPrivate(input);
         }
 
@@ -3789,6 +3892,29 @@ namespace Finance.PriceEval
 
         }
 
+        /// <summary>
+        /// 获取当前快速核报价流程（直接上传）是否已上传核价表
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetIsUplpadEvalTable(GetIsUplpadEvalTableInput input)
+        {
+            //全生命周期处理
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId);
+
+                return fuBom;
+            }
+            else
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                return fuBom;
+            }
+
+        }
+
         #endregion
 
         #region 快速核报价：数据复制对应
@@ -3800,7 +3926,7 @@ namespace Finance.PriceEval
         /// <param name="newAuditFlowId">新的流程号</param>
         /// <param name="oldProductId">被引用流程的模组Id</param>
         /// <returns>新流程对应的模组Id</returns>
-        public async Task<long> GetProductId(long newAuditFlowId, long oldProductId)
+        internal async Task<long> GetProductId(long newAuditFlowId, long oldProductId)
         {
             var m = await _modelCountRepository.FirstOrDefaultAsync(p => p.Id == oldProductId);
             var nm = await _modelCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.SumQuantity == m.SumQuantity);
@@ -3813,7 +3939,7 @@ namespace Finance.PriceEval
         /// <param name="newAuditFlowId">新的流程号</param>
         /// <param name="oldGradientId">被引用流程的的梯度Id</param>
         /// <returns>新流程对应的梯度Id</returns>
-        public async Task<long> GetGradient(long newAuditFlowId, long oldGradientId)
+        internal async Task<long> GetGradient(long newAuditFlowId, long oldGradientId)
         {
             var g = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == oldGradientId);
             var ng = await _gradientRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.GradientValue == g.GradientValue);
