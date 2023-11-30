@@ -819,7 +819,7 @@ namespace Finance.WorkFlows
 
                 || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
-                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "QuotationApprovalForm")
+                || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
 
                 || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
                 || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
@@ -868,9 +868,37 @@ namespace Finance.WorkFlows
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
                         || n.Name == "生成报价分析界面选择报价方案" 
 
-                        || n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
-                        || n.Name == "审批报价策略与核价表" 
-                        || n.Name == "确认中标金额" || n.Name == "归档"
+                        //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
+                        //|| n.Name == "审批报价策略与核价表" 
+                        //|| n.Name == "确认中标金额" || n.Name == "归档"
+                       select new UserTask
+                       {
+                           Id = h.NodeInstanceId,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = w.CreationTime,
+                           TaskUser = u.Name,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
+                           ProcessIdentifier = n.ProcessIdentifier
+                       };
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
+            return new PagedResultDto<UserTask>(count, result);
+        }
+
+        /// <summary>
+        /// 根据当前用户Id 获取已办，不过滤
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskCompleted()
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
