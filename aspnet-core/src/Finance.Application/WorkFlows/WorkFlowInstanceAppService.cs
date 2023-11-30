@@ -890,6 +890,34 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 根据当前用户Id 获取已办，不过滤
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskCompleted()
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       select new UserTask
+                       {
+                           Id = h.NodeInstanceId,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = w.CreationTime,
+                           TaskUser = u.Name,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
+                           ProcessIdentifier = n.ProcessIdentifier
+                       };
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
+            return new PagedResultDto<UserTask>(count, result);
+        }
+
+        /// <summary>
         /// 根据用户Id 获取已办
         /// </summary>
         /// <param name="userId"></param>

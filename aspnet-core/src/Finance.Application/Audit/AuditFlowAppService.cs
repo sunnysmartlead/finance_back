@@ -463,6 +463,7 @@ namespace Finance.Audit
                 throw new FriendlyException(401, "请先登录");
             }
 
+
             //待办
             var data = await _workflowInstanceAppService.GetTaskByUserId(0);
 
@@ -498,21 +499,49 @@ namespace Finance.Audit
             auditFlowRightInfoDtoList.AddRange(dto);
 
             //已办
-            var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
-            var taskedDto = (await tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
-            {
-                AuditFlowId = p.Key.WorkFlowInstanceId,
-                AuditFlowTitle = p.Key.Title,
-                AuditFlowRightDetailList = await TaskCompleted(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
-                {
-                    Id = o.Id,
-                    ProcessName = o.NodeName,
-                    Right = RIGHTTYPE.ReadOnly,
-                    ProcessIdentifier = o.ProcessIdentifier
-                }).ToList())
-            })).Where(p => p.AuditFlowRightDetailList.Any());
 
-            auditFlowRightInfoDtoList.AddRange(taskedDto);
+            //判断当前用户是否是超级管理员
+            var user = await _userRepository.FirstOrDefaultAsync(p => p.Id == AbpSession.UserId);
+
+            // 普通用户的已办
+            if (user.UserName != AbpUserBase.AdminUserName)
+            {
+                var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
+                var taskedDto = (await tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = await TaskCompleted(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList())
+                })).Where(p => p.AuditFlowRightDetailList.Any());
+
+                auditFlowRightInfoDtoList.AddRange(taskedDto);
+            }
+            else
+            {
+                // 超级管理员的已办
+                var tasked = await _workflowInstanceAppService.GetTaskCompleted();
+                var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList()
+                }).Where(p => p.AuditFlowRightDetailList.Any());
+
+                auditFlowRightInfoDtoList.AddRange(taskedDto);
+            }
+
 
             return auditFlowRightInfoDtoList;
         }
