@@ -676,7 +676,7 @@ namespace Finance.WorkFlows
                 .Join(_workflowInstanceRepository.GetAll(), n => n.WorkFlowInstanceId, w => w.Id, (n, w) => new { n, w })
                 .Where(p =>
                 (p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current)
-                || (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
+                //|| (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
                 );
 
 
