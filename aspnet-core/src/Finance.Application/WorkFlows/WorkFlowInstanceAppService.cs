@@ -819,7 +819,7 @@ namespace Finance.WorkFlows
 
                 || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
-                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "QuotationApprovalForm")
+                || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
 
                 || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
                 || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
