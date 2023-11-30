@@ -323,6 +323,18 @@ namespace Finance.Audit
             var costSplit = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.CostSplit);
             var isCostSplit = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
 
+            //财务部-核价表归档管理员
+            var financeTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
+            var isFinanceTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == financeTableAdmin.Id);
+
+            //报价审核表归档管理员
+            var evalTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+            var isEvalTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == evalTableAdmin.Id);
+
+            //报价单归档管理员
+            var bjdgdgly = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var isBjdgdgly = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == bjdgdgly.Id);
+
 
             return list
 
@@ -359,8 +371,16 @@ namespace Finance.Audit
                 .WhereIf((priceEvaluation != null) && priceEvaluation.ProjectManager == AbpSession.UserId, p => (p.ProcessIdentifier != "QuoteApproval"
                 && p.ProcessIdentifier != FinanceConsts.QuoteAnalysis && p.ProcessIdentifier != "QuoteFeedback"
                 && p.ProcessIdentifier != "BidWinningConfirmation" && p.ProcessIdentifier != "ExternalQuotation"
-                && p.ProcessIdentifier != "QuotationApprovalForm" && p.ProcessIdentifier != "ConfirmWinningBid" && p.ProcessIdentifier != "ArchiveEnd")
+                && p.ProcessIdentifier != "QuotationApprovalForm" && p.ProcessIdentifier != "ConfirmWinningBid")//&& p.ProcessIdentifier != "ArchiveEnd"
                 || p.IsReset)
+
+                //如果当前用户不是本流程的项目经理，也不是本流程的录入人。也不是【财务部-核价表归档管理员】、【报价审核表归档管理员】、【报价单归档管理员】，就把【归档】页面过滤掉
+                .WhereIf((priceEvaluation == null) || 
+                ((!isCostSplit) && priceEvaluation.ProjectManager != AbpSession.UserId 
+                && priceEvaluation.CreatorUserId != AbpSession.UserId)
+                &&(!isFinanceTableAdmin) &&(!isEvalTableAdmin) &&(!isBjdgdgly)
+                , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
+
 
                 .ToList();
         }
