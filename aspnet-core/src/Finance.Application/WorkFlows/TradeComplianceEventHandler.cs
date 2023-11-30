@@ -163,6 +163,23 @@ namespace Finance.WorkFlows
                         //    });
                         //}
 
+                        //如果是流转到报价单的
+                        if (eventData.Entity.NodeId == "主流程_报价单")
+                        {
+                            //如果是样品核价，就自动流转报价单进已办
+                            var priceEvaluation = await _priceEvaluationRepository
+                                .FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            if (priceEvaluation.PriceEvalType == FinanceConsts.PriceEvalType_Sample)
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.Done,
+                                    Comment = "系统自动流转"
+                                });
+                            }
+                        }
+
                         //如果是流转到电子BOM退回页面的
                         if (eventData.Entity.NodeId == "主流程_上传电子BOM")
                         {
@@ -250,24 +267,25 @@ namespace Finance.WorkFlows
                         //如果流转到核价看板之后，就缓存核价看板的全部信息
                         if (eventData.Entity.NodeId == "主流程_项目部课长审核")
                         {
+                            #region 缓存核价表
                             var data = from g in _gradientRepository.GetAll()
                                        from s in _solutionRepository.GetAll()
                                        from y in _modelCountYearRepository.GetAll()
                                        where g.AuditFlowId == eventData.Entity.WorkFlowInstanceId
                                        && s.AuditFlowId == eventData.Entity.WorkFlowInstanceId
                                        && y.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                       select new GetPriceEvaluationTableInput
+                                       select new //GetPriceEvaluationTableInput
                                        {
                                            AuditFlowId = eventData.Entity.WorkFlowInstanceId,
                                            GradientId = g.Id,
                                            InputCount = 0,
                                            SolutionId = s.Id,
                                            Year = y.Year,
-                                           UpDown = y.UpDown
+                                           UpDown = y.UpDown,
                                        };
                             var result = await data.ToListAsync();
                             var all = result.GroupBy(p => new { p.AuditFlowId, p.GradientId, p.InputCount, p.SolutionId, })
-                                .Select(p => new GetPriceEvaluationTableInput
+                                .Select(p => new //GetPriceEvaluationTableInput
                                 {
                                     AuditFlowId = p.Key.AuditFlowId,
                                     GradientId = p.Key.GradientId,
@@ -277,9 +295,122 @@ namespace Finance.WorkFlows
                                     UpDown = YearType.Year
                                 }).Distinct();
                             result.AddRange(all);
+
+
                             foreach (var item in result)
                             {
-                                var priceEvaluationTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(item);
+                                //核价表
+                                var priceEvaluationTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    InputCount = item.InputCount,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //其他成本项目2
+                                var otherCostItem2List = await _priceEvaluationGetAppService.GetOtherCostItem2List(new GetOtherCostItem2ListInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //bom成本
+                                var bomCost = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                    InputCount = item.InputCount,
+                                });
+
+                                //制造成本汇总表（未修改）
+                                var manufacturingCostNoChange = await _priceEvaluationGetAppService.GetManufacturingCostNoChange(new GetManufacturingCostInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //制造成本汇总表（已修改）
+                                var manufacturingCost = await _priceEvaluationGetAppService.GetManufacturingCost(new GetManufacturingCostInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //物流成本（未修改）
+                                var logisticsCostNoChange = await _priceEvaluationGetAppService.GetLogisticsCostNoChange(new GetLogisticsCostInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //物流成本（已修改）
+                                var logisticsCost = await _priceEvaluationGetAppService.GetLogisticsCost(new GetLogisticsCostInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //质量成本（未修改）
+                                var qualityCostNoChange = await _priceEvaluationGetAppService.GetQualityCostNoChange(new GetOtherCostItemInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //质量成本（已修改）
+                                var qualityCost = await _priceEvaluationGetAppService.GetQualityCost(new GetOtherCostItemInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //损耗成本（未修改）
+                                var lossCostNoChange = await _priceEvaluationGetAppService.GetLossCostNoChange(new GetCostItemInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
+                                //损耗成本（已修改）
+                                var lossCost = await _priceEvaluationGetAppService.GetLossCost(new GetCostItemInput
+                                {
+                                    AuditFlowId = item.AuditFlowId,
+                                    GradientId = item.GradientId,
+                                    SolutionId = item.SolutionId,
+                                    Year = item.Year,
+                                    UpDown = item.UpDown,
+                                });
+
                                 await _panelJsonRepository.InsertAsync(new PanelJson
                                 {
                                     AuditFlowId = item.AuditFlowId,
@@ -288,9 +419,21 @@ namespace Finance.WorkFlows
                                     SolutionId = item.SolutionId,
                                     Year = item.Year,
                                     UpDown = item.UpDown,
-                                    DataJson = priceEvaluationTable.ToJsonString()
+                                    DataJson = priceEvaluationTable.ToJsonString(),
+                                    OtherCostItem2List = otherCostItem2List.ToJsonString(),
+                                    BomCost = bomCost.ToJsonString(),
+                                    ManufacturingCostNoChange = manufacturingCostNoChange.ToJsonString(),
+                                    ManufacturingCost = manufacturingCost.ToJsonString(),
+                                    LogisticsCostNoChange = logisticsCostNoChange.ToJsonString(),
+                                    LogisticsCost = logisticsCost.ToJsonString(),
+                                    QualityCostNoChange = qualityCostNoChange.ToJsonString(),
+                                    QualityCost = qualityCost.ToJsonString(),
+                                    LossCostNoChange = lossCostNoChange.ToJsonString(),
+                                    LossCost = lossCost.ToJsonString(),
                                 });
                             }
+
+                            #endregion
                         }
 
                         //到核价审批录入后，要清空核价需求录入的缓存
@@ -378,99 +521,96 @@ namespace Finance.WorkFlows
                             //发邮件给拥有这个流程的项目经理
                             if (false)
                             {
+                                #region 邮件发送
 
-                            #region 邮件发送
-
-                            //#if !DEBUG
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
-                            var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+                                //#if !DEBUG
+                                SendEmail email = new SendEmail();
+                                string loginIp = email.GetLoginAddr();
+                                var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
 
-                            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
-                            var role = await _roleRepository.GetAllListAsync(p =>
-                            p.Name == StaticRoleNames.Host.FinanceTableAdmin || p.Name == StaticRoleNames.Host.EvalTableAdmin
-                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
-                            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+                                var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                var role = await _roleRepository.GetAllListAsync(p =>
+                                p.Name == StaticRoleNames.Host.FinanceTableAdmin || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                        || p.Name == StaticRoleNames.Host.Bjdgdgly);
+                                var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
 
-                            if (priceEvaluation != null)
-                            {
-                                userIds.Add(priceEvaluation.ProjectManager);
-                                if (priceEvaluation.CreatorUserId.HasValue
-                                    && priceEvaluation.CreatorUserId != priceEvaluation.ProjectManager)
+                                if (priceEvaluation != null)
                                 {
-                                    userIds.Add(priceEvaluation.CreatorUserId.Value);
-                                }
-                            }
-                            userIds = userIds.Distinct().ToList();
-                            foreach (var userId in userIds)
-                            {
-                                var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-
-                                if (userInfo != null)
-                                {
-                                    string emailAddr = userInfo.EmailAddress;
-                                    string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                    string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-
-                                    try
+                                    userIds.Add(priceEvaluation.ProjectManager);
+                                    if (priceEvaluation.CreatorUserId.HasValue
+                                        && priceEvaluation.CreatorUserId != priceEvaluation.ProjectManager)
                                     {
-                                        if (!emailAddr.Contains("@qq.com"))
+                                        userIds.Add(priceEvaluation.CreatorUserId.Value);
+                                    }
+                                }
+                                userIds = userIds.Distinct().ToList();
+                                foreach (var userId in userIds)
+                                {
+                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+
+                                    if (userInfo != null)
+                                    {
+                                        string emailAddr = userInfo.EmailAddress;
+                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                        string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+
+                                        try
                                         {
-                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                            if (!emailAddr.Contains("@qq.com"))
+                                            {
+                                                await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                            }
+                                        }
+                                        catch (Exception)
+                                        {
                                         }
                                     }
-                                    catch (Exception)
-                                    {
-                                    }
                                 }
-                            }
 
-                            #endregion
-                        }
+                                #endregion
+                            }
                         }
                         else
                         {
 
                             if (false)
                             {
+                                #region 邮件发送
 
-
-                            #region 邮件发送
-
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
+                                SendEmail email = new SendEmail();
+                                string loginIp = email.GetLoginAddr();
 
 
 
-                            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
-                            foreach (var task in allAuditFlowInfos)
-                            {
-                                foreach (var userId in task.TaskUserIds)
+                                var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
+                                foreach (var task in allAuditFlowInfos)
                                 {
-                                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-                                    //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
-
-                                    if (userInfo != null)
+                                    foreach (var userId in task.TaskUserIds)
                                     {
-                                        string emailAddr = userInfo.EmailAddress;
+                                        var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                                        //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
 
-                                        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-                                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                        string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                        Task.Run(async () =>
+                                        if (userInfo != null)
                                         {
-                                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                        });
+                                            string emailAddr = userInfo.EmailAddress;
+
+                                            var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+
+                                            string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                            string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                            Task.Run(async () =>
+                                            {
+                                                await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                            });
 #pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+                                        }
                                     }
                                 }
-                            }
 
-                            #endregion
-                        }
+                                #endregion
+                            }
                         }
 
                     }
