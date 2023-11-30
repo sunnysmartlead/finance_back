@@ -16,7 +16,7 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public virtual long SolutionId { get; set; }
     /// <summary>
-    /// 模组id
+    /// 附件id
     /// </summary>
     public long Productld { get; set; }
     /// <summary>
@@ -28,7 +28,7 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public string SolutionName { get; set; }
     /// <summary>
-    /// 产品名称
+    /// 附件url
     /// </summary>
     public string Product { get; set; }
     /// <summary>
