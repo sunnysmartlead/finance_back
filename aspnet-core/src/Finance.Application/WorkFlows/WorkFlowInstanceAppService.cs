@@ -121,6 +121,28 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 刷新退回线
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaNode()
+        {
+            var data = await (from n in _nodeRepository.GetAll()
+                              join i in _nodeInstanceRepository.GetAll() on n.Id equals i.NodeId
+                              where n.RoleId != i.RoleId
+                              select new
+                              {
+                                  i.Id,
+                                  n.RoleId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _nodeInstanceRepository.GetAsync(item.Id);
+                l.RoleId = item.RoleId;
+            }
+        }
+
+        /// <summary>
         /// 刷新线的激活条件
         /// </summary>
         /// <returns></returns>
