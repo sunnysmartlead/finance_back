@@ -59,6 +59,9 @@ namespace Finance.Audit
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
 
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+        private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
+
 
         private long _projectManager = 0;
         private List<string> _backProcessIdentifiers = null;
@@ -87,7 +90,9 @@ namespace Finance.Audit
             WorkflowInstanceAppService workflowInstanceAppService,
             IRepository<Solution, long> solutionRepository,
             IRepository<PricingTeam, long> pricingTeamRepository,
-            IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository)
+            IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository,
+            IRepository<NodeInstance, long> nodeInstanceRepository,
+            IRepository<WorkflowInstance, long> workflowInstanceRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFinishedProcessRepository = auditFinishedProcessRepository;
@@ -114,6 +119,9 @@ namespace Finance.Audit
             _priceEvaluationRepository = priceEvaluationRepository;
 
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
+
+            _nodeInstanceRepository = nodeInstanceRepository;
+            _workflowInstanceRepository = workflowInstanceRepository;
         }
 
 
@@ -292,6 +300,10 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
+            //if (auditFlowId == 546)
+            //{
+            //    var g34 = "";
+            //}
             //核价需求录入
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
@@ -335,6 +347,32 @@ namespace Finance.Audit
             var bjdgdgly = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
             var isBjdgdgly = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == bjdgdgly.Id);
 
+            //流程
+            var w = await _workflowInstanceRepository.GetAsync(auditFlowId);
+            var n = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档");
+
+
+            //节点
+
+            //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
+            if (w.WorkflowState == WorkflowState.Ended || n.NodeInstanceStatus == NodeInstanceStatus.Current)
+            {
+                if (!list.Any(p => p.ProcessName == "归档"))
+                {
+                    list.Add(new AuditFlowRightDetailDto
+                    {
+                        Id = n.Id,
+                        IsReset = false,
+                        IsRetype = false,
+                        JumpDescription = "",
+                        ProcessIdentifier = n.ProcessIdentifier,
+                        ProcessName = n.Name,
+                        Right = RIGHTTYPE.ReadOnly,
+                    });
+                }
+
+            }
+
 
             return list
 
@@ -375,10 +413,10 @@ namespace Finance.Audit
                 || p.IsReset)
 
                 //如果当前用户不是本流程的项目经理，也不是本流程的录入人。也不是【财务部-核价表归档管理员】、【报价审核表归档管理员】、【报价单归档管理员】，就把【归档】页面过滤掉
-                .WhereIf((priceEvaluation == null) || 
-                ((!isCostSplit) && priceEvaluation.ProjectManager != AbpSession.UserId 
-                && priceEvaluation.CreatorUserId != AbpSession.UserId)
-                &&(!isFinanceTableAdmin) &&(!isEvalTableAdmin) &&(!isBjdgdgly)
+                .WhereIf((priceEvaluation == null) ||
+                 priceEvaluation.ProjectManager != AbpSession.UserId
+                && priceEvaluation.CreatorUserId != AbpSession.UserId
+                && (!isFinanceTableAdmin) && (!isEvalTableAdmin) && (!isBjdgdgly)
                 , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
 
 
