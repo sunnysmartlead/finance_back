@@ -866,7 +866,11 @@ namespace Finance.WorkFlows
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
-                        || n.Name == "生成报价分析界面选择报价方案"
+                        || n.Name == "生成报价分析界面选择报价方案" 
+
+                        || n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
+                        || n.Name == "审批报价策略与核价表" 
+                        || n.Name == "确认中标金额" || n.Name == "归档"
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
