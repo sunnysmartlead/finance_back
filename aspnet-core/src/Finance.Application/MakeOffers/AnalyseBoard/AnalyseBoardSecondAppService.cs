@@ -118,6 +118,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     private readonly NrePricingAppService _nrePricingAppService;
     private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
+    private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
+
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
@@ -131,7 +133,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
         IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService,
-        WorkflowInstanceAppService workflowInstanceAppService)
+        WorkflowInstanceAppService workflowInstanceAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -152,6 +154,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nrePricingAppService = nrePricingAppService;
         _userAppService = userAppService;
         _workflowInstanceAppService = workflowInstanceAppService;
+        _priceEvaluationRepository = priceEvaluationRepository;
     }
 
     /// <summary>
@@ -700,8 +703,16 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<ExternalQuotationDto> GetExternalQuotation(long auditFlowId, long solutionId,
         long numberOfQuotations)
     {
-        //暂时注释 等报价看板完成之后放开
-        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
+
+        //如果是样品核价，就自动流转报价单进已办
+        var priceEvaluation = await _priceEvaluationRepository
+            .FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+        if (priceEvaluation.PriceEvalType == FinanceConsts.PriceEvalType_Sample)
+        {
+            throw new FriendlyException("当前核价类型为样品核价,报价单查询无效!");
+        }
+            //暂时注释 等报价看板完成之后放开
+            List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
         solutionQuotations = solutionQuotations.Where(p => p.Id == solutionId).ToList();
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
