@@ -116,9 +116,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     private readonly NrePricingAppService _nrePricingAppService;
-    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-
-    private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;   
 
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
@@ -133,7 +131,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
         IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService,
-        WorkflowInstanceAppService workflowInstanceAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository)
+        WorkflowInstanceAppService workflowInstanceAppService)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -153,8 +151,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         _nrePricingAppService = nrePricingAppService;
         _userAppService = userAppService;
-        _workflowInstanceAppService = workflowInstanceAppService;
-        _priceEvaluationRepository = priceEvaluationRepository;
+        _workflowInstanceAppService = workflowInstanceAppService;       
     }
 
     /// <summary>
@@ -705,7 +702,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
 
         //如果是样品核价，就自动流转报价单进已办
-        var priceEvaluation = await _priceEvaluationRepository
+        PriceEvaluation priceEvaluation = await _priceEvaluation
             .FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
         if (priceEvaluation.PriceEvalType == FinanceConsts.PriceEvalType_Sample)
         {
