@@ -163,6 +163,23 @@ namespace Finance.WorkFlows
                         //    });
                         //}
 
+                        //如果是流转到报价单的
+                        if (eventData.Entity.NodeId == "主流程_报价单")
+                        {
+                            //如果是样品核价，就自动流转报价单进已办
+                            var priceEvaluation = await _priceEvaluationRepository
+                                .FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                            if (priceEvaluation.PriceEvalType == FinanceConsts.PriceEvalType_Sample)
+                            {
+                                await _workflowInstanceAppService.SubmitNode(new Dto.SubmitNodeInput
+                                {
+                                    NodeInstanceId = eventData.Entity.Id,
+                                    FinanceDictionaryDetailId = FinanceConsts.Done,
+                                    Comment = "系统自动流转"
+                                });
+                            }
+                        }
+
                         //如果是流转到电子BOM退回页面的
                         if (eventData.Entity.NodeId == "主流程_上传电子BOM")
                         {
@@ -504,7 +521,6 @@ namespace Finance.WorkFlows
                             //发邮件给拥有这个流程的项目经理
                             if (false)
                             {
-
                                 #region 邮件发送
 
                                 //#if !DEBUG
@@ -560,8 +576,6 @@ namespace Finance.WorkFlows
 
                             if (false)
                             {
-
-
                                 #region 邮件发送
 
                                 SendEmail email = new SendEmail();
