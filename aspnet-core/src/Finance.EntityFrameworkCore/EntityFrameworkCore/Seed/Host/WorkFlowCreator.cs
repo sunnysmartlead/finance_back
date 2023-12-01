@@ -64,6 +64,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             var financeEval = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.FinanceEval);
             var financeTableAdmin = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
             var evalTableAdmin = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+            var bjdgdgly = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
+
+
             var costSplit = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.CostSplit);
             #endregion
 
@@ -414,7 +417,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_不合规是否退回_{MainFlowId}_归档 || {MainFlowId}_确认中标金额_{MainFlowId}_归档 || {MainFlowId}_选择是否报价_{MainFlowId}_归档 || {MainFlowId}_报价反馈_{MainFlowId}_归档",
                     NodeType= NodeType.End,
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id}",
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id},{bjdgdgly.Id}",
                     ProcessIdentifier = "ArchiveEnd",
                 },
             };

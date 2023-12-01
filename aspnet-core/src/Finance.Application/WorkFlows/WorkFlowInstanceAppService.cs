@@ -121,6 +121,28 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 刷新退回线
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaNode()
+        {
+            var data = await (from n in _nodeRepository.GetAll()
+                              join i in _nodeInstanceRepository.GetAll() on n.Id equals i.NodeId
+                              where n.RoleId != i.RoleId
+                              select new
+                              {
+                                  i.Id,
+                                  n.RoleId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _nodeInstanceRepository.GetAsync(item.Id);
+                l.RoleId = item.RoleId;
+            }
+        }
+
+        /// <summary>
         /// 刷新线的激活条件
         /// </summary>
         /// <returns></returns>
@@ -866,11 +888,13 @@ namespace Finance.WorkFlows
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
-                        || n.Name == "生成报价分析界面选择报价方案" 
+                        || n.Name == "生成报价分析界面选择报价方案"
 
-                        //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
-                        //|| n.Name == "审批报价策略与核价表" 
-                        //|| n.Name == "确认中标金额" || n.Name == "归档"
+                        || n.Name == "归档"
+
+                       //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
+                       //|| n.Name == "审批报价策略与核价表" 
+                       //|| n.Name == "确认中标金额" 
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
