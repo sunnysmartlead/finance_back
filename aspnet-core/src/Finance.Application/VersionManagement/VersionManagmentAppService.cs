@@ -100,8 +100,9 @@ namespace Finance.VersionManagement
                         join n in _nodeInstanceRepository.GetAll() on p.AuditFlowId equals n.WorkFlowInstanceId
                         join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id
                         join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
-                        where w.WorkflowState == WorkflowState.Running
-                        && n.NodeId == "主流程_核价需求录入"
+                        where
+                        //w.WorkflowState == WorkflowState.Running &&
+                        n.NodeId == "主流程_核价需求录入"
                         select new VersionBasicInfoDto
                         {
                             AuditFlowId = p.AuditFlowId,
@@ -375,7 +376,7 @@ namespace Finance.VersionManagement
         /// 获取系统版本操作记录（根据流程实例Id）
         /// </summary>
         /// <returns></returns>
-        public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrdByNodeInstanceId(long flowId,long nodeInstanceId)
+        public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrdByNodeInstanceId(long flowId, long nodeInstanceId)
         {
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
 
