@@ -2621,6 +2621,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             var product = isOfferDto.Product;
             var productid = isOfferDto.Productld;
+            var ModuleName=isOfferDto.ProductName;
             if (productid != 0)
             {
                 var solutionQuotation =
@@ -2628,6 +2629,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         p.AuditFlowId == AuditFlowId && p.version == version);
                 solutionQuotation.Product = product;
                 solutionQuotation.Productld = productid;
+                solutionQuotation.ModuleName = ModuleName;
                 _solutionQutation.UpdateAsync(solutionQuotation);
             }
         }
@@ -5658,6 +5660,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var isQuotation = await getQuotation(auditFlowId, version);
         ntype = isQuotation ? 1 : 0;
         List<SoltionGradPrice> gsp = await GetSoltionGradPriceList(auditFlowId, version, ntype);
+        if (gsp is null || gsp.Count == 0)
+        {
+            return null;
+        }
+        
+        
         Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
             .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
