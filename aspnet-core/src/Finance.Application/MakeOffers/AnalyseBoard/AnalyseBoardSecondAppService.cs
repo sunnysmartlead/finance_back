@@ -1699,7 +1699,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 归档文件下载 传 DownloadListSaveId
+    /// 归档文件下载 传 id组成的list
     /// </summary>
     /// <returns></returns>
     public async Task<IActionResult> PostPigeonholeDownload(List<long> DownloadListSaveIds)
