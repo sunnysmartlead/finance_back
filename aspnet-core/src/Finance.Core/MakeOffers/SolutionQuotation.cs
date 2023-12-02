@@ -20,7 +20,7 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public long Productld { get; set; }
     /// <summary>
-    /// 模组名称
+    /// 附件名称
     /// </summary>
     public string ModuleName { get; set; }
     /// <summary>

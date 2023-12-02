@@ -1422,7 +1422,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     {
                         AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                         ProductName = "", ProductId = 0,
-                        FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表",
+                        FileName = FileName,
                         FilePath = fileUploadOutputDtoOfferhejia.FileUrl,
                         FileId = fileUploadOutputDtoOfferhejia.FileId
                     });
@@ -1446,7 +1446,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                     ProductName = "", ProductId = 0,
-                    FileName = solution.ModuleName + "NRE核价表", FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
+                    FileName = FileName, FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
                     FileId = fileUploadOutputDtoOffernrehejia.FileId
                 });
             }
@@ -1466,7 +1466,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             var priceEvaluationStartInputResult =
                 await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlow);
 
-
+            
             List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlow);
             var gradients = await _analysisBoardSecondMethod.getGradient(auditFlow);
             foreach (var solution in solutions)
@@ -1495,7 +1495,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     {
                         AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                         ProductName = "", ProductId = 0,
-                        FileName = "产品" + solution.ModuleName + "梯度" + gradient.GradientValue + "核价表",
+                        FileName = FileName,
                         FilePath = fileUploadOutputDtoOfferhejia.FileUrl,
                         FileId = fileUploadOutputDtoOfferhejia.FileId
                     });
@@ -1519,7 +1519,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                     ProductName = "", ProductId = 0,
-                    FileName = solution.ModuleName + "NRE核价表", FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
+                    FileName =FileName, FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
                     FileId = fileUploadOutputDtoOffernrehejia.FileId
                 });
             }
@@ -1530,8 +1530,10 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             var sols = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow && p.ntime == time);
             foreach (var sol in sols)
             {
+                var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlow, sol.version);
+                int ntype = isQuotation ? 1 : 0;
                 MemoryStream memoryStreamOffer =
-                    await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow, sol.version, 1,
+                    await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow, sol.version, ntype,
                         "报价审批表" + sol.version);
                 //报价审核表
                 //将报价审核表保存到硬盘中
@@ -1545,20 +1547,24 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                     ProductName = "", ProductId = 0,
-                    FileName = "版本" + sol.version + "报价审批表", FilePath = fileUploadOutputDtoOffer.FileUrl,
+                    FileName = FileName, FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
-                if (sol.Productld != 0)
+                if (sol.Productld != 0)//附件上传
                 {
                     await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                     {
                         AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                         ProductName = "", ProductId = 0,
-                        FileName = "版本" + sol.version + "附件", FilePath = sol.Product,
+                        FileName = "附件"+sol.ModuleName, FilePath = sol.Product,
                         FileId = sol.Productld
                     });
                 }
-
+                var pricetype = priceEvaluationStartInputResult.PriceEvalType;
+                if ("PriceEvalType_Sample".Equals(pricetype))
+                {
+                    continue;
+                }
                 //对外报价单
                 MemoryStream dwbjd =
                     await _analysisBoardSecondMethod.DownloadExternalQuotationStream(auditFlow, sol.Id,
@@ -1572,7 +1578,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 {
                     AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                     ProductName = "", ProductId = 0,
-                    FileName = sol.version + "对外报价单", FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
+                    FileName = FileName, FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
                     FileId = fileUploadOutputDtoOfferdwbj.FileId
                 });
             }
@@ -1693,7 +1699,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 归档文件下载 传 DownloadListSaveId
+    /// 归档文件下载 传 id组成的list
     /// </summary>
     /// <returns></returns>
     public async Task<IActionResult> PostPigeonholeDownload(List<long> DownloadListSaveIds)
@@ -1789,7 +1795,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     /// <summary>
-    /// 上传结构料模板
+    /// 上传附件
     /// </summary>
     /// <param name="file"></param>
     /// <returns></returns>

@@ -29,6 +29,10 @@ public class IsOfferSecondDto:ToExamineDto
     /// </summary>
     public string Product { get; set; }
     /// <summary>
+    /// 附件名称
+    /// </summary>
+    public string ProductName { get; set; }
+    /// <summary>
     /// Nre相关
     /// </summary>
     public List<AnalyseBoardNreDto> nres { get; set; }
