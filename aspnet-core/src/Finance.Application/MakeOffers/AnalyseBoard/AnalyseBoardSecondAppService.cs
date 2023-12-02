@@ -1550,13 +1550,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                     FileName = FileName, FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
-                if (sol.Productld != 0)
+                if (sol.Productld != 0)//附件上传
                 {
                     await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                     {
                         AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
                         ProductName = "", ProductId = 0,
-                        FileName = sol.ModuleName, FilePath = sol.Product,
+                        FileName = "附件"+sol.ModuleName, FilePath = sol.Product,
                         FileId = sol.Productld
                     });
                 }
