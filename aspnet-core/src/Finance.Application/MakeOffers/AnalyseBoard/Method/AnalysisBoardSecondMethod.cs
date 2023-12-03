@@ -5182,6 +5182,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         await _financeAuditQuotationList.HardDeleteAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 1);
+        if (spc is null || spc.Count == 0)
+        {
+            return ;
+        }
         string content = JsonConvert.SerializeObject(spc);
         await _financeAuditQuotationList.InsertOrUpdateAsync(new AuditQuotationList()
         {
