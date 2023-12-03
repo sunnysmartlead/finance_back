@@ -64,6 +64,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             var financeEval = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.FinanceEval);
             var financeTableAdmin = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
             var evalTableAdmin = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+            var bjdgdgly = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
+
+
             var costSplit = _context.Roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.CostSplit);
             #endregion
 
@@ -414,7 +417,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     FinanceDictionaryId = FinanceConsts.Done,
                     Activation = $"{MainFlowId}_不合规是否退回_{MainFlowId}_归档 || {MainFlowId}_确认中标金额_{MainFlowId}_归档 || {MainFlowId}_选择是否报价_{MainFlowId}_归档 || {MainFlowId}_报价反馈_{MainFlowId}_归档",
                     NodeType= NodeType.End,
-                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id}",
+                    RoleId = $"{projectManager.Id},{marketProjectManager.Id},{financeTableAdmin.Id},{evalTableAdmin.Id},{bjdgdgly.Id}",
                     ProcessIdentifier = "ArchiveEnd",
                 },
             };
@@ -433,7 +436,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价审批录入",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Schj},{FinanceConsts.EvalReason_Lcyp},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xnnj}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Bb1},{FinanceConsts.EvalReason_Fabg},{FinanceConsts.EvalReason_Qt},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xmbg},{FinanceConsts.EvalReason_Nj},{FinanceConsts.EvalReason_Schj},{FinanceConsts.EvalReason_Lcyp},{FinanceConsts.EvalReason_Jdcbpg},{FinanceConsts.EvalReason_Xnnj},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj}",
                 },
                 new Line
                 {
@@ -721,7 +724,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     SoureNodeId = "核价需求录入",
                     TargetNodeId = "核价看板",
                     Index = 0,
-                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Shj},{FinanceConsts.EvalReason_Qtsclc},{FinanceConsts.EvalReason_Bnnj},{FinanceConsts.EvalReason_Qtyylc}",
+                    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Yp},{FinanceConsts.EvalReason_Ffabg},{FinanceConsts.EvalReason_Qtyylc}",
                     FinanceDictionaryDetailIds =$"{FinanceConsts.HjkbSelect_Yes},{FinanceConsts.HjkbSelect_Input}"
                 },
                 new Line

@@ -53,5 +53,65 @@ namespace Finance.PriceEval
         /// </summary>
         [Column(TypeName = "CLOB")]
         public virtual string DataJson { get; set; }
+
+        /// <summary>
+        /// 其他成本项目2
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string OtherCostItem2List { get; set; }
+
+        /// <summary>
+        /// bom成本
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string BomCost { get; set; }
+
+        /// <summary>
+        /// 制造成本汇总表（未修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string ManufacturingCostNoChange { get; set; }
+
+        /// <summary>
+        /// 制造成本汇总表（已修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string ManufacturingCost { get; set; }
+
+        /// <summary>
+        /// 物流成本（未修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string LogisticsCostNoChange { get; set; }
+
+        /// <summary>
+        /// 物流成本（已修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string LogisticsCost { get; set; }
+
+        /// <summary>
+        /// 质量成本（未修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string QualityCostNoChange { get; set; }
+
+        /// <summary>
+        /// 质量成本（已修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string QualityCost { get; set; }
+
+        /// <summary>
+        /// 损耗成本（未修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string LossCostNoChange { get; set; }
+
+        /// <summary>
+        /// 损耗成本（已修改）
+        /// </summary>
+        [Column(TypeName = "CLOB")]
+        public virtual string LossCost { get; set; }
     }
 }

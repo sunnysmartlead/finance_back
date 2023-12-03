@@ -120,6 +120,50 @@ namespace Finance.WorkFlows
             }
         }
 
+        /// <summary>
+        /// 刷新退回线
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaNode()
+        {
+            var data = await (from n in _nodeRepository.GetAll()
+                              join i in _nodeInstanceRepository.GetAll() on n.Id equals i.NodeId
+                              where n.RoleId != i.RoleId
+                              select new
+                              {
+                                  i.Id,
+                                  n.RoleId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _nodeInstanceRepository.GetAsync(item.Id);
+                l.RoleId = item.RoleId;
+            }
+        }
+
+        /// <summary>
+        /// 刷新线的激活条件
+        /// </summary>
+        /// <returns></returns>
+        public async Task ShuaLineJiHuo()
+        {
+            var data = await (from l in _lineRepository.GetAll()
+                              join i in _lineInstanceRepository.GetAll() on l.Id equals i.LineId
+                              where l.FinanceDictionaryDetailId != i.FinanceDictionaryDetailId
+                              select new
+                              {
+                                  i.Id,
+                                  l.FinanceDictionaryDetailId
+                              }).ToListAsync();
+
+            foreach (var item in data)
+            {
+                var l = await _lineInstanceRepository.GetAsync(item.Id);
+                l.FinanceDictionaryDetailId = item.FinanceDictionaryDetailId;
+            }
+        }
+
         private async Task TestLine(long id, long id2)
         {
             var lineInstance = await _lineInstanceRepository.GetAllListAsync(p => p.WorkFlowInstanceId == 501);
@@ -654,7 +698,7 @@ namespace Finance.WorkFlows
                 .Join(_workflowInstanceRepository.GetAll(), n => n.WorkFlowInstanceId, w => w.Id, (n, w) => new { n, w })
                 .Where(p =>
                 (p.w.WorkflowState == WorkflowState.Running && p.n.NodeInstanceStatus == NodeInstanceStatus.Current)
-                || (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
+                //|| (p.w.WorkflowState == WorkflowState.Ended && p.n.NodeInstanceStatus == NodeInstanceStatus.Current && p.n.NodeId == "主流程_归档")
                 );
 
 
@@ -797,7 +841,7 @@ namespace Finance.WorkFlows
 
                 || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
-                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "QuotationApprovalForm")
+                || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
 
                 || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
                 || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
@@ -845,6 +889,40 @@ namespace Finance.WorkFlows
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
                         || n.Name == "生成报价分析界面选择报价方案"
+
+                        || n.Name == "归档"
+
+                       //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
+                       //|| n.Name == "审批报价策略与核价表" 
+                       //|| n.Name == "确认中标金额" 
+                       select new UserTask
+                       {
+                           Id = h.NodeInstanceId,
+                           WorkFlowName = w.Name,
+                           Title = w.Title,
+                           NodeName = n.Name,
+                           CreationTime = w.CreationTime,
+                           TaskUser = u.Name,
+                           WorkflowState = w.WorkflowState,
+                           WorkFlowInstanceId = h.WorkFlowInstanceId,
+                           ProcessIdentifier = n.ProcessIdentifier
+                       };
+            var result = data.ToList().DistinctBy(p => new { p.Id, p.WorkFlowInstanceId }).ToList();
+            var count = result.Count;
+
+            return new PagedResultDto<UserTask>(count, result);
+        }
+
+        /// <summary>
+        /// 根据当前用户Id 获取已办，不过滤
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<UserTask>> GetTaskCompleted()
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -1134,6 +1212,12 @@ namespace Finance.WorkFlows
             if (input.FinanceDictionaryDetailIds.Any(p => p != FinanceConsts.HjkbSelect_Yes) && input.Comment.IsNullOrWhiteSpace())
             {
                 throw new FriendlyException($"必须填写退回原因！");
+            }
+
+            //只要审批意见里存在退回到核价需求录入的
+            if (input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Input))
+            {
+                throw new FriendlyException($"核价看板不允许退回到核价需求录入！");
             }
 
             #endregion
