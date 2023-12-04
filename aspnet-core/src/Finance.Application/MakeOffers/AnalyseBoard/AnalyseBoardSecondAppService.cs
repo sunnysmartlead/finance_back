@@ -118,7 +118,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     private readonly NrePricingAppService _nrePricingAppService;
-    private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+    private readonly WorkflowInstanceAppService _workflowInstanceAppService;   
 
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
@@ -155,7 +155,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         _nrePricingAppService = nrePricingAppService;
         _userAppService = userAppService;
-        _workflowInstanceAppService = workflowInstanceAppService;
+        _workflowInstanceAppService = workflowInstanceAppService;       
     }
 
     /// <summary>

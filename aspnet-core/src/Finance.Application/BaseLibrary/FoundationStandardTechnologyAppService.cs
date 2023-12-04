@@ -1713,8 +1713,23 @@ namespace Finance.BaseLibrary
 
                         yaer += 3;
                         CreateCell(herdRow3, yaer - 2, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
-                        CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
-                        CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].NumberPersonnel.ToString(), wk);
+                        if (null != processHoursEnteritems[i].Issues[0].LaborHour)
+                        {
+                            CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
+                        }
+                        else
+                        {
+                            CreateCell(herdRow3, yaer - 1, "", wk);
+
+                        }
+                        if (null != processHoursEnteritems[i].Issues[0].NumberPersonnel)
+                        {
+                            CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].NumberPersonnel.ToString(), wk);
+                        }
+                        else {
+
+                            CreateCell(herdRow3, yaer, "", wk);
+                        }
                     }
 
                 }

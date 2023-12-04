@@ -3437,7 +3437,7 @@ namespace Finance.Processes
             ProcessHoursEnterTotalDto process = new ProcessHoursEnterTotalDto();
          
         // 设置查询条件
-            var query = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId ).ToList();
+            List<ProcessHoursEnter> query = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId ).ToList();
             decimal HardwareTotalPrice = 0;
             decimal SoftwarePrice = 0;
             decimal TraceabilitySoftware = 0;
@@ -3447,7 +3447,13 @@ namespace Finance.Processes
                 var frockList=  _processHoursEnterFrockRepository.GetAll().Where(t => t.ProcessHoursEnterId == item.Id).ToList();
                 foreach (var itemHardwareTotal in frockList)
                 {
-                    hardwareTotalPriceItem += (decimal)(itemHardwareTotal.HardwareDeviceNumber * itemHardwareTotal.HardwareDevicePrice);
+                    if (null == itemHardwareTotal.HardwareDeviceNumber || null == itemHardwareTotal.HardwareDevicePrice)
+                    {
+                        hardwareTotalPriceItem += 0;
+                    }
+                    else {
+                        hardwareTotalPriceItem += (decimal)(itemHardwareTotal.HardwareDeviceNumber * itemHardwareTotal.HardwareDevicePrice);
+                    }
                 }
                 HardwareTotalPrice += hardwareTotalPriceItem;
                 SoftwarePrice += item.SoftwarePrice;
