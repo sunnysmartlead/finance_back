@@ -2573,9 +2573,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
 
-    public async Task<bool> getSameSolution(long AuditFlowId, List<Solution> solutions, int ntime)
+    public async Task<bool> getSameSolution(long AuditFlowId, List<Solution> solutions, int version,int ntime)
     {
-        var sols = await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.ntime == ntime);
+        //本流程下，非本版本下的方案组合
+        var sols = await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.ntime == ntime&&p.version!=version);
         var idLists = solutions.OrderBy(p => p.Id).Select(p => p.Id).ToList();
         var idss = string.Join(",", idLists);
 
@@ -3898,10 +3899,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             list.Add(new NreExcel()
             {
-                PricingMoney = "以上之和：",
-                OfferCoefficient = nres.Sum(p => p.OfferCoefficient).ToString(),
-                OfferMoney = "以上之和：",
-                Remark = nres.Sum(p => p.OfferMoney).ToString()
+                PricingMoney =  nres.Sum(p => p.PricingMoney).ToString(),
+                OfferCoefficient = "",
+                OfferMoney = nres.Sum(p => p.OfferMoney).ToString(),
+                Remark = ""
             });
             list.Add(new NreExcel()
             {
@@ -3955,10 +3956,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         list.Add(new NreExcel()
         {
-            PricingMoney = "以上之和：",
-            OfferCoefficient = hzre.Sum(p => p.OfferCoefficient).ToString(),
-            OfferMoney = "以上之和：",
-            Remark = hzre.Sum(p => p.OfferMoney).ToString()
+            PricingMoney = hzre.Sum(p => p.PricingMoney).ToString(),
+            OfferCoefficient = "",
+            OfferMoney =  hzre.Sum(p => p.OfferMoney).ToString(),
+            Remark =""
         });
 
 
