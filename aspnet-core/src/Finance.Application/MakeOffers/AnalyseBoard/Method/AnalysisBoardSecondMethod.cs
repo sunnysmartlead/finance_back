@@ -2621,7 +2621,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             var product = isOfferDto.Product;
             var productid = isOfferDto.Productld;
-            var ModuleName=isOfferDto.ProductName;
+            var ModuleName = isOfferDto.ProductName;
             if (productid != 0)
             {
                 var solutionQuotation =
@@ -3137,37 +3137,41 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<SampleExcel> list = new();
         foreach (var solutionQuotation in solutionQuotations)
         {
-            list.Add(new SampleExcel()
-                {
-                    SolutionName = "方案名",
-                    Name = "样品阶段",
-                    Pcs = "需求量(pcs)",
-                    Cost = "成本",
-                    UnitPrice = "单价",
-                    GrossMargin = "毛利率",
-                    SalesRevenue = "销售收入"
-                })
-                ;
-            SampleExcel dto = new();
-            dto.SolutionName = solutionQuotation.ModuleName;
-
             List<SampleQuotation> sampleQuotations = _sampleQuotation.GetAll()
                 .Where(p => p.AuditFlowId == AuditFlowId && p.SolutionId == solutionQuotation.Id &&
                             p.version == version && p.ntype == ntype)
                 .ToList();
-            var samples = (from sampleQuotation in sampleQuotations
-                select new SampleExcel()
-                {
-                    SolutionName = solutionQuotation.SolutionName,
-                    Name = sampleQuotation.Name,
-                    Pcs = sampleQuotation.Pcs.ToString(),
-                    Cost = sampleQuotation.Cost.ToString(),
-                    UnitPrice = sampleQuotation.UnitPrice.ToString(),
-                    GrossMargin = sampleQuotation.GrossMargin.ToString() + '%',
-                    SalesRevenue = sampleQuotation.SalesRevenue.ToString()
-                }).ToList();
+            if (sampleQuotations is not  null && sampleQuotations.Count > 0)
+            {
+                list.Add(new SampleExcel()
+                    {
+                        SolutionName = "方案名",
+                        Name = "样品阶段",
+                        Pcs = "需求量(pcs)",
+                        Cost = "成本",
+                        UnitPrice = "单价",
+                        GrossMargin = "毛利率",
+                        SalesRevenue = "销售收入"
+                    })
+                    ;
+                SampleExcel dto = new();
+                dto.SolutionName = solutionQuotation.Product;
 
-            list.AddRange(samples);
+
+                var samples = (from sampleQuotation in sampleQuotations
+                    select new SampleExcel()
+                    {
+                        SolutionName = solutionQuotation.Product,
+                        Name = sampleQuotation.Name,
+                        Pcs = sampleQuotation.Pcs.ToString(),
+                        Cost = sampleQuotation.Cost.ToString(),
+                        UnitPrice = sampleQuotation.UnitPrice.ToString(),
+                        GrossMargin = sampleQuotation.GrossMargin.ToString() + '%',
+                        SalesRevenue = sampleQuotation.SalesRevenue.ToString()
+                    }).ToList();
+
+                list.AddRange(samples);
+            }
         }
 
         return list;
@@ -3185,7 +3189,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         foreach (var solutionQuotation in solutionQuotations)
         {
             OnlySampleDto dto = new();
-            dto.SolutionName = solutionQuotation.ModuleName;
+            dto.SolutionName = solutionQuotation.Product;
             dto.AuditFlowId = AuditFlowId;
             List<SampleQuotation> sampleQuotations = await _sampleQuotation.GetAllListAsync(p =>
                     p.AuditFlowId == AuditFlowId && p.SolutionId == solutionQuotation.Id &&
@@ -5182,6 +5186,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         await _financeAuditQuotationList.HardDeleteAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 1);
+        if (spc is null || spc.Count == 0)
+        {
+            return;
+        }
+
         string content = JsonConvert.SerializeObject(spc);
         await _financeAuditQuotationList.InsertOrUpdateAsync(new AuditQuotationList()
         {
@@ -5664,8 +5673,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             return null;
         }
-        
-        
+
+
         Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
             .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
@@ -6119,6 +6128,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
             versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+            auditFlowId = auditFlowId,
             directCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             terminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
             offerForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
@@ -6487,6 +6497,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
             versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+            auditFlowId = auditFlowId,
             directCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             terminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
             offerForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
