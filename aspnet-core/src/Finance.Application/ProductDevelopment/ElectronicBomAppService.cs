@@ -463,23 +463,20 @@ namespace Finance.ProductDevelopment
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
                 if (productIsSubmits.Count is not 0)
                 {
-                    return;
+                    //return;
                     throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
                 }
                 else
                 {
-                    //查询核价需求导入时的零件信息
-                    var productIds = await _modelCountRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
-
                     List<BoardDto> boardDtos = dto.BoardDtos;
-                    long AuditFlowId = dto.AuditFlowId;
-                    long SolutionId = dto.SolutionId;
-                    long ProductId = dto.ProductId;
+                if (boardDtos.Count == 0)
+                {
+                    throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
+                }
                     boardDtos.ForEach(bomInfo =>
                     {
-                        bomInfo.AuditFlowId = AuditFlowId;
-                        bomInfo.SolutionId = SolutionId;
-                        bomInfo.ProductId = ProductId;
+                        bomInfo.AuditFlowId = dto.AuditFlowId;
+                        bomInfo.SolutionId = dto.SolutionId;
                     });
 
 
@@ -488,7 +485,7 @@ namespace Finance.ProductDevelopment
                     {
                         foreach (var item in boardDtos)
                         {
-                            BoardInfo boardInfo = new()
+                        BoardInfo boardInfo = new()
                             {
                                 AuditFlowId = item.AuditFlowId,
                                 SolutionId = item.SolutionId,
