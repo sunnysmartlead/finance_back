@@ -1150,25 +1150,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
 
-    /*/// <summary>
-    /// 用于测试，没有任何意义
-    /// </summary>
-    /// <param name="auditFlowId"></param>
-    /// <returns></returns>
-    public async Task<QuotationListSecondDto> FinancialFiling(long auditFlowId, int version
-    )
-
-    {
-        SolutionQuotation sol =
-            await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
-        if (sol is null)
-        {
-            throw new FriendlyException($"流程ID:{auditFlowId}的报价方案组合{version}不存在");
-        }
-
-        return await _analysisBoardSecondMethod.QuotationListSecond(auditFlowId, version, 1);
-        ;
-    }*/
+  
 
     /// <summary>
     /// 报价反馈 保存
