@@ -26,6 +26,8 @@ using Abp.Authorization.Users;
 using Finance.Authorization.Roles;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Spire.Pdf.Exporting.XPS.Schema;
+using Abp.BackgroundJobs;
+using Finance.Job;
 
 namespace Finance.WorkFlows
 {
@@ -72,8 +74,9 @@ namespace Finance.WorkFlows
         private readonly IRepository<PriceEvaluation, long> _priceEvaluationRepository;
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
+        private readonly IBackgroundJobManager _backgroundJobManager;
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -100,6 +103,7 @@ namespace Finance.WorkFlows
             _userRoleRepository = userRoleRepository;
             _roleRepository = roleRepository;
             _nodeInstanceRepository = nodeInstanceRepository;
+            _backgroundJobManager = backgroundJobManager;
         }
 
         /// <summary>
@@ -238,7 +242,7 @@ namespace Finance.WorkFlows
                                     var isOk = await _tradeComplianceAppService.IsProductsTradeComplianceOK(eventData.Entity.WorkFlowInstanceId);
                                     if (isOk)
                                     {
-                                        await _panelJsonRepository.DeleteAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
+                                        await _backgroundJobManager.EnqueueAsync<PanelJsonClearJob, long>(eventData.Entity.WorkFlowInstanceId);
                                     }
                                     else
                                     {
@@ -267,173 +271,7 @@ namespace Finance.WorkFlows
                         //如果流转到核价看板之后，就缓存核价看板的全部信息
                         if (eventData.Entity.NodeId == "主流程_项目部课长审核")
                         {
-                            #region 缓存核价表
-                            var data = from g in _gradientRepository.GetAll()
-                                       from s in _solutionRepository.GetAll()
-                                       from y in _modelCountYearRepository.GetAll()
-                                       where g.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                       && s.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                       && y.AuditFlowId == eventData.Entity.WorkFlowInstanceId
-                                       select new //GetPriceEvaluationTableInput
-                                       {
-                                           AuditFlowId = eventData.Entity.WorkFlowInstanceId,
-                                           GradientId = g.Id,
-                                           InputCount = 0,
-                                           SolutionId = s.Id,
-                                           Year = y.Year,
-                                           UpDown = y.UpDown,
-                                       };
-                            var result = await data.ToListAsync();
-                            var all = result.GroupBy(p => new { p.AuditFlowId, p.GradientId, p.InputCount, p.SolutionId, })
-                                .Select(p => new //GetPriceEvaluationTableInput
-                                {
-                                    AuditFlowId = p.Key.AuditFlowId,
-                                    GradientId = p.Key.GradientId,
-                                    InputCount = p.Key.InputCount,
-                                    SolutionId = p.Key.SolutionId,
-                                    Year = PriceEvalConsts.AllYear,
-                                    UpDown = YearType.Year
-                                }).Distinct();
-                            result.AddRange(all);
-
-
-                            foreach (var item in result)
-                            {
-                                //核价表
-                                var priceEvaluationTable = await _priceEvaluationGetAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    InputCount = item.InputCount,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //其他成本项目2
-                                var otherCostItem2List = await _priceEvaluationGetAppService.GetOtherCostItem2List(new GetOtherCostItem2ListInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //bom成本
-                                var bomCost = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                    InputCount = item.InputCount,
-                                });
-
-                                //制造成本汇总表（未修改）
-                                var manufacturingCostNoChange = await _priceEvaluationGetAppService.GetManufacturingCostNoChange(new GetManufacturingCostInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //制造成本汇总表（已修改）
-                                var manufacturingCost = await _priceEvaluationGetAppService.GetManufacturingCost(new GetManufacturingCostInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //物流成本（未修改）
-                                var logisticsCostNoChange = await _priceEvaluationGetAppService.GetLogisticsCostNoChange(new GetLogisticsCostInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //物流成本（已修改）
-                                var logisticsCost = await _priceEvaluationGetAppService.GetLogisticsCost(new GetLogisticsCostInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //质量成本（未修改）
-                                var qualityCostNoChange = await _priceEvaluationGetAppService.GetQualityCostNoChange(new GetOtherCostItemInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //质量成本（已修改）
-                                var qualityCost = await _priceEvaluationGetAppService.GetQualityCost(new GetOtherCostItemInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //损耗成本（未修改）
-                                var lossCostNoChange = await _priceEvaluationGetAppService.GetLossCostNoChange(new GetCostItemInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                //损耗成本（已修改）
-                                var lossCost = await _priceEvaluationGetAppService.GetLossCost(new GetCostItemInput
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                });
-
-                                await _panelJsonRepository.InsertAsync(new PanelJson
-                                {
-                                    AuditFlowId = item.AuditFlowId,
-                                    GradientId = item.GradientId,
-                                    InputCount = item.InputCount,
-                                    SolutionId = item.SolutionId,
-                                    Year = item.Year,
-                                    UpDown = item.UpDown,
-                                    DataJson = priceEvaluationTable.ToJsonString(),
-                                    OtherCostItem2List = otherCostItem2List.ToJsonString(),
-                                    BomCost = bomCost.ToJsonString(),
-                                    ManufacturingCostNoChange = manufacturingCostNoChange.ToJsonString(),
-                                    ManufacturingCost = manufacturingCost.ToJsonString(),
-                                    LogisticsCostNoChange = logisticsCostNoChange.ToJsonString(),
-                                    LogisticsCost = logisticsCost.ToJsonString(),
-                                    QualityCostNoChange = qualityCostNoChange.ToJsonString(),
-                                    QualityCost = qualityCost.ToJsonString(),
-                                    LossCostNoChange = lossCostNoChange.ToJsonString(),
-                                    LossCost = lossCost.ToJsonString(),
-                                });
-                            }
-
-                            #endregion
+                            await _backgroundJobManager.EnqueueAsync<PanelJsonJob, long>(eventData.Entity.WorkFlowInstanceId);
                         }
 
                         //到核价审批录入后，要清空核价需求录入的缓存
