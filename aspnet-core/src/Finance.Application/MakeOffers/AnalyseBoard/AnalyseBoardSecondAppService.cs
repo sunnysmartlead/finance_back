@@ -848,7 +848,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         var result =
             await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,
-                isOfferDto.ntime);
+                isOfferDto.version,  isOfferDto.ntime);
         if (result)
         {
             throw new FriendlyException($"此报价方案组合已存在");
@@ -873,7 +873,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
             isOfferDto.IsFirst = false;
             var result =
-                await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,
+                await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,isOfferDto.version,
                     isOfferDto.ntime);
             if (result)
             {
