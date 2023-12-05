@@ -265,6 +265,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     {
                         var kanBan = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价看板");
                         kanBan.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+                        var shenPi = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价审批录入");
+                        shenPi.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
                     }
                     else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                     {
