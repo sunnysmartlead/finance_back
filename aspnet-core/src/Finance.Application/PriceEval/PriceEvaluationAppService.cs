@@ -108,6 +108,7 @@ namespace Finance.PriceEval
 
         private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
 
+
         public PriceEvaluationAppService(ICacheManager cacheManager, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
@@ -154,7 +155,7 @@ namespace Finance.PriceEval
           fu_OtherCostItem2Repository,
           fu_OtherCostItemRepository,
           fu_QualityCostListDtoRepository,
-        fu_LogisticsCostRepository)
+        fu_LogisticsCostRepository, nodeInstanceRepository)
         {
             _cacheManager = cacheManager;
             _nodeInstanceRepository = nodeInstanceRepository;
