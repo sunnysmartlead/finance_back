@@ -1513,7 +1513,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 int ntype = isQuotation ? 1 : 0;
                 MemoryStream memoryStreamOffer =
                     await _analysisBoardSecondMethod.DownloadAuditQuotationListStream(auditFlow, sol.version, ntype,
-                        "报价审批表" + sol.version);
+                        "报价审核表" + sol.version);
                 //报价审核表
                 //将报价审核表保存到硬盘中
                 FileName = "版本" + sol.version + "报价审核表.xlsx";
@@ -1629,7 +1629,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 if (auditFlowId is not null)
                 {
                     downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
-                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审批表")));
+                        p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("报价审核表")));
                     downloadListSaves.AddRange(await _financeDownloadListSave.GetAllListAsync(p =>
                         p.AuditFlowId.Equals(auditFlowId) && p.FileName.Contains("附件")));
                 }
