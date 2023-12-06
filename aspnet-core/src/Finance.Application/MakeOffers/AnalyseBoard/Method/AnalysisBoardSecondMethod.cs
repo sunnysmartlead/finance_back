@@ -5386,7 +5386,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
 
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5397,7 +5397,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos.Select(p =>
+            externalQuotationDto.NreQuotationListDtos?.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
                     .FirstOrDefault(m =>
@@ -5427,7 +5427,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ? 1
                     : externalQuotations.Max(p => p.NumberOfQuotations) + 1
             };
-            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+            externalQuotationDto.ProductQuotationListDtos = productDtos?.Select((a, index) =>
                 new ProductQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5436,7 +5436,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     TravelVolume = a.Motion,
                     UnitPrice = decimal.Parse(a.UntilPrice)
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5463,7 +5463,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.AccountNumber = "39603001040014366";
             externalQuotationDto.Address = "浙江省余姚市阳明街道丰乐路67-69号";
         }
-
+        if (externalQuotationDto.NreQuotationListDtos is null) externalQuotationDto.NreQuotationListDtos = new();
+        if (externalQuotationDto.ProductQuotationListDtos is null) externalQuotationDto.ProductQuotationListDtos = new();
         return externalQuotationDto;
     }
 
@@ -5539,17 +5540,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         long numberOfQuotations)
     {
         ExternalQuotationDto external =
-            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
-        external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
+            await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);        
+        external.ProductQuotationListDtos = external.ProductQuotationListDtos?.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
             return p;
-        }).ToList();
-        external.NreQuotationListDtos = external.NreQuotationListDtos.Select((p, index) =>
+        }).ToList();        
+        external.NreQuotationListDtos = external.NreQuotationListDtos?.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
             return p;
-        }).ToList();
+        }).ToList();       
         var memoryStream = new MemoryStream();
 
         await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/报价单下载.xlsx", external);

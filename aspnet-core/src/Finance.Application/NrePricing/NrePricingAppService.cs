@@ -220,7 +220,9 @@ namespace Finance.NerPricing
         /// </summary>
         private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
         private readonly ICacheManager _cacheManager;
-        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, ICacheManager cacheManager)
+
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+        public NrePricingAppService(IRepository<ModelCount, long> resourceModelCount, ElectronicStructuralMethod resourceElectronicStructuralMethod, IRepository<HandPieceCost, long> resourceHandPieceCost, IRepository<RestsCost, long> resourceRestsCost, IRepository<TravelExpense, long> resourceTravelExpense, IRepository<MouldInventory, long> resourceMouldInventory, IRepository<LaboratoryFee, long> resourceLaboratoryFee, NrePricingMethod resourceNrePricingMethod, IRepository<EnvironmentalExperimentFee, long> resourceEnvironmentalExperimentFee, IRepository<QADepartmentQC, long> resourceQADepartmentQC, IRepository<InitialResourcesManagement, long> resourceInitialResourcesManagement, IRepository<EquipmentInfo, long> resourceEquipmentInfo, IRepository<TraceInfo, long> resourceTraceInfo, IRepository<WorkingHoursInfo, long> resourceWorkingHoursInfo, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<NreIsSubmit, long> resourceNreIsSubmit, IRepository<ModelCountYear, long> resourceModelCountYear, IRepository<ExchangeRate, long> configExchangeRate, IRepository<StructBomDifferent, long> configStructBomDifferent, IRepository<User, long> userRepository, IRepository<ProcessHoursEnter, long> processHoursEnter, IRepository<ProcessHoursEnterFixture, long> processHoursEnterFixture, IRepository<ProcessHoursEnterDevice, long> processHoursEnterDevice, IRepository<ProcessHoursEnterLine, long> processHoursEnterLine, IRepository<ProcessHoursEnterFrock, long> processHoursEnterFrock, IRepository<Foundationreliable, long> foundationreliable, IRepository<HandPieceCostModify, long> handPieceCostModify, IRepository<MouldInventoryModify, long> mouldInventoryModify, IRepository<ToolingCostsModify, long> toolingCostsModify, IRepository<FixtureCostsModify, long> fixtureCostsModify, IRepository<InspectionToolCostModify, long> inspectionToolCostModify, IRepository<ProductionEquipmentCostsModify, long> productionEquipmentCostsModify, IRepository<ExperimentalExpensesModify, long> experimentalExpensesModify, IRepository<TestingSoftwareCostsModify, long> testingSoftwareCostsModify, IRepository<TravelExpenseModify, long> travelExpenseModify, IRepository<RestsCostModify, long> restsCostModify, WorkflowInstanceAppService workflowInstanceAppService, FoundationreliableAppService foundationreliableAppService, FoundationEmcAppService foundationEmcAppService, ProcessHoursEnterAppService processHoursEnterAppService, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, ICacheManager cacheManager, IRepository<NodeInstance, long> nodeInstanceRepository)
         {
             _resourceModelCount = resourceModelCount;
             _resourceElectronicStructuralMethod = resourceElectronicStructuralMethod;
@@ -265,6 +267,7 @@ namespace Finance.NerPricing
             _processHoursEnterAppService = processHoursEnterAppService;
             _auditFlowIdPricingForm = auditFlowIdPricingForm;
             _cacheManager = cacheManager;
+            _nodeInstanceRepository = nodeInstanceRepository;
         }
         #region 快速核报价流程
         /// <summary>
@@ -2138,13 +2141,23 @@ namespace Finance.NerPricing
         {
             try
             {
-                AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 PricingFormDto pricingFormDto = new();
-                if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null)
+                //直接上传快速核价流程的核价原因
+                var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+                var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+                //只判断是直接上传快速核价的流程
+                if (list.Contains(node.FinanceDictionaryDetailId))
                 {
-                    pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
-                    return pricingFormDto;
-                }             
+                    AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));                  
+                    if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null)
+                    {
+                        pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
+                        return pricingFormDto;
+                    }else
+                    {
+                        return pricingFormDto;
+                    }
+                }                  
                 PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
                 List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);         
                 pricingFormDto = ObjectMapper.Map<PricingFormDto>(await GetPricingForm(auditFlowId, solutionId));
