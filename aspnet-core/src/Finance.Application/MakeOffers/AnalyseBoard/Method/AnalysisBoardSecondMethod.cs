@@ -5386,7 +5386,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
 
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5397,7 +5397,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos.Select(p =>
+            externalQuotationDto.NreQuotationListDtos?.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
                     .FirstOrDefault(m =>
@@ -5427,7 +5427,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ? 1
                     : externalQuotations.Max(p => p.NumberOfQuotations) + 1
             };
-            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+            externalQuotationDto.ProductQuotationListDtos = productDtos?.Select((a, index) =>
                 new ProductQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5436,7 +5436,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     TravelVolume = a.Motion,
                     UnitPrice = decimal.Parse(a.UntilPrice)
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
