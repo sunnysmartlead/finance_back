@@ -96,12 +96,12 @@ namespace Finance.QuickQuotationReview
             PriceEvaluationStartResult priceEvaluationStartResult = new();
             if(input.IsSubmit)
             {
-                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStart(input);
+                priceEvaluationStartResult = await _priceEvaluationAppService.InternalPriceEvaluationStart(input);
             }
             else
             {
                 PriceEvaluationStartSaveInput priceEvaluationStartSaveInpu = ObjectMapper.Map<PriceEvaluationStartSaveInput>(input);
-                priceEvaluationStartResult = await _priceEvaluationAppService.PriceEvaluationStartSave(priceEvaluationStartSaveInpu);
+                priceEvaluationStartResult = await _priceEvaluationAppService.InternalPriceEvaluationStartSave(priceEvaluationStartSaveInpu);
                 return priceEvaluationStartResult;              
             }                
             dto dto = new dto

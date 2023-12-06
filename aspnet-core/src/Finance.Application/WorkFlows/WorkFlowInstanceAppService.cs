@@ -1386,18 +1386,6 @@ namespace Finance.WorkFlows
             node.NodeInstanceStatus = NodeInstanceStatus.Passed;
         }
 
-        /// <summary>
-        /// 快速核报价：判断是否为上传流程
-        /// </summary>
-        /// <param name="auditFlowId"></param>
-        /// <returns></returns>
-        public async virtual Task<bool> IsUploadAuditFlow(long auditFlowId)
-        {
-            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
 
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
-
-            return list.Contains(node.FinanceDictionaryDetailId);
-        }
     }
 }

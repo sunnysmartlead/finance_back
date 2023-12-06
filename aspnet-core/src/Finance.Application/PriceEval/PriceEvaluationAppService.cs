@@ -223,6 +223,36 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStartSave(PriceEvaluationStartSaveInput input)
         {
+            return await InternalPriceEvaluationStartSave(input, true);
+        }
+
+        /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）：保存
+        /// </summary>
+        /// <returns></returns>
+        [AbpAuthorize]
+        public async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStartSave(PriceEvaluationStartSaveInput input, bool isFd = false)
+        {
+            if (isFd)
+            {
+                #region 流程防抖
+
+                var cacheJson = JsonConvert.SerializeObject(input);
+                var code = cacheJson.GetHashCode().ToString();
+
+                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+                if (cache is null)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+                }
+                else
+                {
+                    throw new FriendlyException($"您重复提交了流程！");
+                }
+
+                #endregion
+            }
             //if (!input.IsSubmit)
             //{
             long auid;
@@ -262,6 +292,7 @@ namespace Finance.PriceEval
             //}
         }
 
+
         /// <summary>
         /// 开始核价：报价核价需求录入界面（第一步）
         /// </summary>
@@ -270,24 +301,36 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+            return await InternalPriceEvaluationStart(input, true);
+        }
 
-            #region 流程防抖
-
-            var cacheJson = JsonConvert.SerializeObject(input);
-            var code = cacheJson.GetHashCode().ToString();
-
-            var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
-            if (cache is null)
+        /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）
+        /// </summary>
+        /// <returns></returns>
+        [AbpAuthorize]
+        internal async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStart(PriceEvaluationStartInput input, bool isFd = false)
+        {
+            if (isFd)
             {
-                await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+                #region 流程防抖
 
-            }
-            else
-            {
-                throw new FriendlyException($"您重复提交了流程！");
-            }
+                var cacheJson = JsonConvert.SerializeObject(input);
+                var code = cacheJson.GetHashCode().ToString();
 
-            #endregion
+                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+                if (cache is null)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+                }
+                else
+                {
+                    throw new FriendlyException($"您重复提交了流程！");
+                }
+
+                #endregion
+            }
 
             #region 通用参数校验
 
@@ -757,6 +800,7 @@ namespace Finance.PriceEval
                 //});
                 return new PriceEvaluationStartResult { AuditFlowId = auditFlowId, IsSuccess = true, Message = "添加成功！" };
             }
+
         }
 
         /// <summary>
