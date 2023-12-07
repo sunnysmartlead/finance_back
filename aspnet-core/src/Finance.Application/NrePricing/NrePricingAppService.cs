@@ -936,12 +936,13 @@ namespace Finance.NerPricing
                             var CountDV = Convert.ToDecimal(row.GetCell(5).ToString());
                             var CountPV = Convert.ToDecimal(row.GetCell(6).ToString());
                             var AllCost = Convert.ToDecimal(row.GetCell(7).ToString());
-                            var Remark = row.GetCell(8).ToString();
-                            pricingFormDto.LaboratoryFeeModels.Add(new() { ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(8).ToString());
+                            var Remark = row.GetCell(9).ToString();
+                            pricingFormDto.LaboratoryFeeModels.Add(new() {UnitPrice= UnitPrice, ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
                         }
                         catch (Exception e)
                         {
-                            throw new FriendlyException($"实验费!{rowIndex + 1}行,时间-摸底/时间-DV/时间-PV/费用值存在问题!");
+                            throw new FriendlyException($"实验费!{rowIndex + 1}行,时间-摸底/时间-DV/时间-PV/费用/单价值存在问题!");
                         }
                     }
                     //测试软件费用
