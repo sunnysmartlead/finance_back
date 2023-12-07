@@ -424,7 +424,7 @@ namespace Finance.NerPricing
                 List<HandPieceCostModify> handPieceCostModifies = await _handPieceCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 handPieceCostModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -442,7 +442,7 @@ namespace Finance.NerPricing
                 List<MouldInventoryModify> mouldInventoryModifies = await _mouldInventoryModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 mouldInventoryModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -460,7 +460,7 @@ namespace Finance.NerPricing
                 List<ToolingCostsModify> toolingCostsModifies= await _toolingCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 toolingCostsModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -478,7 +478,7 @@ namespace Finance.NerPricing
                 List<FixtureCostsModify> fixtureCostsModifies= await _fixtureCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 fixtureCostsModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -496,7 +496,7 @@ namespace Finance.NerPricing
                 List<InspectionToolCostModify> inspectionToolCostModifies = await _inspectionToolCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 inspectionToolCostModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -514,7 +514,7 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = await _productionEquipmentCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 productionEquipmentCostsModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -532,7 +532,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpensesEmc = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==1);
                 experimentalExpensesEmc.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -550,7 +550,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==2);
                 experimentalExpenses.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -568,7 +568,7 @@ namespace Finance.NerPricing
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = await _testingSoftwareCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 testingSoftwareCostsModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     p.Id = 0;
                     if (p.ModifyId is 0)
@@ -602,7 +602,7 @@ namespace Finance.NerPricing
                 List<TravelExpenseModify> travelExpenseModifies = await _travelExpenseModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 travelExpenseModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
@@ -620,7 +620,7 @@ namespace Finance.NerPricing
                 List<RestsCostModify> restsCostModifies = await _restsCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 restsCostModifies.Select(p =>
                 {
-                    p.AuditFlowId = dto.QuoteAuditFlowId;
+                    p.AuditFlowId = dto.NewAuditFlowId;
                     p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
                     if (p.ModifyId is 0)
                     {
