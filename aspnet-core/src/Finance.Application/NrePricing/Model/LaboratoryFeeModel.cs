@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using static Finance.Ext.FriendlyRequiredAttribute;
@@ -71,6 +72,10 @@ namespace Finance.NrePricing.Model
     /// </summary>
     public class LaboratoryFeeModel
     {
+        /// <summary>
+        /// 实验费类型 判断是EMC实验费还是环境实验费  1是EMC实验费2是环境实验费
+        /// </summary>
+        public int ExperimentalFeesType { get; set; }
         /// <summary>
         /// Id
         /// </summary>

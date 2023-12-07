@@ -143,7 +143,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="QuoteAuditFlowId"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        internal async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId, long QuoteAuditFlowId)
+        public async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId, long QuoteAuditFlowId)
         {
             List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds = new();
             AuditEntering auditEntering = await AuditExport(QuoteAuditFlowId);
