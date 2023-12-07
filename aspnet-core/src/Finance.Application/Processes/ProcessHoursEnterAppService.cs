@@ -723,7 +723,7 @@ namespace Finance.Processes
                                 processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
                                 processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
                                 processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
-                                long QuoteId = processHoursEnterFixture.Id;
+                                long QuoteId = zoolInfo.Id;
                                 long NewId = await _processHoursEnterFixtureRepository.InsertAndGetIdAsync(processHoursEnterFixture);
                                 idMappingListHoursEnter.ProcessHoursEnterFixture.Add(new() { QuoteId = QuoteId, NewId = NewId });
                             }
