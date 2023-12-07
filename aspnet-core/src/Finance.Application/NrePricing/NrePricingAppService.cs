@@ -556,9 +556,9 @@ namespace Finance.NerPricing
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = await _testingSoftwareCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 testingSoftwareCostsModifies.Select(p =>
                 {
+                    p.Id = 0;
                     if (p.ModifyId is 0)
-                    {
-                        p.Id = 0;
+                    {                        
                         return p;
                     }
                     IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnter.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
@@ -568,17 +568,19 @@ namespace Finance.NerPricing
                     if (idMapping is not null)
                     {
                         p.ModifyId = idMapping.NewId;
+                        return p;
                     }
                     if (idMapping1 is not null)
                     {
                         p.ModifyId = idMapping.NewId+1;
+                        return p;
                     }
                     if (idMapping2 is not null)
                     {
                         p.ModifyId = idMapping.NewId+2;
+                        return p;
                     }
-                    if(p.ModifyId==0) throw new FriendlyException("复制测试软件费用修改项复制的时候没有找到对应ModifyId");
-                    p.Id = 0;
+                    if(p.ModifyId==0) throw new FriendlyException("复制测试软件费用修改项复制的时候没有找到对应ModifyId");                   
                     return p;
                 }).ToList();
                 await _testingSoftwareCostsModify.BulkInsertAsync(testingSoftwareCostsModifies);         
@@ -2655,7 +2657,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (LaboratoryFeeModel item in pricingFormDto.LaboratoryFeeModels)
                 {
-                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExperimentalFeesType.Equals(item.ExperimentalFeesType));
                     if (modify != null)
                     {
                         item.ProjectName = modify.ProjectName;
