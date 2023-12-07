@@ -1,4 +1,5 @@
-﻿using Abp.Application.Services.Dto;
+﻿using Abp.Application.Editions;
+using Abp.Application.Services.Dto;
 using Abp.Authorization;
 using Abp.Domain.Entities;
 using Abp.Domain.Repositories;
@@ -2027,7 +2028,7 @@ namespace Finance.PriceEval
             {
                 return ObjectMapper.Map<List<ManufacturingCost>>(fuManufacturing);
             }
-            else if (isUploadAuditFlow) 
+            else if (isUploadAuditFlow)
             {
                 throw new FriendlyException($"核价表未上传！");
             }
@@ -2759,7 +2760,7 @@ namespace Finance.PriceEval
                                   && y.UpDown == inputDto.UpDown && y.Year == inputDto.Year
                                   select new ProductionControlInfoListDto
                                   {
-                                      EditId = l.Id.ToString(),
+                                      //EditId = l.Id.ToString(),
                                       Year = inputDto.Year.ToString(),
                                       UpDown = inputDto.UpDown,
                                       Freight = l.FreightPrice.GetValueOrDefault(),
@@ -2771,6 +2772,7 @@ namespace Finance.PriceEval
                                   }).ToListAsync();
                 data.ForEach(item =>
                 {
+                    item.EditId = $"{inputDto.Year.ToString()}{inputDto.UpDown}";
                     item.PerFreight = (item.Freight + item.StorageExpenses) / item.MonthEndDemand;
                     item.PerTotalLogisticsCost = item.PerPackagingPrice + ((item.Freight + item.StorageExpenses) / item.MonthEndDemand);
                 });
