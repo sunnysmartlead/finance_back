@@ -3021,14 +3021,14 @@ namespace Finance.NerPricing
                 EMC.Select(p => {
                     p.ExperimentalFeesType = 1;
                     return p;
-                });
+                }).ToList();
                 modify.LaboratoryFeeModels.AddRange(EMC);
                 //环境实验费
                 List<LaboratoryFeeModel> Environment = ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests);
                 Environment.Select(p => {
                     p.ExperimentalFeesType = 2;
                     return p;
-                });
+                }).ToList();
                 modify.LaboratoryFeeModels.AddRange(Environment);                
                 modify.LaboratoryFeeModelsTotal = modify.LaboratoryFeeModels.Sum(p => p.AllCost);
                 //测试软件费用                 
