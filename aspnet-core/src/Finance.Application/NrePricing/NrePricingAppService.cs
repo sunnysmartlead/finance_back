@@ -564,6 +564,16 @@ namespace Finance.NerPricing
                     return p;
                 }).ToList();
                 await _experimentalExpensesModify.BulkInsertAsync(experimentalExpenses);
+                //实验费添加的修改项
+                List<ExperimentalExpensesModify> addexperimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId) && p.ModifyId == 0);
+                addexperimentalExpenses.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _experimentalExpensesModify.BulkInsertAsync(addexperimentalExpenses);
                 //测试软件费用
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = await _testingSoftwareCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 testingSoftwareCostsModifies.Select(p =>
