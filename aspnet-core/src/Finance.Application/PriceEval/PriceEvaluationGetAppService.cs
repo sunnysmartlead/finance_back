@@ -30,6 +30,7 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Finance.WorkFlows;
 using LinqKit;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Http;
@@ -53,6 +54,7 @@ using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Security.Policy;
 using System.Threading.Tasks;
 using test;
@@ -152,6 +154,10 @@ namespace Finance.PriceEval
         private readonly IRepository<Fu_QualityCostListDto, long> _fu_QualityCostListDtoRepository;
         private readonly IRepository<Fu_LogisticsCost, long> _fu_LogisticsCostRepository;
 
+        //流程
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+
+
         private string errMessage = string.Empty;
 
 
@@ -209,7 +215,8 @@ namespace Finance.PriceEval
          IRepository<Fu_OtherCostItem2, long> fu_OtherCostItem2Repository,
          IRepository<Fu_OtherCostItem, long> fu_OtherCostItemRepository,
          IRepository<Fu_QualityCostListDto, long> fu_QualityCostListDtoRepository,
-         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository)
+         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository,
+         IRepository<NodeInstance, long> nodeInstanceRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -268,6 +275,8 @@ namespace Finance.PriceEval
             _fu_OtherCostItemRepository = fu_OtherCostItemRepository;
             _fu_QualityCostListDtoRepository = fu_QualityCostListDtoRepository;
             _fu_LogisticsCostRepository = fu_LogisticsCostRepository;
+
+            _nodeInstanceRepository = nodeInstanceRepository;
         }
 
 
@@ -867,11 +876,17 @@ namespace Finance.PriceEval
             {
                 #region 快速核报价：上传
 
+                var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
                 var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
                  && p.Year == year && p.UpDown == upDown);
                 if (fuOtherCostItem2.Any())
                 {
                     return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                }
+                else if (isUploadAuditFlow)
+                {
+                    throw new FriendlyException($"核价表未上传！");
                 }
 
                 #endregion
@@ -1509,11 +1524,17 @@ namespace Finance.PriceEval
                 {
                     #region 快速核报价：上传
 
+                    var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
                     var fuBom = await _fu_BomRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
                      && p.Year == year && p.UpDown == upDown);
                     if (fuBom.Any())
                     {
                         return ObjectMapper.Map<List<Material>>(fuBom);
+                    }
+                    else if (isUploadAuditFlow)
+                    {
+                        throw new FriendlyException($"核价表未上传！");
                     }
 
                     #endregion
@@ -1721,7 +1742,9 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCostNoChange(GetManufacturingCostInput input)
         {
+
             #region 缓存
+
             var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
             && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
             && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.ManufacturingCostNoChange).FirstOrDefaultAsync();
@@ -1996,11 +2019,17 @@ namespace Finance.PriceEval
         {
             #region 快速核报价：上传
 
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
             var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
              && p.Year == input.Year && p.UpDown == input.UpDown);
             if (fuManufacturing.Any())
             {
                 return ObjectMapper.Map<List<ManufacturingCost>>(fuManufacturing);
+            }
+            else if (isUploadAuditFlow) 
+            {
+                throw new FriendlyException($"核价表未上传！");
             }
 
             #endregion
@@ -2323,12 +2352,18 @@ namespace Finance.PriceEval
         {
             #region 快速核报价：上传
 
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
             //筛选组测
             var fuManufacturing = await _fu_ManufacturingCostRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
              && p.Year == year && p.UpDown == upDown && p.CostType == CostType.GroupTest);
             if (fuManufacturing is not null)
             {
                 return ObjectMapper.Map<ManufacturingCost>(fuManufacturing);
+            }
+            else if (isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
             }
 
             #endregion
@@ -2698,13 +2733,18 @@ namespace Finance.PriceEval
 
                 #region 快速核报价：上传
 
+                var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
                 var fuLogisticsCost = await _fu_LogisticsCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
                  && p.Year == inputDto.Year.ToString() && p.UpDown == inputDto.UpDown);
                 if (fuLogisticsCost.Any())
                 {
                     return ObjectMapper.Map<List<ProductionControlInfoListDto>>(fuLogisticsCost);
                 }
-
+                else if (isUploadAuditFlow)
+                {
+                    throw new FriendlyException($"核价表未上传！");
+                }
                 #endregion
 
                 var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
@@ -2958,13 +2998,18 @@ namespace Finance.PriceEval
 
             #region 快速核报价：上传
 
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
             var fuQualityCostListDto = await _fu_QualityCostListDtoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
              && p.Year == input.Year && p.UpDown == input.UpDown);
             if (fuQualityCostListDto is not null)
             {
                 return ObjectMapper.Map<QualityCostListDto>(fuQualityCostListDto);
             }
-
+            else if (isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
             #endregion
 
 
@@ -3912,7 +3957,20 @@ namespace Finance.PriceEval
 
                 return fuBom;
             }
+        }
 
+        /// <summary>
+        /// 快速核报价：判断是否为上传流程
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async virtual Task<bool> IsUploadAuditFlow(long auditFlowId)
+        {
+            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+
+            return list.Contains(node.FinanceDictionaryDetailId);
         }
 
         #endregion
@@ -3947,5 +4005,6 @@ namespace Finance.PriceEval
         }
 
         #endregion
+
     }
 }
