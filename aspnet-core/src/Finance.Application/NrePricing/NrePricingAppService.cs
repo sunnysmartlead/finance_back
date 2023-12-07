@@ -573,6 +573,7 @@ namespace Finance.NerPricing
                     p.Id = 0;
                     return p;
                 }).ToList();
+                await _experimentalExpensesModify.BulkInsertAsync(addexperimentalExpenses);
                 //测试软件费用
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = await _testingSoftwareCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
                 testingSoftwareCostsModifies.Select(p =>
