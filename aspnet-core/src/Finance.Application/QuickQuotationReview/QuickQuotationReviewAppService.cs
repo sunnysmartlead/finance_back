@@ -3,6 +3,7 @@ using Abp.Authorization;
 using Finance.Audit;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.Entering;
 using Finance.NerPricing;
 using Finance.PriceEval;
@@ -79,10 +80,6 @@ namespace Finance.QuickQuotationReview
             _structionBomAppService = structionBomAppService;
             _productDevelopmentInputAppService = productDevelopmentInputAppService;
         }
-
-
-
-
         /// <summary>
         /// 开始快速核价：报价核价需求录入界面（第一步）
         /// </summary>
@@ -91,7 +88,6 @@ namespace Finance.QuickQuotationReview
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInputQuoteFlow input)
         {
             input.QuickQuoteAuditFlowId = input.QuoteAuditFlowId;
-
             //核价需求录入
             PriceEvaluationStartResult priceEvaluationStartResult = new();
             if(input.IsSubmit)
@@ -113,17 +109,11 @@ namespace Finance.QuickQuotationReview
             List<SolutionIdAndQuoteSolutionId> solutionIdAnds = await _demandApplyAuditAppService.FastAuditEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId);
             dto.SolutionIdAndQuoteSolutionId = solutionIdAnds;
             //工时工序  
-            await _processHoursEnterAppService.ProcessHoursEnterCopyAsync(dto.QuoteAuditFlowId, dto.NewAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            IdMappingListHoursEnter idMappingListHoursEnter= await _processHoursEnterAppService.ProcessHoursEnterCopyAsync(dto.QuoteAuditFlowId, dto.NewAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //物流成本
             await _logisticscostAppService.LogisticscostsCopyAsync(dto.QuoteAuditFlowId, dto.NewAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //制造成本
-            await _bomEnterAppService.GetBomEntersCopyAsync(dto.QuoteAuditFlowId, dto.NewAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
-
-            //产品开发部审核 无信息录入
-            //NRE环境实验费
-            await _nrePricingAppService.FastPostExperimentItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
-            //NRE模具费
-            await _nrePricingAppService.FastPostResourcesManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            await _bomEnterAppService.GetBomEntersCopyAsync(dto.QuoteAuditFlowId, dto.NewAuditFlowId, dto.SolutionIdAndQuoteSolutionId);            
             //电子BOM录入复制表
             List<BomIdAndQuoteBomId> electronicBomIdAndQuoteBomIds =  await _electronicBomAppService.FastPostElectronicEntering(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //结构录入
@@ -148,28 +138,21 @@ namespace Finance.QuickQuotationReview
             await _structionBomAppService.FastPostStuctDifferCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //物流基础信息表
             await _productDevelopmentInputAppService.FastPostProductDevelopmentCopy(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
-
-            //NREEMC实验费
-            await _nrePricingAppService.FastPostEmcItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            AllIdMappingList allIdMappingList = new AllIdMappingList();
+            //NRE环境实验费
+            allIdMappingList.FastPostExperimentItemsSingle = await _nrePricingAppService.FastPostExperimentItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //NRE模具费
+            allIdMappingList.FastPostResourcesManagementSingle = await _nrePricingAppService.FastPostResourcesManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            //NRE---EMC实验费
+            allIdMappingList.FastPostEmcItemsSingle = await _nrePricingAppService.FastPostEmcItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //NRE手板件、其他、差旅费
-            await _nrePricingAppService.FastPostProjectManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
-
+            IdMappingList FastPostProjectManagementSingle= await _nrePricingAppService.FastPostProjectManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            allIdMappingList.HandPieceCost = FastPostProjectManagementSingle.HandPieceCost;
+            allIdMappingList.RestsCost = FastPostProjectManagementSingle.RestsCost;
+            allIdMappingList.TravelExpense = FastPostProjectManagementSingle.TravelExpense;
+            //NRE核价看板修改项复制
+            await _nrePricingAppService.FastModify(allIdMappingList, dto, idMappingListHoursEnter);
             return priceEvaluationStartResult;
-        }
-        public class dto
-        {
-            /// <summary>
-            /// 流程ID
-            /// </summary>
-            public long NewAuditFlowId { get; set; }
-            /// <summary>
-            /// 引用流程的流程ID
-            /// </summary>
-            public long QuoteAuditFlowId { get; set; }
-            /// <summary>
-            /// 方案ID和引用流程的方案ID
-            /// </summary>
-            public List<SolutionIdAndQuoteSolutionId> SolutionIdAndQuoteSolutionId { get; set; }
-        }
+        }       
     }
 }
