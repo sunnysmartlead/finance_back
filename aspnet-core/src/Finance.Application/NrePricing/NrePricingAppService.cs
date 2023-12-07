@@ -2482,7 +2482,7 @@ namespace Finance.NerPricing
                 List<HandPieceCostModify> handPieceCostModifies = _handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (HandPieceCostModel item in pricingFormDto.HandPieceCost)
                 {
-                    HandPieceCostModify modify = handPieceCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    HandPieceCostModify modify = handPieceCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.PartName = modify.PartName;
@@ -2511,7 +2511,7 @@ namespace Finance.NerPricing
                 List<MouldInventoryModify> mouldInventoryModifies = _mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (MouldInventoryModel item in pricingFormDto.MouldInventory)
                 {
-                    MouldInventoryModify modify = mouldInventoryModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    MouldInventoryModify modify = mouldInventoryModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.StructuralId = modify.StructuralId;
@@ -2546,7 +2546,7 @@ namespace Finance.NerPricing
                 List<ToolingCostsModify> toolingCostsModifies = _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ToolingCostModel item in pricingFormDto.ToolingCost)
                 {
-                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.WorkName = modify.WorkName;
@@ -2573,7 +2573,7 @@ namespace Finance.NerPricing
                 List<FixtureCostsModify> fixtureCostsModifies = _fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (FixtureCostModel item in pricingFormDto.FixtureCost)
                 {
-                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ToolingName = modify.ToolingName;
@@ -2600,7 +2600,7 @@ namespace Finance.NerPricing
                 List<InspectionToolCostModify> inspectionToolCostModifies = _inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (QADepartmentQCModel item in pricingFormDto.QAQCDepartments)
                 {
-                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.Qc = modify.Qc;
@@ -2627,7 +2627,7 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = _productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ProductionEquipmentCostModel item in pricingFormDto.ProductionEquipmentCost)
                 {
-                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&& item.Id!=0);
                     if (modify != null)
                     {
                         item.EquipmentName = modify.EquipmentName;
@@ -2658,7 +2658,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (LaboratoryFeeModel item in pricingFormDto.LaboratoryFeeModels)
                 {
-                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExperimentalFeesType.Equals(item.ExperimentalFeesType));
+                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExperimentalFeesType.Equals(item.ExperimentalFeesType) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ProjectName = modify.ProjectName;
@@ -2695,7 +2695,7 @@ namespace Finance.NerPricing
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = _testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (SoftwareTestingCotsModel item in pricingFormDto.SoftwareTestingCost)
                 {
-                    TestingSoftwareCostsModify modify = testingSoftwareCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    TestingSoftwareCostsModify modify = testingSoftwareCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.SoftwareProject = modify.SoftwareProject;
@@ -2722,7 +2722,7 @@ namespace Finance.NerPricing
                 List<TravelExpenseModify> travelExpenseModifies = _travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (TravelExpenseModel item in pricingFormDto.TravelExpense)
                 {
-                    TravelExpenseModify modify = travelExpenseModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    TravelExpenseModify modify = travelExpenseModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
@@ -2753,7 +2753,7 @@ namespace Finance.NerPricing
                 List<RestsCostModify> restsCostModifies = _restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (RestsCostModel item in pricingFormDto.RestsCost)
                 {
-                    RestsCostModify modify = restsCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    RestsCostModify modify = restsCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ConstName = modify.ConstName;
