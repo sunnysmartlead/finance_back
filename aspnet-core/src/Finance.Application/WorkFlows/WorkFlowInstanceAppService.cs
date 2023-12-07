@@ -1319,7 +1319,7 @@ namespace Finance.WorkFlows
         public async virtual Task<PagedResultDto<WorkflowInstance>> GetWorkflowOvered(GetWorkflowOveredInput input)
         {
             //普通流程的核价原因
-            var hjyy = new List<string> { FinanceConsts. EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Xnnj, FinanceConsts.EvalReason_Nj };
+            var hjyy = new List<string> { FinanceConsts.EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Xnnj, FinanceConsts.EvalReason_Nj };
 
             var data = (from w in _workflowInstanceRepository.GetAll()
                         join h in _instanceHistoryRepository.GetAll() on w.Id equals h.WorkFlowInstanceId
@@ -1327,7 +1327,8 @@ namespace Finance.WorkFlows
                         && w.WorkflowState == WorkflowState.Ended
                         select w)
                         .Distinct()
-                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter))
+                        .WhereIf(input.AuditFlowId.HasValue && input.AuditFlowId.Value != default, p => p.Id == input.AuditFlowId);
 
             var count = await data.CountAsync();
 
