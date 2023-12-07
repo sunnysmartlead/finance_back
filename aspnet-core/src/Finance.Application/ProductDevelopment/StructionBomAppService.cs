@@ -10,6 +10,9 @@ using Finance.Ext;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.ProductDevelopment.Dto;
+using Finance.ProjectManagement;
+using Finance.ProjectManagement.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
@@ -54,11 +57,18 @@ namespace Finance.ProductDevelopment
         private readonly IObjectMapper _objectMapper;
 
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
+
         /// <summary>
         /// 营销部审核中方案表
         /// </summary>
         public readonly IRepository<Solution, long> _resourceSchemeTable;
-        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> resourceSchemeTable)
+
+        public StructionBomAppService(ILogger<StructionBomAppService> logger, IRepository<StructureBomInfo, long> structureBomInfoRepository, IRepository<StructureBomInfoBak, long> structureBomInfoBakRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<StructBomDifferent, long> structBomDifferentRepository, IRepository<Solution, long> solutionTableRepository, IRepository<NreIsSubmit, long> productIsSubmit, AuditFlowAppService flowAppService, ProductDevelopmentInputAppService productDevelopmentInputAppService, IObjectMapper objectMapper, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, IRepository<Solution, long> resourceSchemeTable)
         {
             _logger = logger;
             _structureBomInfoRepository = structureBomInfoRepository;
@@ -71,9 +81,77 @@ namespace Finance.ProductDevelopment
             _productDevelopmentInputAppService = productDevelopmentInputAppService;
             _objectMapper = objectMapper;
             _workflowInstanceAppService = workflowInstanceAppService;
+            _fileCommonService = fileCommonService;
             _resourceSchemeTable = resourceSchemeTable;
         }
 
+        #region 快速核价
+        /// <summary>
+        /// 结构录入快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task<List<BomIdAndQuoteBomId>> FastPostStruralEntering(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            List<BomIdAndQuoteBomId> list = new List<BomIdAndQuoteBomId>();
+
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<StructureBomInfo> structureElectronics = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                foreach (var item2 in structureElectronics)
+                {
+                    BomIdAndQuoteBomId bomIdAndQuoteBomId = new BomIdAndQuoteBomId();
+                    bomIdAndQuoteBomId.QuoteBomId = item2.Id;
+                    item2.AuditFlowId = AuditFlowId;
+                    item2.Id = 0;
+                    item2.SolutionId = item.NewSolutionId;
+
+                    long newStructureBomInfoId = await _structureBomInfoRepository.InsertAndGetIdAsync(item2);
+                    bomIdAndQuoteBomId.NewBomId = newStructureBomInfoId;
+                    list.Add(bomIdAndQuoteBomId);
+                }
+
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// 结构bak录入复制表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostStuctEnteringCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<StructureBomInfoBak> enteringStructBak = await _structureBomInfoBakRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                enteringStructBak.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _structureBomInfoBakRepository.BulkInsertAsync(enteringStructBak);
+            }
+        }
+
+        /// <summary>
+        /// 结构BOM两次上传差异化表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostStuctDifferCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<StructBomDifferent> enteringStuctDiffer = await _structBomDifferentRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                enteringStuctDiffer.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _structBomDifferentRepository.BulkInsertAsync(enteringStuctDiffer);
+            }
+        }
+
+        #endregion
 
 
 
@@ -85,6 +163,13 @@ namespace Finance.ProductDevelopment
         /// <exception cref="UserFriendlyException"></exception>
         public async Task<ProductDevelopmentInputDto> LoadExcel(IFormFile file)
         {
+            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+
+            FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
+
+
+            result.StuFileId = fileUploadOutputDto.FileId;
+
             //打开上传文件的输入流
             Stream stream = file.OpenReadStream();
 
@@ -96,7 +181,7 @@ namespace Finance.ProductDevelopment
             var sheet = workbook.GetSheetAt(0);
 
             List<StructureBomDto> list = new List<StructureBomDto>();
-            ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
+           
 
             //判断是否获取到 sheet
             if (sheet != null)
@@ -285,10 +370,7 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveStructionBom(ProductDevelopmentInputDto dto)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == dto.AuditFlowId && p.Id == dto.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+            
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
 
 
@@ -314,6 +396,7 @@ namespace Finance.ProductDevelopment
                         bomInfo.AuditFlowId = AuditFlowId;
                         bomInfo.SolutionId = SolutionId;
                         bomInfo.ProductId = ProductId;
+                        bomInfo.FileId = dto.StuFileId;
                     });
 
                     //要保存的bom表list
@@ -354,6 +437,7 @@ namespace Finance.ProductDevelopment
                                 SecondaryProcessingMethod = item.SecondaryProcessingMethod,
                                 SurfaceTreatmentMethod = item.SurfaceTreatmentMethod,
                                 DimensionalAccuracyRemark = item.DimensionalAccuracyRemark,
+                                FileId=item.FileId,
                             };
                             await _structureBomInfoRepository.InsertAsync(structureBomInfo);
                         }
@@ -382,11 +466,7 @@ namespace Finance.ProductDevelopment
                     #endregion
 
                 }
-            }
-            else
-            {
-                throw new FriendlyException(dto.SolutionId + ":该零件方案您没有权限查看！");
-            }
+           
         }
 
         /// <summary>

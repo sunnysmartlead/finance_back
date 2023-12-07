@@ -36,8 +36,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
+using NPOI.SS.UserModel;
+using NPOI.SS.Util;
+using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Rougamo;
+using Spire.Xls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,6 +51,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using test;
 
 namespace Finance.PriceEval
 {
@@ -100,6 +106,9 @@ namespace Finance.PriceEval
         /// </summary>
         private readonly AuditFlowAppService _flowAppService;
 
+        private readonly IRepository<AfterUpdateSumInfo, long> _afterUpdateSumInfoRepository;
+
+
         public PriceEvaluationAppService(ICacheManager cacheManager, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<Pcs, long> pcsRepository, IRepository<PcsYear, long> pcsYearRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Requirement, long> requirementRepository, IRepository<ElectronicBomInfo, long> electronicBomInfoRepository, IRepository<StructureBomInfo, long> structureBomInfoRepository,
             IRepository<EnteringElectronicCopy, long> enteringElectronicRepository,
             IRepository<StructureElectronicCopy, long> structureElectronicRepository,
@@ -126,11 +135,27 @@ namespace Finance.PriceEval
            IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
            IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
            IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-           IRepository<PanelJson, long> panelJsonRepository)
+           IRepository<PanelJson, long> panelJsonRepository,
+           IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository,
+           IRepository<BomMaterial, long> bomMaterialRepository,
+           IRepository<Fu_Bom, long> fu_BomRepository,
+          IRepository<Fu_ManufacturingCost, long> fu_ManufacturingCostRepository,
+          IRepository<Fu_LossCost, long> fu_LossCostRepository,
+         IRepository<Fu_OtherCostItem2, long> fu_OtherCostItem2Repository,
+         IRepository<Fu_OtherCostItem, long> fu_OtherCostItemRepository,
+         IRepository<Fu_QualityCostListDto, long> fu_QualityCostListDtoRepository,
+         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository)
             : base(financeDictionaryDetailRepository, priceEvaluationRepository, pcsRepository, pcsYearRepository, modelCountRepository, modelCountYearRepository, requirementRepository, electronicBomInfoRepository, structureBomInfoRepository, enteringElectronicRepository, structureElectronicRepository, lossRateInfoRepository, lossRateYearInfoRepository, exchangeRateRepository, manufacturingCostInfoRepository, yearInfoRepository, workingHoursInfoRepository, rateEntryInfoRepository, productionControlInfoRepository, qualityCostProportionEntryInfoRepository, userInputInfoRepository, qualityCostProportionYearInfoRepository, uphInfoRepository, allManufacturingCostRepository,
                   gradientRepository, gradientModelRepository, gradientModelYearRepository, updateItemRepository, solutionRepository, bomEnterRepository, bomEnterTotalRepository, nrePricingAppService, shareCountRepository, logisticscostRepository,
                   qualityCostRatioRepository, qualityCostRatioYearRepository, customerTargetPriceRepository, followLineTangentRepository, processHoursEnterUphRepository,
-                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository)
+                  processHoursEnterDeviceRepository, processHoursEnterRepository, panelJsonRepository, bomMaterialRepository,
+                  fu_BomRepository,
+         fu_ManufacturingCostRepository,
+          fu_LossCostRepository,
+          fu_OtherCostItem2Repository,
+          fu_OtherCostItemRepository,
+          fu_QualityCostListDtoRepository,
+        fu_LogisticsCostRepository, nodeInstanceRepository)
         {
             _cacheManager = cacheManager;
             _nodeInstanceRepository = nodeInstanceRepository;
@@ -157,6 +182,7 @@ namespace Finance.PriceEval
             _updateItemRepository = updateItemRepository;
 
             _countryLibraryRepository = countryLibraryRepository;
+            _afterUpdateSumInfoRepository = afterUpdateSumInfoRepository;
         }
 
 
@@ -190,6 +216,84 @@ namespace Finance.PriceEval
 
         #region 核价开始
         /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）：保存
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [AbpAuthorize]
+        public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStartSave(PriceEvaluationStartSaveInput input)
+        {
+            return await InternalPriceEvaluationStartSave(input, true);
+        }
+
+        /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）：保存
+        /// </summary>
+        /// <returns></returns>
+        [AbpAuthorize]
+        public async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStartSave(PriceEvaluationStartSaveInput input, bool isFd = false)
+        {
+            if (isFd)
+            {
+                #region 流程防抖
+
+                var cacheJson = JsonConvert.SerializeObject(input);
+                var code = cacheJson.GetHashCode().ToString();
+
+                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+                if (cache is null)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+                }
+                else
+                {
+                    throw new FriendlyException($"您重复提交了流程！");
+                }
+
+                #endregion
+            }
+            //if (!input.IsSubmit)
+            //{
+            long auid;
+            if (input.NodeInstanceId == default)
+            {
+                auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                {
+                    WorkflowId = WorkFlowCreator.MainFlowId,
+                    Title = input.Title,
+                    FinanceDictionaryDetailId = FinanceConsts.Save,
+                });
+            }
+            else
+            {
+                var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == input.NodeInstanceId);
+                auid = nodeInstance.WorkFlowInstanceId;
+            }
+
+
+            var json = JsonConvert.SerializeObject(input);
+
+            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auid);
+            if (priceEvaluationStartData is null)
+            {
+                await _priceEvaluationStartDataRepository.InsertAsync(new PriceEvaluationStartData
+                {
+                    AuditFlowId = auid,
+                    DataJson = json
+                });
+            }
+            else
+            {
+                priceEvaluationStartData.DataJson = json;
+            }
+
+            return new PriceEvaluationStartResult { AuditFlowId = auid, IsSuccess = true, Message = "添加成功！" };
+            //}
+        }
+
+
+        /// <summary>
         /// 开始核价：报价核价需求录入界面（第一步）
         /// </summary>
         /// <param name="input"></param>
@@ -197,26 +301,44 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> PriceEvaluationStart(PriceEvaluationStartInput input)
         {
+            return await InternalPriceEvaluationStart(input, true);
+        }
 
-            #region 流程防抖
-
-            var cacheJson = JsonConvert.SerializeObject(input);
-            var code = cacheJson.GetHashCode().ToString();
-
-            var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
-            if (cache is null)
+        /// <summary>
+        /// 开始核价：报价核价需求录入界面（第一步）
+        /// </summary>
+        /// <returns></returns>
+        [AbpAuthorize]
+        internal async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStart(PriceEvaluationStartInput input, bool isFd = false)
+        {
+            if (isFd)
             {
-                await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+                #region 流程防抖
 
-            }
-            else
-            {
-                throw new FriendlyException($"您重复提交了流程！");
-            }
+                var cacheJson = JsonConvert.SerializeObject(input);
+                var code = cacheJson.GetHashCode().ToString();
 
-            #endregion
+                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+                if (cache is null)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+                }
+                else
+                {
+                    throw new FriendlyException($"您重复提交了流程！");
+                }
+
+                #endregion
+            }
 
             #region 通用参数校验
+
+            if (input.ProjectCycle > 8)
+            {
+                throw new FriendlyException($"项目周期不得大于8年！");
+            }
+
             var isProductInformation = input.ProductInformation.GroupBy(p => p.Product).Any(p => p.Count() > 1);
             if (isProductInformation)
             {
@@ -272,6 +394,22 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"终端走量的车厂车型不能完全相同！");
             }
+
+            if (input.SopTime < DateTime.Now.Year)
+            {
+                throw new FriendlyException($"SOP年份不能小于当年年份！");
+            }
+
+            if (input.Gradient == null || input.Gradient.Count == 0 || input.Gradient.Any(p => p.GradientValue == 0))
+            {
+                throw new FriendlyException($"梯度数量不能为0！");
+            }
+
+            if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
+            {
+                throw new FriendlyException($"梯度数量不能重复！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
@@ -662,6 +800,7 @@ namespace Finance.PriceEval
                 //});
                 return new PriceEvaluationStartResult { AuditFlowId = auditFlowId, IsSuccess = true, Message = "添加成功！" };
             }
+
         }
 
         /// <summary>
@@ -777,6 +916,12 @@ namespace Finance.PriceEval
                 item.ProductTypeName = dictionaryDetail.DisplayName;
             }
 
+            //var node = await _nodeInstanceRepository
+            //    .FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+
+            //priceEvaluationDto.NodeInstanceId = node.Id;
+            //priceEvaluationDto.Opinion = priceEvaluation.Opinion;
+
             return priceEvaluationDto;
         }
 
@@ -842,6 +987,11 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task SetUpdateItemLossCost(SetUpdateItemInput<List<LossCost>> input)
         {
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.LossCost
@@ -902,6 +1052,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"组测成本的全生命周期数据不允许修改！");
             }
 
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.ManufacturingCost
@@ -957,6 +1112,11 @@ namespace Finance.PriceEval
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 throw new FriendlyException($"物流成本的全生命周期数据不允许修改！");
+            }
+
+            if (input.UpdateItem.Any(p => p.EditNotes.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
             }
 
             var entity = await _updateItemRepository.GetAll()
@@ -1069,6 +1229,12 @@ namespace Finance.PriceEval
             {
                 throw new FriendlyException($"其他成本的全生命周期数据不允许修改！");
             }
+
+            if (input.UpdateItem.Any(p => p.Note.IsNullOrWhiteSpace()))
+            {
+                throw new FriendlyException($"必须填写修改备注！");
+            }
+
             var entity = await _updateItemRepository.GetAll()
                 .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
                 && p.UpdateItemType == UpdateItemType.OtherCostItem2List
@@ -1153,11 +1319,24 @@ namespace Finance.PriceEval
             }
             catch (Exception)
             {
-                throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
-
+                //如果未填，或格式不正确，就设置为0
+                targetPrice = 0;
+                //throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
             }
 
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = (targetPrice * customerTargetPrice.ExchangeRate) - sum });
+            decimal jq;
+            if (customerTargetPrice.ExchangeRate is null)
+            {
+                jq = 0;
+            }
+            else
+            {
+                jq = targetPrice * customerTargetPrice.ExchangeRate.Value;
+            }
+
+
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = jq - sum });
+
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
 
@@ -1219,15 +1398,58 @@ namespace Finance.PriceEval
         public async virtual Task<FileResult> NreTableDownload(NreTableDownloadInput input)
         {
             var memoryStream = await NreTableDownloadStream(input);
+            ////开始行
+            int StartLine = 5;
+            memoryStream.Position = 0;
+            // 创建工作簿
+            var workbook = new XSSFWorkbook(memoryStream);
+            // 获取第一个工作表
+            var sheet = workbook.GetSheetAt(0);
+            int[] ProductionEquipmentCost = new int[2];//生产设备费       
+            int[] TravelExpense = new int[2];//差旅费           
 
+            for (int rowIndex = StartLine + 1; rowIndex <= sheet.LastRowNum; rowIndex++)
+            {
+                var row = sheet.GetRow(rowIndex);
+                if (row == null) continue;
+                string ExpenseName = row.GetCell(2).ToString();
+                string ExpenseNameHJ = row.GetCell(5).ToString();
 
-            //var memoryStream = new MemoryStream();
-
-            //await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/NRE.xlsx", dto);
-
-            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "NRE核价表.xlsx" };
+                if (ExpenseName.Equals("生产设备费用"))
+                {
+                    ProductionEquipmentCost[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("生产设备费用合计"))
+                {
+                    ProductionEquipmentCost[1] = rowIndex - 1;
+                }
+                if (ExpenseName.Equals("差旅费"))
+                {
+                    TravelExpense[0] = rowIndex + 2;
+                }
+                if (ExpenseNameHJ.Equals("差旅费合计"))
+                {
+                    TravelExpense[1] = rowIndex - 1;
+                }
+            }
+            //设备状态
+            List<FinanceDictionaryDetail> ProductionEquipmentCostName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.Sbzt));
+            //事由
+            List<FinanceDictionaryDetail> TravelExpenseName = await _financeDictionaryDetailRepository.GetAllListAsync(p => p.FinanceDictionaryId.Equals(FinanceConsts.NreReasons));
+            //列数据约束 生产设备费用
+            workbook.SetConstraint(sheet, 3, ProductionEquipmentCost[0], ProductionEquipmentCost[1], ProductionEquipmentCostName.Select(p => p.DisplayName).ToArray());
+            //列数据约束 差旅费
+            workbook.SetConstraint(sheet, 2, TravelExpense[0], TravelExpense[1], TravelExpenseName.Select(p => p.DisplayName).ToArray());
+            // 保存工作簿
+            using (MemoryStream fileStream = new MemoryStream())
+            {
+                workbook.Write(fileStream);
+                return new FileContentResult(fileStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"NRE核价表.xlsx"
+                };
+            }
         }
-
         #endregion
 
         #region 制造成本
@@ -1349,6 +1571,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
+        [Obsolete]
         public virtual async Task<ManufacturingCostInput> GetInputManufacturingCost(GetManufacturingCostInputDto input)
         {
             var data = await _allManufacturingCostRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
@@ -1362,6 +1585,68 @@ namespace Finance.PriceEval
                 return null;
             }
             return new ManufacturingCostInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, Cob = cob, Smt = smt, Other = other };
+        }
+
+        #endregion
+
+        #region 保存核价看板各成本修改后合计，用于核心器件查询使用
+
+        public async Task SaveAfterUpdateSum(AfterUpdateSumDto input)
+        {
+            var afterUpdateSumInfoList = await _afterUpdateSumInfoRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(input.SolutionId) && p.GradientId.Equals(input.GradientId) && p.Year.Equals(input.Year) && p.UpDown.Equals(input.UpDown));
+
+
+            if (afterUpdateSumInfoList.Count is not 0)
+            {
+                AfterUpdateSumInfo afterUpdateSumInfo = afterUpdateSumInfoList.FirstOrDefault();
+
+                if (input.QualityCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.QualityCostAfterSum = input.QualityCostAfterSum;
+                }
+                if (input.LossCostAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LossCostAfterSum = input.LossCostAfterSum;
+                }
+                if (input.ManufacturingAfterSum > 0)
+                {
+                    afterUpdateSumInfo.ManufacturingAfterSum = input.ManufacturingAfterSum;
+                }
+                if (input.LogisticsAfterSum > 0)
+                {
+                    afterUpdateSumInfo.LogisticsAfterSum = input.LogisticsAfterSum;
+                }
+                if (input.OtherCosttAfterSum > 0)
+                {
+                    afterUpdateSumInfo.OtherCosttAfterSum = input.OtherCosttAfterSum;
+                }
+
+
+                await _afterUpdateSumInfoRepository.UpdateAsync(afterUpdateSumInfo);
+
+            }
+            else
+            {
+
+                AfterUpdateSumInfo afterSumInfo = new()
+                {
+                    AuditFlowId = input.AuditFlowId,
+                    SolutionId = input.SolutionId,
+                    GradientId = input.GradientId,
+                    Year = input.Year,
+                    UpDown = input.UpDown,
+                    QualityCostAfterSum = input.QualityCostAfterSum,
+                    LossCostAfterSum = input.LossCostAfterSum,
+                    ManufacturingAfterSum = input.LossCostAfterSum,
+                    OtherCosttAfterSum = input.OtherCosttAfterSum,
+
+                };
+                await _afterUpdateSumInfoRepository.InsertAsync(afterSumInfo);
+
+            }
+
+
+
         }
 
         #endregion

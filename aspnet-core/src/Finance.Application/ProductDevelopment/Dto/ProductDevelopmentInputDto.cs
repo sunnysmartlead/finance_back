@@ -98,6 +98,11 @@ namespace Finance.ProductDevelopment.Dto
         /// 关键尺寸精度及重要要求
         /// </summary>
         public string DimensionalAccuracyRemark { get; set; }
+
+        /// <summary>
+        /// 电子BOM文件Id
+        /// </summary>
+        public long FileId { get; set; }
     }
 
 
@@ -156,6 +161,11 @@ namespace Finance.ProductDevelopment.Dto
         /// 方案号
         /// </summary>
         public string SolutionNum { get; set; }
+
+        /// <summary>
+        /// 电子BOM文件Id
+        /// </summary>
+        public long FileId { get; set; }
     }
 
 
@@ -349,11 +359,11 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 电子BOM文件Id
         /// </summary>
-        public string ElcFileId { get; set; }
+        public long ElcFileId { get; set; }
         /// <summary>
         /// 结构BOM文件Id
         /// </summary>
-        public string Stu3DFileId { get; set; }
+        public long StuFileId { get; set; }
 
     }
 

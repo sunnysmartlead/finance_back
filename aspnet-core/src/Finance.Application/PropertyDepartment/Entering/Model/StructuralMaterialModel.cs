@@ -15,6 +15,10 @@ namespace Finance.PropertyDepartment.Entering.Model
     public class StructuralMaterialModel
     {
         /// <summary>
+        /// Id
+        /// </summary>
+        public long Id { get; set; }
+        /// <summary>
         /// 方案的id
         /// </summary>
         [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification, true)]

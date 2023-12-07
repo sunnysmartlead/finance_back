@@ -1,6 +1,9 @@
 ﻿using Finance.Ext;
+using Finance.PropertyDepartment.Entering.Dto;
+using Finance.PropertyDepartment.Entering.Method;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -156,4 +159,15 @@ namespace Finance.PropertyDepartment.Entering.Model
         [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
+    /// <summary>
+    /// 电子BOM表单原币和年降计算的 交互类
+    /// </summary>
+    public class CalculationConstructionModel : ConstructionModel
+    {
+        /// <summary>
+        /// 用户录入的是原币还是年降 0:原币  1:年降
+        /// </summary>
+        [FriendlyRequired("参数:Type")]
+        public IsType Type { get; set; }
+    }   
 }

@@ -23,15 +23,20 @@ namespace Finance.MakeOffers
         /// </summary>
         [Column(TypeName = "CLOB")]
         public string AuditQuotationListJson { get; set; }
+     
         /// <summary>
         /// 版本
         /// </summary>
         public int version { get; set; }
         
         /// <summary>
-        /// 1 营销部审批、总经理审批1、总经理2
+        /// 序号
         /// </summary>
         public int ntype { get; set; }
+        /// <summary>
+        /// 1 类别  2报价审批表，3上轮单价
+        /// </summary>
+        public int nsource { get; set; }
 
     }
 }

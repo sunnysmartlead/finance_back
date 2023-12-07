@@ -1,7 +1,9 @@
 ﻿using Finance.Ext;
+using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -140,4 +142,15 @@ namespace Finance.PropertyDepartment.Entering.Dto
         [FriendlyRequired("修改意见")]
         public string ModificationComments { get; set; }
     }
+    /// <summary>
+    /// 电子BOM表单原币和年降计算的 交互类
+    /// </summary>
+    public class CalculationElectronicDto: ElectronicDto
+    {
+        /// <summary>
+        /// 用户录入的是原币还是年降 0:原币  1:年降
+        /// </summary>
+        [FriendlyRequired("参数:Type")]
+        public IsType Type { get; set; }
+    }   
 }

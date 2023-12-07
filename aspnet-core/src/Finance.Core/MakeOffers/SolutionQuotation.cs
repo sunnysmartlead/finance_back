@@ -16,11 +16,11 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public virtual long SolutionId { get; set; }
     /// <summary>
-    /// 模组id
+    /// 附件id
     /// </summary>
     public long Productld { get; set; }
     /// <summary>
-    /// 模组名称
+    /// 附件名称
     /// </summary>
     public string ModuleName { get; set; }
     /// <summary>
@@ -28,11 +28,11 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public string SolutionName { get; set; }
     /// <summary>
-    /// 产品名称
+    /// 附件url
     /// </summary>
     public string Product { get; set; }
     /// <summary>
-    /// 是否COB方案
+    /// 报价反馈仅保存
     /// </summary>
     public bool IsCOB { get; set; }
     /// <summary>
@@ -44,7 +44,7 @@ public class SolutionQuotation: FullAuditedEntity<long>
     /// </summary>
     public long StructEngineerId { get; set; }
     /// <summary>
-    /// 是否为首款产品
+    /// 仅保存
     /// </summary>
     public bool IsFirst { get; set; }
     /// <summary>

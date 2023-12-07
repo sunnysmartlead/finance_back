@@ -1,5 +1,6 @@
 ﻿using Abp.AutoMapper;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Session;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
@@ -65,6 +66,14 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// </summary>
         private readonly FileCommonService _fileCommonService;
         /// <summary>
+        /// 营销部录入审核
+        /// </summary>
+        private PriceEvaluationGetAppService _priceEvaluationAppService;
+
+
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="resourcePricingTeam"></param>
@@ -75,7 +84,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="fileManagementRepository"></param>
         /// <param name="workflowInstanceAppService"></param>
         /// <param name="fileCommonService"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService)
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationAppService, IRepository<NodeInstance, long> nodeInstanceRepository)
         {
             _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
@@ -85,9 +94,56 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _fileManagementRepository = fileManagementRepository;
             _workflowInstanceAppService = workflowInstanceAppService;
             _fileCommonService = fileCommonService;
+            _priceEvaluationAppService = priceEvaluationAppService;
+            _nodeInstanceRepository = nodeInstanceRepository;
         }
         #region 快速核报价内容
-        public async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId,long QuoteAuditFlowId)
+        /// <summary>
+        /// BOM页面枚举
+        /// </summary>
+        public enum BOMtype
+        {
+            /// <summary>
+            /// 结构
+            /// </summary>
+            Structure = 0,
+            /// <summary>
+            /// 电子
+            /// </summary>
+            Electronics = 1
+        }
+        /// <summary>
+        /// BOM查看的权限
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="SolutionId"></param>
+        /// <param name="bOMtype"></param>
+        /// <returns></returns>
+        public async Task<bool> GetBOMViewPermissions(long AuditFlowId, long SolutionId, BOMtype bOMtype)
+        {
+            long userId = AbpSession.GetUserId();
+            //结构
+            if (bOMtype.Equals(BOMtype.Structure))
+            {
+                Solution solution = await _resourceSchemeTable.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.Id.Equals(SolutionId) && p.StructEngineerId.Equals(userId));
+                return solution == null ? false : true;
+            }
+            //电子
+            if (bOMtype.Equals(BOMtype.Electronics))
+            {
+                Solution solution = await _resourceSchemeTable.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.Id.Equals(SolutionId) && p.ElecEngineerId.Equals(userId));
+                return solution == null ? false : true;
+            }
+            throw new FriendlyException("BOM查看的权限接口bOMtype参数异常!");
+        }
+        /// <summary>
+        /// 核价需求审批快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        internal async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId, long QuoteAuditFlowId)
         {
             List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds = new();
             AuditEntering auditEntering = await AuditExport(QuoteAuditFlowId);
@@ -97,19 +153,22 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             {
                 throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
             }
-            //方案表
-            await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
-            //设计方案
-            await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId));
             // 核价团队  其中包含(核价人员以及对应完成时间)
             PricingTeam pricingTeam = ObjectMapper.Map<PricingTeam>(auditEntering.PricingTeam);
             pricingTeam.AuditFlowId = AuditFlowId;
-            await _resourcePricingTeam.InsertOrUpdateAndGetIdAsync(pricingTeam);
+            pricingTeam.Id = 0;
+            await _resourcePricingTeam.InsertAsync(pricingTeam);
             #region 方案表
             // 营销部审核 方案表
             List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
-            schemeTables.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
-            schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);          
+            schemeTables.Select(async p =>
+            {
+                p.AuditFlowId = AuditFlowId;
+                p.Id = 0;
+                p.Productld = await _priceEvaluationAppService.GetProductId(AuditFlowId, p.Productld);
+                return p;
+            }).ToList();
+            schemeTables = await _resourceSchemeTable.BulkInsertAsync(schemeTables);
             #endregion
             #region 设计方案
             foreach (DesignSolutionDto design in auditEntering.DesignSolutionList)
@@ -117,14 +176,14 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 Solution solution = schemeTables.FirstOrDefault(a => a.Product == design.SolutionName);
                 if (solution != null)
                 {
-                    solutionIdAndQuoteSolutionIds.Add(new SolutionIdAndQuoteSolutionId() { SolutionId= solution.Id , QuoteSolutionId= design.SolutionId });
+                    solutionIdAndQuoteSolutionIds.Add(new SolutionIdAndQuoteSolutionId() { NewSolutionId = solution.Id, QuoteSolutionId = design.SolutionId });
                     design.SolutionId = solution.Id;
                 }
             }
             // 营销部审核中项目设计方案
             List<DesignSolution> designSchemes = ObjectMapper.Map<List<DesignSolution>>(auditEntering.DesignSolutionList);
-            designSchemes.Select(p => { p.AuditFlowId = AuditFlowId; return p; }).ToList();
-            designSchemes = await _resourceDesignScheme.BulkInsertOrUpdateAsync(designSchemes);
+            designSchemes.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; return p; }).ToList();
+            designSchemes = await _resourceDesignScheme.BulkInsertAsync(designSchemes);
             #endregion
             return solutionIdAndQuoteSolutionIds;
         }
@@ -138,7 +197,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         {
             try
             {
-                if(auditEntering.Opinion != FinanceConsts.YesOrNo_No)
+                if (auditEntering.Opinion != FinanceConsts.YesOrNo_No)
                 {
                     //判断项目设计方案和方案是否一对一 如果不 则全段传值错误
                     bool exists = auditEntering.SolutionTableList.All(a => auditEntering.DesignSolutionList.Any(b => b.SolutionName == a.Product));
@@ -147,7 +206,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                         throw new FriendlyException("设计方案的方案名称和方案的产品名称不一一对应");
                     }
                     //方案表
-                    await _resourceSchemeTable.HardDeleteAsync(p =>p.AuditFlowId.Equals(auditEntering.AuditFlowId));
+                    await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                     //设计方案
                     await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                     // 核价团队  其中包含(核价人员以及对应完成时间)
@@ -186,22 +245,48 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     ////删除 用户在前端删除的 数据项目
                     //await _resourceDesignScheme.DeleteAsync(p => DesignSchemeDiffId.Contains(p.Id));
                     #endregion
-                }else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                }
+                else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                 {
                     //方案表
                     await _resourceSchemeTable.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                     //设计方案
                     await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 }
-                #region 工作流
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+
+                //直接上传快速核价流程的核价原因
+                var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+                //在这里要判断：如果是直接上传核报价，就直接激活核价看板
+                var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价需求录入");
+                if (list.Contains(node.FinanceDictionaryDetailId))
                 {
-                    NodeInstanceId = auditEntering.NodeInstanceId,
-                    FinanceDictionaryDetailId = auditEntering.Opinion,
-                    Comment = auditEntering.Comment,
-                });
-                #endregion
+                    if (auditEntering.Opinion == FinanceConsts.YesOrNo_Yes)
+                    {
+                        var kanBan = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价看板");
+                        kanBan.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+                        var shenPi = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价审批录入");
+                        shenPi.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
+                    }
+                    else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                    {
+                        throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
+                    }
+                }
+                else
+                {
+                    #region 工作流
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        NodeInstanceId = auditEntering.NodeInstanceId,
+                        FinanceDictionaryDetailId = auditEntering.Opinion,
+                        Comment = auditEntering.Comment,
+                    });
+                    #endregion
+                }
             }
             catch (Exception ex)
             {
@@ -391,7 +476,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         public async Task<FileResult> DownloadExplosives([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             // 营销部审核中项目设计方案
-            DesignSolution designScheme = await _resourceDesignScheme.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId)&&p.SolutionId.Equals(solutionId));
+            DesignSolution designScheme = await _resourceDesignScheme.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
             return await _fileCommonService.DownloadFile(designScheme.FileId);
         }
     }

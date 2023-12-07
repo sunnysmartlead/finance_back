@@ -133,9 +133,15 @@ namespace Finance.TradeCompliance
                                    join b in await _countryLibraryRepository.GetAllListAsync() on a.CountryLibraryId equals b.Id
                                    select b.Country).ToList();
 
-                tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.Count > 0 ? countryList.FirstOrDefault() : null;
-
-
+                if (countryList.Count > 0)
+                {
+                    tradeComplianceCheckDto.TradeComplianceCheck.Country = countryList.FirstOrDefault();
+                }
+                else
+                {
+                    var country = await _countryLibraryRepository.GetAllListAsync(p => p.Id == 149);
+                    tradeComplianceCheckDto.TradeComplianceCheck.Country = country.FirstOrDefault().Country;
+                }
 
 
                 //存入部分合规信息生成ID
@@ -399,12 +405,12 @@ namespace Finance.TradeCompliance
             row004.CreateCell(7).SetCellValue("金额");
             row004.CreateCell(8).SetCellValue("物料管制状态分类");
 
-
+            int index = 1;
             for (int n = 0; n < TradeTable.ProductMaterialInfos.Count; n++)
             {
                 IRow row00n = sheet.CreateRow(4+1+n);
 
-                row00n.CreateCell(1).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialIdInBom);
+                row00n.CreateCell(1).SetCellValue(index);
                 row00n.CreateCell(2).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialCode);
                 row00n.CreateCell(3).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialName);
                 row00n.CreateCell(4).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialDetailName);
@@ -412,7 +418,7 @@ namespace Finance.TradeCompliance
                 row00n.CreateCell(6).SetCellValue(TradeTable.ProductMaterialInfos[n].UnitPrice.ToString());
                 row00n.CreateCell(7).SetCellValue(TradeTable.ProductMaterialInfos[n].Amount.ToString());
                 row00n.CreateCell(8).SetCellValue(TradeTable.ProductMaterialInfos[n].ControlStateType);
-
+                index++;
             }
 
             IRow rowAfterN1= sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);

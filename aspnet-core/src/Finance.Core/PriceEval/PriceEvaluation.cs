@@ -337,6 +337,11 @@ namespace Finance.PriceEval
         /// </summary>
         public virtual string Reason { get; set; }
 
+        /// <summary>
+        /// 核价原因（工作流使用）
+        /// </summary>
+        public virtual string Opinion { get; set; }
+
 
         /// <summary>
         /// 报价币种（汇率录入表（ExchangeRate）主键）（二开应该注释掉）
@@ -353,6 +358,12 @@ namespace Finance.PriceEval
         /// <summary>
         /// BOM是否客供Json
         /// </summary>
+        [Column(TypeName = "CLOB")]
         public virtual string BomIsCustomerSupplyJson { get; set;}
+
+        /// <summary>
+        /// 引用流程的ID（引用流程快速核价）
+        /// </summary>
+        public virtual long? QuickQuoteAuditFlowId { get; set; }
     }
 }

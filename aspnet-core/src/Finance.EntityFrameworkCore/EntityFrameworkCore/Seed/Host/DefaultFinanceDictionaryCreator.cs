@@ -214,6 +214,15 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qt, DisplayName="其他",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Jdcbpg, DisplayName="节点成本预估",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xmbg, DisplayName="项目变更",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtyylc, DisplayName="其他引用流程",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Bnnj, DisplayName="本年年降",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Tgyp, DisplayName="推广样品",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Schj, DisplayName="首次核价",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Lcyp, DisplayName="量产样品",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Xnnj, DisplayName="下年年降",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtsclc, DisplayName="其他上传流程",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.EvalReason, Id=FinanceConsts.EvalReason_Qtlxbj, DisplayName="其他零星报价",},
+
 
                 //完成与否
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Done, Id = FinanceConsts.Done, DisplayName="完成",},
@@ -249,6 +258,10 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Wlcblr, DisplayName="物流成本录入",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Gsgxtj, DisplayName="工序工时添加",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Cobzzcblr, DisplayName="COB制造成本录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nremjflr, DisplayName="NRE模具费录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nrekkxsyflr, DisplayName="NRE-可靠性实验费录入",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nresbj, DisplayName="NRE手板件",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.MybhgSelect, Id = FinanceConsts.MybhgSelect_Nreemcsyflr, DisplayName="NRE-EMC实验费录入",},
 
                 //核价看板选项
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.HjkbSelect, Id = FinanceConsts.HjkbSelect_Yes, DisplayName="同意",},

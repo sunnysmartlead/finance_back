@@ -254,6 +254,10 @@ namespace Finance.EntityFrameworkCore
         /// 工装费用 修改项 实体类
         /// </summary>
         public virtual DbSet<ToolingCostsModify> ToolingCostsModify { get; set; }
+        /// <summary>
+        /// Nre 核价表 带流程ID 实体类
+        /// </summary>
+        public virtual DbSet<AuditFlowIdPricingForm> AuditFlowIdPricingForm { get; set; }
         #endregion
 
         //工作流相关的表
@@ -415,8 +419,24 @@ namespace Finance.EntityFrameworkCore
         /// </summary>
         public virtual DbSet<FollowLineTangent> FollowLineTangent { get; set; }
 
+        /// <summary>
+        /// 保存核价看板修改后合计
+        /// </summary>
+        public virtual DbSet<AfterUpdateSumInfo> AfterUpdateSumInfo { get; set; }
+
+
 
         public virtual DbSet<TaskReset> TaskReset { get; set; }
+
+        public virtual DbSet<BomMaterial> BomMaterial { get; set; }
+        public virtual DbSet<Fu_Bom> Fu_Bom { get; set; }
+        public virtual DbSet<Fu_ManufacturingCost> Fu_ManufacturingCost { get; set; }
+        public virtual DbSet<Fu_LossCost> Fu_LossCost { get; set; }
+        public virtual DbSet<Fu_OtherCostItem2> Fu_OtherCostItem2 { get; set; }
+        public virtual DbSet<Fu_OtherCostItem> Fu_OtherCostItem { get; set; }
+        public virtual DbSet<Fu_QualityCostListDto> Fu_QualityCostListDto { get; set; }
+        public virtual DbSet<Fu_LogisticsCost> Fu_LogisticsCost { get; set; }
+
 
 
         #region 报价单新增表
@@ -599,6 +619,9 @@ namespace Finance.EntityFrameworkCore
             modelBuilder.Entity<FProcesses>().ToTable("FProcesses");
             modelBuilder.Entity<FTWorkingHour>().ToTable("FTSWorkingHour");
             modelBuilder.Entity<FollowLineTangent>().ToTable("FollowLineTangent");
+
+
+            modelBuilder.Entity<AfterUpdateSumInfo>().ToTable("AfterUpdateSumInfo");
 
             base.OnModelCreating(modelBuilder);
         }

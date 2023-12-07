@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Finance.DemandApplyAudit;
 using static Finance.Authorization.Roles.StaticRoleNames;
 using Abp.Collections.Extensions;
+using Finance.WorkFlows.Dto;
 
 namespace Finance.Audit
 {
@@ -56,6 +57,10 @@ namespace Finance.Audit
 
         private readonly IRepository<Solution, long> _solutionRepository;
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
+        private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
+
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+        private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
 
 
         private long _projectManager = 0;
@@ -64,23 +69,30 @@ namespace Finance.Audit
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="auditFlowRepository"></param>
-        /// <param name="auditFinishedProcessRepository"></param>
-        /// <param name="auditCurrentProcessRepository"></param>
-        /// <param name="auditFlowDetailRepository"></param>
-        /// <param name="auditFlowRightRepository"></param>
-        /// <param name="flowProcessRepository"></param>
-        /// <param name="flowJumpInfoRepository"></param>
-        /// <param name="flowClearInfoRepository"></param>
-        /// <param name="priceEvaluationRepository"></param>
-        /// <param name="userInputInfoRepository"></param>
-        /// <param name="userRepository"></param>
-        /// <param name="roleRepository"></param>
-        /// <param name="userRoleRepository"></param>
-        /// <param name="tradeComplianceAppService"></param>
-        /// <param name="financeDictionaryDetailRepository"></param>
-        /// <param name="noticeEmailInfoRepository"></param>
-        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<FlowJumpInfo, long> flowJumpInfoRepository, IRepository<FlowClearInfo, long> flowClearInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, TradeComplianceAppService tradeComplianceAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<AuditFlowDelete, long> auditFlowDeleteRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, WorkflowInstanceAppService workflowInstanceAppService, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository)
+        public AuditFlowAppService(IRepository<AuditFlow, long> auditFlowRepository,
+
+            IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository,
+            IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository,
+            IRepository<AuditFlowDetail, long> auditFlowDetailRepository,
+            IRepository<AuditFlowRight, long> auditFlowRightRepository,
+            IRepository<FlowProcess, long> flowProcessRepository,
+            IRepository<FlowJumpInfo, long> flowJumpInfoRepository,
+            IRepository<FlowClearInfo, long> flowClearInfoRepository,
+            IRepository<PriceEvaluation, long> priceEvaluationRepository,
+            IRepository<UserInputInfo, long> userInputInfoRepository,
+            IRepository<User, long> userRepository,
+            IRepository<Role> roleRepository,
+            IRepository<UserRole, long> userRoleRepository,
+            TradeComplianceAppService tradeComplianceAppService,
+            IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
+            IRepository<AuditFlowDelete, long> auditFlowDeleteRepository,
+            IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository,
+            WorkflowInstanceAppService workflowInstanceAppService,
+            IRepository<Solution, long> solutionRepository,
+            IRepository<PricingTeam, long> pricingTeamRepository,
+            IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository,
+            IRepository<NodeInstance, long> nodeInstanceRepository,
+            IRepository<WorkflowInstance, long> workflowInstanceRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFinishedProcessRepository = auditFinishedProcessRepository;
@@ -103,6 +115,13 @@ namespace Finance.Audit
 
             _solutionRepository = solutionRepository;
             _pricingTeamRepository = pricingTeamRepository;
+
+            _priceEvaluationRepository = priceEvaluationRepository;
+
+            _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
+
+            _nodeInstanceRepository = nodeInstanceRepository;
+            _workflowInstanceRepository = workflowInstanceRepository;
         }
 
 
@@ -195,8 +214,22 @@ namespace Finance.Audit
             //获取项目经理
             var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
+            //获取核价需求录入保存项
+            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
+
             //项目经理控制的页面
-            var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+            var pmPage = new List<string> { FinanceConsts.PriceDemandReview,
+                FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine,
+                FinanceConsts.PriceEvaluationBoard };
+
+            //拥有能看归档的角色的用户
+            var role = await _roleRepository.GetAllListAsync(p =>
+                            p.Name == StaticRoleNames.Host.FinanceTableAdmin
+                            || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+
 
             return list
 
@@ -206,7 +239,7 @@ namespace Finance.Audit
                 //如果当前用户不是结构工程师，就把结构BOM录入页面过滤掉
                 .WhereIf(!solutionList.Any(p => p.StructEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.StructureBOM || p.IsReset)
 
-                //公式工序
+                //工序工时
                 .WhereIf(pricingTeam == null || pricingTeam.EngineerId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.FormulaOperationAddition || p.IsReset)
 
                 //环境实验费
@@ -221,32 +254,224 @@ namespace Finance.Audit
                 //物流成本录入
                 .WhereIf(pricingTeam == null || pricingTeam.ProductManageTimeId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.LogisticsCostEntry || p.IsReset)
 
-
                 //项目核价审核
                 .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit || p.IsReset)
 
                 //项目经理
-                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => !pmPage.Contains(p.ProcessIdentifier) || p.IsReset)
+                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => ((!pmPage.Contains(p.ProcessIdentifier)) || p.ProcessName == FinanceConsts.Bomcbsh) || p.IsReset)
 
                 //生成报价分析界面选择报价方案、选择是否报价，必须是发起核价需求录入的人才能看到
                 .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.IsReset)
+
+                //核价需求录入，必须是自己录入或项目经理才可见
+                .WhereIf((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId)
+
+                || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
+
+                //报价单，必须是发起核价需求录入的人才能看到
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != "ExternalQuotation" || p.IsReset)
+
+                //报价审批表、【报价反馈】，必须是发起核价需求录入的人才能看到
+                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId,
+                p => (p.ProcessIdentifier != "QuotationApprovalForm" && p.ProcessIdentifier != "QuoteFeedback") || p.IsReset)
+
+                //如果当前用户是本流程的项目经理，就把【审批报价策略与核价表】、【报价反馈】、【确认中标金额】页面过滤掉
+                .WhereIf(projectPm == null || projectPm.ProjectManager == AbpSession.UserId,
+                p => p.ProcessIdentifier != "QuoteApproval" || p.ProcessIdentifier != "QuoteFeedback" || p.ProcessIdentifier != "BidWinningConfirmation"
+                || p.IsReset
+                )
+
+                //归档，如果当前用户不是该流程的发起人、项目经理，或归档管理员，就过滤
+                .WhereIf(projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
+                && (!userIds.Contains(AbpSession.UserId.Value)),
+
+                p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
+
+
+                .ToList();
+        }
+
+
+        /// <summary>
+        /// 过滤已办项
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
+        {
+            //if (auditFlowId == 546)
+            //{
+            //    var g34 = "";
+            //}
+            //核价需求录入
+            var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
+            //贸易合规审核员
+            var tradeComplianceAuditor = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
+            var isTradeComplianceAuditor = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
+
+            //项目管理部-项目经理
+            var projectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectManager);
+            var isProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectManager.Id);
+
+            // 市场部-项目经理
+            var marketProjectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectManager);
+            var isMarketProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectManager.Id);
+
+            //项目管理部-项目部长
+            var marketProjectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectMinister);
+            var isMarketProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectMinister.Id);
+
+            // 市场部-项目部长
+            var projectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectMinister);
+            var isProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectMinister.Id);
+
+            // 总经理
+            var generalManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.GeneralManager);
+            var isGeneralManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
+
+            // 成本拆分员
+            var costSplit = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.CostSplit);
+            var isCostSplit = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
+
+            //财务部-核价表归档管理员
+            var financeTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
+            var isFinanceTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == financeTableAdmin.Id);
+
+            //报价审核表归档管理员
+            var evalTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+            var isEvalTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == evalTableAdmin.Id);
+
+            //报价单归档管理员
+            var bjdgdgly = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var isBjdgdgly = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == bjdgdgly.Id);
+
+            //流程
+            var w = await _workflowInstanceRepository.GetAsync(auditFlowId);
+            var n = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档");
+
+
+            //节点
+
+            //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
+            if (w.WorkflowState == WorkflowState.Ended || n.NodeInstanceStatus == NodeInstanceStatus.Current)
+            {
+                if (!list.Any(p => p.ProcessName == "归档"))
+                {
+                    list.Add(new AuditFlowRightDetailDto
+                    {
+                        Id = n.Id,
+                        IsReset = false,
+                        IsRetype = false,
+                        JumpDescription = "",
+                        ProcessIdentifier = n.ProcessIdentifier,
+                        ProcessName = n.Name,
+                        Right = RIGHTTYPE.ReadOnly,
+                    });
+                }
+
+            }
+
+
+            return list
+
+                //如果当前用户不是本流程的项目经理或流程发起人（业务员），就把开始页面过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "开始" || p.IsReset)
+
+                //如果当前用户不是贸易合规审核员，或该流程的项目经理，就把贸易合规页面过滤掉
+                .WhereIf((priceEvaluation == null) || (!isTradeComplianceAuditor) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+
+                //如果当前用户不是流程发起人（业务员），就把【生成报价分析界面选择报价方案】、【报价反馈】过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId,
+                p => (p.ProcessName != "生成报价分析界面选择报价方案" && p.ProcessName != "报价反馈") || p.IsReset)
+
+                ////如果当前用户不是流程发起人（业务员），就把【报价审批表】过滤掉
+                //.WhereIf(priceEvaluation.CreatorUserId != AbpSession.UserId, p => p.ProcessName != "报价审批表" || p.IsReset)
+
+                ////如果当前用户不是流程发起人（业务员），就把【报价单】过滤掉
+                //.WhereIf(priceEvaluation.CreatorUserId != AbpSession.UserId, p => p.ProcessName != "报价单" || p.IsReset)
+
+                //如果当前用户不是本流程的项目经理，就把【查看每个方案初版BOM成本】页面过滤掉
+                .WhereIf((priceEvaluation == null) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
+
+                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】或该流传的项目经理，就把【项目部长查看核价表】页面过滤掉
+                .WhereIf((priceEvaluation == null) || (!isMarketProjectMinister) || (!isProjectMinister) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
+
+                //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
+                .WhereIf((!isGeneralManager), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
+
+                //如果当前用户不是【成本拆分员】且不是本流程的项目经理，就把【核心器件成本NRE费用拆分】页面过滤掉
+                .WhereIf((priceEvaluation == null) || ((!isCostSplit) && priceEvaluation.ProjectManager != AbpSession.UserId), p => p.ProcessName != "核心器件成本NRE费用拆分" || p.IsReset)
+
+                //如果当前用户是本流程的项目经理，就把【审批报价策略与核价表】、【生成报价分析界面选择报价方案】、【选择是否报价】、
+                //【报价反馈】、【确认中标金额】、【报价单】、【报价审批表】、【总经理查看中标金额】、【归档】页面过滤掉
+                .WhereIf((priceEvaluation != null) && priceEvaluation.ProjectManager == AbpSession.UserId, p => (p.ProcessIdentifier != "QuoteApproval"
+                && p.ProcessIdentifier != FinanceConsts.QuoteAnalysis && p.ProcessIdentifier != "QuoteFeedback"
+                && p.ProcessIdentifier != "BidWinningConfirmation" && p.ProcessIdentifier != "ExternalQuotation"
+                && p.ProcessIdentifier != "QuotationApprovalForm" && p.ProcessIdentifier != "ConfirmWinningBid")//&& p.ProcessIdentifier != "ArchiveEnd"
+                || p.IsReset)
+
+                //如果当前用户不是本流程的项目经理，也不是本流程的录入人。也不是【财务部-核价表归档管理员】、【报价审核表归档管理员】、【报价单归档管理员】，就把【归档】页面过滤掉
+                .WhereIf((priceEvaluation == null) ||
+                 priceEvaluation.ProjectManager != AbpSession.UserId
+                && priceEvaluation.CreatorUserId != AbpSession.UserId
+                && (!isFinanceTableAdmin) && (!isEvalTableAdmin) && (!isBjdgdgly)
+                , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
+
 
                 .ToList();
         }
 
         /// <summary>
-        /// 获取当前用户关联的项目核价流程和界面
+        /// 邮件专用流程获取
         /// </summary>
-        public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfos()
+        /// <returns></returns>
+        public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfosForEmail()
         {
-            //如果是项目经理，可以看整个流程的全部已办。否则，只能看自己的已办
             List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
-            //登录的实例
-            if (AbpSession.UserId is null)
-            {
-                throw new FriendlyException(401, "请先登录");
-            }
+            //待办
+            var data = await _workflowInstanceAppService.GetTaskByUserId(0, false);
 
+            //重置
+            var resetData = await _workflowInstanceAppService.GetReset(0, false);
+
+            data.Items = data.Items.Where(p => !resetData.Items.Select(o => o.Id).Contains(p.Id))
+                .Union(resetData.Items).ToList();
+
+            var dto = (await data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
+            {
+                AuditFlowId = p.Key.WorkFlowInstanceId,
+                AuditFlowTitle = p.Key.Title,
+                AuditFlowRightDetailList = await FilteTask(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
+                {
+                    Id = o.Id,
+                    ProcessName = o.NodeName,
+                    Right = RIGHTTYPE.Edit,
+                    ProcessIdentifier = o.ProcessIdentifier,
+                    IsRetype = o.IsBack,
+                    JumpDescription = o.Comment,
+                    IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
+                }).ToList())
+            }))
+            .Where(p => p.AuditFlowRightDetailList.Any());
+
+
+
+            auditFlowRightInfoDtoList.AddRange(dto);
+
+            return auditFlowRightInfoDtoList;
+
+        }
+
+        /// <summary>
+        /// 邮件专用流程获取
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfosByTask()
+        {
+            List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
             //待办
             var data = await _workflowInstanceAppService.GetTaskByUserId(0);
 
@@ -269,6 +494,7 @@ namespace Finance.Audit
                     IsRetype = o.IsBack,
                     JumpDescription = o.Comment,
                     IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
                 }).ToList())
             }))
             .Where(p => p.AuditFlowRightDetailList.Any());
@@ -277,104 +503,105 @@ namespace Finance.Audit
 
             auditFlowRightInfoDtoList.AddRange(dto);
 
-            //已办
-            var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
-            var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+            return auditFlowRightInfoDtoList;
+
+        }
+
+
+        /// <summary>
+        /// 获取当前用户关联的项目核价流程和界面
+        /// </summary>
+        public async virtual Task<List<AuditFlowRightInfoDto>> GetAllAuditFlowInfos()
+        {
+            //如果是项目经理，可以看整个流程的全部已办。否则，只能看自己的已办
+            List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
+            //登录的实例
+            if (AbpSession.UserId is null)
+            {
+                throw new FriendlyException(401, "请先登录");
+            }
+
+
+            //待办
+            var data = await _workflowInstanceAppService.GetTaskByUserId(0);
+
+            //添加别人重置给自己的任务
+            var resetData = await _workflowInstanceAppService.GetReset(0);
+
+            data.Items = data.Items.Where(p => !resetData.Items.Select(o => o.Id).Contains(p.Id))
+                .Union(resetData.Items).ToList();
+
+            //删去自己重置给别人任务
+            var resetedData = await _workflowInstanceAppService.GetReseted(0);
+
+            data.Items = data.Items.ExceptBy(resetedData.Items.Select(p => p.Id), p => p.Id).ToList();
+
+            var dto = (await data.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
             {
                 AuditFlowId = p.Key.WorkFlowInstanceId,
                 AuditFlowTitle = p.Key.Title,
-                AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                AuditFlowRightDetailList = await FilteTask(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                 {
                     Id = o.Id,
                     ProcessName = o.NodeName,
-                    Right = RIGHTTYPE.ReadOnly,
-                    ProcessIdentifier = o.ProcessIdentifier
-                }).ToList()
-            }).ToList();
+                    Right = RIGHTTYPE.Edit,
+                    ProcessIdentifier = o.ProcessIdentifier,
+                    IsRetype = o.IsBack,
+                    JumpDescription = o.Comment,
+                    IsReset = o.IsReset,
+                    TaskUserIds = o.TaskUserIds,
+                }).ToList())
+            }))
+            .Where(p => p.AuditFlowRightDetailList.Any());
 
-            ////项目经理的全部已办
-            //var userRole = from ur in _userRoleRepository.GetAll()
-            //               join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
-            //               where ur.UserId == AbpSession.UserId
-            //               && r.Name.Contains("项目经理")
-            //               select r.Name;
-            //var isPm = await userRole.AnyAsync();
-            //if (isPm)
-            //{
-            //    var auditFlowIds = dto.Select(p => p.AuditFlowId).Union(taskedDto.Select(p => p.AuditFlowId)).Distinct();
-            //    var taskedPm = await auditFlowIds.SelectAsync(async p => await _workflowInstanceAppService.GetInstanceHistoryByWorkflowInstanceId(p));
-            //    var taskedDtoPm = taskedPm.SelectMany(p => p.Items).GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
-            //    {
-            //        AuditFlowId = p.Key.WorkFlowInstanceId,
-            //        AuditFlowTitle = p.Key.Title,
-            //        AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
-            //        {
-            //            Id = o.Id,
-            //            ProcessName = o.NodeName,
-            //            Right = RIGHTTYPE.ReadOnly,
-            //            ProcessIdentifier = o.ProcessIdentifier
-            //        }).ToList()
-            //    }).ToList();
-            //    auditFlowRightInfoDtoList.AddRange(taskedDtoPm);
-            //}
-            //else
-            //{
-            //    auditFlowRightInfoDtoList.AddRange(taskedDto);
-            //}
+            auditFlowRightInfoDtoList.AddRange(dto);
 
+            //已办
 
-            auditFlowRightInfoDtoList.AddRange(taskedDto);
+            //判断当前用户是否是超级管理员
+            var user = await _userRepository.FirstOrDefaultAsync(p => p.Id == AbpSession.UserId);
+
+            // 普通用户的已办
+            if (user.UserName != AbpUserBase.AdminUserName)
+            {
+                var tasked = await _workflowInstanceAppService.GetTaskCompletedFilter();
+                var taskedDto = (await tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = await TaskCompleted(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList())
+                })).Where(p => p.AuditFlowRightDetailList.Any());
+
+                auditFlowRightInfoDtoList.AddRange(taskedDto);
+            }
+            else
+            {
+                // 超级管理员的已办
+                var tasked = await _workflowInstanceAppService.GetTaskCompleted();
+                var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+                {
+                    AuditFlowId = p.Key.WorkFlowInstanceId,
+                    AuditFlowTitle = p.Key.Title,
+                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                    {
+                        Id = o.Id,
+                        ProcessName = o.NodeName,
+                        Right = RIGHTTYPE.ReadOnly,
+                        ProcessIdentifier = o.ProcessIdentifier
+                    }).ToList()
+                }).Where(p => p.AuditFlowRightDetailList.Any());
+
+                auditFlowRightInfoDtoList.AddRange(taskedDto);
+            }
+
 
             return auditFlowRightInfoDtoList;
-
-
-            //var flowRightInfos = await _auditFlowRightRepository.GetAllListAsync(p => p.UserId == AbpSession.UserId.Value);
-            //foreach (var flowRight in flowRightInfos)
-            //{
-            //    AuditFlowRightInfoDto auditFlowRightInfoDto = this.GetIndexOfRightInfoList(flowRight.AuditFlowId, auditFlowRightInfoDtoList);
-            //    if (auditFlowRightInfoDto == null)
-            //    {
-            //        auditFlowRightInfoDto = new();
-            //        auditFlowRightInfoDto.AuditFlowId = flowRight.AuditFlowId;
-            //        var priceEvaluations = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == flowRight.AuditFlowId);
-            //        if (priceEvaluations.Count > 0)
-            //        {
-            //            auditFlowRightInfoDto.AuditFlowTitle = priceEvaluations.FirstOrDefault().Title;
-            //        }
-            //        else
-            //        {
-            //            continue;
-            //        }
-            //        auditFlowRightInfoDto.AuditFlowRightDetailList = new();
-            //        auditFlowRightInfoDtoList.Add(auditFlowRightInfoDto);
-            //    }
-            //    if (flowRight.ProcessIdentifier == AuditFlowConsts.AF_ArchiveEnd)
-            //    {
-            //        var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowRight.AuditFlowId);
-            //        if (flowList.Count > 0)
-            //        {
-            //            if (!(flowList.FirstOrDefault()).IsValid)
-            //            {
-            //                continue;
-            //            }
-            //        }
-            //        else
-            //        {
-            //            continue;
-            //        }
-            //    }
-            //    AuditFlowRightDetailDto auditFlowRightDetailDto = new()
-            //    {
-            //        ProcessIdentifier = flowRight.ProcessIdentifier,
-            //        ProcessName = this.AuditFlowName(flowRight.ProcessIdentifier),
-            //        Right = flowRight.RightType,
-            //        IsRetype = flowRight.IsRetype,
-            //        JumpDescription = flowRight.Remark
-            //    };
-            //    auditFlowRightInfoDto.AuditFlowRightDetailList.Add(auditFlowRightDetailDto);
-            //}
-
-            //return auditFlowRightInfoDtoList;
         }
 
         private string AuditFlowName(string ProcessIdentifier)
@@ -1490,61 +1717,66 @@ namespace Finance.Audit
         /// <returns></returns>
         public async virtual Task DeleteAuditFlowById(AuditFlowDeleteDto auditFlowDeleteDto)
         {
-            AuditFlowDelete auditFlowDelete = new();
-            auditFlowDelete.AuditFlowId = auditFlowDeleteDto.AuditFlowId;
-            auditFlowDelete.DeleteReason = auditFlowDeleteDto.DeleteReason;
+            await _workflowInstanceAppService.OverWorkflow(new OverWorkflowInput { AuditFlowId = auditFlowDeleteDto.AuditFlowId, DeleteReason = auditFlowDeleteDto.DeleteReason });
 
-            PriceEvaluation priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            if (priceEvaluation != null)
-            {
-                auditFlowDelete.AuditFlowName = priceEvaluation.Title;
-                User user = await _userRepository.FirstOrDefaultAsync(p => p.Name.Equals(priceEvaluation.Drafter));
-                if (user != null)
-                {
-                    auditFlowDelete.AuditFlowUserId = user.Id;
-                }
-                if (AbpSession.UserId != null)
-                {
-                    auditFlowDelete.AuditFlowDeleterId = (long)AbpSession.UserId;
-                }
-            }
+            #region 一开逻辑
+            //AuditFlowDelete auditFlowDelete = new();
+            //auditFlowDelete.AuditFlowId = auditFlowDeleteDto.AuditFlowId;
+            //auditFlowDelete.DeleteReason = auditFlowDeleteDto.DeleteReason;
 
-            var auditFlowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == auditFlowDeleteDto.AuditFlowId);
-            if (auditFlowList.Count > 0)
-            {
-                auditFlowDelete.AuditFlowVersion = auditFlowList.FirstOrDefault().QuoteVersion;
-                await _auditFlowRepository.HardDeleteAsync(auditFlowList.FirstOrDefault());
-            }
-            else
-            {
-                throw new FriendlyException("流程已删除！");
-            }
+            //PriceEvaluation priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
+            //if (priceEvaluation != null)
+            //{
+            //    auditFlowDelete.AuditFlowName = priceEvaluation.Title;
+            //    User user = await _userRepository.FirstOrDefaultAsync(p => p.Name.Equals(priceEvaluation.Drafter));
+            //    if (user != null)
+            //    {
+            //        auditFlowDelete.AuditFlowUserId = user.Id;
+            //    }
+            //    if (AbpSession.UserId != null)
+            //    {
+            //        auditFlowDelete.AuditFlowDeleterId = (long)AbpSession.UserId;
+            //    }
+            //}
 
-            var auditFlowCurrentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            foreach (var auditFlowCurrent in auditFlowCurrentList)
-            {
-                await _auditCurrentProcessRepository.HardDeleteAsync(auditFlowCurrent);
-            }
+            //var auditFlowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == auditFlowDeleteDto.AuditFlowId);
+            //if (auditFlowList.Count > 0)
+            //{
+            //    auditFlowDelete.AuditFlowVersion = auditFlowList.FirstOrDefault().QuoteVersion;
+            //    await _auditFlowRepository.HardDeleteAsync(auditFlowList.FirstOrDefault());
+            //}
+            //else
+            //{
+            //    throw new FriendlyException("流程已删除！");
+            //}
 
-            var auditFlowFinishedList = await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            foreach (var auditFinished in auditFlowFinishedList)
-            {
-                await _auditFinishedProcessRepository.HardDeleteAsync(auditFinished);
-            }
+            //var auditFlowCurrentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
+            //foreach (var auditFlowCurrent in auditFlowCurrentList)
+            //{
+            //    await _auditCurrentProcessRepository.HardDeleteAsync(auditFlowCurrent);
+            //}
 
-            var auditFlowDetailList = await _auditFlowDetailRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            foreach (var auditFlowDetail in auditFlowDetailList)
-            {
-                await _auditFlowDetailRepository.HardDeleteAsync(auditFlowDetail);
-            }
+            //var auditFlowFinishedList = await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
+            //foreach (var auditFinished in auditFlowFinishedList)
+            //{
+            //    await _auditFinishedProcessRepository.HardDeleteAsync(auditFinished);
+            //}
 
-            var auditFlowRightList = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            foreach (var auditFlowRight in auditFlowRightList)
-            {
-                await _auditFlowRightRepository.HardDeleteAsync(auditFlowRight);
-            }
+            //var auditFlowDetailList = await _auditFlowDetailRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
+            //foreach (var auditFlowDetail in auditFlowDetailList)
+            //{
+            //    await _auditFlowDetailRepository.HardDeleteAsync(auditFlowDetail);
+            //}
 
-            await _auditFlowDeleteRepository.InsertAsync(auditFlowDelete);
+            //var auditFlowRightList = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
+            //foreach (var auditFlowRight in auditFlowRightList)
+            //{
+            //    await _auditFlowRightRepository.HardDeleteAsync(auditFlowRight);
+            //}
+
+            //await _auditFlowDeleteRepository.InsertAsync(auditFlowDelete);
+
+            #endregion
         }
 
         /// <summary>

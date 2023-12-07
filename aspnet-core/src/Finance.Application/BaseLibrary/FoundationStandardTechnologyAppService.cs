@@ -166,6 +166,10 @@ namespace Finance.BaseLibrary
             foreach (var item in dtos)
             {
                 var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
+                if (user != null)
+                {
+                    item.LastModifierUserName = user.Name;
+                }
                 List<FoundationReliableProcessHoursResponseDto> foundationReliableProcessHoursResponseDtos = new List<FoundationReliableProcessHoursResponseDto>();
 
              List<FoundationReliableProcessHours> FoundationReliableProcessHourList =  this._foundationFoundationReliableProcessHoursRepository.GetAll().Where(u => u.StandardTechnologyId == item.Id).ToList();
@@ -455,9 +459,29 @@ namespace Finance.BaseLibrary
                         {
                             ProcessHoursEnteritemDto technologyHardware = new ProcessHoursEnteritemDto();
                             technologyHardware.Year = device.Year;
-                            technologyHardware.LaborHour = decimal.Parse(device.LaborHour);
-                            technologyHardware.MachineHour = decimal.Parse(device.MachineHour);
-                            technologyHardware.PersonnelNumber = decimal.Parse(device.NumberPersonnel);
+                            if (null != device.LaborHour)
+                            {
+                                technologyHardware.LaborHour = decimal.Parse(device.LaborHour);
+                            }
+                            else {
+                                technologyHardware.LaborHour = 0;
+                            }
+                            if (null != device.MachineHour)
+                            {
+                                technologyHardware.MachineHour = decimal.Parse(device.MachineHour);
+                            }
+                            else
+                            {
+                                technologyHardware.MachineHour = 0;
+                            }
+                            if (null != device.NumberPersonnel)
+                            {
+                                technologyHardware.PersonnelNumber = decimal.Parse(device.NumberPersonnel);
+                            }
+                            else
+                            {
+                                technologyHardware.PersonnelNumber = 0;
+                            }
                             foundationWorkingHourItemDtosItem.Add(technologyHardware);
 
 
@@ -1689,8 +1713,23 @@ namespace Finance.BaseLibrary
 
                         yaer += 3;
                         CreateCell(herdRow3, yaer - 2, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
-                        CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
-                        CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].NumberPersonnel.ToString(), wk);
+                        if (null != processHoursEnteritems[i].Issues[0].LaborHour)
+                        {
+                            CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
+                        }
+                        else
+                        {
+                            CreateCell(herdRow3, yaer - 1, "", wk);
+
+                        }
+                        if (null != processHoursEnteritems[i].Issues[0].NumberPersonnel)
+                        {
+                            CreateCell(herdRow3, yaer, processHoursEnteritems[i].Issues[0].NumberPersonnel.ToString(), wk);
+                        }
+                        else {
+
+                            CreateCell(herdRow3, yaer, "", wk);
+                        }
                     }
 
                 }

@@ -26,6 +26,11 @@ namespace Finance.VersionManagement.Dto
         /// 版本号
         /// </summary>
         public List<int> Versions { get; set; }
+
+        /// <summary>
+        /// 对应流程Id
+        /// </summary>
+        public long AuditFlowId { get; set; }
     }
 
     /// <summary>
@@ -189,6 +194,14 @@ namespace Finance.VersionManagement.Dto
     public class AuditFlowOperateReocrdDto
     {
         /// <summary>
+        /// 任务标题
+        /// </summary>
+        public string Title { get; set; }
+        /// <summary>
+        /// 分类
+        /// </summary>
+        public string TypeName { get; set; }
+        /// <summary>
         /// 项目名称
         /// </summary>
         public string ProjectName { get; set; }
@@ -216,6 +229,11 @@ namespace Finance.VersionManagement.Dto
         /// 要求完成时间
         /// </summary>
         public DateTime? RequiredTime { get; set; }
+
+        /// <summary>
+        /// 重置时间（如果为空，表示是正常流程。如果有值，表示经历过重置，显示的是重置时间）
+        /// </summary>
+        public DateTime? ResetTime { get; set; }
         /// <summary>
         /// 操作时间记录列表
         /// </summary>

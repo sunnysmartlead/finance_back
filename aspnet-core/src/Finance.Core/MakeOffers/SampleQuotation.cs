@@ -48,4 +48,53 @@ public class SampleQuotation : FullAuditedEntity<long>
     /// 版本
     /// </summary>
     public int version { get; set; }
+    /// <summary>
+    /// 类别  0报价分析看板，1报价反馈
+    /// </summary>
+    public int ntype { get; set; }
+}
+
+public class SampleExcel
+{
+    /// <summary>
+    /// 方案名
+    /// </summary>
+    public string SolutionName { get; set; }
+    /// <summary>
+    /// 样品阶段名称（从字典明细表取值，FinanceDictionaryId是【SampleName】）
+    /// </summary>
+    public  string Name { get; set; }
+
+
+    /// <summary>
+    /// 需求量
+    /// </summary>
+    public  string Pcs { get; set; }
+    /// <summary>
+    /// 成本
+    /// </summary>
+    public string Cost { get; set; }
+
+    /// <summary>
+    /// 单价
+    /// </summary>
+    public string UnitPrice { get; set; }
+
+    /// <summary>
+    /// 毛利率
+    /// </summary>
+    public string GrossMargin { get; set; }
+
+    /// <summary>
+    /// 销售收入
+    /// </summary>
+    public string SalesRevenue { get; set; }
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
+    /// <summary>
+    /// 类别  0报价分析看板，1报价反馈
+    /// </summary>
+    public int ntype { get; set; }
 }

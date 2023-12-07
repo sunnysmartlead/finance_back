@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.MakeOffers.AnalyseBoard.Model;
 
 namespace Finance.MakeOffers.AnalyseBoard.DTo;
@@ -7,7 +8,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 报价表  交互类
 /// </summary>
-public class QuotationListSecondDto
+public class QuotationListSecondDto:ToExamineDto
 {
     /// <summary>
     /// 查询日期
@@ -106,6 +107,10 @@ public class QuotationListSecondDto
     /// 走量信息
     /// </summary>
     public List<MotionMessageSecondModel> MotionMessage { get; set; }
+    /// <summary>
+    /// 走量信息
+    /// </summary>
+    public List<MotionGradientSecondModel> motion { get; set; }
 
     /// <summary>
     /// 项目名称
@@ -148,6 +153,11 @@ public class QuotationListSecondDto
     /// </summary>
 
     public List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct { get; set; }
+    /// <summary>
+    /// 客户年降率、年度返利要求、一次性折让率、佣金比例
+    /// </summary>
+
+    public List<SopSecondModel> sops{ get; set; }
 }
 
 /// <summary>
@@ -311,5 +321,27 @@ public string MessageName { get; set; }
 
 
 public List<YearValue> YearValues{ get; set; }
+
+}
+
+
+
+public class MotionGradientSecondModel{
+    /// <summary>
+    /// 梯度
+    /// </summary>
+    public  string gradient { get; set; }
+    /// <summary>
+    /// 标题
+    /// </summary>
+    public string key { get; set; }
+
+    /// <summary>
+    /// 值
+    /// </summary>
+    public string value { get; set; }
+
+
+ 
 
 }

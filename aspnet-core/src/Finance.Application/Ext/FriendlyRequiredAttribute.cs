@@ -63,7 +63,7 @@ namespace Finance.Ext
                 {
                     if (value == null) throw new FriendlyException($"{errorName}不能为空");
                     if (value is string str && string.IsNullOrWhiteSpace(str)) throw new FriendlyException($"{errorName}不能为空");
-                    if ((value is int || value is long) && (long)value == 0) throw new FriendlyException($"{errorName}不能为0");
+                    if ((value is int || value is long) && Convert.ToInt32(value) == 0) throw new FriendlyException($"{errorName}不能为0");
                     if (value is IEnumerable enumerable && !enumerable.GetEnumerator().MoveNext()) throw new FriendlyException($"{errorName}不能为空");
                     if ((value is int || value is long) && specialVerification.Equals(SpecialVerification.AuditFlowIdVerification))
                     {

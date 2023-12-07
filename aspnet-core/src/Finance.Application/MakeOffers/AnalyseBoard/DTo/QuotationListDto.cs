@@ -25,6 +25,12 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo
         /// 审批说明
         /// </summary>
         public string BackReason { get; set; }
+        /// <summary>
+        /// 是否报价
+        /// </summary>
+        public bool IsQuotation { get; set; }
+        
+        
     }
     /// <summary>
     /// 报价表  交互类

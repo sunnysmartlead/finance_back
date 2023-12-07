@@ -46,6 +46,11 @@ namespace Finance.WorkFlows.Dto
         public virtual string TaskUser { get; set; }
 
         /// <summary>
+        /// 操作用户Id列表
+        /// </summary>
+        public virtual List<int> TaskUserIds { get; set; }
+
+        /// <summary>
         /// 工作流状态
         /// </summary>
         public virtual WorkflowState WorkflowState { get; set; }
@@ -65,5 +70,20 @@ namespace Finance.WorkFlows.Dto
         /// 审批评论
         /// </summary>
         public virtual string Comment { get; set; }
+
+        /// <summary>
+        /// 目标用户Id
+        /// </summary>
+        public virtual long TargetUserId { get; set; }
+
+        /// <summary>
+        /// 重置用户Id
+        /// </summary>
+        public virtual long ResetUserId { get; set; }
+
+        /// <summary>
+        /// 操作角色
+        /// </summary>
+        internal virtual string RoleId { get; set; }
     }
 }

@@ -9,6 +9,7 @@ using Finance.Audit;
 using Finance.Audit.Dto;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.EngineeringDepartment;
 using Finance.Entering;
 using Finance.Ext;
@@ -29,14 +30,18 @@ using Finance.ProductionControl;
 using Finance.ProjectManagement;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.Entering.Model;
+using Finance.WorkFlows;
 using LinqKit;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
+using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
 using Spire.Pdf.Exporting.XPS.Schema;
@@ -44,10 +49,12 @@ using Spire.Xls.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Security.Policy;
 using System.Threading.Tasks;
 using test;
@@ -135,6 +142,20 @@ namespace Finance.PriceEval
         private readonly IRepository<ProcessHoursEnter, long> _processHoursEnterRepository;
 
         private readonly IRepository<PanelJson, long> _panelJsonRepository;
+        private readonly IRepository<BomMaterial, long> _bomMaterialRepository;
+
+        //快速核报价：直接上传
+
+        private readonly IRepository<Fu_Bom, long> _fu_BomRepository;
+        private readonly IRepository<Fu_ManufacturingCost, long> _fu_ManufacturingCostRepository;
+        private readonly IRepository<Fu_LossCost, long> _fu_LossCostRepository;
+        private readonly IRepository<Fu_OtherCostItem2, long> _fu_OtherCostItem2Repository;
+        private readonly IRepository<Fu_OtherCostItem, long> _fu_OtherCostItemRepository;
+        private readonly IRepository<Fu_QualityCostListDto, long> _fu_QualityCostListDtoRepository;
+        private readonly IRepository<Fu_LogisticsCost, long> _fu_LogisticsCostRepository;
+
+        //流程
+        private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
 
         private string errMessage = string.Empty;
@@ -185,7 +206,17 @@ namespace Finance.PriceEval
             IRepository<ProcessHoursEnterUph, long> processHoursEnterUphRepository,
             IRepository<ProcessHoursEnterDevice, long> processHoursEnterDeviceRepository,
             IRepository<ProcessHoursEnter, long> processHoursEnterRepository,
-            IRepository<PanelJson, long> panelJsonRepository)
+            IRepository<PanelJson, long> panelJsonRepository,
+            IRepository<BomMaterial, long> bomMaterialRepository,
+
+            IRepository<Fu_Bom, long> fu_BomRepository,
+          IRepository<Fu_ManufacturingCost, long> fu_ManufacturingCostRepository,
+          IRepository<Fu_LossCost, long> fu_LossCostRepository,
+         IRepository<Fu_OtherCostItem2, long> fu_OtherCostItem2Repository,
+         IRepository<Fu_OtherCostItem, long> fu_OtherCostItemRepository,
+         IRepository<Fu_QualityCostListDto, long> fu_QualityCostListDtoRepository,
+         IRepository<Fu_LogisticsCost, long> fu_LogisticsCostRepository,
+         IRepository<NodeInstance, long> nodeInstanceRepository)
         {
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
             _priceEvaluationRepository = priceEvaluationRepository;
@@ -235,6 +266,17 @@ namespace Finance.PriceEval
             _processHoursEnterRepository = processHoursEnterRepository;
 
             _panelJsonRepository = panelJsonRepository;
+            _bomMaterialRepository = bomMaterialRepository;
+
+            _fu_BomRepository = fu_BomRepository;
+            _fu_ManufacturingCostRepository = fu_ManufacturingCostRepository;
+            _fu_LossCostRepository = fu_LossCostRepository;
+            _fu_OtherCostItem2Repository = fu_OtherCostItem2Repository;
+            _fu_OtherCostItemRepository = fu_OtherCostItemRepository;
+            _fu_QualityCostListDtoRepository = fu_QualityCostListDtoRepository;
+            _fu_LogisticsCostRepository = fu_LogisticsCostRepository;
+
+            _nodeInstanceRepository = nodeInstanceRepository;
         }
 
 
@@ -449,13 +491,16 @@ namespace Finance.PriceEval
         /// <returns>项目核价表</returns>
         public async virtual Task<ExcelPriceEvaluationTableDto> GetPriceEvaluationTable(GetPriceEvaluationTableInput input)
         {
-            var json = await _panelJsonRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
             && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == input.InputCount
-            && p.Year == input.Year && p.UpDown == input.UpDown);
-            if (json is not null)
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.DataJson).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
             {
-                return json.DataJson.FromJsonString<ExcelPriceEvaluationTableDto>();
+                return json.FromJsonString<ExcelPriceEvaluationTableDto>();
             }
+            #endregion
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
 
@@ -829,6 +874,23 @@ namespace Finance.PriceEval
 
             async Task<List<OtherCostItem2>> GetData(int year, YearType upDown, decimal quantity)
             {
+                #region 快速核报价：上传
+
+                var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+                var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                 && p.Year == year && p.UpDown == upDown);
+                if (fuOtherCostItem2.Any())
+                {
+                    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                }
+                else if (isUploadAuditFlow)
+                {
+                    throw new FriendlyException($"核价表未上传！");
+                }
+
+                #endregion
+
                 //修改项
                 var getUpdateItemOtherCosts = await GetUpdateItemOtherCost(new GetUpdateItemInput
                 {
@@ -1017,6 +1079,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<OtherCostItem2List>> GetOtherCostItem2List(GetOtherCostItem2ListInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.OtherCostItem2List).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<OtherCostItem2List>>();
+            }
+            #endregion
+
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var shareCount = await _shareCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
@@ -1045,7 +1117,7 @@ namespace Finance.PriceEval
             //(sopYear + yearCount)表示分摊截止年份，input.Year减去它，如果不为负数，表示当前年份可分摊
             var isHasCost = IsHasCostFunc(input.Year, input.UpDown, sopYear.Year, yearCount);//input.Year - (sopYear.Year + yearCount) < 0;
 
-
+            var isHasNre = priceEvaluation.IsHasNre != null && priceEvaluation.IsHasNre == false;
 
             var otherCostItem2List = new List<OtherCostItem2List>
             {
@@ -1055,7 +1127,7 @@ namespace Finance.PriceEval
                     ItemName = MoldCosts,
                     Total = data.MouldInventoryTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfMouldCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfMouldCost
                 },
                 new OtherCostItem2List
                 {
@@ -1063,7 +1135,7 @@ namespace Finance.PriceEval
                     ItemName = FixtureCost,
                     Total = data.FixtureCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfFixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.AllocationOfFixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1071,7 +1143,7 @@ namespace Finance.PriceEval
                     ItemName = ToolCost,
                     Total = data.ToolingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FrockCost
+                    IsShare =isHasNre?false: priceEvaluation.FrockCost
                 },
                 new OtherCostItem2List
                 {
@@ -1079,7 +1151,7 @@ namespace Finance.PriceEval
                     ItemName = InspectionCost,
                     Total = data.QAQCDepartmentsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.FixtureCost
+                    IsShare =isHasNre?false: priceEvaluation.FixtureCost
                 },
                 new OtherCostItem2List
                 {
@@ -1087,7 +1159,7 @@ namespace Finance.PriceEval
                     ItemName = SpecializedEquipmentCost,
                     Total = data.ProductionEquipmentCost.Where(p=>p.DeviceStatusName=="专用").Sum(p=>p.Cost),//data.ProductionEquipmentCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.AllocationOfEquipmentCost
+                    IsShare = isHasNre?false:priceEvaluation.AllocationOfEquipmentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1095,7 +1167,7 @@ namespace Finance.PriceEval
                     ItemName = ExperimentCost,
                     Total = data.LaboratoryFeeModelsTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.ExperimentCost
+                    IsShare = isHasNre?false:priceEvaluation.ExperimentCost
                 },
                 new OtherCostItem2List
                 {
@@ -1103,7 +1175,7 @@ namespace Finance.PriceEval
                     ItemName = TestSoftwareCost,
                     Total = data.SoftwareTestingCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TestCost
+                    IsShare = isHasNre?false:priceEvaluation.TestCost
                 },
                  new OtherCostItem2List
                 {
@@ -1111,7 +1183,7 @@ namespace Finance.PriceEval
                     ItemName =OtherExpensesCost,
                     Total = data.RestsCostTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.OtherCost
+                    IsShare = isHasNre?false:priceEvaluation.OtherCost
                 },
                   new OtherCostItem2List
                 {
@@ -1119,7 +1191,7 @@ namespace Finance.PriceEval
                     ItemName = TravelCost,
                     Total = data.TravelExpenseTotal,
                     Note = string.Empty,
-                    IsShare = priceEvaluation.TravelCost
+                    IsShare = isHasNre?false:priceEvaluation.TravelCost
                 },
 
                 new OtherCostItem2List
@@ -1201,6 +1273,7 @@ namespace Finance.PriceEval
                 UpDown = input.UpDown
             });
 
+            otherCostItem2List.ForEach(p => p.EditId = p.ItemName);
 
             return otherCostItem2List;
         }
@@ -1216,6 +1289,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<LossCost>> GetLossCostNoChange(GetCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LossCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<LossCost>>();
+            }
+            #endregion
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
             return await this.GetLossCostByMaterial(input.Year, electronicAndStructureList, input, false);
@@ -1228,6 +1311,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<LossCost>> GetLossCost(GetCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LossCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<LossCost>>();
+            }
+            #endregion
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
             return await this.GetLossCostByMaterial(input.Year, electronicAndStructureList, input);
@@ -1310,11 +1403,20 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<Material>> GetBomCost(GetBomCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.BomCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<Material>>();
+            }
+            #endregion
+
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
 
             var customerTargetPrice = await _customerTargetPriceRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
-
 
             var sopYear = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId).MinAsync(p => p.Year);
             var data = await GetAllData(input);
@@ -1420,6 +1522,22 @@ namespace Finance.PriceEval
 
                 async Task<List<Material>> GetData(int year, YearType upDown)
                 {
+                    #region 快速核报价：上传
+
+                    var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+                    var fuBom = await _fu_BomRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == year && p.UpDown == upDown);
+                    if (fuBom.Any())
+                    {
+                        return ObjectMapper.Map<List<Material>>(fuBom);
+                    }
+                    else if (isUploadAuditFlow)
+                    {
+                        throw new FriendlyException($"核价表未上传！");
+                    }
+
+                    #endregion
                     var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
                                                    join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
                                                    where gm.AuditFlowId == input.AuditFlowId && gm.GradientId == input.GradientId && gm.ProductId == productId && gmy.Year == year && gmy.UpDown == upDown
@@ -1544,7 +1662,7 @@ namespace Finance.PriceEval
                     {
                         item.Year = year;
                         item.MaterialPrice = GetMaterialPrice(item.SystemiginalCurrency, year, upDown, gradient.GradientValue);
-                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.Currency == item.ExchangeRateId ? customerTargetPrice.ExchangeRate : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
+                        item.ExchangeRate = customerTargetPrice is not null && customerTargetPrice.Currency is not null && customerTargetPrice.ExchangeRate is not null && customerTargetPrice.Currency is not 0 && customerTargetPrice.ExchangeRate is not 0 && customerTargetPrice.Currency == item.ExchangeRateId ? customerTargetPrice.ExchangeRate.Value : GetExchangeRate(item.ExchangeRateValue, year);//二开：如果营销部录入有汇率，就取录入
                         item.MaterialPriceCyn = item.MaterialPrice * item.ExchangeRate;  //GetYearValue(item.StandardMoney, year, upDown, gradient.GradientValue);//二开：材料单价原币*汇率
                         item.TotalMoneyCyn = (decimal)item.AssemblyCount * item.MaterialPriceCyn;//人民币合计金额=装配数量*人民币单价（诸年之和）二开：也可以直接取本位币
                         item.Loss = item.LossRate / 100 * item.TotalMoneyCyn;//等于合计金额*损耗率
@@ -1574,6 +1692,22 @@ namespace Finance.PriceEval
                             return item.InputCount;
                         }
                     }
+
+                    #region 快速核报价：数据复制
+
+                    //把导入的BOM信息读取进来
+                    var bomMaterial = await _bomMaterialRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId
+                    && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId);
+
+                    var bomDto = ObjectMapper.Map<List<Material>>(bomMaterial);
+
+                    for (int i = 0; i < bomDto.Count; i++)
+                    {
+                        bomDto[i].Id = $"import{i}";
+                        bomDto[i].Year = year;
+                    }
+                    electronicAndStructureList.AddRange(bomDto);
+                    #endregion
 
                     return electronicAndStructureList.GroupBy(p => p.SuperType).Select(p => p.Select(o => o).OrderByDescending(o => o.TotalMoneyCyn).ToList())
                         .SelectMany(p => p).ToList();
@@ -1608,6 +1742,18 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCostNoChange(GetManufacturingCostInput input)
         {
+
+            #region 缓存
+
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.ManufacturingCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ManufacturingCost>>();
+            }
+            #endregion
+
             return await GetManufacturingCostPrivate(input, false);
         }
 
@@ -1618,6 +1764,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCost(GetManufacturingCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.ManufacturingCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ManufacturingCost>>();
+            }
+            #endregion
+
             return await GetManufacturingCostPrivate(input);
         }
 
@@ -1665,22 +1821,43 @@ namespace Finance.PriceEval
                 //月需求量的和
                 var manufacturingCostDirectListMonthlyDemand = dtoList.Sum(p => p.MonthlyDemand);
 
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gm.GradientId == input.GradientId && gm.AuditFlowId == input.AuditFlowId
+                                               && gm.ProductId == solution.Productld
+                                               select gmy).ToListAsync();
+                var gradientModelYearSum = gradientModelYear.Sum(p => p.Count);
+
                 var manufacturingCostDirect = new ManufacturingCostDirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
-                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLaborNo) / manufacturingCostDirectListMonthlyDemand,
+                    //EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciationNo) / manufacturingCostDirectListMonthlyDemand,
+                    //LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    //ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostDirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    EquipmentDepreciation = manufacturingCostDirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    LineChangeCost = manufacturingCostDirectList.Sum(p => p.LineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+
+                    ManufacturingExpenses = manufacturingCostDirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostDirect.Subtotal = manufacturingCostDirect.DirectLabor + manufacturingCostDirect.EquipmentDepreciation + manufacturingCostDirect.LineChangeCost + manufacturingCostDirect.ManufacturingExpenses;
 
                 var manufacturingCostIndirect = new ManufacturingCostIndirect
                 {
                     Id = 0,
-                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
-                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * p.MonthlyDemand) / manufacturingCostDirectListMonthlyDemand,
+                    DirectLabor = manufacturingCostIndirectList.Sum(p => p.DirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    ManufacturingExpenses = manufacturingCostIndirectList.Sum(p => p.ManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
+                    EquipmentDepreciation = manufacturingCostIndirectList.Sum(p => p.EquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Id && o.UpDown == p.UpDown
+                    ).Count) / gradientModelYearSum,
                 };
                 manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -1814,6 +1991,7 @@ namespace Finance.PriceEval
             }
             else
             {
+
                 var entity = await GetData(input, gradient, solution.Productld, isChange);
 
 
@@ -1839,6 +2017,24 @@ namespace Finance.PriceEval
         }
         async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
+            #region 快速核报价：上传
+
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+            var fuManufacturing = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (fuManufacturing.Any())
+            {
+                return ObjectMapper.Map<List<ManufacturingCost>>(fuManufacturing);
+            }
+            else if (isUploadAuditFlow) 
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
+
+            #endregion
+
+
             #region 获取组测
 
             var dto = await GetGroupTest(input.Year, input.UpDown, input, gradient, sProductld, isChange);
@@ -1901,9 +2097,6 @@ namespace Finance.PriceEval
 
             if (inputDto.Year == PriceEvalConsts.AllYear)
             {
-
-
-
                 var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == inputDto.GradientId);
                 var gradientValue = gradient.GradientValue.ToString();
 
@@ -2157,6 +2350,24 @@ namespace Finance.PriceEval
 
         async Task<ManufacturingCost> GetGroupTest(int year, YearType upDown, GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
+            #region 快速核报价：上传
+
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+            //筛选组测
+            var fuManufacturing = await _fu_ManufacturingCostRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == year && p.UpDown == upDown && p.CostType == CostType.GroupTest);
+            if (fuManufacturing is not null)
+            {
+                return ObjectMapper.Map<ManufacturingCost>(fuManufacturing);
+            }
+            else if (isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
+
+            #endregion
+
             if (isChange)
             {
                 //取得修改项
@@ -2169,10 +2380,14 @@ namespace Finance.PriceEval
                 var manufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
                 if (manufacturingCostEdit is not null)
                 {
-                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == PriceEvalConsts.Zc);
+                    var zf = manufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.GroupTest.ToString());
 
                     if (zf is not null)
                     {
+                        zf.UpDown = upDown;
+                        zf.ManufacturingCostDirect.UpDown = upDown;
+                        zf.ManufacturingCostIndirect.UpDown = upDown;
+
                         return zf;
                     }
                 }
@@ -2333,9 +2548,9 @@ namespace Finance.PriceEval
             {
                 MonthlyDemand = monthlyDemand,
                 Id = year,
-                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.LaborHour).To<decimal>()) / 3600,
+                DirectLabor = (rateEntryInfo.IndirectLaborRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
                 EquipmentDepreciation = (rateEntryInfo.IndirectDepreciationRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600,
-                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * manufacturingHours) / 3600) + manufacturingCostInfo.ProcessCost,
+                ManufacturingExpenses = ((rateEntryInfo.IndirectManufacturingRate * yearInfo.Sum(p => p.MachineHour).To<decimal>()) / 3600) + manufacturingCostInfo.ProcessCost,
             };
             manufacturingCostIndirect.Subtotal = manufacturingCostIndirect.DirectLabor + manufacturingCostIndirect.EquipmentDepreciation + manufacturingCostIndirect.ManufacturingExpenses;
 
@@ -2346,7 +2561,7 @@ namespace Finance.PriceEval
 
             var dto = new ManufacturingCost
             {
-                EditId = PriceEvalConsts.Zc,
+                EditId = CostType.GroupTest.ToString(),
                 Id = year,
                 CostType = CostType.GroupTest,
                 CostItem = PriceEvalConsts.GroupTest,
@@ -2357,6 +2572,11 @@ namespace Finance.PriceEval
                 ManufacturingCostIndirect = manufacturingCostIndirect,
                 Subtotal = manufacturingCost.Subtotal + manufacturingCostIndirect.Subtotal
             };
+
+            dto.UpDown = upDown;
+            dto.ManufacturingCostDirect.UpDown = upDown;
+            dto.ManufacturingCostIndirect.UpDown = upDown;
+
             return dto;
 
             //dto.Round2();//保留两位小数
@@ -2420,6 +2640,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ProductionControlInfoListDto>> GetLogisticsCostNoChange(GetLogisticsCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LogisticsCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ProductionControlInfoListDto>>();
+            }
+            #endregion
+
             return await GetLogisticsCostPrivate(input, false);
         }
 
@@ -2430,6 +2660,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ProductionControlInfoListDto>> GetLogisticsCost(GetLogisticsCostInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.LogisticsCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<List<ProductionControlInfoListDto>>();
+            }
+            #endregion
+
             return await GetLogisticsCostPrivate(input);
         }
 
@@ -2437,7 +2677,7 @@ namespace Finance.PriceEval
         /// 获取 物流成本汇总表
         /// </summary>
         /// <returns></returns>
-        private async Task<List<ProductionControlInfoListDto>> GetLogisticsCostPrivate(GetLogisticsCostInput input, bool isChange = true)
+        public async Task<List<ProductionControlInfoListDto>> GetLogisticsCostPrivate(GetLogisticsCostInput input, bool isChange = true)
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
 
@@ -2490,6 +2730,23 @@ namespace Finance.PriceEval
 
             async Task<List<ProductionControlInfoListDto>> GetData(GetLogisticsCostInput inputDto, Solution solution, string gradientValue)
             {
+
+                #region 快速核报价：上传
+
+                var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+                var fuLogisticsCost = await _fu_LogisticsCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
+                 && p.Year == inputDto.Year.ToString() && p.UpDown == inputDto.UpDown);
+                if (fuLogisticsCost.Any())
+                {
+                    return ObjectMapper.Map<List<ProductionControlInfoListDto>>(fuLogisticsCost);
+                }
+                else if (isUploadAuditFlow)
+                {
+                    throw new FriendlyException($"核价表未上传！");
+                }
+                #endregion
+
                 var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
                                                join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
                                                where gm.AuditFlowId == inputDto.AuditFlowId && gm.GradientId == inputDto.GradientId && gm.ProductId == solution.Productld && gmy.Year == inputDto.Year && gmy.UpDown == inputDto.UpDown
@@ -2563,6 +2820,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<QualityCostListDto> GetQualityCostNoChange(GetOtherCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.QualityCostNoChange).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<QualityCostListDto>();
+            }
+            #endregion
+
             if (input.Year == PriceEvalConsts.AllYear)
             {
                 return await GetQualityCostPrivate(input);
@@ -2580,6 +2847,16 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<QualityCostListDto> GetQualityCost(GetOtherCostItemInput input)
         {
+            #region 缓存
+            var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
+            && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId && p.InputCount == 0
+            && p.Year == input.Year && p.UpDown == input.UpDown).Select(p => p.QualityCost).FirstOrDefaultAsync();
+            if (!json.IsNullOrWhiteSpace())
+            {
+                return json.FromJsonString<QualityCostListDto>();
+            }
+            #endregion
+
             return await GetQualityCostPrivate(input);
         }
 
@@ -2661,7 +2938,7 @@ namespace Finance.PriceEval
                     QualityCost = qualityCost / yearCount.Sum(p => p.Quantity),
                 };
 
-                result.CostProportion = result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply);
+                result.CostProportion = (result.QualityCost / bom.Sum(p => p.TotalMoneyCynNoCustomerSupply)) * 100;
 
                 return result;
             }
@@ -2718,6 +2995,24 @@ namespace Finance.PriceEval
         private async Task<QualityCostListDto> GetQualityCostPrivate(GetOtherCostItemInput input, List<Material> electronicAndStructureList
          , decimal logisticsFee, decimal manufacturingCostSubtotal, bool isChange = true)
         {
+
+            #region 快速核报价：上传
+
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+            var fuQualityCostListDto = await _fu_QualityCostListDtoRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+             && p.Year == input.Year && p.UpDown == input.UpDown);
+            if (fuQualityCostListDto is not null)
+            {
+                return ObjectMapper.Map<QualityCostListDto>(fuQualityCostListDto);
+            }
+            else if (isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
+            #endregion
+
+
             if (isChange)
             {
                 //取得修改项
@@ -3024,31 +3319,38 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadStreamInput input)
+        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
         {
-            return null;
-            //if (input.IsAll)
-            //{
-            //    var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = true }));
-            //    DtoExcel(dtoAll);
-            //    var memoryStream = new MemoryStream();
-            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTable.xlsx", dtoAll);
-            //    return memoryStream;
-            //}
-            //else
-            //{
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+            var productId = solution.Productld;
+
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
+
+            DtoExcel(dtoAll);
+            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
+
+            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
+                .SelectAsync(async p =>
+                {
+                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
+                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
+                })).ToList();
+
+            var memoryStream = new MemoryStream();
 
 
-            //    var dto = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTableResult(new GetPriceEvaluationTableResultInput { AuditFlowId = input.AuditFlowId, ProductId = input.ProductId, IsAll = false }));
-
-            //    DtoExcel(dto);
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
 
 
-            //    var memoryStream2 = new MemoryStream();
+            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
-            //    await MiniExcel.SaveAsByTemplateAsync(memoryStream2, "wwwroot/Excel/PriceEvaluationTable.xlsx", dto);
-            //    return memoryStream2;
-            //}
+            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+
+            return memoryStream2;
         }
 
         private string GetYearName(YearType yearType)
@@ -3082,37 +3384,9 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            var solution = await _solutionRepository.GetAsync(input.SolutionId);
-            var productId = solution.Productld;
-
-            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
-
-            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
-
-            DtoExcel(dtoAll);
-            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
-
-            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
-                .SelectAsync(async p =>
-                {
-                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
-                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
-                })).ToList();
-
-            var memoryStream = new MemoryStream();
-
-
-            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
-
-
-            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
-
-            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
-            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+            var memoryStream2 = await PriceEvaluationTableDownloadStream(input);
 
             return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
-
         }
 
         /// <summary>
@@ -3144,7 +3418,7 @@ namespace Finance.PriceEval
             dtoAll.LogisticsFee = dtoAll.OtherCostItem.LogisticsFee;
             dtoAll.ProductCategory = dtoAll.OtherCostItem.ProductCategory;
             dtoAll.CostProportion = dtoAll.OtherCostItem.CostProportion;
-            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion * 100}%";
+            dtoAll.CostProportionText = $"{dtoAll.OtherCostItem.CostProportion}%";// * 100
             dtoAll.QualityCost = dtoAll.OtherCostItem.QualityCost;
             dtoAll.AccountingPeriod = dtoAll.OtherCostItem.AccountingPeriod;
             dtoAll.CapitalCostRate = dtoAll.OtherCostItem.CapitalCostRate;
@@ -3256,7 +3530,6 @@ namespace Finance.PriceEval
 
         //}
         #endregion
-
 
         #region 方案成本对比表
 
@@ -3465,5 +3738,273 @@ namespace Finance.PriceEval
         }
 
         #endregion
+
+        #region 快速核报价_数据复制
+
+        /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetBomImportTemplate()
+        {
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { new Material { SuperType = string.Empty } });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
+        /// 快速核报价：获取BOM成本导入模板
+        /// </summary>
+        /// <returns></returns>
+        private async Task<FileResult> GetBomImportTemplate2(GetBomCostInput input)
+        {
+            var bom = await GetBomCost(input);
+            var memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, new[] { bom.First() });
+            return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "BOM成本导入模板.xlsx" };
+        }
+
+        /// <summary>
+        /// 快速核报价：导入BOM成本
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task BomImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
+        {
+            //获取excel数据
+            var stream = excle.OpenReadStream();
+            var rows = MiniExcel.Query<Material>(stream).Where(p => !p.SuperType.IsNullOrWhiteSpace()).ToList();
+
+            //删除表中数据
+            _bomMaterialRepository.Delete(p => p.AuditFlowId == auditFlowId);
+
+            //把excel数据插入表中
+            var entity = ObjectMapper.Map<List<BomMaterial>>(rows);
+
+            foreach (var item in entity)
+            {
+                item.AuditFlowId = auditFlowId;
+                item.GradientId = gradientId;
+                item.SolutionId = solutionId;
+            }
+
+            await _bomMaterialRepository.BulkInsertAsync(entity);
+        }
+
+
+        /// <summary>
+        /// 获取 bom成本上传的BOM成本
+        /// </summary>
+        /// <returns></returns>
+        public async virtual Task<List<Material>> GetImportBomCost(long auditFlowId, long gradientId, long solutionId)
+        {
+            //把导入的BOM信息读取进来
+            var bomMaterial = await _bomMaterialRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId
+            && p.GradientId == gradientId && p.SolutionId == solutionId);
+
+            var bomDto = ObjectMapper.Map<List<Material>>(bomMaterial);
+
+            for (int i = 0; i < bomDto.Count; i++)
+            {
+                bomDto[i].Id = $"import{i}";
+            }
+            return bomDto;
+        }
+
+        /// <summary>
+        /// 快速核报价：导入核价表
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task EvalTableImport(long auditFlowId, long gradientId, long solutionId, [Required] IFormFile excle)
+        {
+            //auditFlowId = 196;
+            //gradientId = 285;
+            //solutionId = 236;
+            try
+            {
+                //读取方案Id
+                var solution = await _solutionRepository.GetAsync(solutionId);
+
+                //读取零件Id
+                var productId = solution.Productld;
+
+                //获取全部年份
+                var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.ProductId == productId);
+
+                //把文件写入流中
+                var stream = excle.OpenReadStream();
+
+                // 创建工作簿
+                var workbook = new XSSFWorkbook(stream);
+
+                //获取全部梯度
+                var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                               join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                               where gmy.AuditFlowId == auditFlowId && gm.ProductId == productId && gm.GradientId == gradientId
+                                               select gmy).ToListAsync();
+
+                foreach (var modelCountYear in modelCountYears)
+                {
+                    //Get sheet name
+                    var sheetName = $"{modelCountYear.Year}{GetYearName(modelCountYear.UpDown)}";
+
+                    //删除已有数据
+                    await _fu_BomRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_ManufacturingCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_LossCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_OtherCostItem2Repository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_OtherCostItemRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_QualityCostListDtoRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown);
+                    await _fu_LogisticsCostRepository.DeleteAsync(p => p.AuditFlowId == auditFlowId && p.GradientId == gradientId && p.SolutionId == solutionId && p.Year == modelCountYear.Year.ToString() && p.UpDown == modelCountYear.UpDown);
+
+                    //Dto转换
+
+                    // BOM
+                    var materials = workbook.GetSheet(sheetName).GetMaterials(modelCountYear.Year, modelCountYear.UpDown).ToList();
+                    var materialsEntity = ObjectMapper.Map<List<Fu_Bom>>(materials);
+                    materialsEntity.ForEach(p =>
+                    {
+                        p.AuditFlowId = auditFlowId;
+                        p.SolutionId = solutionId;
+                        p.GradientId = gradientId;
+                    });
+                    await _fu_BomRepository.BulkInsertAsync(materialsEntity);
+
+                    //制造成本
+                    var manufacturingCosts = workbook.GetSheet(sheetName).GetManufacturingCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+                    var manufacturingCostsEntity = ObjectMapper.Map<List<Fu_ManufacturingCost>>(manufacturingCosts);
+                    manufacturingCostsEntity.ForEach(p =>
+                    {
+                        p.AuditFlowId = auditFlowId;
+                        p.SolutionId = solutionId;
+                        p.GradientId = gradientId;
+                    });
+                    await _fu_ManufacturingCostRepository.BulkInsertAsync(manufacturingCostsEntity);
+
+                    //损耗成本
+                    var lossCosts = workbook.GetSheet(sheetName).GetLossCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+                    var lossCostsEntity = ObjectMapper.Map<List<Fu_LossCost>>(lossCosts);
+                    lossCostsEntity.ForEach(p =>
+                    {
+                        p.AuditFlowId = auditFlowId;
+                        p.SolutionId = solutionId;
+                        p.GradientId = gradientId;
+                    });
+                    await _fu_LossCostRepository.BulkInsertAsync(lossCostsEntity);
+
+                    //其他成本项目2
+                    var otherCostItem2s = workbook.GetSheet(sheetName).GetOtherCostItem2s(modelCountYear.Year, modelCountYear.UpDown, gradientModelYear.FirstOrDefault(p => p.Year == modelCountYear.Year && p.UpDown == modelCountYear.UpDown).Count).ToList();
+                    var otherCostItem2sEntity = ObjectMapper.Map<List<Fu_OtherCostItem2>>(otherCostItem2s);
+                    otherCostItem2sEntity.ForEach(p =>
+                    {
+                        p.AuditFlowId = auditFlowId;
+                        p.SolutionId = solutionId;
+                        p.GradientId = gradientId;
+                    });
+                    await _fu_OtherCostItem2Repository.BulkInsertAsync(otherCostItem2sEntity);
+
+                    //其他成本
+                    var otherCostItems = workbook.GetSheet(sheetName).GetOtherCostItems(modelCountYear.Year, modelCountYear.UpDown);
+                    var otherCostItemsEntity = ObjectMapper.Map<Fu_OtherCostItem>(otherCostItems);
+                    otherCostItemsEntity.AuditFlowId = auditFlowId;
+                    otherCostItemsEntity.SolutionId = solutionId;
+                    otherCostItemsEntity.GradientId = gradientId;
+                    await _fu_OtherCostItemRepository.InsertAsync(otherCostItemsEntity);
+
+                    //质量成本
+                    var qualityCostListDto = workbook.GetSheet(sheetName).GetQualityCostListDto(modelCountYear.Year, modelCountYear.UpDown);
+                    var qualityCostListDtoEntity = ObjectMapper.Map<Fu_QualityCostListDto>(qualityCostListDto);
+                    qualityCostListDtoEntity.AuditFlowId = auditFlowId;
+                    qualityCostListDtoEntity.SolutionId = solutionId;
+                    qualityCostListDtoEntity.GradientId = gradientId;
+                    await _fu_QualityCostListDtoRepository.InsertAsync(qualityCostListDtoEntity);
+
+                    //物流成本汇总
+                    var logisticsCosts = workbook.GetSheet(sheetName).GetLogisticsCosts(modelCountYear.Year, modelCountYear.UpDown).ToList();
+                    var logisticsCostsEntity = ObjectMapper.Map<List<Fu_LogisticsCost>>(logisticsCosts);
+                    logisticsCostsEntity.ForEach(p =>
+                    {
+                        p.AuditFlowId = auditFlowId;
+                        p.SolutionId = solutionId;
+                        p.GradientId = gradientId;
+                    });
+                    await _fu_LogisticsCostRepository.BulkInsertAsync(logisticsCostsEntity);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException($"核价表读取错误：{e.Message}");
+            }
+
+        }
+
+        /// <summary>
+        /// 获取当前快速核报价流程（直接上传）是否已上传核价表
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> GetIsUplpadEvalTable(GetIsUplpadEvalTableInput input)
+        {
+            //全生命周期处理
+            if (input.Year == PriceEvalConsts.AllYear)
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId);
+
+                return fuBom;
+            }
+            else
+            {
+                var fuBom = await _fu_BomRepository.GetAll().AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == input.Year && p.UpDown == input.UpDown);
+
+                return fuBom;
+            }
+        }
+
+        /// <summary>
+        /// 快速核报价：判断是否为上传流程
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async virtual Task<bool> IsUploadAuditFlow(long auditFlowId)
+        {
+            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_核价需求录入");
+
+            return list.Contains(node.FinanceDictionaryDetailId);
+        }
+
+        #endregion
+
+        #region 快速核报价：数据复制对应
+
+
+        /// <summary>
+        /// 获取模组Id
+        /// </summary>
+        /// <param name="newAuditFlowId">新的流程号</param>
+        /// <param name="oldProductId">被引用流程的模组Id</param>
+        /// <returns>新流程对应的模组Id</returns>
+        internal async Task<long> GetProductId(long newAuditFlowId, long oldProductId)
+        {
+            var m = await _modelCountRepository.FirstOrDefaultAsync(p => p.Id == oldProductId);
+            var nm = await _modelCountRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.SumQuantity == m.SumQuantity);
+            return nm.Id;
+        }
+
+        /// <summary>
+        /// 获取梯度Id
+        /// </summary>
+        /// <param name="newAuditFlowId">新的流程号</param>
+        /// <param name="oldGradientId">被引用流程的的梯度Id</param>
+        /// <returns>新流程对应的梯度Id</returns>
+        internal async Task<long> GetGradient(long newAuditFlowId, long oldGradientId)
+        {
+            var g = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == oldGradientId);
+            var ng = await _gradientRepository.FirstOrDefaultAsync(p => p.AuditFlowId == newAuditFlowId && p.GradientValue == g.GradientValue);
+            return ng.Id;
+        }
+
+        #endregion
+
     }
 }

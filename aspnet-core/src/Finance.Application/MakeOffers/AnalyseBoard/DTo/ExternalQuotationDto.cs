@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Finance.Dto;
 using Finance.Ext;
 using Finance.MakeOffers.AnalyseBoard.Model;
 using static Finance.Ext.FriendlyRequiredAttribute;
@@ -8,7 +9,7 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// <summary>
 /// 对外报价单
 /// </summary>
-public class ExternalQuotationDto
+public class ExternalQuotationDto : ToExamineDto
 {
     /// <summary>
     /// Id
@@ -98,42 +99,42 @@ public class ExternalQuotationDto
     /// <summary>
     /// 制作
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("制作")]
     public virtual string Make { get; set; }
     /// <summary>
     /// 审核
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("审核")]
     public virtual string ToExamine { get; set; }
     /// <summary>
     /// 记录编号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("记录编号")]
     public virtual string RecordNo { get; set; }
     /// <summary>
     /// 户名
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("户名")]
     public virtual string AccountName { get; set; }
     /// <summary>
     /// 税号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("税号")]
     public virtual string DutyParagraph { get; set; }
     /// <summary>
     /// 开户行
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("开户行")]
     public virtual string BankOfDeposit { get; set; }
     /// <summary>
     /// 账号
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("账号")]
     public virtual string AccountNumber { get; set; }
     /// <summary>
     /// 地址
     /// </summary>
-    [FriendlyRequired("报价币种")]
+    [FriendlyRequired("地址")]
     public virtual string Address { get; set; }
     /// <summary>
     /// 报价次数
@@ -171,7 +172,7 @@ public class ProductQuotationListDto
     /// <summary>
     /// Id
     /// </summary>
-    public long  Id { get; set; }
+    public long Id { get; set; }
     /// <summary>
     /// 序号
     /// </summary>
@@ -185,7 +186,7 @@ public class ProductQuotationListDto
     /// 年份
     /// </summary>
     [FriendlyRequired("产品报价清单-年份")]
-    public virtual long Year { get; set; }   
+    public virtual string Year { get; set; }
     /// <summary>
     /// 走量
     /// </summary>       
@@ -200,7 +201,7 @@ public class ProductQuotationListDto
     /// 备注
     /// </summary>
     public virtual string Remark { get; set; }
-    
+
 }
 /// <summary>
 /// NRE报价清单交互类

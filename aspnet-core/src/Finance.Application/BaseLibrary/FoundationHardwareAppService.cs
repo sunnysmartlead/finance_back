@@ -442,7 +442,8 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        this.CreateLog(" 导入软硬件项目" + list.Count + "条");
+                        var query1 = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
+                        this.CreateLog(" 导入软硬件项目" + query1.Count() + "条");
                     }
                 }
             }

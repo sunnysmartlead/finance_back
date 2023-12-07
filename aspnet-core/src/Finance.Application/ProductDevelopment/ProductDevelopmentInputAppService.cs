@@ -10,6 +10,7 @@ using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment.Dto;
+using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -52,8 +53,26 @@ namespace Finance.ProductDevelopment
             _resourceSchemeTable = resourceSchemeTable;
         }
 
+        #region 快速核报价
 
+        /// <summary>
+        /// 物流基础信息表快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task FastPostProductDevelopmentCopy(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            foreach (var item in solutionIdAndQuoteSolutionIds)
+            {
+                List<ProductDevelopmentInput> productDevelopments = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId.Equals(QuoteAuditFlowId) && p.SolutionId.Equals(item.QuoteSolutionId));
+                productDevelopments.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
+                await _productDevelopmentInputRepository.BulkInsertAsync(productDevelopments);
+            }
+        }
 
+        #endregion
 
 
         /// <summary>
@@ -64,10 +83,7 @@ namespace Finance.ProductDevelopment
 
         public async Task<ProductDevelopmentInput> SaveProductDevelopmentInput(ProductDevelopmentInputDto input)
         {
-            long PeopleId = AbpSession.GetUserId();//获取登录人ID
-            var solution = await _solutionTableRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId && p.Id == input.SolutionId);
-            if (solution.ElecEngineerId == PeopleId || solution.StructEngineerId == PeopleId)
-            {
+            
                 if (input.Picture3DFileId.IsNullOrEmpty())
                 {
                     throw new FriendlyException("3D爆炸图必选上传");
@@ -105,11 +121,7 @@ namespace Finance.ProductDevelopment
                 ProductDevelopmentInput entityRet = await _productDevelopmentInputRepository.InsertOrUpdateAsync(entity);
 
                 return entityRet;
-            }
-            else
-            {
-                throw new FriendlyException(input.SolutionId + ":该零件方案您没有权限查看！");
-            }
+         
         }
 
         /// <summary>

@@ -7,7 +7,10 @@ namespace Finance.MakeOffers.AnalyseBoard.DTo;
 /// </summary>
 public class ManagerApprovalOfferDto
 {
-
+    /// <summary>
+    /// 是否仅含样品
+    /// </summary>
+    public bool issample { get; set; }
     /// <summary>
     /// 单价汇总
     /// </summary>
@@ -24,6 +27,11 @@ public class ManagerApprovalOfferDto
     /// NRE
     /// </summary>
     public  AnalyseBoardNreDto nre{get; set;}
+    /// <summary>
+    /// 样品报价
+    /// </summary>
+    public List<OnlySampleDto> SampleOffer { get; set; }
+
 }
 /// <summary>
 /// 总经理报价审批

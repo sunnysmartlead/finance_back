@@ -263,7 +263,7 @@ namespace Finance.BaseLibrary
                         FoundationDeviceDto entity = new FoundationDeviceDto();
                         entity.IsDeleted = false;
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
-                        entity.ProcessName = initRow.GetCell(1).ToString();
+                        entity.ProcessName = initRow.GetCell(1).StringCellValue;
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
@@ -349,7 +349,9 @@ namespace Finance.BaseLibrary
 
 
                         }
-                        this.CreateLog(" 导入设备项目" + list.Count + "条");
+                        var query1 = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
+
+                        this.CreateLog(" 导入设备项目" + query1.Count() + "条");
                     }
                 }
             }

@@ -616,6 +616,46 @@ namespace Finance
         /// </summary>
         public const string EvalReason_Xmbg = "EvalReason_Xmbg";
 
+        /// <summary>
+        /// 其他引用流程
+        /// </summary>
+        public const string EvalReason_Qtyylc = "EvalReason_Qtyylc";
+
+        /// <summary>
+        /// 本年年降
+        /// </summary>
+        public const string EvalReason_Bnnj = "EvalReason_Bnnj";
+
+        /// <summary>
+        /// 推广样品
+        /// </summary>
+        public const string EvalReason_Tgyp = "EvalReason_Tgyp";
+
+        /// <summary>
+        /// 首次核价
+        /// </summary>
+        public const string EvalReason_Schj = "EvalReason_Schj";
+
+        /// <summary>
+        /// 量产样品
+        /// </summary>
+        public const string EvalReason_Lcyp = "EvalReason_Lcyp";
+
+        /// <summary>
+        /// 下年年降
+        /// </summary>
+        public const string EvalReason_Xnnj = "EvalReason_Xnnj";
+
+        /// <summary>
+        /// 其他上传流程
+        /// </summary>
+        public const string EvalReason_Qtsclc = "EvalReason_Qtsclc";
+
+        /// <summary>
+        /// 其他零星报价
+        /// </summary>
+        public const string EvalReason_Qtlxbj = "EvalReason_Qtlxbj";
+
 
         /// <summary>
         /// 报价反馈
@@ -642,6 +682,10 @@ namespace Finance
         /// </summary>
         public const string EvalFeedback_Bjxysp = "EvalFeedback_Bjxysp";
 
+        /// <summary>
+        /// BOM成本审核名称
+        /// </summary>
+        public const string Bomcbsh = "BOM成本审核";
 
         /// <summary>
         /// 结构BOM单价审核选项
@@ -776,6 +820,26 @@ namespace Finance
         /// </summary>
         public const string MybhgSelect_Cobzzcblr = "MybhgSelect_Cobzzcblr";
 
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE模具费录入】
+        /// </summary>
+        public const string MybhgSelect_Nremjflr = "MybhgSelect_Nremjflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-可靠性实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nrekkxsyflr = "MybhgSelect_Nrekkxsyflr";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE手板件】
+        /// </summary>
+        public const string MybhgSelect_Nresbj = "MybhgSelect_Nresbj";
+
+        /// <summary>
+        /// 贸易不合规选项 退回到【NRE-EMC实验费录入】
+        /// </summary>
+        public const string MybhgSelect_Nreemcsyflr = "MybhgSelect_Nreemcsyflr";
+
 
         /// <summary>
         /// 核价看板选项
@@ -861,12 +925,12 @@ namespace Finance
         /// <summary>
         /// 核价看板选项 退回到【结构BOM单价审核】
         /// </summary>
-        public const string HjkbSelect_Jgbomdjsh = "HjkbSelect_Nreemcsyflr";
+        public const string HjkbSelect_Jgbomdjsh = "HjkbSelect_Jgbomdjsh";
 
         /// <summary>
         /// 核价看板选项 退回到【电子BOM单价审核】
         /// </summary>
-        public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Nreemcsyflr";
+        public const string HjkbSelect_Dzbomdjsh = "HjkbSelect_Dzbomdjsh";
 
         /// <summary>
         /// 核价看板选项 退回到【核价审批录入】
@@ -898,6 +962,10 @@ namespace Finance
         /// </summary>
         public const string FormulaOperationAddition = "FormulaOperationAddition";
 
+        /// <summary>
+        /// 贸易合规
+        /// </summary>
+        public const string TradeCompliance = "TradeCompliance";
 
         /// <summary>
         /// NRE_EMC实验费录入
@@ -945,6 +1013,11 @@ namespace Finance
         /// 生成报价分析界面选择报价方案
         /// </summary>
         public const string QuoteAnalysis = "QuoteAnalysis";
+
+        /// <summary>
+        /// 核价需求录入
+        /// </summary>
+        public const string PricingDemandInput = "PricingDemandInput";
 
         #endregion
 

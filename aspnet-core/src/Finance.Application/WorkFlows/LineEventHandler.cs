@@ -4,18 +4,13 @@ using Abp.Events.Bus.Entities;
 using Abp.Events.Bus.Handlers;
 using Finance.Entering;
 using Finance.NerPricing;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Finance.WorkFlows
 {
     /// <summary>
-    /// 工作流线事件
+    /// 工作流历史事件
     /// </summary>
-    public class LineEventHandler : IEventHandler<EntityUpdatedEventData<LineInstance>>, ITransientDependency
+    public class LineEventHandler : IEventHandler<EntityCreatedEventData<InstanceHistory>>, ITransientDependency
     {
         private readonly ResourceEnteringAppService _resourceEnteringAppService;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
@@ -28,42 +23,38 @@ namespace Finance.WorkFlows
             _nrePricingAppService = nrePricingAppService;
         }
 
-
-
-
-
-
         /// <summary>
         /// 贸易合规等节点被激活时触发
         /// </summary>
         /// <param name="eventData"></param>
-        public async void HandleEvent(EntityUpdatedEventData<LineInstance> eventData)
+        public async void HandleEvent(EntityCreatedEventData<InstanceHistory> eventData)
         {
 
             using (var uow = _unitOfWorkManager.Begin())
             {
                 using (_unitOfWorkManager.Current.SetTenantId(1))
                 {
-                    ////必须是已重置才能执行
-                    //if (eventData.Entity.NodeInstanceStatus != NodeInstanceStatus.Passed)
-                    //{
-                    //    return;
-                    //}
 
-                    //如果是流转到主流程_电子BOM匹配修改
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_电子BOM匹配修改" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_电子BOM匹配修改")
+                    if (
+                        (eventData.Entity.NodeId == "主流程_核价看板" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Dzbomppxg || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Scdzbom))
+                        || (eventData.Entity.NodeId == "主流程_不合规是否退回" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Dzbomppxg || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Scdzbom))
+                        )
                     {
                         await _resourceEnteringAppService.GetElectronicConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
-                    //如果是流转到主流程_结构BOM匹配修改
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_结构BOM匹配修改" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_结构BOM匹配修改")
+                    if (
+                        (eventData.Entity.NodeId == "主流程_核价看板" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Jgbomppxg || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Scjgbom))
+                        || (eventData.Entity.NodeId == "主流程_不合规是否退回" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Jgbomppxg || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Scjgbom))
+                        )
                     {
                         await _resourceEnteringAppService.GetStructuralConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
 
-                    //如果是流转到主流程_NRE模具费录入
-                    if (eventData.Entity.LineId == "主流程_核价看板_主流程_NRE模具费录入" || eventData.Entity.LineId == "主流程_不合规是否退回_主流程_NRE模具费录入")
+                    if (
+                        (eventData.Entity.NodeId == "主流程_核价看板" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Nremjflr || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.HjkbSelect_Scjgbom))
+                        || (eventData.Entity.NodeId == "主流程_不合规是否退回" && (eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Nremjflr || eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.MybhgSelect_Scjgbom))
+                        )
                     {
                         await _nrePricingAppService.GetResourcesManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
                     }
