@@ -13,5 +13,11 @@ namespace Finance.WorkFlows.Dto
         /// 筛选流程名
         /// </summary>
         public virtual string Filter { get; set; }
+
+        /// <summary>
+        /// 流程ID
+        /// </summary>
+        public virtual long? AuditFlowId { get; set; }
+
     }
 }

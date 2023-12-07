@@ -7,7 +7,10 @@ using Finance.Audit;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
+using Finance.Dto;
 using Finance.EngineeringDepartment;
+using Finance.Entering;
+
 //using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.FinanceMaintain;
@@ -30,16 +33,19 @@ using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using MiniExcelLibs;
 using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
+using NPOI.Util;
 using NPOI.XSSF.UserModel;
 using Spire.Xls;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -277,15 +283,24 @@ namespace Finance.NerPricing
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
         /// <returns></returns>
-        internal async Task FastPostExperimentItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task<List<IdMapping>> FastPostExperimentItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
         {
+            List<IdMapping> idMappings = new();
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
             {
                 ExperimentItemsModel experiment = await GetReturnExperimentItemsSingle(QuoteAuditFlowId, item.QuoteSolutionId);
                 List<EnvironmentalExperimentFee> environmentalExperimentFees = ObjectMapper.Map<List<EnvironmentalExperimentFee>>(experiment.EnvironmentalExperimentFeeModels);
-                environmentalExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceEnvironmentalExperimentFee.BulkInsertAsync(environmentalExperimentFees);
+                foreach (EnvironmentalExperimentFee environmental in environmentalExperimentFees)
+                {
+                    environmental.AuditFlowId = AuditFlowId;
+                    environmental.SolutionId = item.NewSolutionId;
+                    long QuoteId = environmental.Id;
+                    environmental.Id = 0;
+                    long NewId = await _resourceEnvironmentalExperimentFee.InsertAndGetIdAsync(environmental);
+                    idMappings.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
             }
+            return idMappings;
         }
         /// <summary>
         /// 模具费快速核报价
@@ -294,14 +309,341 @@ namespace Finance.NerPricing
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
         /// <returns></returns>
-        internal async Task FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task<List<IdMapping>> FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
         {
+            List<IdMapping> idMappings = new();
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
             {
                 MouldInventoryPartModel mouldInventoryPartModel = await GetInitialResourcesManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
                 List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
-                MouldInventorys.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceMouldInventory.BulkInsertAsync(MouldInventorys);
+                foreach (MouldInventory mould in MouldInventorys)
+                {
+                    mould.AuditFlowId = AuditFlowId;
+                    mould.SolutionId = item.NewSolutionId;
+                    long QuoteId = mould.Id;
+                    mould.Id = 0;
+                    long NewId = await _resourceMouldInventory.InsertAndGetIdAsync(mould);
+                    idMappings.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
+            }
+            return idMappings;
+        }
+
+        /// <summary>
+        /// EMC实验费快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task<List<IdMapping>> FastPostEmcItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            List<IdMapping> idMappings = new();
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                LaboratoryItemsModel laboratory = await GetProductDepartmentSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                List<LaboratoryFee> laboratoryExperimentFees = ObjectMapper.Map<List<LaboratoryFee>>(laboratory.laboratoryFeeModels);
+                foreach (LaboratoryFee laboratoryFee in laboratoryExperimentFees)
+                {
+                    laboratoryFee.AuditFlowId = AuditFlowId;
+                    laboratoryFee.SolutionId = item.NewSolutionId;
+                    long QuoteId = laboratoryFee.Id;
+                    laboratoryFee.Id = 0;
+                    long NewId = await _resourceLaboratoryFee.InsertAndGetIdAsync(laboratoryFee);
+                    idMappings.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
+            }
+            return idMappings;
+        }
+        /// <summary>
+        /// 手板件、差旅、其他快速核报价
+        /// </summary>
+        /// <param name="AuditFlowId"></param>
+        /// <param name="QuoteAuditFlowId"></param>
+        /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <returns></returns>
+        internal async Task<IdMappingList> FastPostProjectManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        {
+            IdMappingList idMappingList = new();
+            idMappingList.HandPieceCost = new();
+            idMappingList.RestsCost = new();
+            idMappingList.TravelExpense = new();
+            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
+            {
+                ProjectManagementModel projectManagementModel = await GetReturnProjectManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
+                //手板件
+                List<HandPieceCost> handPieceCosts = ObjectMapper.Map<List<HandPieceCost>>(projectManagementModel.HandPieceCost);
+                foreach (HandPieceCost pieceCost in handPieceCosts)
+                {
+                    pieceCost.AuditFlowId = AuditFlowId;
+                    pieceCost.SolutionId = item.NewSolutionId;
+                    long QuoteId = pieceCost.Id;
+                    pieceCost.Id = 0;
+                    long NewId = await _resourceHandPieceCost.InsertAndGetIdAsync(pieceCost);
+                    idMappingList.HandPieceCost.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
+
+                //其他费用
+                List<RestsCost> restsCosts = ObjectMapper.Map<List<RestsCost>>(projectManagementModel.RestsCost);
+                foreach (RestsCost restsCost in restsCosts)
+                {
+                    restsCost.AuditFlowId = AuditFlowId;
+                    restsCost.SolutionId = item.NewSolutionId;
+                    long QuoteId = restsCost.Id;
+                    restsCost.Id = 0;
+                    long NewId = await _resourceRestsCost.InsertAndGetIdAsync(restsCost);
+                    idMappingList.RestsCost.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
+
+                //差旅费
+                List<TravelExpense> travelExpenses = ObjectMapper.Map<List<TravelExpense>>(projectManagementModel.TravelExpense);
+                foreach (TravelExpense travelExpense in travelExpenses)
+                {
+                    travelExpense.AuditFlowId = AuditFlowId;
+                    travelExpense.SolutionId = item.NewSolutionId;
+                    long QuoteId = travelExpense.Id;
+                    travelExpense.Id = 0;
+                    long NewId = await _resourceTravelExpense.InsertAndGetIdAsync(travelExpense);
+                    idMappingList.TravelExpense.Add(new() { QuoteId = QuoteId, NewId = NewId });
+                }
+            }
+            return idMappingList;
+        }
+        /// <summary>
+        /// Nre修改项添加 快速核报价
+        /// </summary>
+        /// <param name="allIdMappingList"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        internal async Task FastModify(AllIdMappingList allIdMappingList, dto dto, IdMappingListHoursEnter idMappingListHoursEnter)
+        {            
+
+            foreach (SolutionIdAndQuoteSolutionId solutionIdAndQuote in dto?.SolutionIdAndQuoteSolutionId)
+            {
+                //手板件修改项复制
+                List<HandPieceCostModify> handPieceCostModifies = await _handPieceCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                handPieceCostModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.HandPieceCost.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制手板件修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _handPieceCostModify.BulkInsertAsync(handPieceCostModifies);
+                //模具费修改项复制
+                List<MouldInventoryModify> mouldInventoryModifies = await _mouldInventoryModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                mouldInventoryModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.FastPostResourcesManagementSingle.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制模具费修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _mouldInventoryModify.BulkInsertAsync(mouldInventoryModifies);
+                //工装费用
+                List<ToolingCostsModify> toolingCostsModifies= await _toolingCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                toolingCostsModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnter.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制工装费用的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _toolingCostsModify.BulkInsertAsync(toolingCostsModifies);
+                //治具费用
+                List<FixtureCostsModify> fixtureCostsModifies= await _fixtureCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                fixtureCostsModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnterFixture.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制治具费用的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _fixtureCostsModify.BulkInsertAsync(fixtureCostsModifies);
+                //检具费用
+                List<InspectionToolCostModify> inspectionToolCostModifies = await _inspectionToolCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                inspectionToolCostModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnterFixture.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制检具费用的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _inspectionToolCostModify.BulkInsertAsync(inspectionToolCostModifies);
+                //生产设备费用
+                List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = await _productionEquipmentCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                productionEquipmentCostsModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnterDevice.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制检具费用的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _productionEquipmentCostsModify.BulkInsertAsync(productionEquipmentCostsModifies);               
+                //EMC实验费修改项复制
+                List<ExperimentalExpensesModify> experimentalExpensesEmc = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==1);
+                experimentalExpensesEmc.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.FastPostEmcItemsSingle.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制EMC实验费修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _experimentalExpensesModify.BulkInsertAsync(experimentalExpensesEmc);
+                 //环境实验费修改项
+                List<ExperimentalExpensesModify> experimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==2);
+                experimentalExpenses.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.FastPostExperimentItemsSingle.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制环境实验费修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _experimentalExpensesModify.BulkInsertAsync(experimentalExpenses);
+                //实验费添加的修改项
+                List<ExperimentalExpensesModify> addexperimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId) && p.ModifyId == 0);
+                addexperimentalExpenses.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _experimentalExpensesModify.BulkInsertAsync(addexperimentalExpenses);
+                //测试软件费用
+                List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = await _testingSoftwareCostsModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                testingSoftwareCostsModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    p.Id = 0;
+                    if (p.ModifyId is 0)
+                    {                        
+                        return p;
+                    }
+                    IdMapping idMapping = idMappingListHoursEnter.ProcessHoursEnter.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    IdMapping idMapping1 = idMappingListHoursEnter.ProcessHoursEnter.FirstOrDefault(m => p.ModifyId.Equals(m.QuoteId + 1));
+                    IdMapping idMapping2 = idMappingListHoursEnter.ProcessHoursEnter.FirstOrDefault(m => p.ModifyId.Equals(m.QuoteId + 2));
+                    p.ModifyId = 0;
+                    if (idMapping is not null)
+                    {
+                        p.ModifyId = idMapping.NewId;
+                        return p;
+                    }
+                    if (idMapping1 is not null)
+                    {
+                        p.ModifyId = idMapping1.NewId+1;
+                        return p;
+                    }
+                    if (idMapping2 is not null)
+                    {
+                        p.ModifyId = idMapping2.NewId+2;
+                        return p;
+                    }
+                    if(p.ModifyId==0) throw new FriendlyException("复制测试软件费用修改项复制的时候没有找到对应ModifyId");                   
+                    return p;
+                }).ToList();
+                await _testingSoftwareCostsModify.BulkInsertAsync(testingSoftwareCostsModifies);         
+                //差旅费修改项复制 
+                List<TravelExpenseModify> travelExpenseModifies = await _travelExpenseModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                travelExpenseModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.TravelExpense.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制差旅费修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _travelExpenseModify.BulkInsertAsync(travelExpenseModifies);
+                //其他费用修改项复制
+                List<RestsCostModify> restsCostModifies = await _restsCostModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId));
+                restsCostModifies.Select(p =>
+                {
+                    p.AuditFlowId = dto.NewAuditFlowId;
+                    p.SolutionId = (long)(dto?.SolutionIdAndQuoteSolutionId.FirstOrDefault(m => m.QuoteSolutionId.Equals(p.SolutionId)).NewSolutionId);
+                    if (p.ModifyId is 0)
+                    {
+                        p.Id = 0;
+                        return p;
+                    }
+                    IdMapping idMapping = allIdMappingList.RestsCost.FirstOrDefault(m => m.QuoteId.Equals(p.ModifyId));
+                    if (idMapping is null) throw new FriendlyException("复制差旅费修改项复制的时候没有找到对应ModifyId");
+                    p.ModifyId = idMapping.NewId;
+                    p.Id = 0;
+                    return p;
+                }).ToList();
+                await _restsCostModify.BulkInsertAsync(restsCostModifies);
             }
         }
         #endregion
@@ -622,12 +964,13 @@ namespace Finance.NerPricing
                             var CountDV = Convert.ToDecimal(row.GetCell(5).ToString());
                             var CountPV = Convert.ToDecimal(row.GetCell(6).ToString());
                             var AllCost = Convert.ToDecimal(row.GetCell(7).ToString());
-                            var Remark = row.GetCell(8).ToString();
-                            pricingFormDto.LaboratoryFeeModels.Add(new() { ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(8).ToString());
+                            var Remark = row.GetCell(9).ToString();
+                            pricingFormDto.LaboratoryFeeModels.Add(new() {UnitPrice= UnitPrice, ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
                         }
                         catch (Exception e)
                         {
-                            throw new FriendlyException($"实验费!{rowIndex + 1}行,时间-摸底/时间-DV/时间-PV/费用值存在问题!");
+                            throw new FriendlyException($"实验费!{rowIndex + 1}行,时间-摸底/时间-DV/时间-PV/费用/单价值存在问题!");
                         }
                     }
                     //测试软件费用
@@ -1141,10 +1484,10 @@ namespace Finance.NerPricing
         public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)
         {
             await ProcessAntiShaking("PostResourcesManagementSingle", price);
-            if(price?.ResourcesManagementModels?.MouldInventory?.Id==0)
+            if (price?.ResourcesManagementModels?.MouldInventory?.Id == 0)
             {
-              int prop=await  _resourceMouldInventory.CountAsync(p=>p.AuditFlowId.Equals(price.AuditFlowId)&&p.SolutionId.Equals(price.ResourcesManagementModels.SolutionId)&&p.StructuralId.Equals(price.ResourcesManagementModels.MouldInventory.StructuralId));
-              if(prop!=0) throw new FriendlyException("此条数据已被其他人员录入,请刷新获取最新数据!");
+                int prop = await _resourceMouldInventory.CountAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.ResourcesManagementModels.SolutionId) && p.StructuralId.Equals(price.ResourcesManagementModels.MouldInventory.StructuralId));
+                if (prop != 0) throw new FriendlyException("此条数据已被其他人员录入,请刷新获取最新数据!");
             }
             ResourcesManagementModel resourcesManagementModel = new();
             resourcesManagementModel = price.ResourcesManagementModels;
@@ -1459,7 +1802,7 @@ namespace Finance.NerPricing
         /// <returns></returns>
         public async Task<LaboratoryItemsModel> GetProductDepartmentSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
-            try 
+            try
             {
                 List<LaboratoryItemsModel> LaboratoryItemsModels = new();
                 //所有的方案
@@ -1485,7 +1828,7 @@ namespace Finance.NerPricing
             {
                 throw new UserFriendlyException(e.Message);
             }
-            
+
         }
         /// <summary>
         ///  Nre 产品部EMC+电性能实验费 导出数据(传数据)
@@ -2148,25 +2491,26 @@ namespace Finance.NerPricing
                 //只判断是直接上传快速核价的流程
                 if (list.Contains(node.FinanceDictionaryDetailId))
                 {
-                    AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));                  
+                    AuditFlowIdPricingForm auditFlowIdPricingForms = await _auditFlowIdPricingForm.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                     if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null)
                     {
                         pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
                         return pricingFormDto;
-                    }else
+                    }
+                    else
                     {
                         return pricingFormDto;
                     }
-                }                  
+                }
                 PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);         
+                List<ModelCount> modelCount = await _resourceModelCount.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
                 pricingFormDto = ObjectMapper.Map<PricingFormDto>(await GetPricingForm(auditFlowId, solutionId));
                 //替换被修改项的值
                 //手板件费用
                 List<HandPieceCostModify> handPieceCostModifies = _handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (HandPieceCostModel item in pricingFormDto.HandPieceCost)
                 {
-                    HandPieceCostModify modify = handPieceCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    HandPieceCostModify modify = handPieceCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.PartName = modify.PartName;
@@ -2195,7 +2539,7 @@ namespace Finance.NerPricing
                 List<MouldInventoryModify> mouldInventoryModifies = _mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (MouldInventoryModel item in pricingFormDto.MouldInventory)
                 {
-                    MouldInventoryModify modify = mouldInventoryModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    MouldInventoryModify modify = mouldInventoryModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.StructuralId = modify.StructuralId;
@@ -2230,7 +2574,7 @@ namespace Finance.NerPricing
                 List<ToolingCostsModify> toolingCostsModifies = _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ToolingCostModel item in pricingFormDto.ToolingCost)
                 {
-                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.WorkName = modify.WorkName;
@@ -2257,7 +2601,7 @@ namespace Finance.NerPricing
                 List<FixtureCostsModify> fixtureCostsModifies = _fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (FixtureCostModel item in pricingFormDto.FixtureCost)
                 {
-                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ToolingName = modify.ToolingName;
@@ -2284,7 +2628,7 @@ namespace Finance.NerPricing
                 List<InspectionToolCostModify> inspectionToolCostModifies = _inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (QADepartmentQCModel item in pricingFormDto.QAQCDepartments)
                 {
-                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.Qc = modify.Qc;
@@ -2311,7 +2655,7 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = _productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ProductionEquipmentCostModel item in pricingFormDto.ProductionEquipmentCost)
                 {
-                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&& item.Id!=0);
                     if (modify != null)
                     {
                         item.EquipmentName = modify.EquipmentName;
@@ -2342,7 +2686,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (LaboratoryFeeModel item in pricingFormDto.LaboratoryFeeModels)
                 {
-                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExperimentalFeesType.Equals(item.ExperimentalFeesType) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ProjectName = modify.ProjectName;
@@ -2379,7 +2723,7 @@ namespace Finance.NerPricing
                 List<TestingSoftwareCostsModify> testingSoftwareCostsModifies = _testingSoftwareCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (SoftwareTestingCotsModel item in pricingFormDto.SoftwareTestingCost)
                 {
-                    TestingSoftwareCostsModify modify = testingSoftwareCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    TestingSoftwareCostsModify modify = testingSoftwareCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.SoftwareProject = modify.SoftwareProject;
@@ -2406,7 +2750,7 @@ namespace Finance.NerPricing
                 List<TravelExpenseModify> travelExpenseModifies = _travelExpenseModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (TravelExpenseModel item in pricingFormDto.TravelExpense)
                 {
-                    TravelExpenseModify modify = travelExpenseModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    TravelExpenseModify modify = travelExpenseModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ReasonsId = modify.ReasonsId;
@@ -2437,7 +2781,7 @@ namespace Finance.NerPricing
                 List<RestsCostModify> restsCostModifies = _restsCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (RestsCostModel item in pricingFormDto.RestsCost)
                 {
-                    RestsCostModify modify = restsCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id));
+                    RestsCostModify modify = restsCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ConstName = modify.ConstName;
@@ -2672,12 +3016,12 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostModel> productionEquipmentCostModels = processHoursEnterDevices.GroupBy(m => new { m.DeviceName, m.DevicePrice, m.DeviceStatus }).Select(
                     a => new ProductionEquipmentCostModel
                     {
-                        Id = processHoursEnterDevices.Where(p => p.DeviceName == (a.Key.DeviceName ?? string.Empty) && p.DevicePrice == (a.Key.DevicePrice ?? 0M) && p.DeviceStatus ==(a.Key.DeviceStatus ?? string.Empty)).Select(p => p.Id).FirstOrDefault(),
-                        EquipmentName = a.Key.DeviceName??string.Empty,
+                        Id = processHoursEnterDevices.Where(p => p.DeviceName == (a.Key.DeviceName ?? string.Empty) && p.DevicePrice == (a.Key.DevicePrice ?? 0M) && p.DeviceStatus == (a.Key.DeviceStatus ?? string.Empty)).Select(p => p.Id).FirstOrDefault(),
+                        EquipmentName = a.Key.DeviceName ?? string.Empty,
                         DeviceStatus = a.Key.DeviceStatus ?? string.Empty,
                         UnitPrice = (decimal)(a.Key.DevicePrice ?? 0M),
                         Number = (int)a.Sum(c => c.DeviceNumber),
-                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) *(a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy? NumberOfLines: UphAndValuesd / 100) ) ,
+                        Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) * (a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? NumberOfLines : UphAndValuesd / 100)),
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
@@ -2695,16 +3039,27 @@ namespace Finance.NerPricing
                                                                                               }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
-                //实验费用
-                {
-                    //-产品部-电子工程师录入的试验费用
-                    List<LaboratoryFee> laboratoryFees = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                    //-品保部录入的实验费用
-                    List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-                    modify.LaboratoryFeeModels = ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
-                    modify.LaboratoryFeeModels.AddRange(ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests));
-                    modify.LaboratoryFeeModelsTotal = modify.LaboratoryFeeModels.Sum(p => p.AllCost);
-                }
+                //实验费用                
+                //-产品部-电子工程师录入的试验费用
+                List<LaboratoryFee> laboratoryFees = await _resourceLaboratoryFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                //-品保部录入的实验费用
+                List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
+                modify.LaboratoryFeeModels = new(); 
+                //EMC实验费
+                List<LaboratoryFeeModel> EMC=ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
+                EMC.Select(p => {
+                    p.ExperimentalFeesType = 1;
+                    return p;
+                }).ToList();
+                modify.LaboratoryFeeModels.AddRange(EMC);
+                //环境实验费
+                List<LaboratoryFeeModel> Environment = ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests);
+                Environment.Select(p => {
+                    p.ExperimentalFeesType = 2;
+                    return p;
+                }).ToList();
+                modify.LaboratoryFeeModels.AddRange(Environment);                
+                modify.LaboratoryFeeModelsTotal = modify.LaboratoryFeeModels.Sum(p => p.AllCost);
                 //测试软件费用                 
                 //测试软件费用=>硬件费用               
                 List<ProcessHoursEnterFrock> processHoursEnterFrocks = (from a in processHours
@@ -2773,7 +3128,7 @@ namespace Finance.NerPricing
                 {
                     modify.USDAllCost = modify.RMBAllCost;
                 }
-                //手板件费用修改项[
+                //手板件费用修改项
                 modify.HandPieceCostModifyDtos = ObjectMapper.Map<List<HandPieceCostModifyDto>>(_handPieceCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
                 //模具费用修改项
                 modify.MouldInventoryModifyDtos = ObjectMapper.Map<List<MouldInventoryModifyDto>>(_mouldInventoryModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId))).OrderBy(p => p.Id).ToList();
@@ -3066,54 +3421,5 @@ namespace Finance.NerPricing
             }
             #endregion
         }
-
-
-        /// <summary>
-        /// EMC实验费快速核报价
-        /// </summary>
-        /// <param name="AuditFlowId"></param>
-        /// <param name="QuoteAuditFlowId"></param>
-        /// <param name="solutionIdAndQuoteSolutionIds"></param>
-        /// <returns></returns>
-        internal async Task FastPostEmcItemsSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
-        {
-            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
-            {
-                LaboratoryItemsModel laboratory = await GetProductDepartmentSingle(QuoteAuditFlowId, item.QuoteSolutionId);
-                List<LaboratoryFee> laboratoryExperimentFees = ObjectMapper.Map<List<LaboratoryFee>>(laboratory.laboratoryFeeModels);
-                laboratoryExperimentFees.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceLaboratoryFee.BulkInsertAsync(laboratoryExperimentFees);
-            }
-        }
-        /// <summary>
-        /// 手板件、差旅、其他快速核报价
-        /// </summary>
-        /// <param name="AuditFlowId"></param>
-        /// <param name="QuoteAuditFlowId"></param>
-        /// <param name="solutionIdAndQuoteSolutionIds"></param>
-        /// <returns></returns>
-        internal async Task FastPostProjectManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
-        {
-            foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
-            {
-                ProjectManagementModel projectManagementModel = await GetReturnProjectManagementSingle(QuoteAuditFlowId, item.QuoteSolutionId);
-                //手板件
-                List<HandPieceCost> handPieceCosts = ObjectMapper.Map<List<HandPieceCost>>(projectManagementModel.HandPieceCost);
-                handPieceCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceHandPieceCost.BulkInsertAsync(handPieceCosts);
-
-                //其他费用
-                List<RestsCost> restsCosts = ObjectMapper.Map<List<RestsCost>>(projectManagementModel.RestsCost);
-                restsCosts.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceRestsCost.BulkInsertAsync(restsCosts);
-
-                //差旅费
-                List<TravelExpense> travelExpenses = ObjectMapper.Map<List<TravelExpense>>(projectManagementModel.TravelExpense);
-                travelExpenses.Select(p => { p.AuditFlowId = AuditFlowId; p.Id = 0; p.SolutionId = item.NewSolutionId; return p; }).ToList();
-                await _resourceTravelExpense.BulkInsertAsync(travelExpenses);
-            }
-        }
-
-
-        }
+    }
 }
