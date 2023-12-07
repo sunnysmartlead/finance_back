@@ -19,7 +19,7 @@ namespace Finance.NrePricing.Dto
         /// <summary>
         /// 实验费类型 判断是EMC实验费还是环境实验费  0是EMC实验费1是环境实验费
         /// </summary>
-        [FriendlyRequired("实验费类型")]
+        //[FriendlyRequired("实验费类型")]
         public int ExperimentalFeesType { get; set; }
         /// <summary>
         /// Id
