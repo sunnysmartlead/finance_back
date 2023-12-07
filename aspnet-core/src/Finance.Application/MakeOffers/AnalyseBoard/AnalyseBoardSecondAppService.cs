@@ -713,7 +713,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
 
         //暂时注释 等报价看板完成之后放开
-        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
+        List<SolutionQuotationDto> solutionQuotations = await GetCatalogue(auditFlowId);
         solutionQuotations = solutionQuotations.Where(p => p.Id == solutionId).ToList();
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
@@ -732,7 +732,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         await externalQuotationDto.ProcessAntiShaking("SaveExternalQuotation");
         //暂时注释 等报价看板完成之后放开
-        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
+        List<SolutionQuotationDto> solutionQuotations = await GetCatalogue(externalQuotationDto.AuditFlowId);
         solutionQuotations = solutionQuotations.Where(p => p.Id == externalQuotationDto.SolutionId).ToList();
         if (solutionQuotations is null || solutionQuotations.Count == 0)
         {
@@ -747,7 +747,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<List<SolutionQuotationDto>> GeCatalogue(long auditFlowId)
+    public async Task<List<SolutionQuotationDto>> GetCatalogue(long auditFlowId)
     {
         return await _analysisBoardSecondMethod.GeCatalogue(auditFlowId);
     }
