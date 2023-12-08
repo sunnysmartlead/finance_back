@@ -112,11 +112,11 @@ namespace Finance.PriceEval
                         await _updateItemRepository.InsertAsync(updateItem);
                     }
 
-                    //修改方案表内容
-                    foreach (var item in newSolution)
-                    {
-                        item.Productld = productIdMap.FirstOrDefault(p => p.OldProductId == item.Productld).NewProductId;
-                    }
+                    ////修改方案表内容
+                    //foreach (var item in newSolution)
+                    //{
+                    //    item.Productld = productIdMap.FirstOrDefault(p => p.OldProductId == item.Productld).NewProductId;
+                    //}
                 }
                 uow.Complete();
             }
