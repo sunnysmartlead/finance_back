@@ -75,7 +75,7 @@ namespace Finance.NrePricing.Model
         /// <summary>
         /// 实验费类型 判断是EMC实验费还是环境实验费  1是EMC实验费2是环境实验费
         /// </summary>
-        public int ExperimentalFeesType { get; set; }
+        public int ExpenseType { get; set; }
         /// <summary>
         /// Id
         /// </summary>

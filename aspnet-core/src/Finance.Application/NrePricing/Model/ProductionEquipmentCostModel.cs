@@ -14,6 +14,10 @@ namespace Finance.NrePricing.Model
     public class ProductionEquipmentCostModel
     {
         /// <summary>
+        /// 需求：名称和单价一样的话要合并数据  这个Ids 就是储存合并后所有数据的id
+        /// </summary>
+        public HashSet<long> Ids { get; set; }
+        /// <summary>
         /// Id
         /// </summary>
         public long Id { get; set; }
