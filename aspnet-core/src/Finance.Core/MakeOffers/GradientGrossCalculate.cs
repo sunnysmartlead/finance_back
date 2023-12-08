@@ -84,5 +84,23 @@ public class GradientGrossCalculate : FullAuditedEntity<long>
     /// 类别  0报价分析看板，1报价反馈
     /// </summary>
     public int ntype { get; set; }
+    /// <summary>
+    /// 上轮报价单价
+    /// </summary>
+    public decimal LastRoundPrice{ get; set; }
+    
+    
+    /// <summary>
+    /// 上轮报价毛利率
+    /// </summary>
+    public decimal LastRoundGrossMargin{ get; set; }
+    /// <summary>
+    /// 上轮报价增加客供料毛利率
+    /// </summary>
+    public decimal LastRoundClientGrossMargin{ get; set; }
+    /// <summary>
+    /// 上轮报价剔除NRE分摊费用毛利率
+    /// </summary>
+    public decimal LastRoundNreGrossMargin{ get; set; }
 
 }
