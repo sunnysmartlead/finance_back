@@ -40,4 +40,9 @@ public class ProjectBoardSecondOffers: FullAuditedEntity<long>
     /// 类别  0报价分析看板，1报价反馈
     /// </summary>
     public int ntype { get; set; }
+    /// <summary>
+    /// 之前几轮的 本次报价的值
+    /// </summary>
+    public decimal? OldOffer { get; set; }
+    
 }
