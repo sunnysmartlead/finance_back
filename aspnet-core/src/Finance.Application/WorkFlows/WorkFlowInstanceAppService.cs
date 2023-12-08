@@ -1227,46 +1227,48 @@ namespace Finance.WorkFlows
 
             #endregion
 
-            #region 直接上传流程：文档上传校验
-
-            var nodeInstance = await _nodeInstanceRepository.GetAsync(input.NodeInstanceId);
-            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
-
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
-
-            //若是上传流程
-            if (list.Contains(node.FinanceDictionaryDetailId))
-            {
-                //判断核价表上传是否完整，梯度和方案是否均已上传
-                var gradientCount = await _gradientRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
-                var solutionCount = await _solutionRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
-
-                var fuBom = await _fu_BomRepository.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId).Select(p => new { p.GradientId, p.SolutionId }).ToListAsync();
-
-                var fuGradientCount = fuBom.DistinctBy(p => p.GradientId).Count();
-                var fuSolutionCount = fuBom.DistinctBy(p => p.SolutionId).Count();
-                if (gradientCount != fuGradientCount || solutionCount != fuSolutionCount)
-                {
-                    throw new FriendlyException($"没有上传完整的核价表，不可流转！");
-                }
-
-                var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId && p.JsonData != null && p.JsonData != string.Empty)
-                    .Select(p => new { p.SolutionId }).ToListAsync();
-                var auditFlowIdPricingFormsCount = auditFlowIdPricingForms.DistinctBy(p => p.SolutionId).Count();
-
-                if (auditFlowIdPricingFormsCount != solutionCount)
-                {
-                    throw new FriendlyException($"没有上传完整的NRE核价表，不可流转！");
-                }
-            }
-
-            #endregion
 
             #region 同意
 
             //审批意见集合有且仅有同意
             if (input.FinanceDictionaryDetailIds.Count == 1 && input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Yes))
             {
+                #region 直接上传流程：文档上传校验
+
+                var nodeInstance = await _nodeInstanceRepository.GetAsync(input.NodeInstanceId);
+                var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+                var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+
+                //若是上传流程
+                if (list.Contains(node.FinanceDictionaryDetailId))
+                {
+                    //判断核价表上传是否完整，梯度和方案是否均已上传
+                    var gradientCount = await _gradientRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
+                    var solutionCount = await _solutionRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
+
+                    var fuBom = await _fu_BomRepository.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId).Select(p => new { p.GradientId, p.SolutionId }).ToListAsync();
+
+                    var fuGradientCount = fuBom.DistinctBy(p => p.GradientId).Count();
+                    var fuSolutionCount = fuBom.DistinctBy(p => p.SolutionId).Count();
+                    if (gradientCount != fuGradientCount || solutionCount != fuSolutionCount)
+                    {
+                        throw new FriendlyException($"没有上传完整的核价表，不可流转！");
+                    }
+
+                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId && p.JsonData != null && p.JsonData != string.Empty)
+                        .Select(p => new { p.SolutionId }).ToListAsync();
+                    var auditFlowIdPricingFormsCount = auditFlowIdPricingForms.DistinctBy(p => p.SolutionId).Count();
+
+                    if (auditFlowIdPricingFormsCount != solutionCount)
+                    {
+                        throw new FriendlyException($"没有上传完整的NRE核价表，不可流转！");
+                    }
+                }
+
+                #endregion
+
+
                 //正常调用流程流转接口
                 await SubmitNodeInterfece(new SubmitNodeInput
                 {
