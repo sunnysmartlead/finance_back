@@ -308,8 +308,9 @@ namespace Finance.NerPricing
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBomIds"></param>
         /// <returns></returns>
-        internal async Task<List<IdMapping>> FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task<List<IdMapping>> FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBomIds)
         {
             List<IdMapping> idMappings = new();
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
@@ -318,6 +319,12 @@ namespace Finance.NerPricing
                 List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
                 foreach (MouldInventory mould in MouldInventorys)
                 {
+                    if (mould.StructuralId != 0)
+                    {
+                        BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBomIds.FirstOrDefault(m => m.QuoteBomId.Equals(mould.StructuralId));
+                        if (bomIdAndQuoteBomId is null) throw new FriendlyException("模具费快速核报价复制数据时候未找到对应的StructureId");
+                        mould.StructuralId = bomIdAndQuoteBomId.NewBomId;
+                    }                                                             
                     mould.AuditFlowId = AuditFlowId;
                     mould.SolutionId = item.NewSolutionId;
                     long QuoteId = mould.Id;
@@ -1433,8 +1440,8 @@ namespace Finance.NerPricing
 
                 //mouldInventory = mouldInventory.Except(mouldInventoryEquals).Distinct().ToList();//差集
                 mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
-                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
-                var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
+                List<long> l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
+                List<long> id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
                 await _resourceMouldInventory.DeleteAsync(p => id.Contains(p.Id));
 
                 mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();

@@ -142,7 +142,7 @@ namespace Finance.QuickQuotationReview
             //NRE环境实验费
             allIdMappingList.FastPostExperimentItemsSingle = await _nrePricingAppService.FastPostExperimentItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //NRE模具费
-            allIdMappingList.FastPostResourcesManagementSingle = await _nrePricingAppService.FastPostResourcesManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
+            allIdMappingList.FastPostResourcesManagementSingle = await _nrePricingAppService.FastPostResourcesManagementSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId, structionBomIdAndQuoteBomIds);
             //NRE---EMC实验费
             allIdMappingList.FastPostEmcItemsSingle = await _nrePricingAppService.FastPostEmcItemsSingle(dto.NewAuditFlowId, dto.QuoteAuditFlowId, dto.SolutionIdAndQuoteSolutionId);
             //NRE手板件、其他、差旅费
