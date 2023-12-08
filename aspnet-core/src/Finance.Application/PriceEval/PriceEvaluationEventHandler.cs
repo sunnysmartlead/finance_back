@@ -86,7 +86,7 @@ namespace Finance.PriceEval
                     var oldSolution = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == eventData.Entity.QuickQuoteAuditFlowId);
                     var newSolution = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == eventData.Entity.AuditFlowId);
                     var solutionIdMap = from o in oldSolution
-                                        join n in newSolution on new { o.SolutionName, o.ModuleName } equals new { n.SolutionName, n.ModuleName }
+                                        join n in newSolution on o.Product equals n.Product
                                         select new
                                         {
                                             OldSolution = o.Id,
