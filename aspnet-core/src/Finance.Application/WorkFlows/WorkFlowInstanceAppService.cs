@@ -1256,7 +1256,7 @@ namespace Finance.WorkFlows
                         throw new FriendlyException($"没有上传完整的核价表，不可流转！");
                     }
 
-                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId && p.JsonData != null && p.JsonData != string.Empty)
+                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId)// && p.JsonData != null && p.JsonData != string.Empty
                         .Select(p => new { p.SolutionId }).ToListAsync();
                     var auditFlowIdPricingFormsCount = auditFlowIdPricingForms.DistinctBy(p => p.SolutionId).Count();
 
