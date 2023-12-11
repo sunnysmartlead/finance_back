@@ -15,6 +15,10 @@ namespace Finance.Nre
     public class ToolingCostsModify : FullAuditedEntity<long>
     {
         /// <summary>
+        /// 费用类型 判断是工装费用还是测试线费用  1是工装费用2是测试线费用
+        /// </summary>
+        public int ExpenseType { get; set; }
+        /// <summary>
         /// 流程号Id
         /// </summary> 
         public long AuditFlowId { get; set; }

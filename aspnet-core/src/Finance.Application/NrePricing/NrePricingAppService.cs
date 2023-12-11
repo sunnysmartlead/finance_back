@@ -308,8 +308,9 @@ namespace Finance.NerPricing
         /// <param name="AuditFlowId"></param>
         /// <param name="QuoteAuditFlowId"></param>
         /// <param name="solutionIdAndQuoteSolutionIds"></param>
+        /// <param name="bomIdAndQuoteBomIds"></param>
         /// <returns></returns>
-        internal async Task<List<IdMapping>> FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds)
+        internal async Task<List<IdMapping>> FastPostResourcesManagementSingle(long AuditFlowId, long QuoteAuditFlowId, List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds, List<BomIdAndQuoteBomId> bomIdAndQuoteBomIds)
         {
             List<IdMapping> idMappings = new();
             foreach (SolutionIdAndQuoteSolutionId item in solutionIdAndQuoteSolutionIds)
@@ -318,6 +319,12 @@ namespace Finance.NerPricing
                 List<MouldInventory> MouldInventorys = ObjectMapper.Map<List<MouldInventory>>(mouldInventoryPartModel.MouldInventoryModels);
                 foreach (MouldInventory mould in MouldInventorys)
                 {
+                    if (mould.StructuralId != 0)
+                    {
+                        BomIdAndQuoteBomId bomIdAndQuoteBomId = bomIdAndQuoteBomIds.FirstOrDefault(m => m.QuoteBomId.Equals(mould.StructuralId));
+                        if (bomIdAndQuoteBomId is null) throw new FriendlyException("模具费快速核报价复制数据时候未找到对应的StructureId");
+                        mould.StructuralId = bomIdAndQuoteBomId.NewBomId;
+                    }                                                             
                     mould.AuditFlowId = AuditFlowId;
                     mould.SolutionId = item.NewSolutionId;
                     long QuoteId = mould.Id;
@@ -529,7 +536,7 @@ namespace Finance.NerPricing
                 }).ToList();
                 await _productionEquipmentCostsModify.BulkInsertAsync(productionEquipmentCostsModifies);               
                 //EMC实验费修改项复制
-                List<ExperimentalExpensesModify> experimentalExpensesEmc = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==1);
+                List<ExperimentalExpensesModify> experimentalExpensesEmc = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExpenseType==1);
                 experimentalExpensesEmc.Select(p =>
                 {
                     p.AuditFlowId = dto.NewAuditFlowId;
@@ -547,7 +554,7 @@ namespace Finance.NerPricing
                 }).ToList();
                 await _experimentalExpensesModify.BulkInsertAsync(experimentalExpensesEmc);
                  //环境实验费修改项
-                List<ExperimentalExpensesModify> experimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExperimentalFeesType==2);
+                List<ExperimentalExpensesModify> experimentalExpenses = await _experimentalExpensesModify.GetAllListAsync(p => p.AuditFlowId.Equals(dto.QuoteAuditFlowId) && p.SolutionId.Equals(solutionIdAndQuote.QuoteSolutionId)&&p.ExpenseType==2);
                 experimentalExpenses.Select(p =>
                 {
                     p.AuditFlowId = dto.NewAuditFlowId;
@@ -1433,8 +1440,8 @@ namespace Finance.NerPricing
 
                 //mouldInventory = mouldInventory.Except(mouldInventoryEquals).Distinct().ToList();//差集
                 mouldInventoryPartModel.MouldInventoryModels = await _resourceNrePricingMethod.MouldInventoryModels(auditFlowId, part.SolutionId);//传流程id和方案号的id
-                var l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
-                var id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
+                List<long> l = mouldInventoryPartModel.MouldInventoryModels.Select(p => p.StructuralId).ToList();
+                List<long> id = mouldInventory.Where(p => !l.Contains(p.StructuralId)).Select(p => p.Id).ToList();
                 await _resourceMouldInventory.DeleteAsync(p => id.Contains(p.Id));
 
                 mouldInventory = mouldInventory.Where(p => !id.Contains(p.Id)).ToList();
@@ -2574,7 +2581,7 @@ namespace Finance.NerPricing
                 List<ToolingCostsModify> toolingCostsModifies = _toolingCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ToolingCostModel item in pricingFormDto.ToolingCost)
                 {
-                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
+                    ToolingCostsModify modify = toolingCostsModifies.FirstOrDefault(p => item.Ids.Contains(p.ModifyId) && p.ExpenseType.Equals(item.ExpenseType) && item.Id != 0);
                     if (modify != null)
                     {
                         item.WorkName = modify.WorkName;
@@ -2601,7 +2608,7 @@ namespace Finance.NerPricing
                 List<FixtureCostsModify> fixtureCostsModifies = _fixtureCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (FixtureCostModel item in pricingFormDto.FixtureCost)
                 {
-                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
+                    FixtureCostsModify modify = fixtureCostsModifies.FirstOrDefault(p => item.Ids.Contains(p.ModifyId) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ToolingName = modify.ToolingName;
@@ -2628,7 +2635,7 @@ namespace Finance.NerPricing
                 List<InspectionToolCostModify> inspectionToolCostModifies = _inspectionToolCostModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (QADepartmentQCModel item in pricingFormDto.QAQCDepartments)
                 {
-                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id) && item.Id != 0);
+                    InspectionToolCostModify modify = inspectionToolCostModifies.FirstOrDefault(p => item.Ids.Contains(p.ModifyId) && item.Id != 0);
                     if (modify != null)
                     {
                         item.Qc = modify.Qc;
@@ -2655,7 +2662,7 @@ namespace Finance.NerPricing
                 List<ProductionEquipmentCostsModify> productionEquipmentCostsModifies = _productionEquipmentCostsModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (ProductionEquipmentCostModel item in pricingFormDto.ProductionEquipmentCost)
                 {
-                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&& item.Id!=0);
+                    ProductionEquipmentCostsModify modify = productionEquipmentCostsModifies.FirstOrDefault(p => item.Ids.Contains(p.ModifyId) && item.Id!=0);
                     if (modify != null)
                     {
                         item.EquipmentName = modify.EquipmentName;
@@ -2686,7 +2693,7 @@ namespace Finance.NerPricing
                 List<ExperimentalExpensesModify> experimentalExpensesModifies = _experimentalExpensesModify.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
                 foreach (LaboratoryFeeModel item in pricingFormDto.LaboratoryFeeModels)
                 {
-                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExperimentalFeesType.Equals(item.ExperimentalFeesType) && item.Id != 0);
+                    ExperimentalExpensesModify modify = experimentalExpensesModifies.FirstOrDefault(p => p.ModifyId.Equals(item.Id)&&p.ExpenseType.Equals(item.ExpenseType) && item.Id != 0);
                     if (modify != null)
                     {
                         item.ProjectName = modify.ProjectName;
@@ -2944,17 +2951,27 @@ namespace Finance.NerPricing
                     WorkName = a.Key.FrockName,
                     UnitPriceOfTooling = a.Key.FrockPrice,
                     ToolingCount = (int)a.Sum(m => m.FrockNumber),
-                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd / 100
+                    Cost = a.Key.FrockPrice * a.Sum(m => m.FrockNumber) * UphAndValuesd / 100,
+                    Ids = processHours.Where(p => p.FrockName == a.Key.FrockName && p.FrockPrice == a.Key.FrockPrice).Select(p => p.Id).ToHashSet()
+                }).ToList();
+                workingHoursInfosGZ.Select(p => {
+                    p.ExpenseType = 1;
+                    return p;
                 }).ToList();
                 modify.ToolingCost = workingHoursInfosGZ;
                 //工装费用=>测试线费用               
                 List<ToolingCostModel> workingHoursInfosCSX = processHours.Where(p => p.TestLineName is not null).GroupBy(m => new { m.TestLineName, m.TestLinePrice }).Select(a => new ToolingCostModel
                 {
-                    Id = processHours.Where(p => p.TestLineName == a.Key.TestLineName && p.TestLinePrice == a.Key.TestLinePrice).Select(p => p.Id).FirstOrDefault() + 1,
+                    Id = processHours.Where(p => p.TestLineName == a.Key.TestLineName && p.TestLinePrice == a.Key.TestLinePrice).Select(p => p.Id).FirstOrDefault(),
                     WorkName = a.Key.TestLineName,
                     UnitPriceOfTooling = (decimal)a.Key.TestLinePrice,
                     ToolingCount = (int)a.Sum(m => m.TestLineNumber),
                     Cost = (decimal)(a.Key.TestLinePrice * a.Sum(m => m.TestLineNumber)) * UphAndValuesd / 100,
+                    Ids= processHours.Where(p => p.TestLineName == a.Key.TestLineName && p.TestLinePrice == a.Key.TestLinePrice).Select(p => p.Id).ToHashSet(),
+                }).ToList();
+                workingHoursInfosCSX.Select(p => {
+                    p.ExpenseType = 2;
+                    return p;
                 }).ToList();
                 modify.ToolingCost.AddRange(workingHoursInfosCSX);
                 modify.ToolingCostTotal = modify.ToolingCost.Sum(p => p.Cost);
@@ -2976,11 +2993,13 @@ namespace Finance.NerPricing
                          ToolingName = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Number = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * NumberOfLines
+                         Cost = (decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * NumberOfLines,
+                         Ids = processHoursEnterFixtures.Where(p => p.FixtureName == a.Key.FixtureName && p.FixturePrice == a.Key.FixturePrice).Select(p => p.Id).ToHashSet()
                      }).ToList();
                 modify.FixtureCost = productionEquipmentCostModelsZj;
                 modify.FixtureCostTotal = modify.FixtureCost.Sum(p => p.Cost);
                 //检具费用(有变化,工装治具)
+                #region 一开代码以注释
                 //List<ProcessHoursEnter> processHours= await _processHoursEnter.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));            
                 //modify.QAQCDepartments = (from a in processHours
                 //                          select new QADepartmentQCModel
@@ -2990,7 +3009,7 @@ namespace Finance.NerPricing
                 //                              Count = (int)a.FixtureNumber,
                 //                              Cost = a.FixturePrice * a.FixtureNumber* UphAndValuesd
                 //                          }).ToList();
-
+                #endregion            
                 modify.QAQCDepartments = processHours.GroupBy(m => new { m.FixtureName, m.FixturePrice }).Select(
                      a => new QADepartmentQCModel
                      {
@@ -2998,7 +3017,8 @@ namespace Finance.NerPricing
                          Qc = a.Key.FixtureName,
                          UnitPrice = (decimal)a.Key.FixturePrice,
                          Count = (int)a.Sum(c => c.FixtureNumber),
-                         Cost = ((decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd) / 100
+                         Cost = ((decimal)(a.Key.FixturePrice * a.Sum(c => c.FixtureNumber)) * UphAndValuesd) / 100,
+                         Ids = processHoursEnterFixtures.Where(p => p.FixtureName == a.Key.FixtureName && p.FixturePrice == a.Key.FixturePrice).Select(p => p.Id).ToHashSet(),
                      }).ToList();
                 modify.QAQCDepartmentsTotal = modify.QAQCDepartments.Sum(p => p.Cost);
                 //生产设备费用 
@@ -3022,6 +3042,7 @@ namespace Finance.NerPricing
                         UnitPrice = (decimal)(a.Key.DevicePrice ?? 0M),
                         Number = (int)a.Sum(c => c.DeviceNumber),
                         Cost = (decimal)((a.Key.DevicePrice ?? 0M) * a.Sum(c => c.DeviceNumber) * (a.Key.DeviceStatus == FinanceConsts.Sbzt_Zy ? NumberOfLines : UphAndValuesd / 100)),
+                        Ids = processHoursEnterDevices.Where(p => p.DeviceName == (a.Key.DeviceName ?? string.Empty) && p.DevicePrice == (a.Key.DevicePrice ?? 0M) && p.DeviceStatus == (a.Key.DeviceStatus ?? string.Empty)).Select(p => p.Id).ToHashSet(),
                     }).ToList();
                 List<ProductionEquipmentCostModel> productionEquipmentCostModelsjoinedList = (from t in productionEquipmentCostModels
                                                                                               join p in _financeDictionaryDetailRepository.GetAll()
@@ -3035,7 +3056,8 @@ namespace Finance.NerPricing
                                                                                                   UnitPrice = t.UnitPrice,
                                                                                                   Number = t.Number,
                                                                                                   Cost = t.Cost,
-                                                                                                  DeviceStatusName = p != null ? p.DisplayName : ""
+                                                                                                  DeviceStatusName = p != null ? p.DisplayName : "",
+                                                                                                  Ids=t.Ids,
                                                                                               }).ToList();
                 modify.ProductionEquipmentCost = productionEquipmentCostModelsjoinedList;
                 modify.ProductionEquipmentCostTotal = modify.ProductionEquipmentCost.Sum(p => p.Cost);
@@ -3048,14 +3070,14 @@ namespace Finance.NerPricing
                 //EMC实验费
                 List<LaboratoryFeeModel> EMC=ObjectMapper.Map<List<LaboratoryFeeModel>>(laboratoryFees);
                 EMC.Select(p => {
-                    p.ExperimentalFeesType = 1;
+                    p.ExpenseType = 1;
                     return p;
                 }).ToList();
                 modify.LaboratoryFeeModels.AddRange(EMC);
                 //环境实验费
                 List<LaboratoryFeeModel> Environment = ObjectMapper.Map<List<LaboratoryFeeModel>>(qADepartmentTests);
                 Environment.Select(p => {
-                    p.ExperimentalFeesType = 2;
+                    p.ExpenseType = 2;
                     return p;
                 }).ToList();
                 modify.LaboratoryFeeModels.AddRange(Environment);                

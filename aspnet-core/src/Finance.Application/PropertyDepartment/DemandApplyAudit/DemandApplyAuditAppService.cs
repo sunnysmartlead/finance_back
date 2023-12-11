@@ -216,6 +216,16 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     #region 方案表
                     // 营销部审核 方案表
                     List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
+                    //判断方案名称是否有重复的            
+                    bool ProducteCount = schemeTables.GroupBy(p => p.Product).Count() > 1;                    
+                    HashSet<string> idSet = new HashSet<string>();                   
+                    foreach (Solution person in schemeTables)
+                    {
+                        if (!idSet.Add(person.Product))
+                        {
+                            throw new FriendlyException("产品名称不能相同");
+                        }
+                    }                 
                     schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
                     schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
                     ////现在数据库里有的数据项
