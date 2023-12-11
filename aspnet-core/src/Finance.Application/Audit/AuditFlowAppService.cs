@@ -222,7 +222,15 @@ namespace Finance.Audit
 
             //获取项目经理
             //var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-            var projectPm = await _priceEvaluationRepository.GetAll().DeferredFirstOrDefault(p => p.AuditFlowId == auditFlowId)
+            var projectPm = await _priceEvaluationRepository.GetAll()
+                .Select(p=> new 
+                {
+                    p.Id,
+                    p.CreatorUserId,
+                    p.AuditFlowId,
+                    p.ProjectManager
+                })
+                .DeferredFirstOrDefault(p => p.AuditFlowId == auditFlowId)
                  .FromCacheAsync($"{FinanceConsts.PriceEvaluationCacheName}{auditFlowId}");
 
 
