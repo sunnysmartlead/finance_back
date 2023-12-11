@@ -27,6 +27,9 @@ using Finance.DemandApplyAudit;
 using static Finance.Authorization.Roles.StaticRoleNames;
 using Abp.Collections.Extensions;
 using Finance.WorkFlows.Dto;
+using Z.EntityFramework.Plus;
+using Abp.Domain.Entities.Auditing;
+using Abp.Application.Services.Dto;
 
 namespace Finance.Audit
 {
@@ -205,17 +208,32 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> FilteTask(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
+            var roles = await _roleRepository.GetAll().FromCacheAsync(FinanceConsts.RoleCacheName);
+            var userRole = await _userRoleRepository.GetAll().FromCacheAsync(FinanceConsts.UserRoleCacheName);
+
             //获取当前流程方案列表
-            var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            //var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
+            var solutionList = await _solutionRepository.GetAll().Where(p => p.AuditFlowId == auditFlowId).FromCacheAsync($"{FinanceConsts.SolutionCacheName}{auditFlowId}");
+
 
             //获取核价团队
-            var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            //var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            var pricingTeam = await _pricingTeamRepository.GetAll().DeferredFirstOrDefault(p => p.AuditFlowId == auditFlowId).FromCacheAsync($"{FinanceConsts.PricingTeamCacheName}{auditFlowId}");
 
             //获取项目经理
-            var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            //var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            var projectPm = await _priceEvaluationRepository.GetAll().DeferredFirstOrDefault(p => p.AuditFlowId == auditFlowId)
+                 .FromCacheAsync($"{FinanceConsts.PriceEvaluationCacheName}{auditFlowId}");
+
 
             //获取核价需求录入保存项
-            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.GetAll().Select(p => new
+            {
+                p.Id,
+                p.CreatorUserId,
+                p.AuditFlowId
+            }).DeferredFirstOrDefault(p => p.AuditFlowId == auditFlowId)
+            .FromCacheAsync($"{FinanceConsts.PriceEvaluationStartDataCacheName}{auditFlowId}");
 
 
             //项目经理控制的页面
@@ -224,11 +242,11 @@ namespace Finance.Audit
                 FinanceConsts.PriceEvaluationBoard };
 
             //拥有能看归档的角色的用户
-            var role = await _roleRepository.GetAllListAsync(p =>
+            var role = roles.Where(p =>
                             p.Name == StaticRoleNames.Host.FinanceTableAdmin
                             || p.Name == StaticRoleNames.Host.EvalTableAdmin
-                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
-            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+                            || p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var userIds = userRole.Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToList();
 
 
             return list
@@ -300,73 +318,78 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
-            //if (auditFlowId == 546)
-            //{
-            //    var g34 = "";
-            //}
+            var roles = await _roleRepository.GetAll().FromCacheAsync(FinanceConsts.RoleCacheName);
+            var users = await _userRoleRepository.GetAll().FromCacheAsync(FinanceConsts.UserCacheName);
+
             //核价需求录入
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
             //贸易合规审核员
-            var tradeComplianceAuditor = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
-            var isTradeComplianceAuditor = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
+            var tradeComplianceAuditor = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.TradeComplianceAuditor);
+            var isTradeComplianceAuditor = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == tradeComplianceAuditor.Id);
 
             //项目管理部-项目经理
-            var projectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectManager);
-            var isProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectManager.Id);
+            var projectManager = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.ProjectManager);
+            var isProjectManager = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == projectManager.Id);
 
             // 市场部-项目经理
-            var marketProjectManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectManager);
-            var isMarketProjectManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectManager.Id);
+            var marketProjectManager = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.MarketProjectManager);
+            var isMarketProjectManager = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectManager.Id);
 
             //项目管理部-项目部长
-            var marketProjectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.MarketProjectMinister);
-            var isMarketProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectMinister.Id);
+            var marketProjectMinister = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.MarketProjectMinister);
+            var isMarketProjectMinister = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == marketProjectMinister.Id);
 
             // 市场部-项目部长
-            var projectMinister = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.ProjectMinister);
-            var isProjectMinister = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == projectMinister.Id);
+            var projectMinister = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.ProjectMinister);
+            var isProjectMinister = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == projectMinister.Id);
 
             // 总经理
-            var generalManager = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.GeneralManager);
-            var isGeneralManager = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
+            var generalManager = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.GeneralManager);
+            var isGeneralManager = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == generalManager.Id);
 
             // 成本拆分员
-            var costSplit = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.CostSplit);
-            var isCostSplit = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
+            var costSplit = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.CostSplit);
+            var isCostSplit = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == costSplit.Id);
 
             //财务部-核价表归档管理员
-            var financeTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
-            var isFinanceTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == financeTableAdmin.Id);
+            var financeTableAdmin = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.FinanceTableAdmin);
+            var isFinanceTableAdmin = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == financeTableAdmin.Id);
 
             //报价审核表归档管理员
-            var evalTableAdmin = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
-            var isEvalTableAdmin = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == evalTableAdmin.Id);
+            var evalTableAdmin = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.EvalTableAdmin);
+            var isEvalTableAdmin = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == evalTableAdmin.Id);
 
             //报价单归档管理员
-            var bjdgdgly = await _roleRepository.FirstOrDefaultAsync(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
-            var isBjdgdgly = await _userRoleRepository.GetAll().AnyAsync(p => p.UserId == AbpSession.UserId && p.RoleId == bjdgdgly.Id);
+            var bjdgdgly = roles.FirstOrDefault(p => p.Name == StaticRoleNames.Host.Bjdgdgly);
+            var isBjdgdgly = users.Any(p => p.UserId == AbpSession.UserId && p.RoleId == bjdgdgly.Id);
 
             //流程
-            var w = await _workflowInstanceRepository.GetAsync(auditFlowId);
-            var n = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档");
+            //var workflowInstance = await _workflowInstanceRepository.GetAsync(auditFlowId);
+            //var nodeInstance = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档");
+            var workflowInstance = await _workflowInstanceRepository.GetAll()
+                .DeferredFirstOrDefault(p => p.Id == auditFlowId)
+                .FromCacheAsync($"{FinanceConsts.WorkflowInstanceCacheName}{auditFlowId}");
 
+            var nodeInstance = await _nodeInstanceRepository.GetAll()
+                .DeferredFirstOrDefault(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档")
+                .FromCacheAsync($"{FinanceConsts.NodeInstanceCacheName}{auditFlowId}");
 
             //节点
 
             //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
-            if (w.WorkflowState == WorkflowState.Ended || n.NodeInstanceStatus == NodeInstanceStatus.Current)
+            if (workflowInstance.WorkflowState == WorkflowState.Ended || nodeInstance.NodeInstanceStatus == NodeInstanceStatus.Current)
             {
                 if (!list.Any(p => p.ProcessName == "归档"))
                 {
                     list.Add(new AuditFlowRightDetailDto
                     {
-                        Id = n.Id,
+                        Id = nodeInstance.Id,
                         IsReset = false,
                         IsRetype = false,
                         JumpDescription = "",
-                        ProcessIdentifier = n.ProcessIdentifier,
-                        ProcessName = n.Name,
+                        ProcessIdentifier = nodeInstance.ProcessIdentifier,
+                        ProcessName = nodeInstance.Name,
                         Right = RIGHTTYPE.ReadOnly,
                     });
                 }

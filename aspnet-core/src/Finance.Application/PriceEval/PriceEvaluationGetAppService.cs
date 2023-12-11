@@ -284,6 +284,76 @@ namespace Finance.PriceEval
 
         #endregion
 
+        /// <summary>
+        /// 测试修改项
+        /// </summary>
+        /// <returns></returns>
+        public async Task Dfgdfgdf() 
+        {
+            var AuditFlowId = 731;
+            var QuickQuoteAuditFlowId = 499;
+
+
+            //获取ProductId对应关系
+            var oldProduct = await _modelCountRepository.GetAll().Where(p => p.AuditFlowId == QuickQuoteAuditFlowId).Select(p => new { p.Id, p.Product }).ToListAsync();
+            var newProduct = await _modelCountRepository.GetAll().Where(p => p.AuditFlowId == AuditFlowId).Select(p => new { p.Id, p.Product }).ToListAsync();
+            var productIdMap = from o in oldProduct
+                               join n in newProduct on o.Product equals n.Product
+                               select new
+                               {
+                                   OldProductId = o.Id,
+                                   NewProductId = n.Id
+                               };
+
+
+            //获取GradientId对应关系
+            var oldGradient = await _gradientRepository.GetAll().Where(p => p.AuditFlowId == QuickQuoteAuditFlowId).Select(p => new { p.Id, p.GradientValue }).ToListAsync();
+            var newGradient = await _gradientRepository.GetAll().Where(p => p.AuditFlowId == AuditFlowId).Select(p => new { p.Id, p.GradientValue }).ToListAsync();
+            var gradientIdMap = from o in oldGradient
+                                join n in newGradient on o.GradientValue equals n.GradientValue
+                                select new
+                                {
+                                    OldGradient = o.Id,
+                                    NewGradient = n.Id
+                                };
+
+            //获取SolutionId对应关系
+            var oldSolution = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == QuickQuoteAuditFlowId);
+            var newSolution = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == AuditFlowId);
+            var solutionIdMap = from o in oldSolution
+                                join n in newSolution on o.Product equals n.Product
+                                select new
+                                {
+                                    OldSolution = o.Id,
+                                    NewSolution = n.Id
+                                };
+
+            //读取修改项内容
+            var oldUpdateItems = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == QuickQuoteAuditFlowId);
+
+            var list = new List<UpdateItem>();
+            foreach (var oldUpdateItem in oldUpdateItems)
+            {
+                var solution = await _solutionRepository.GetAsync(oldUpdateItem.SolutionId);
+                var productId = solution.Productld;
+
+                var updateItem = new UpdateItem
+                {
+                    AuditFlowId = AuditFlowId,
+                    ProductId = productIdMap.FirstOrDefault(p => p.OldProductId == productId).NewProductId,
+                    GradientId = gradientIdMap.FirstOrDefault(p => p.OldGradient == oldUpdateItem.GradientId).NewGradient,
+                    SolutionId = solutionIdMap.FirstOrDefault(p => p.OldSolution == oldUpdateItem.SolutionId).NewSolution,
+                    UpdateItemType = oldUpdateItem.UpdateItemType,
+                    Year = oldUpdateItem.Year,
+                    UpDown = oldUpdateItem.UpDown,
+                    MaterialJson = oldUpdateItem.MaterialJson,
+                    File = oldUpdateItem.File
+                };
+                list.Add(updateItem);
+            }
+
+        }
+
         #region 核价表
 
 

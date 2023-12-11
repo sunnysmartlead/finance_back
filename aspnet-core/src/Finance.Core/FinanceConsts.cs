@@ -52,6 +52,50 @@ namespace Finance
 
         public const int ExcelColumnWidth = 20;
 
+        /// <summary>
+        /// 用户缓存名称
+        /// </summary>
+        public const string UserCacheName = "User";
+
+        /// <summary>
+        /// 角色缓存名称
+        /// </summary>
+        public const string RoleCacheName = "Role";
+
+        /// <summary>
+        /// 用户角色缓存名称
+        /// </summary>
+        public const string UserRoleCacheName = "UserRole";
+
+        /// <summary>
+        /// 工作流实例缓存名称
+        /// </summary>
+        public const string WorkflowInstanceCacheName = "WorkflowInstance";
+
+        /// <summary>
+        /// 节点实例缓存名称
+        /// </summary>
+        public const string NodeInstanceCacheName = "NodeInstance";
+
+        /// <summary>
+        /// 方案缓存名称
+        /// </summary>
+        public const string SolutionCacheName = "Solution";
+
+        /// <summary>
+        /// 核价团队缓存名称
+        /// </summary>
+        public const string PricingTeamCacheName = "PricingTeam";
+
+        /// <summary>
+        /// 核价需求录入缓存名称
+        /// </summary>
+        public const string PriceEvaluationCacheName = "PriceEvaluation";
+
+        /// <summary>
+        /// 核价开始数据缓存名称
+        /// </summary>
+        public const string PriceEvaluationStartDataCacheName = "PriceEvaluationStartData";
 
         /// <summary>
         /// 部门PathId的生成规则
