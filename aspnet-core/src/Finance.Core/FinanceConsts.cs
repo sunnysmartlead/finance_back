@@ -19,6 +19,7 @@ namespace Finance
 
         public const string AliServer_In_IP = "172.26.144.105"; //阿里云内网IP地址
         public const string AliServer_Out_IP = "139.196.216.165"; //阿里云外网IP地址
+        public const string ShangHaiServerIP = "10.1.1.131"; //上海服务器IP地址
 
         public const int SmtpPort_Tencent = 587;    //SMTP服务器端口
         public const string SmtpServer_Tencent = "smtp.qq.com"; //SMTP服务器
