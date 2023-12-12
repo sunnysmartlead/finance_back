@@ -2398,8 +2398,9 @@ namespace Finance.PriceEval
             var yearInfo = await (from yi in _yearInfoRepository.GetAll()
                                   join e in _processHoursEnterRepository.GetAll() on yi.ProcessHoursEnterId equals e.Id
                                   join y in _modelCountYearRepository.GetAll() on yi.ModelCountYearId equals y.Id
-                                  where y.AuditFlowId == input.AuditFlowId
-                                  && e.SolutionId == input.SolutionId
+                                  where
+                                  //y.AuditFlowId == input.AuditFlowId &&
+                                  e.SolutionId == input.SolutionId
                                   && y.Year == year && y.UpDown == upDown
                                   select yi).ToListAsync();
 
