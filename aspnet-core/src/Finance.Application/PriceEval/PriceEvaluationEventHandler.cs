@@ -44,7 +44,7 @@ namespace Finance.PriceEval
         }
 
         /// <summary>
-        /// 贸易合规等节点被激活时触发
+        /// 核价需求录入后触发
         /// </summary>
         /// <param name="eventData"></param>
         public async void HandleEvent(EntityCreatedEventData<PriceEvaluation> eventData)
@@ -97,10 +97,13 @@ namespace Finance.PriceEval
                     var oldUpdateItems = await _updateItemRepository.GetAllListAsync(p => p.AuditFlowId == eventData.Entity.QuickQuoteAuditFlowId);
                     foreach (var oldUpdateItem in oldUpdateItems)
                     {
+                        var solution = await _solutionRepository.GetAsync(oldUpdateItem.SolutionId);
+                        var productId = solution.Productld;
+
                         var updateItem = new UpdateItem
                         {
                             AuditFlowId = eventData.Entity.AuditFlowId,
-                            ProductId = productIdMap.FirstOrDefault(p => p.OldProductId == oldUpdateItem.ProductId).NewProductId,
+                            ProductId = productIdMap.FirstOrDefault(p => p.OldProductId == productId).NewProductId,
                             GradientId = gradientIdMap.FirstOrDefault(p => p.OldGradient == oldUpdateItem.GradientId).NewGradient,
                             SolutionId = solutionIdMap.FirstOrDefault(p => p.OldSolution == oldUpdateItem.SolutionId).NewSolution,
                             UpdateItemType = oldUpdateItem.UpdateItemType,
@@ -111,12 +114,6 @@ namespace Finance.PriceEval
                         };
                         await _updateItemRepository.InsertAsync(updateItem);
                     }
-
-                    ////修改方案表内容
-                    //foreach (var item in newSolution)
-                    //{
-                    //    item.Productld = productIdMap.FirstOrDefault(p => p.OldProductId == item.Productld).NewProductId;
-                    //}
                 }
                 uow.Complete();
             }

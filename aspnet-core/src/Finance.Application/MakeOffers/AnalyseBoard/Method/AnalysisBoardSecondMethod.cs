@@ -5129,10 +5129,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var version = quotationListSecondDto.version;
         var isQuotation = await getQuotation(auditFlowId, version);
         int type = isQuotation ? 1 : 0;
-        var excel = await getAppExcel(auditFlowId, version, type);
         var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 0);
-        var ntype = dowm.Max(p => p.ntype);
+        int ntype = 0;
+        if (dowm is not null && dowm.Count>0)
+        {
+            ntype = dowm.Max(p => p.ntype);
+        }
+       
         string content = JsonConvert.SerializeObject(quotationListSecondDto);
 
         _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
