@@ -37,6 +37,7 @@ using Microsoft.EntityFrameworkCore;
 using MiniExcelLibs;
 using Newtonsoft.Json;
 using NPOI.HPSF;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -233,17 +234,19 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         public async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStartSave(PriceEvaluationStartSaveInput input, bool isFd = false)
         {
+            var cacheJson = JsonConvert.SerializeObject(input);
+            var code = cacheJson.GetHashCode().ToString();
+
+            var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+
             if (isFd)
             {
                 #region 流程防抖
 
-                var cacheJson = JsonConvert.SerializeObject(input);
-                var code = cacheJson.GetHashCode().ToString();
 
-                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
                 if (cache is null)
                 {
-                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+                    //await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
 
                 }
                 else
@@ -288,6 +291,12 @@ namespace Finance.PriceEval
                 priceEvaluationStartData.DataJson = json;
             }
 
+            if (cache is null && isFd)
+            {
+                await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+            }
+
             return new PriceEvaluationStartResult { AuditFlowId = auid, IsSuccess = true, Message = "添加成功！" };
             //}
         }
@@ -311,17 +320,19 @@ namespace Finance.PriceEval
         [AbpAuthorize]
         internal async virtual Task<PriceEvaluationStartResult> InternalPriceEvaluationStart(PriceEvaluationStartInput input, bool isFd = false)
         {
+            var cacheJson = JsonConvert.SerializeObject(input);
+            var code = cacheJson.GetHashCode().ToString();
+
+            var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
+
             if (isFd)
             {
                 #region 流程防抖
 
-                var cacheJson = JsonConvert.SerializeObject(input);
-                var code = cacheJson.GetHashCode().ToString();
 
-                var cache = await _cacheManager.GetCache("PriceEvaluationStartInput").GetOrDefaultAsync(code);
                 if (cache is null)
                 {
-                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+                    //await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
 
                 }
                 else
@@ -445,6 +456,12 @@ namespace Finance.PriceEval
                 else
                 {
                     priceEvaluationStartData.DataJson = json;
+                }
+
+                if (cache is null && isFd)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
                 }
 
                 return new PriceEvaluationStartResult { AuditFlowId = auid, IsSuccess = true, Message = "添加成功！" };
@@ -798,8 +815,17 @@ namespace Finance.PriceEval
                 //    UserId = user.Id,
                 //    Opinion = OPINIONTYPE.Submit_Agreee
                 //});
+
+                if (cache is null && isFd)
+                {
+                    await _cacheManager.GetCache("PriceEvaluationStartInput").SetAsync(code, code, new TimeSpan(24, 0, 0));
+
+                }
+
                 return new PriceEvaluationStartResult { AuditFlowId = auditFlowId, IsSuccess = true, Message = "添加成功！" };
             }
+
+
 
         }
 
