@@ -888,14 +888,14 @@ namespace Finance.WorkFlows
                        join pe in _priceEvaluationRepository.GetAll() on h.WorkFlowInstanceId equals pe.AuditFlowId into pe1
                        from p in pe1.DefaultIfEmpty()
 
-                       where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
+                       where ((p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
                         || n.Name == "生成报价分析界面选择报价方案"
 
-                        || n.Name == "归档"
+                        || n.Name == "归档") && (!h.FinanceDictionaryDetailId.Contains("Save"))
 
                        //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
                        //|| n.Name == "审批报价策略与核价表" 
@@ -928,6 +928,7 @@ namespace Finance.WorkFlows
                        join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
                        join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
                        join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       where !h.FinanceDictionaryDetailId.Contains("Save")
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
