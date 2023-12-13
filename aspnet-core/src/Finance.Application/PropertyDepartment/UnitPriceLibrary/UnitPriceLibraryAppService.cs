@@ -505,6 +505,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                 {
                     { "项目名称", item.EntryName },
                     { "项目子代码", item.ProjectSubcode },
+                    { "产品名称", item.ProductName },
                     { "物料编码", item.MaterialCode },
                     { "物料名称", item.MaterialName },
                     { "装配数量", item.AssemblyQuantity }
