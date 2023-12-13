@@ -928,6 +928,7 @@ namespace Finance.WorkFlows
                        join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
                        join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
                        join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       where !h.FinanceDictionaryDetailId.Contains("Save")
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
