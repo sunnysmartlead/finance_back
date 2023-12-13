@@ -190,6 +190,15 @@ namespace Finance.PriceEval
 
         #endregion
 
+        public string GetIp() 
+        
+        {
+            SendEmail email = new SendEmail();
+            string loginIp = email.GetLoginAddr();
+            return loginIp;
+
+        }
+
         /// <summary>
         /// 手动刷新国家类型
         /// </summary>
