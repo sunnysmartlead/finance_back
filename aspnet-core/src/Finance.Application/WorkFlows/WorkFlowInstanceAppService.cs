@@ -12,6 +12,7 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.Infrastructure.Dto;
+using Finance.Nre;
 using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
 using LinqKit;
@@ -61,8 +62,12 @@ namespace Finance.WorkFlows
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
 
         private readonly IRepository<PriceEvaluationStartData, long> _priceEvaluationStartDataRepository;
+        private readonly IRepository<Fu_Bom, long> _fu_BomRepository;
 
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository)
+        private readonly IRepository<Gradient, long> _gradientRepository;
+        private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
+
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
@@ -82,10 +87,10 @@ namespace Finance.WorkFlows
             _solutionRepository = solutionRepository;
             _pricingTeamRepository = pricingTeamRepository;
             _priceEvaluationStartDataRepository = priceEvaluationStartDataRepository;
+            _fu_BomRepository = fu_BomRepository;
+            _gradientRepository = gradientRepository;
+            _auditFlowIdPricingForm = auditFlowIdPricingForm;
         }
-
-
-
 
         /// <summary>
         /// 手动触发贸易合规（手动测试使用时改为public）
@@ -883,14 +888,14 @@ namespace Finance.WorkFlows
                        join pe in _priceEvaluationRepository.GetAll() on h.WorkFlowInstanceId equals pe.AuditFlowId into pe1
                        from p in pe1.DefaultIfEmpty()
 
-                       where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
+                       where ((p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
                         || n.Name == "生成报价分析界面选择报价方案"
 
-                        || n.Name == "归档"
+                        || n.Name == "归档") && (!h.FinanceDictionaryDetailId.Contains("Save"))
 
                        //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
                        //|| n.Name == "审批报价策略与核价表" 
@@ -1222,11 +1227,48 @@ namespace Finance.WorkFlows
 
             #endregion
 
+
             #region 同意
 
             //审批意见集合有且仅有同意
             if (input.FinanceDictionaryDetailIds.Count == 1 && input.FinanceDictionaryDetailIds.Contains(FinanceConsts.HjkbSelect_Yes))
             {
+                #region 直接上传流程：文档上传校验
+
+                var nodeInstance = await _nodeInstanceRepository.GetAsync(input.NodeInstanceId);
+                var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+                var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+
+                //若是上传流程
+                if (list.Contains(node.FinanceDictionaryDetailId))
+                {
+                    //判断核价表上传是否完整，梯度和方案是否均已上传
+                    var gradientCount = await _gradientRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
+                    var solutionCount = await _solutionRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
+
+                    var fuBom = await _fu_BomRepository.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId).Select(p => new { p.GradientId, p.SolutionId }).ToListAsync();
+
+                    var fuGradientCount = fuBom.DistinctBy(p => p.GradientId).Count();
+                    var fuSolutionCount = fuBom.DistinctBy(p => p.SolutionId).Count();
+                    if (gradientCount != fuGradientCount || solutionCount != fuSolutionCount)
+                    {
+                        throw new FriendlyException($"没有上传完整的核价表，不可流转！");
+                    }
+
+                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId)// && p.JsonData != null && p.JsonData != string.Empty
+                        .Select(p => new { p.SolutionId }).ToListAsync();
+                    var auditFlowIdPricingFormsCount = auditFlowIdPricingForms.DistinctBy(p => p.SolutionId).Count();
+
+                    if (auditFlowIdPricingFormsCount != solutionCount)
+                    {
+                        throw new FriendlyException($"没有上传完整的NRE核价表，不可流转！");
+                    }
+                }
+
+                #endregion
+
+
                 //正常调用流程流转接口
                 await SubmitNodeInterfece(new SubmitNodeInput
                 {
@@ -1255,6 +1297,20 @@ namespace Finance.WorkFlows
             #endregion
         }
 
+        /// <summary>
+        /// 快速核报价：判断是否为上传流程
+        /// </summary>
+        /// <returns></returns>
+        private async Task<bool> IsUploadAuditFlow(long nodeInstanceId)
+        {
+            var nodeInstance = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
+            var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == nodeInstance.WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+
+            return list.Contains(node.FinanceDictionaryDetailId);
+        }
+
 
         /// <summary>
         /// 获取普通核报价归档流程
@@ -1265,7 +1321,7 @@ namespace Finance.WorkFlows
         public async virtual Task<PagedResultDto<WorkflowInstance>> GetWorkflowOvered(GetWorkflowOveredInput input)
         {
             //普通流程的核价原因
-            var hjyy = new List<string> { FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Nj };
+            var hjyy = new List<string> { FinanceConsts.EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt, FinanceConsts.EvalReason_Bb1, FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Xnnj, FinanceConsts.EvalReason_Nj };
 
             var data = (from w in _workflowInstanceRepository.GetAll()
                         join h in _instanceHistoryRepository.GetAll() on w.Id equals h.WorkFlowInstanceId
@@ -1273,7 +1329,8 @@ namespace Finance.WorkFlows
                         && w.WorkflowState == WorkflowState.Ended
                         select w)
                         .Distinct()
-                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter));
+                        .WhereIf(!input.Filter.IsNullOrWhiteSpace(), p => p.Title.Contains(input.Filter))
+                        .WhereIf(input.AuditFlowId.HasValue && input.AuditFlowId.Value != default, p => p.Id == input.AuditFlowId);
 
             var count = await data.CountAsync();
 
@@ -1385,5 +1442,7 @@ namespace Finance.WorkFlows
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
             node.NodeInstanceStatus = NodeInstanceStatus.Passed;
         }
+
+
     }
 }

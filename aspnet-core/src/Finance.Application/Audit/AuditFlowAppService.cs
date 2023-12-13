@@ -266,7 +266,7 @@ namespace Finance.Audit
                 //核价需求录入，必须是自己录入或项目经理才可见
                 .WhereIf((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId)
 
-                || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
+                || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId && projectPm.CreatorUserId != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
 
                 //报价单，必须是发起核价需求录入的人才能看到
                 .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != "ExternalQuotation" || p.IsReset)

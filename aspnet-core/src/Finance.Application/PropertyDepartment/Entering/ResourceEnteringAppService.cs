@@ -828,7 +828,7 @@ namespace Finance.Entering
             await _configEnteringElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronic> enterings = await _configEnteringElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<EnteringElectronicCopy> enteringsCopy = ObjectMapper.Map<List<EnteringElectronicCopy>>(enterings);
-            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy, false);
+            await _configEnteringElectronicCopy.BulkInsertAsync(enteringsCopy);
         }
         /// <summary>
         /// 结构单价复制
@@ -840,7 +840,7 @@ namespace Finance.Entering
             await _configStructureElectronicCopy.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<StructureElectronic> structures = await _configStructureElectronic.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
             List<StructureElectronicCopy> structuresCopy = ObjectMapper.Map<List<StructureElectronicCopy>>(structures);
-            await _configStructureElectronicCopy.BulkInsertAsync(structuresCopy, false);
+            await _configStructureElectronicCopy.BulkInsertAsync(structuresCopy);
         }
         /// <summary>
         /// 电子单价复制清除

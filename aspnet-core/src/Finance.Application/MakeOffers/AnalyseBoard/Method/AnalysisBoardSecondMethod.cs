@@ -2573,9 +2573,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
 
-    public async Task<bool> getSameSolution(long AuditFlowId, List<Solution> solutions, int ntime)
+    public async Task<bool> getSameSolution(long AuditFlowId, List<Solution> solutions, int version, int ntime)
     {
-        var sols = await _solutionQutation.GetAllListAsync(p => p.AuditFlowId == AuditFlowId && p.ntime == ntime);
+        //本流程下，非本版本下的方案组合
+        var sols = await _solutionQutation.GetAllListAsync(p =>
+            p.AuditFlowId == AuditFlowId && p.ntime == ntime && p.version != version);
         var idLists = solutions.OrderBy(p => p.Id).Select(p => p.Id).ToList();
         var idss = string.Join(",", idLists);
 
@@ -2621,17 +2623,19 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             var product = isOfferDto.Product;
             var productid = isOfferDto.Productld;
-            var ModuleName=isOfferDto.ProductName;
+            var ModuleName = isOfferDto.ProductName;
+            var solutionQuotation =
+                await _solutionQutation.FirstOrDefaultAsync(p =>
+                    p.AuditFlowId == AuditFlowId && p.version == version);
             if (productid != 0)
             {
-                var solutionQuotation =
-                    await _solutionQutation.FirstOrDefaultAsync(p =>
-                        p.AuditFlowId == AuditFlowId && p.version == version);
                 solutionQuotation.Product = product;
                 solutionQuotation.Productld = productid;
                 solutionQuotation.ModuleName = ModuleName;
-                _solutionQutation.UpdateAsync(solutionQuotation);
             }
+
+            solutionQuotation.status = 1;
+            _solutionQutation.UpdateAsync(solutionQuotation);
         }
 
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
@@ -2692,61 +2696,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ClientGrossMargin = ds.AllClientGrossMargin,
                     ClientClientGrossMargin = ds.AllClientClientGrossMargin,
                     ClientNreGrossMargin = ds.AllClientNreGrossMargin,
+
+                    LastRoundPrice = ds.LastRoundPrice,
+                    LastRoundGrossMargin = ds.LastRoundGrossMargin,
+                    LastRoundClientGrossMargin = ds.LastRoundClientGrossMargin,
+                    LastRoundNreGrossMargin = ds.LastRoundNreGrossMargin,
+
                     ThisQuotationPrice = ds.OfferUnitPrice,
                     ThisQuotationGrossMargin = ds.OffeGrossMargin,
                     ThisQuotationClientGrossMargin = ds.ClientGrossMargin,
                     ThisQuotationNreGrossMargin = ds.NreGrossMargin
                 };
-                if (last > 0)
-                {
-                    DynamicUnitPriceOffers lastsj = new DynamicUnitPriceOffers();
-                    if (!string.IsNullOrEmpty(ds.carModel) && !ds.ProductName.Equals("齐套"))
-                    {
-                        var lastlist = (from lastjts in await _dynamicUnitPriceOffers.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && p.carModel.Equals(ds.carModel) && p.ntype == ntype &&
-                                p.ProductName.Equals(ds.ProductName))
-                            join sol in await _solutionQutation.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && p.ntime == last) on lastjts.version equals sol.version
-                            select lastjts).ToList();
-
-
-                        lastsj = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                    }
-                    else if (!string.IsNullOrEmpty(ds.carModel) && ds.ProductName.Equals("齐套"))
-                    {
-                        var lastlist = (from lastjts in await _dynamicUnitPriceOffers.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && p.carModel.Equals(ds.carModel) && p.ntype == ntype &&
-                                p.ProductName.Equals("齐套"))
-                            join sol in await _solutionQutation.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && p.ntime == last) on lastjts.version equals sol.version
-                            select lastjts).ToList();
-
-
-                        lastsj = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                    }
-                    else if (string.IsNullOrEmpty(ds.carModel))
-                    {
-                        var lastlist = (from lastjts in await _dynamicUnitPriceOffers.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && string.IsNullOrEmpty(p.carModel) && p.ntype == ntype &&
-                                p.SolutionId == ds.SolutionId)
-                            join sol in await _solutionQutation.GetAllListAsync(p =>
-                                p.AuditFlowId == AuditFlowId && p.ntime == last) on lastjts.version equals sol.version
-                            select lastjts).ToList();
-
-
-                        lastsj = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                    }
-
-                    if (lastsj is not null)
-                    {
-                        gross.LastRoundPrice = lastsj.OfferUnitPrice;
-                        gross.LastRoundGrossMargin = lastsj.OffeGrossMargin;
-                        gross.LastRoundClientGrossMargin = lastsj.ClientGrossMargin;
-                        gross.LastRoundNreGrossMargin = lastsj.NreGrossMargin;
-                    }
-                }
-
-
                 GrossMargins.Add(gross);
             }
 
@@ -2801,6 +2761,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     AllClientGrossMargin = gross.ClientGrossMargin,
                     AllClientClientGrossMargin = gross.ClientClientGrossMargin,
                     AllClientNreGrossMargin = gross.ClientNreGrossMargin,
+                    LastRoundPrice = gross.LastRoundPrice,
+                    LastRoundGrossMargin = gross.LastRoundGrossMargin,
+                    LastRoundClientGrossMargin = gross.LastRoundClientGrossMargin,
+                    LastRoundNreGrossMargin = gross.LastRoundNreGrossMargin,
                     OfferUnitPrice = gross.ThisQuotationPrice,
                     OffeGrossMargin = gross.ThisQuotationGrossMargin,
                     ClientGrossMargin = gross.ThisQuotationClientGrossMargin,
@@ -2844,33 +2808,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientGrossMargin = jtsl.ClientGrossMargin,
                 ClientClientGrossMargin = jtsl.ClientClientGrossMargin,
                 ClientNreGrossMargin = jtsl.ClientNreGrossMargin,
+                LastRoundPrice = jtsl.LastRoundPrice,
+                LastRoundGrossMargin = jtsl.LastRoundGrossMargin,
+                LastRoundClientGrossMargin = jtsl.LastRoundClientGrossMargin,
+                LastRoundNreGrossMargin = jtsl.LastRoundNreGrossMargin,
                 ThisQuotationPrice = jtsl.OfferUnitPrice,
                 ThisQuotationGrossMargin = jtsl.OfferGrossMargin,
                 ThisQuotationClientGrossMargin = jtsl.OfferClientGrossMargin,
                 ThisQuotationNreGrossMargin = jtsl.OfferNreGrossMargin,
                 Id = jtsl.Id,
             }).ToList();
-        foreach (var gradientGross in gradientQuotedGross)
-        {
-            if (last > 0)
-            {
-                var lastlist = (from lastjts in await _actualUnitPriceOffer.GetAllListAsync(p =>
-                        p.AuditFlowId == AuditFlowId && p.ntype == ntype && p.GradientId == gradientGross.GradientId &&
-                        p.SolutionId.Equals(gradientGross.SolutionId))
-                    join sol in await _solutionQutation.GetAllListAsync(p =>
-                        p.AuditFlowId == AuditFlowId && p.ntime == last) on lastjts.version equals sol.version
-                    select lastjts).ToList();
-                var lastjt = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                if (lastjt is not null)
-                {
-                    gradientGross.LastRoundPrice = lastjt.OfferUnitPrice;
-                    gradientGross.LastRoundGrossMargin = lastjt.OfferGrossMargin;
-                    gradientGross.LastRoundClientGrossMargin = lastjt.OfferClientGrossMargin;
-                    gradientGross.LastRoundNreGrossMargin = lastjt.OfferNreGrossMargin;
-                }
-            }
-        }
-
         return gradientQuotedGross;
     }
 
@@ -2901,6 +2848,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientNreGrossMargin = gradientQuotedGro.ClientNreGrossMargin,
                 OfferUnitPrice = gradientQuotedGro.ThisQuotationPrice,
                 OfferGrossMargin = gradientQuotedGro.ThisQuotationGrossMargin,
+                LastRoundPrice = gradientQuotedGro.LastRoundPrice,
+                LastRoundGrossMargin = gradientQuotedGro.LastRoundGrossMargin,
+                LastRoundClientGrossMargin = gradientQuotedGro.LastRoundClientGrossMargin,
+                LastRoundNreGrossMargin = gradientQuotedGro.LastRoundNreGrossMargin,
                 OfferClientGrossMargin = gradientQuotedGro.ThisQuotationClientGrossMargin,
                 OfferNreGrossMargin = gradientQuotedGro.ThisQuotationNreGrossMargin
             }).ToList();
@@ -2932,6 +2883,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ntype = ntype,
                     InteriorTarget = board.InteriorTarget,
                     ClientTarget = board.ClientTarget,
+                    OldOffer = board.OldOffer,
                     Offer = board.Offer.Value
                 }).ToList();
 
@@ -2970,43 +2922,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     GradientId = p.GradientId,
                     version = version,
                     Id = p.Id,
+                    OldOffer = p.OldOffer,
                     InteriorTarget = p.InteriorTarget,
                     ClientTarget = p.ClientTarget,
                     Offer = p.Offer
                 };
-
-                if (last > 0)
-                {
-                    var lastbord = new ProjectBoardSecondOffers();
-                    if (p.GradientId != 0)
-                    {
-                        var lastlist = (from lastjts in await _resourceProjectBoardSecondOffers.GetAllListAsync(x =>
-                                x.AuditFlowId == AuditFlowId && x.GradientId == p.GradientId &&
-                                x.ProjectName.Equals(p.ProjectName) &&
-                                x.ntype == ntype)
-                            join sol in await _solutionQutation.GetAllListAsync(x =>
-                                x.AuditFlowId == AuditFlowId && x.ntime == last) on lastjts.version equals sol.version
-                            select lastjts).ToList();
-                        lastbord = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                    }
-                    else if (p.GradientId == 0)
-                    {
-                        var lastlist = (from lastjts in await _resourceProjectBoardSecondOffers.GetAllListAsync(x =>
-                                x.AuditFlowId == AuditFlowId && x.GradientId == 0 &&
-                                x.ProjectName.Equals(p.ProjectName) &&
-                                x.ntype == ntype)
-                            join sol in await _solutionQutation.GetAllListAsync(x =>
-                                x.AuditFlowId == AuditFlowId && x.ntime == last) on lastjts.version equals sol.version
-                            select lastjts).ToList();
-                        lastbord = lastlist.OrderByDescending(p => p.version).FirstOrDefault();
-                    }
-
-                    if (lastbord is not null)
-                    {
-                        projectBoardModel.OldOffer = lastbord.Offer;
-                    }
-                }
-
                 ps.Add(projectBoardModel);
             }
 
@@ -3137,37 +3057,41 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<SampleExcel> list = new();
         foreach (var solutionQuotation in solutionQuotations)
         {
-            list.Add(new SampleExcel()
-                {
-                    SolutionName = "方案名",
-                    Name = "样品阶段",
-                    Pcs = "需求量(pcs)",
-                    Cost = "成本",
-                    UnitPrice = "单价",
-                    GrossMargin = "毛利率",
-                    SalesRevenue = "销售收入"
-                })
-                ;
-            SampleExcel dto = new();
-            dto.SolutionName = solutionQuotation.ModuleName;
-
             List<SampleQuotation> sampleQuotations = _sampleQuotation.GetAll()
                 .Where(p => p.AuditFlowId == AuditFlowId && p.SolutionId == solutionQuotation.Id &&
                             p.version == version && p.ntype == ntype)
                 .ToList();
-            var samples = (from sampleQuotation in sampleQuotations
-                select new SampleExcel()
-                {
-                    SolutionName = solutionQuotation.SolutionName,
-                    Name = sampleQuotation.Name,
-                    Pcs = sampleQuotation.Pcs.ToString(),
-                    Cost = sampleQuotation.Cost.ToString(),
-                    UnitPrice = sampleQuotation.UnitPrice.ToString(),
-                    GrossMargin = sampleQuotation.GrossMargin.ToString() + '%',
-                    SalesRevenue = sampleQuotation.SalesRevenue.ToString()
-                }).ToList();
+            if (sampleQuotations is not null && sampleQuotations.Count > 0)
+            {
+                list.Add(new SampleExcel()
+                    {
+                        SolutionName = "方案名",
+                        Name = "样品阶段",
+                        Pcs = "需求量(pcs)",
+                        Cost = "成本",
+                        UnitPrice = "单价",
+                        GrossMargin = "毛利率",
+                        SalesRevenue = "销售收入"
+                    })
+                    ;
+                SampleExcel dto = new();
+                dto.SolutionName = solutionQuotation.Product;
 
-            list.AddRange(samples);
+
+                var samples = (from sampleQuotation in sampleQuotations
+                    select new SampleExcel()
+                    {
+                        SolutionName = solutionQuotation.Product,
+                        Name = sampleQuotation.Name,
+                        Pcs = sampleQuotation.Pcs.ToString(),
+                        Cost = sampleQuotation.Cost.ToString(),
+                        UnitPrice = sampleQuotation.UnitPrice.ToString(),
+                        GrossMargin = sampleQuotation.GrossMargin.ToString() + '%',
+                        SalesRevenue = sampleQuotation.SalesRevenue.ToString()
+                    }).ToList();
+
+                list.AddRange(samples);
+            }
         }
 
         return list;
@@ -3185,7 +3109,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         foreach (var solutionQuotation in solutionQuotations)
         {
             OnlySampleDto dto = new();
-            dto.SolutionName = solutionQuotation.ModuleName;
+            dto.SolutionName = solutionQuotation.Product;
             dto.AuditFlowId = AuditFlowId;
             List<SampleQuotation> sampleQuotations = await _sampleQuotation.GetAllListAsync(p =>
                     p.AuditFlowId == AuditFlowId && p.SolutionId == solutionQuotation.Id &&
@@ -3211,11 +3135,21 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             AuditFlowId = processId,
             SolutionListJson = JsonConvert.SerializeObject(solutions),
             ntime = time,
+            status = 0,
             IsFirst = isfirst,
             version = version
         };
         _solutionQutation.InsertAsync(solutionQuotation);
     }
+
+    public async Task updateSolution(int version, long processId, int status)
+    {
+        var sol = await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
+
+        sol.status = status;
+        await _solutionQutation.UpdateAsync(sol);
+    }
+
 
     /// <summary>
     /// NRE 保存  接口
@@ -3894,10 +3828,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
             list.Add(new NreExcel()
             {
-                PricingMoney = "以上之和：",
-                OfferCoefficient = nres.Sum(p => p.OfferCoefficient).ToString(),
-                OfferMoney = "以上之和：",
-                Remark = nres.Sum(p => p.OfferMoney).ToString()
+                PricingMoney = nres.Sum(p => p.PricingMoney).ToString(),
+                OfferCoefficient = "",
+                OfferMoney = nres.Sum(p => p.OfferMoney).ToString(),
+                Remark = ""
             });
             list.Add(new NreExcel()
             {
@@ -3951,10 +3885,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         list.Add(new NreExcel()
         {
-            PricingMoney = "以上之和：",
-            OfferCoefficient = hzre.Sum(p => p.OfferCoefficient).ToString(),
-            OfferMoney = "以上之和：",
-            Remark = hzre.Sum(p => p.OfferMoney).ToString()
+            PricingMoney = hzre.Sum(p => p.PricingMoney).ToString(),
+            OfferCoefficient = "",
+            OfferMoney = hzre.Sum(p => p.OfferMoney).ToString(),
+            Remark = ""
         });
 
 
@@ -4322,22 +4256,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<bool> getQuotation(long auditFlowId, int version)
     {
-        var samplecount =
-            await _sampleQuotation.CountAsync(p =>
-                p.AuditFlowId == auditFlowId && p.version == version && p.ntype == 1);
-        if (samplecount > 0)
+        var solutionQuotation = await _solutionQutation.FirstOrDefaultAsync(p =>
+            p.AuditFlowId == auditFlowId && p.version == version);
+
+        var status = solutionQuotation.status;
+        if (status == 1)
         {
             return true;
         }
-
-        var nrecount =
-            await _actualUnitPriceOffer.CountAsync(p =>
-                p.AuditFlowId == auditFlowId && p.version == version && p.ntype == 1);
-        if (nrecount > 0)
-        {
-            return true;
-        }
-
 
         return false;
     }
@@ -5182,6 +5108,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         await _financeAuditQuotationList.HardDeleteAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 1);
+        if (spc is null || spc.Count == 0)
+        {
+            return;
+        }
+
         string content = JsonConvert.SerializeObject(spc);
         await _financeAuditQuotationList.InsertOrUpdateAsync(new AuditQuotationList()
         {
@@ -5198,10 +5129,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var version = quotationListSecondDto.version;
         var isQuotation = await getQuotation(auditFlowId, version);
         int type = isQuotation ? 1 : 0;
-        var excel = await getAppExcel(auditFlowId, version, type);
         var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 0);
-        var ntype = dowm.Max(p => p.ntype);
+        int ntype = 0;
+        if (dowm is not null && dowm.Count>0)
+        {
+            ntype = dowm.Max(p => p.ntype);
+        }
+       
         string content = JsonConvert.SerializeObject(quotationListSecondDto);
 
         _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
@@ -5376,7 +5311,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
 
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5387,7 +5322,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ExperimentalFees = a.sy,
                     RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos.Select(p =>
+            externalQuotationDto.NreQuotationListDtos?.Select(p =>
             {
                 NreQuotationList nreQuotationList = nreQuotationLists
                     .FirstOrDefault(m =>
@@ -5417,7 +5352,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     ? 1
                     : externalQuotations.Max(p => p.NumberOfQuotations) + 1
             };
-            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+            externalQuotationDto.ProductQuotationListDtos = productDtos?.Select((a, index) =>
                 new ProductQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5426,7 +5361,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     TravelVolume = a.Motion,
                     UnitPrice = decimal.Parse(a.UntilPrice)
                 }).ToList();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos.Select((a, index) =>
+            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
                 new NreQuotationListDto()
                 {
                     SerialNumber = index + 1,
@@ -5454,6 +5389,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             externalQuotationDto.Address = "浙江省余姚市阳明街道丰乐路67-69号";
         }
 
+        if (externalQuotationDto.NreQuotationListDtos is null) externalQuotationDto.NreQuotationListDtos = new();
+        if (externalQuotationDto.ProductQuotationListDtos is null)
+            externalQuotationDto.ProductQuotationListDtos = new();
         return externalQuotationDto;
     }
 
@@ -5530,12 +5468,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
         ExternalQuotationDto external =
             await GetExternalQuotation(auditFlowId, solutionId, numberOfQuotations);
-        external.ProductQuotationListDtos = external.ProductQuotationListDtos.Select((p, index) =>
+        external.ProductQuotationListDtos = external.ProductQuotationListDtos?.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
             return p;
         }).ToList();
-        external.NreQuotationListDtos = external.NreQuotationListDtos.Select((p, index) =>
+        external.NreQuotationListDtos = external.NreQuotationListDtos?.Select((p, index) =>
         {
             p.SerialNumber = index + 1;
             return p;
@@ -5664,8 +5602,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             return null;
         }
-        
-        
+
+
         Dictionary<long, List<SoltionGradPrice>> gsmap = gsp.GroupBy(p => p.Gradientid)
             .ToDictionary(x => x.Key, x => x.Select(e => e).ToList());
 
@@ -6119,6 +6057,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
             versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+            auditFlowId = auditFlowId,
             directCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             terminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
             offerForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))
@@ -6487,6 +6426,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
             versions = priceEvaluationStartInputResult.QuoteVersion, //版本
+            auditFlowId = auditFlowId,
             directCustomerName = priceEvaluationStartInputResult.CustomerName, //直接客户名称
             terminalCustomerName = priceEvaluationStartInputResult.TerminalName, //终端客户名称
             offerForm = (string.IsNullOrEmpty(priceEvaluationStartInputResult.PriceEvalType))

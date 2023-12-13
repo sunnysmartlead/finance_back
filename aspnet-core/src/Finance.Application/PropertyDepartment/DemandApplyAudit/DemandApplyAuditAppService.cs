@@ -143,7 +143,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="QuoteAuditFlowId"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        internal async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId, long QuoteAuditFlowId)
+        public async Task<List<SolutionIdAndQuoteSolutionId>> FastAuditEntering(long AuditFlowId, long QuoteAuditFlowId)
         {
             List<SolutionIdAndQuoteSolutionId> solutionIdAndQuoteSolutionIds = new();
             AuditEntering auditEntering = await AuditExport(QuoteAuditFlowId);
@@ -216,6 +216,16 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     #region 方案表
                     // 营销部审核 方案表
                     List<Solution> schemeTables = ObjectMapper.Map<List<Solution>>(auditEntering.SolutionTableList);
+                    //判断方案名称是否有重复的            
+                    bool ProducteCount = schemeTables.GroupBy(p => p.Product).Count() > 1;                    
+                    HashSet<string> idSet = new HashSet<string>();                   
+                    foreach (Solution person in schemeTables)
+                    {
+                        if (!idSet.Add(person.Product))
+                        {
+                            throw new FriendlyException("产品名称不能相同");
+                        }
+                    }                 
                     schemeTables.Select(p => { p.AuditFlowId = auditEntering.AuditFlowId; return p; }).ToList();
                     schemeTables = await _resourceSchemeTable.BulkInsertOrUpdateAsync(schemeTables);
                     ////现在数据库里有的数据项
@@ -265,6 +275,10 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     {
                         var kanBan = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价看板");
                         kanBan.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+                        var shenPi = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价审批录入");
+                        shenPi.NodeInstanceStatus = NodeInstanceStatus.Passed;
+
                     }
                     else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                     {
