@@ -640,7 +640,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// 共用物料库模版下载
         /// </summary>
         /// <returns></returns>
-        public IActionResult ExportSharedMaterialWarehouse(string FileName = "共用物料库模版")
+        [HttpGet]
+        public IActionResult ExportSharedMaterialWarehouseDownload(string FileName = "共用物料库模版")
         {
             try
             {
