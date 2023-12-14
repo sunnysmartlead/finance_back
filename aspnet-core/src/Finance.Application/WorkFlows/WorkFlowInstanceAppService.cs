@@ -1011,6 +1011,40 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 根据流程Id 获取流程历史
+        /// </summary>
+        /// <param name="workflowInstanceId"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<InstanceHistoryListDto>> GetInstanceHistoryById(long workflowInstanceId)
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       join f in _financeDictionaryDetailRepository.GetAll() on h.FinanceDictionaryDetailId equals f.Id
+                       where h.WorkFlowInstanceId == workflowInstanceId
+                       orderby h.Id descending
+                       select new InstanceHistoryListDto
+                       {
+                           UserName = u.Name,
+                           NodeName = n.Name,
+                           DisplayName = f.DisplayName,
+                           Comment = h.Comment,
+
+                           Id = h.Id,
+                           CreationTime = h.CreationTime,
+                           CreatorUserId = h.CreatorUserId,
+                           DeleterUserId = h.DeleterUserId,
+                           DeletionTime = h.DeletionTime,
+                           IsDeleted = h.IsDeleted,
+                           LastModificationTime = h.LastModificationTime,
+                           LastModifierUserId = h.LastModifierUserId,
+                       };
+            var count = await data.CountAsync();
+            var result = await data.ToListAsync();
+            return new PagedResultDto<InstanceHistoryListDto>(count, result);
+        }
+
+        /// <summary>
         /// 获取当前用户的已办
         /// </summary>
         /// <returns></returns>
