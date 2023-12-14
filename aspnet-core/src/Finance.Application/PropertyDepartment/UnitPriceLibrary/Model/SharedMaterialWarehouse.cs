@@ -33,6 +33,11 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary.Model
         [ExcelColumnName("产品名称")]
         public string ProductName { get; set; }
         /// <summary>
+        /// 方案名称
+        /// </summary>
+        [ExcelColumnName("方案名称")]
+        public string SolutionName { get; set; }
+        /// <summary>
         /// 物料编码
         /// </summary>
         [ExcelColumnName("物料编码")]
