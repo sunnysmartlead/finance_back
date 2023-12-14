@@ -139,6 +139,7 @@ namespace Finance.BaseLibrary
 
                 var queryItem = this._logisticscostRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == entity.Id && t.Classification == item).ToList();
                 var dtosItem = ObjectMapper.Map<List<Logisticscost>, List<LogisticscostDto>>(queryItem, new List<LogisticscostDto>());
+               
                 foreach (var dtosItem1 in dtosItem)
                 {
                    
@@ -182,6 +183,10 @@ namespace Finance.BaseLibrary
 
                 logisticscostResponse.LogisticscostList = dtosItem;
                 logisticscostResponse.Classification = item;
+                if (dtosItem.Count>0)
+                {
+                    logisticscostResponse.UpDown = (int)(dtosItem[0].Moon);
+                }
                 logisticscostResponseList.Add(logisticscostResponse);
             }
 
@@ -244,6 +249,10 @@ namespace Finance.BaseLibrary
                         logisticscostDtos.Add(logisticscostDto);
                     }
                     logisticscostResponse.LogisticscostList = logisticscostDtos;
+                    if (logisticscostDtos.Count > 0)
+                    {
+                        logisticscostResponse.UpDown = (int)(logisticscostDtos[0].Moon);
+                    }
                     logisticscostResponseList.Add(logisticscostResponse);
                     }
 

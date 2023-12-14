@@ -1863,7 +1863,7 @@ namespace Finance.Processes
             }
 
 
-            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
+            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).OrderByDescending(i => i.Id).Select(p => p.DeviceName).Distinct()  select a).ToList();
 
             List<string> listDeviceItem = new List<string>();
             int indexDevice = 0;
