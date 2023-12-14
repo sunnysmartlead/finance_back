@@ -190,12 +190,15 @@ namespace Finance.PriceEval
 
         #endregion
 
-        public string GetIp() 
-        
+        public string GetIp()
+
         {
             SendEmail email = new SendEmail();
             string loginIp = email.GetLoginAddr();
-            return loginIp;
+
+            var result = loginIp.Equals(FinanceConsts.ShangHaiServerIP);
+
+            return loginIp + result;
 
         }
 
