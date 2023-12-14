@@ -793,31 +793,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException(ex.Message);
         }
     }
-
-    /*///// <summary>
-    ///  审核的保存
-    /// </summary>
-    /// <param name="quotationListDto"></param>
-    /// <returns></returns>
-    public async Task PostIsOfferSave(IsOfferSecondDto analyseBoardSecondDto)
-    {
-        AuditQuotationList auditQuotationList =
-            await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
-                p.AuditFlowId.Equals(analyseBoardSecondDto.AuditFlowId));
-        if (auditQuotationList is not null)
-        {
-            auditQuotationList.AuditQuotationListJson = JsonConvert.SerializeObject(analyseBoardSecondDto);
-            await _financeAuditQuotationList.UpdateAsync(auditQuotationList);
-        }
-        else
-        {
-            await _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
-            {
-                AuditFlowId = analyseBoardSecondDto.AuditFlowId,
-                AuditQuotationListJson = JsonConvert.SerializeObject(analyseBoardSecondDto),
-            });
-        }
-    }*/
+    
 
     /// <summary>
     /// 报价分析看板 删除 只有报价分析看板仅保存的情况下才能删除
@@ -845,7 +821,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         isOfferDto.IsFirst = true;
         
-        await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, 0);
+        await _analysisBoardSecondMethod.deleteNoSolution(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         var result =
             await _analysisBoardSecondMethod.getSameSolution(isOfferDto.AuditFlowId, isOfferDto.Solutions,
                 isOfferDto.version,  isOfferDto.ntime);
@@ -869,7 +845,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
         
 
-            await _analysisBoardSecondMethod.delete(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
+            await _analysisBoardSecondMethod.deleteNoSolution(isOfferDto.AuditFlowId, isOfferDto.version, isOfferDto.ntype);
 
             isOfferDto.IsFirst = false;
             var result =
