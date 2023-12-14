@@ -888,14 +888,14 @@ namespace Finance.WorkFlows
                        join pe in _priceEvaluationRepository.GetAll() on h.WorkFlowInstanceId equals pe.AuditFlowId into pe1
                        from p in pe1.DefaultIfEmpty()
 
-                       where (p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
+                       where ((p != null && p.ProjectManager == AbpSession.UserId) || (h.CreatorUserId == AbpSession.UserId)
 
 
                        || n.Name == "贸易合规" || n.Name == "查看每个方案初版BOM成本" || n.Name == "项目部长查看核价表"
                         || n.Name == "总经理查看中标金额" || n.Name == "核心器件成本NRE费用拆分" || n.Name == "开始"
                         || n.Name == "生成报价分析界面选择报价方案"
 
-                        || n.Name == "归档"
+                        || n.Name == "归档") && (!h.FinanceDictionaryDetailId.Contains("Save"))
 
                        //|| n.Name == "报价单" || n.Name == "报价审批表" ||n.Name == "报价反馈" || n.Name == "选择是否报价"
                        //|| n.Name == "审批报价策略与核价表" 
@@ -928,6 +928,7 @@ namespace Finance.WorkFlows
                        join w in _workflowInstanceRepository.GetAll() on h.WorkFlowInstanceId equals w.Id
                        join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
                        join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       where !h.FinanceDictionaryDetailId.Contains("Save")
                        select new UserTask
                        {
                            Id = h.NodeInstanceId,
@@ -1007,6 +1008,40 @@ namespace Finance.WorkFlows
             var count = await data.CountAsync();
             var result = await data.ToListAsync();
             return new PagedResultDto<UserTask>(count, result);
+        }
+
+        /// <summary>
+        /// 根据流程Id 获取流程历史
+        /// </summary>
+        /// <param name="workflowInstanceId"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<InstanceHistoryListDto>> GetInstanceHistoryById(long workflowInstanceId)
+        {
+            var data = from h in _instanceHistoryRepository.GetAll()
+                       join n in _nodeInstanceRepository.GetAll() on h.NodeInstanceId equals n.Id
+                       join u in _userManager.Users on h.CreatorUserId equals u.Id
+                       join f in _financeDictionaryDetailRepository.GetAll() on h.FinanceDictionaryDetailId equals f.Id
+                       where h.WorkFlowInstanceId == workflowInstanceId
+                       orderby h.Id descending
+                       select new InstanceHistoryListDto
+                       {
+                           UserName = u.Name,
+                           NodeName = n.Name,
+                           DisplayName = f.DisplayName,
+                           Comment = h.Comment,
+
+                           Id = h.Id,
+                           CreationTime = h.CreationTime,
+                           CreatorUserId = h.CreatorUserId,
+                           DeleterUserId = h.DeleterUserId,
+                           DeletionTime = h.DeletionTime,
+                           IsDeleted = h.IsDeleted,
+                           LastModificationTime = h.LastModificationTime,
+                           LastModifierUserId = h.LastModifierUserId,
+                       };
+            var count = await data.CountAsync();
+            var result = await data.ToListAsync();
+            return new PagedResultDto<InstanceHistoryListDto>(count, result);
         }
 
         /// <summary>

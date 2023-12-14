@@ -34,6 +34,14 @@ namespace Finance.FinanceMaintain
         /// </summary>       
         public decimal AssemblyQuantity { get; set; }
         /// <summary>
+        /// 产品名称
+        /// </summary>
+        public string ProductName { get; set; }
+        /// <summary>
+        /// 方案名称
+        /// </summary>      
+        public string SolutionName { get; set; }
+        /// <summary>
         /// 模组走量(存JSON) 实体类为YearOrValueModeCanNull
         /// </summary>
         public string ModuleThroughputs { get; set; }

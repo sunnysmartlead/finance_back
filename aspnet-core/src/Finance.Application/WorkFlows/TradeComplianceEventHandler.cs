@@ -355,16 +355,19 @@ namespace Finance.WorkFlows
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
                             wf.WorkflowState = WorkflowState.Ended;
 
+                            SendEmail email = new SendEmail();
+                            string loginIp = email.GetLoginAddr();
+
 
                             //发邮件给拥有这个流程的项目经理
-                            if (false)
+                            if (loginIp.Equals(FinanceConsts.ShangHaiServerIP))
                             {
-                             await   _backgroundJobManager.EnqueueAsync<SendEndEmailJob, NodeInstance>(eventData.Entity);
+                                await _backgroundJobManager.EnqueueAsync<SendEndEmailJob, NodeInstance>(eventData.Entity);
                                 #region 邮件发送
 
-                        //        //#if !DEBUG
-                        //        SendEmail email = new SendEmail();
-                        //        string loginIp = email.GetLoginAddr();
+                                //#if !DEBUG
+                                //SendEmail email = new SendEmail();
+                                //string loginIp = email.GetLoginAddr();
                         //        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
 
@@ -412,15 +415,17 @@ namespace Finance.WorkFlows
                         }
                         else
                         {
+                            SendEmail email = new SendEmail();
+                            string loginIp = email.GetLoginAddr();
 
-                            if (false)
+                            if (loginIp.Equals(FinanceConsts.ShangHaiServerIP))
                             {
                                 await _backgroundJobManager.EnqueueAsync<SendEmailJob, NodeInstance>(eventData.Entity);
 
                                 #region 邮件发送
 
-                                //                                SendEmail email = new SendEmail();
-                                //                                string loginIp = email.GetLoginAddr();
+                                //SendEmail email = new SendEmail();
+                                //string loginIp = email.GetLoginAddr();
 
 
 

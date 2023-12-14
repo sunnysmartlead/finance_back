@@ -5286,53 +5286,56 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 await _externalQuotationMx.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             List<NreQuotationList> nreQuotationLists =
                 await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
-
-
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
+            #region 不去数据库中取值,而是取报价看板返回的值
+            //externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
+            //externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
+            //    new ProductQuotationListDto()
+            //    {
+            //        SerialNumber = index + 1,
+            //        ProductName = a.ProductName,
+            //        Year = a.Year,
+            //        TravelVolume = a.Motion,
+            //        UnitPrice = decimal.Parse(a.UntilPrice)
+            //    }).ToList();
+
+            //externalQuotationDto.ProductQuotationListDtos.Select(p =>
+            //{
+            //    ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
+            //        .FirstOrDefault(m =>
+            //            m.ProductName == p.ProductName && m.Year == p.Year && m.TravelVolume == p.TravelVolume &&
+            //            m.UnitPrice == p.UnitPrice);
+            //    if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
+            //    return p;
+            //}).ToList();
+            //externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
+            //externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
+            //    new NreQuotationListDto()
+            //    {
+            //        SerialNumber = index + 1,
+            //        ProductName = a.Product,
+            //        HandmadePartsFee = a.shouban,
+            //        MyPropMoldCosterty = a.moju,
+            //        CostOfToolingAndFixtures = a.gzyj,
+            //        ExperimentalFees = a.sy,
+            //        RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
+            //    }).ToList();
+            //externalQuotationDto.NreQuotationListDtos?.Select(p =>
+            //{
+            //    NreQuotationList nreQuotationList = nreQuotationLists
+            //        .FirstOrDefault(m =>
+            //            m.ProductName == p.ProductName && m.HandmadePartsFee == p.HandmadePartsFee &&
+            //            m.MyPropMoldCosterty == p.MyPropMoldCosterty &&
+            //            m.CostOfToolingAndFixtures == p.CostOfToolingAndFixtures &&
+            //            m.ExperimentalFees == p.ExperimentalFees && m.RDExpenses == p.RDExpenses);
+            //    if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
+            //    return p;
+            //}).ToList();
+            #endregion
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
-                new ProductQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.ProductName,
-                    Year = a.Year,
-                    TravelVolume = a.Motion,
-                    UnitPrice = decimal.Parse(a.UntilPrice)
-                }).ToList();
-
-            externalQuotationDto.ProductQuotationListDtos.Select(p =>
-            {
-                ProductExternalQuotationMx productExternalQuotationMx = externalQuotationMxs
-                    .FirstOrDefault(m =>
-                        m.ProductName == p.ProductName && m.Year == p.Year && m.TravelVolume == p.TravelVolume &&
-                        m.UnitPrice == p.UnitPrice);
-                if (productExternalQuotationMx is not null) p.Remark = productExternalQuotationMx.Remark;
-                return p;
-            }).ToList();
-
+            externalQuotationDto.ProductQuotationListDtos = ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);          
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = quotationNreDtos?.Select((a, index) =>
-                new NreQuotationListDto()
-                {
-                    SerialNumber = index + 1,
-                    ProductName = a.Product,
-                    HandmadePartsFee = a.shouban,
-                    MyPropMoldCosterty = a.moju,
-                    CostOfToolingAndFixtures = a.gzyj,
-                    ExperimentalFees = a.sy,
-                    RDExpenses = a.qt + a.cl + a.csrj + a.jianju + a.scsb,
-                }).ToList();
-            externalQuotationDto.NreQuotationListDtos?.Select(p =>
-            {
-                NreQuotationList nreQuotationList = nreQuotationLists
-                    .FirstOrDefault(m =>
-                        m.ProductName == p.ProductName && m.HandmadePartsFee == p.HandmadePartsFee &&
-                        m.MyPropMoldCosterty == p.MyPropMoldCosterty &&
-                        m.CostOfToolingAndFixtures == p.CostOfToolingAndFixtures &&
-                        m.ExperimentalFees == p.ExperimentalFees && m.RDExpenses == p.RDExpenses);
-                if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
-                return p;
-            }).ToList();
+            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);         
         }
         else
         {
