@@ -1,8 +1,10 @@
-﻿using Abp.Dependency;
+﻿using Abp.BackgroundJobs;
+using Abp.Dependency;
 using Abp.Domain.Uow;
 using Abp.Events.Bus.Entities;
 using Abp.Events.Bus.Handlers;
 using Finance.Entering;
+using Finance.Job;
 using Finance.NerPricing;
 
 namespace Finance.WorkFlows
@@ -15,13 +17,17 @@ namespace Finance.WorkFlows
         private readonly ResourceEnteringAppService _resourceEnteringAppService;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly NrePricingAppService _nrePricingAppService;
+        private readonly IBackgroundJobManager _backgroundJobManager;
 
-        public LineEventHandler(ResourceEnteringAppService resourceEnteringAppService, IUnitOfWorkManager unitOfWorkManager, NrePricingAppService nrePricingAppService)
+        public LineEventHandler(ResourceEnteringAppService resourceEnteringAppService, IUnitOfWorkManager unitOfWorkManager, NrePricingAppService nrePricingAppService, IBackgroundJobManager backgroundJobManager)
         {
             _resourceEnteringAppService = resourceEnteringAppService;
             _unitOfWorkManager = unitOfWorkManager;
             _nrePricingAppService = nrePricingAppService;
+            _backgroundJobManager = backgroundJobManager;
         }
+
+
 
         /// <summary>
         /// 贸易合规等节点被激活时触发
@@ -57,6 +63,12 @@ namespace Finance.WorkFlows
                         )
                     {
                         await _nrePricingAppService.GetResourcesManagementConfigurationState(eventData.Entity.WorkFlowInstanceId);
+                    }
+
+                    //中标后录入基础库
+                    if (eventData.Entity.NodeId == "主流程_确认中标金额" && eventData.Entity.FinanceDictionaryDetailId == FinanceConsts.YesOrNo_Yes)
+                    {
+                        await _backgroundJobManager.EnqueueAsync<PublicMateriaJob, long>(eventData.Entity.WorkFlowInstanceId);
                     }
                 }
                 uow.Complete();
