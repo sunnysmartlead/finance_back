@@ -479,31 +479,73 @@ namespace Finance.ProductDevelopment
                         bomInfo.SolutionId = dto.SolutionId;
                     });
 
-
+                foreach (var item in boardDtos)
+                {
+                    BoardInfo boardInfo;
                     var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                    if (boardInfoByProductIds.Count == 0)
+                    if (boardInfoByProductIds.Count > 0)
                     {
-                        foreach (var item in boardDtos)
+                        await _boardInfoRepository.HardDeleteAsync(p=>p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId));
+                        boardInfo = new()
                         {
-                        BoardInfo boardInfo = new()
-                            {
-                                AuditFlowId = item.AuditFlowId,
-                                SolutionId = item.SolutionId,
-                                ProductId = item.ProductId,
-                                BoardId = item.BoardId,
-                                BoardName = item.BoardName,
-                                BoardLenth = item.BoardLenth,
-                                BoardWidth = item.BoardWidth,
-                                BoardSquare = item.BoardSquare,
-                                StoneQuantity = item.StoneQuantity,
-                            };
-                            await _boardInfoRepository.InsertAsync(boardInfo);
-                        }
+                            AuditFlowId = item.AuditFlowId,
+                            SolutionId = item.SolutionId,
+                            ProductId = item.ProductId,
+                            BoardId = item.BoardId,
+                            BoardName = item.BoardName,
+                            BoardLenth = item.BoardLenth,
+                            BoardWidth = item.BoardWidth,
+                            BoardSquare = item.BoardSquare,
+                            StoneQuantity = item.StoneQuantity,
+                        };
+                        await _boardInfoRepository.InsertAsync(boardInfo);
                     }
+                    else
+                    {
+                        boardInfo = new()
+                        {
+                            AuditFlowId = item.AuditFlowId,
+                            SolutionId = item.SolutionId,
+                            ProductId = item.ProductId,
+                            BoardId = item.BoardId,
+                            BoardName = item.BoardName,
+                            BoardLenth = item.BoardLenth,
+                            BoardWidth = item.BoardWidth,
+                            BoardSquare = item.BoardSquare,
+                            StoneQuantity = item.StoneQuantity,
+                        };
+                        await _boardInfoRepository.InsertAsync(boardInfo);
+                    }
+            
+                }
 
-                    #region 录入完成之后
-                    //为提交操作才执行插库、流转工作流操作
-                    if (dto.Opinion == FinanceConsts.Done)
+                //    var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                //BoardInfo boardInfo;
+                //if (boardInfoByProductIds.Count == 0)
+                //{
+                //    foreach (var item in boardDtos)
+                //    {
+                //        boardInfo = new()
+                //        {
+                //            AuditFlowId = item.AuditFlowId,
+                //            SolutionId = item.SolutionId,
+                //            ProductId = item.ProductId,
+                //            BoardId = item.BoardId,
+                //            BoardName = item.BoardName,
+                //            BoardLenth = item.BoardLenth,
+                //            BoardWidth = item.BoardWidth,
+                //            BoardSquare = item.BoardSquare,
+                //            StoneQuantity = item.StoneQuantity,
+                //        };
+                //        await _boardInfoRepository.InsertAsync(boardInfo);
+                //    }
+                //}
+
+
+
+                #region 录入完成之后
+                //为提交操作才执行插库、流转工作流操作
+                if (dto.Opinion == FinanceConsts.Done)
                     {
                         await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
 
