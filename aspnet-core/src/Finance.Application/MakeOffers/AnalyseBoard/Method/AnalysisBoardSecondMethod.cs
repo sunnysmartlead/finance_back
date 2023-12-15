@@ -2572,6 +2572,28 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         await _dynamicUnitPriceOffers.DeleteAsync(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
+    
+    
+    public async Task deleteNoSolution(long AuditFlowId, int version, int ntype)
+    {
+        //应陈梦瑶要求，不删除方案
+        await _nreQuotation.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _deviceQuotation.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _sampleQuotation.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _resourceUnitPriceOffers.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _resourcePooledAnalysisOffers.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _resourceProjectBoardSecondOffers.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _actualUnitPriceOffer.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+        await _dynamicUnitPriceOffers.DeleteAsync(p =>
+            p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
+    }
 
     public async Task<bool> getSameSolution(long AuditFlowId, List<Solution> solutions, int version, int ntime)
     {
@@ -3130,16 +3152,23 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task InsertSolution(List<Solution> solutions, int version, int time, long processId, bool isfirst)
     {
+       var sol= await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
+       long id = 0;
+       if (sol is not null)
+       {
+           id = sol.Id;
+       }
         SolutionQuotation solutionQuotation = new()
         {
             AuditFlowId = processId,
             SolutionListJson = JsonConvert.SerializeObject(solutions),
             ntime = time,
             status = 0,
+            Id=id,
             IsFirst = isfirst,
             version = version
         };
-        _solutionQutation.InsertAsync(solutionQuotation);
+        _solutionQutation.InsertOrUpdateAsync(solutionQuotation);
     }
 
     public async Task updateSolution(int version, long processId, int status)
@@ -3819,18 +3848,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     solutionName = solution.Product,
                     Index = i + "",
                     CostName = nre.FormName,
-                    PricingMoney = nre.PricingMoney.ToString(),
-                    OfferCoefficient = nre.OfferCoefficient.ToString(),
-                    OfferMoney = nre.OfferMoney.ToString(),
+                    PricingMoney =Math.Round(nre.PricingMoney,2).ToString(),
+                    OfferCoefficient = Math.Round(nre.OfferCoefficient,2).ToString(),
+                    OfferMoney = Math.Round(nre.OfferMoney,2).ToString(),
                     Remark = nre.Remark
                 });
             }
 
             list.Add(new NreExcel()
             {
-                PricingMoney = nres.Sum(p => p.PricingMoney).ToString(),
+                PricingMoney = Math.Round(nres.Sum(p => p.PricingMoney),2).ToString(),
                 OfferCoefficient = "",
-                OfferMoney = nres.Sum(p => p.OfferMoney).ToString(),
+                OfferMoney = Math.Round(nres.Sum(p => p.OfferMoney),2).ToString(),
                 Remark = ""
             });
             list.Add(new NreExcel()
@@ -3848,9 +3877,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 {
                     solutionName = solution.SolutionName,
                     Index = dev.DeviceName,
-                    CostName = dev.DevicePrice.ToString(),
-                    PricingMoney = dev.Number.ToString(),
-                    OfferCoefficient = dev.equipmentMoney.ToString()
+                    CostName =Math.Round( dev.DevicePrice,2).ToString(),
+                    PricingMoney =Math.Round( dev.Number,2).ToString(),
+                    OfferCoefficient = Math.Round(dev.equipmentMoney,2).ToString()
                 });
             }
         }
@@ -3876,18 +3905,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 solutionName = "汇总",
                 Index = i + "",
                 CostName = nre.FormName,
-                PricingMoney = nre.PricingMoney.ToString(),
-                OfferCoefficient = nre.OfferCoefficient.ToString(),
-                OfferMoney = nre.OfferMoney.ToString(),
+                PricingMoney = Math.Round( nre.PricingMoney,2).ToString(),
+                OfferCoefficient =Math.Round(  nre.OfferCoefficient,2).ToString(),
+                OfferMoney =Math.Round(  nre.OfferMoney,2).ToString(),
                 Remark = nre.Remark
             });
         }
 
         list.Add(new NreExcel()
         {
-            PricingMoney = hzre.Sum(p => p.PricingMoney).ToString(),
+            PricingMoney = Math.Round(hzre.Sum(p => p.PricingMoney),2).ToString(),
             OfferCoefficient = "",
-            OfferMoney = hzre.Sum(p => p.OfferMoney).ToString(),
+            OfferMoney = Math.Round(hzre.Sum(p => p.OfferMoney),2).ToString(),
             Remark = ""
         });
 
@@ -3908,9 +3937,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 solutionName = "汇总",
                 Index = dev.DeviceName,
-                CostName = dev.DevicePrice.ToString(),
-                PricingMoney = dev.Number.ToString(),
-                OfferCoefficient = dev.equipmentMoney.ToString()
+                CostName = Math.Round(dev.DevicePrice,2).ToString(),
+                PricingMoney = Math.Round(dev.Number,2).ToString(),
+                OfferCoefficient = Math.Round(dev.equipmentMoney,2).ToString()
             });
         }
 
@@ -4736,8 +4765,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             NREUnitSumModel nreUnitSumModel = new()
             {
                 Product = solution.Product,
-                cost = cost,
-                number = number
+                cost = Math.Round(cost,2),
+                number = Math.Round(number,2)
             };
 
             unitPriceSumModels.Add(unitPriceSumModel);
