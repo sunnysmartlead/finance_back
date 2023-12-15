@@ -298,6 +298,7 @@ namespace Finance.BaseLibrary
             }
             // 查询数据
             var list = query.ToList();
+        
             //数据转换
             var dtos = ObjectMapper.Map<List<FoundationStandardTechnology>, List<FoundationStandardTechnologyDto>>(list, new List<FoundationStandardTechnologyDto>());
             foreach (var item in dtos)
@@ -306,7 +307,13 @@ namespace Finance.BaseLibrary
                 List<ProcessHoursEnterDto> processHoursEnterDtoList = new List<ProcessHoursEnterDto>();
 
                var FoundationReliableProcessHourList = this._foundationFoundationReliableProcessHoursRepository.GetAll().Where(u => u.StandardTechnologyId == item.Id && u.IsDeleted == false).ToList();
-
+                FoundationReliableProcessHourList.Sort((a, b) => {
+                    int aProcessNumber = 0;
+                    int.TryParse(a.ProcessNumber, out aProcessNumber);
+                    int bProcessNumber = 0;
+                    int.TryParse(b.ProcessNumber, out bProcessNumber);
+                    return aProcessNumber.CompareTo(bProcessNumber);
+                });
                 foreach (var foundationReliableProcessHours in FoundationReliableProcessHourList)
                 {
                     ProcessHoursEnterDto foundationReliableProcess = new ProcessHoursEnterDto();
