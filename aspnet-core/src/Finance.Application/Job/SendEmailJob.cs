@@ -2,6 +2,7 @@
 using Abp.BackgroundJobs;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
+using Abp.Domain.Uow;
 using Finance.Audit;
 using Finance.Authorization.Users;
 using Finance.WorkFlows;
@@ -18,40 +19,56 @@ namespace Finance.Job
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+
+        public SendEmailJob(WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IUnitOfWorkManager unitOfWorkManager)
+        {
+            _workflowInstanceAppService = workflowInstanceAppService;
+            _userRepository = userRepository;
+            _noticeEmailInfoRepository = noticeEmailInfoRepository;
+            _unitOfWorkManager = unitOfWorkManager;
+        }
 
         public async override Task ExecuteAsync(NodeInstance nodeInstance)
         {
-            #region 邮件发送
-
-            SendEmail email = new SendEmail();
-            string loginIp = email.GetLoginAddr();
-            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(nodeInstance.WorkFlowInstanceId, nodeInstance.Id);
-            var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-            foreach (var task in allAuditFlowInfos)
+            using (var uow = _unitOfWorkManager.Begin())
             {
-                foreach (var userId in task.TaskUserIds)
+                using (_unitOfWorkManager.Current.SetTenantId(1))
                 {
-                    var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
+                    #region 邮件发送
 
-                    if (userInfo != null)
+                    SendEmail email = new SendEmail();
+                    string loginIp = email.GetLoginAddr();
+                    var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(nodeInstance.WorkFlowInstanceId, nodeInstance.Id);
+                    var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
+
+                    foreach (var task in allAuditFlowInfos)
                     {
-                        string emailAddr = userInfo.EmailAddress;
-                        string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                        string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+                        foreach (var userId in task.TaskUserIds)
+                        {
+                            var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
 
-                        try
-                        {
-                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                        }
-                        catch (Exception)
-                        {
+                            if (userInfo != null)
+                            {
+                                string emailAddr = userInfo.EmailAddress;
+                                string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
+                                string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+
+                                try
+                                {
+                                    await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                }
+                                catch (Exception)
+                                {
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            #endregion
+                    #endregion
+                }
+                uow.Complete();
+            }
         }
     }
 }
