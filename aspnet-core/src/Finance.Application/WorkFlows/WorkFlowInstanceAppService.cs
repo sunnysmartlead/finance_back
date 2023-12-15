@@ -803,73 +803,86 @@ namespace Finance.WorkFlows
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
 
+                
+
                 //查询重置
                 var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
                 foreach (var reset in resets)
                 {
-                    #region 用户权限
-
-                    //获取当前流程方案列表
-                    var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == workflowInstanceId);
-
-                    //获取核价团队
-                    var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
-
-                    //获取项目经理
-                    var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
-
-                    //获取核价需求录入保存项
-                    var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
-
-
-                    //项目经理控制的页面
-                    var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
-
-                    var deleteUserIds = new List<int>();
-
-                    foreach (var userId in item.TaskUserIds)
-                    {
-                        if (
-                            (!solutionList.Any(p => p.ElecEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
-                            || (!solutionList.Any(p => p.StructEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.StructureBOM)
-                || (pricingTeam == null || pricingTeam.EngineerId != userId && item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
-                || (pricingTeam == null || pricingTeam.QualityBenchId != userId && item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
-                || (pricingTeam == null || pricingTeam.EMCId != userId && item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
-                || (pricingTeam == null || pricingTeam.ProductCostInputId != userId && item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
-                || (pricingTeam == null || pricingTeam.ProductManageTimeId != userId && item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
-                || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
-                || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
-                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
-
-                || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
-                || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
-
-                || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
-
-                || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
-
-                || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
-                || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
-                )))
-
-                            )
-                        {
-                            deleteUserIds.Add(userId);
-                        }
-                    }
-
-                    foreach (var deleteUserId in deleteUserIds)
-                    {
-                        item.TaskUserIds.Remove(deleteUserId);
-                    }
-
-                    #endregion
+                    
 
                     item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
                     item.TaskUserIds.Add(reset.TargetUserId.To<int>());
                 }
 
+                #region 用户权限
 
+                //获取当前流程方案列表
+                var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                //获取核价团队
+                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                //获取项目经理
+                var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+                //获取核价需求录入保存项
+                var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+
+
+                //项目经理控制的页面
+                var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+
+                //拥有能看归档的角色的用户
+                var role = await _roleRepository.GetAllListAsync(p =>
+                                p.Name == StaticRoleNames.Host.FinanceTableAdmin
+                                || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                        || p.Name == StaticRoleNames.Host.Bjdgdgly);
+                var endUserIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+
+
+                var deleteUserIds = new List<int>();
+
+                foreach (var userId in item.TaskUserIds)
+                {
+                    if (
+                        (!solutionList.Any(p => p.ElecEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                        || (!solutionList.Any(p => p.StructEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.StructureBOM)
+            || (pricingTeam == null || pricingTeam.EngineerId != userId && item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+            || (pricingTeam == null || pricingTeam.QualityBenchId != userId && item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+            || (pricingTeam == null || pricingTeam.EMCId != userId && item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+            || (pricingTeam == null || pricingTeam.ProductCostInputId != userId && item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+            || (pricingTeam == null || pricingTeam.ProductManageTimeId != userId && item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+            || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
+            || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
+            || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
+
+            || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
+            || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+
+            || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
+
+            || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
+
+            || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
+            || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
+            )))
+
+            || (projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
+            && (!endUserIds.Contains(AbpSession.UserId.Value) && item.ProcessIdentifier == "ArchiveEnd")
+                        )
+                        )
+                    {
+                        deleteUserIds.Add(userId);
+                    }
+                }
+
+                foreach (var deleteUserId in deleteUserIds)
+                {
+                    item.TaskUserIds.Remove(deleteUserId);
+                }
+
+                #endregion
             }
             return data;
         }
