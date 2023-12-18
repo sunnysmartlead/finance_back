@@ -419,7 +419,7 @@ namespace Finance.Audit
                 && (!isFinanceTableAdmin) && (!isEvalTableAdmin) && (!isBjdgdgly)
                 , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
 
-
+                .OrderBy(p=>p.ProcessName.GetTypeNameSort())
                 .ToList();
         }
 
