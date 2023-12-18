@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -811,6 +812,52 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [ExcelIgnore]
         public string ModificationComments { get; set; }
+
+
+        #region 结构料专用
+
+        /// <summary>
+        /// 外形尺寸mm
+        /// </summary>
+        [ExcelIgnore]
+        public string OverallDimensionSize { get; set; }
+        ///// <summary>
+        ///// 材料
+        ///// </summary>
+        //[Column("MATERIALNAME")]
+        //public string MaterialName { get; set; }
+        /// <summary>
+        /// 重量g
+        /// </summary>
+        [ExcelIgnore]
+        public double? WeightNumber { get; set; }
+        /// <summary>
+        /// 成型工艺
+        /// </summary>
+        [ExcelIgnore]
+        public string MoldingProcess { get; set; }
+        /// <summary>
+        /// 是否新开模
+        /// </summary>
+        [ExcelIgnore]
+        public string IsNewMouldProduct { get; set; }
+        /// <summary>
+        /// 二次加工方法
+        /// </summary>
+        [ExcelIgnore]
+        public string SecondaryProcessingMethod { get; set; }
+        /// <summary>
+        /// 表面处理
+        /// </summary>
+        [ExcelIgnore]
+        public string SurfaceTreatmentMethod { get; set; }
+        /// <summary>
+        /// 关键尺寸精度及重要要求
+        /// </summary>
+        [ExcelIgnore]
+        public string DimensionalAccuracyRemark { get; set; }
+
+        #endregion
     }
 
     /// <summary>

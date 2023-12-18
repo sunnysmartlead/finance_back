@@ -1645,6 +1645,16 @@ namespace Finance.PriceEval
                                         StandardMoney = se.StandardMoney,
                                         Remarks = se.Remark,
                                         ModificationComments = se.ModificationComments,
+
+
+                                        //结构料专用
+                                        OverallDimensionSize = sb.OverallDimensionSize,
+                                        WeightNumber = sb.WeightNumber,
+                                        MoldingProcess = sb.MoldingProcess,
+                                        IsNewMouldProduct = sb.IsNewMouldProduct,
+                                        SecondaryProcessingMethod = sb.SecondaryProcessingMethod,
+                                        SurfaceTreatmentMethod = sb.SurfaceTreatmentMethod,
+                                        DimensionalAccuracyRemark = sb.DimensionalAccuracyRemark,
                                     };
                     var structureList = await structure.ToListAsync();
 
