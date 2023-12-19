@@ -16,17 +16,21 @@ using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using Finance.Processes.ProcessHoursEnterDtos;
 using Finance.ProductDevelopment;
+using Finance.ProjectManagement;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.UnitPriceLibrary.Dto;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
+using Interface.Expends;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using MiniExcelLibs;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
+using Newtonsoft.Json;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.POIFS.FileSystem;
 using NPOI.SS.Formula.Functions;
@@ -88,7 +92,9 @@ namespace Finance.Processes
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetailRepository;
         private readonly IRepository<NreIsSubmit, long> _resourceNreIsSubmit;
-
+        protected readonly IRepository<ElectronicBomInfo, long> _electronicBomInfoRepository;
+        protected readonly IRepository<StructureBomInfo, long> _structureBomInfoRepository;
+        private readonly FileCommonService _fileCommonService;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -109,7 +115,9 @@ namespace Finance.Processes
                       IRepository<FoundationHardwareItem, long> foundationHardwareItemRepository,
                       IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository,
                       IRepository<NreIsSubmit, long> resourceNreIsSubmit,
-                      WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository)
+                      WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository, 
+                      IRepository<ElectronicBomInfo, long> electronicBomInfoRepository,
+                      IRepository<StructureBomInfo, long> structureBomInfoRepository, FileCommonService fileCommonService)
         {
             _foundationDeviceRepository = foundationDeviceRepository;
             _foundationProcedureRepository = foundationProcedureRepository;
@@ -139,6 +147,9 @@ namespace Finance.Processes
             _foundationHardwareItemRepository = foundationHardwareItemRepository;
             _userRepository = userRepository;
             _financeDictionaryDetailRepository = financeDictionaryDetailRepository;
+            _electronicBomInfoRepository = electronicBomInfoRepository;
+            _structureBomInfoRepository = structureBomInfoRepository;
+            _fileCommonService = fileCommonService;
         }
 
         /// <summary>
@@ -359,7 +370,14 @@ namespace Finance.Processes
         {
             // 设置查询条件
             var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
-
+            //排序
+            list.Sort((a, b) => {
+                int aProcessNumber = 0;
+                int.TryParse(a.ProcessNumber, out aProcessNumber);
+                int bProcessNumber = 0;
+                int.TryParse(b.ProcessNumber, out bProcessNumber);
+                return aProcessNumber.CompareTo(bProcessNumber);
+            });
             // 查询数据
             //数据转换
 
@@ -1863,7 +1881,7 @@ namespace Finance.Processes
             }
 
 
-            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.DeviceName).Distinct()  select a).ToList();
+            var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).OrderByDescending(i => i.Id).Select(p => p.DeviceName).Distinct()  select a).ToList();
 
             List<string> listDeviceItem = new List<string>();
             int indexDevice = 0;
@@ -3480,6 +3498,73 @@ namespace Finance.Processes
             sheet.AddMergedRegion(region);
         }
 
+
+        /// <summary>
+        /// 电子下载
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async Task<FileResult> GetElectronBom(long auditFlowId, long solutionId)
+        {
+            try
+            {
+                var query = await  _electronicBomInfoRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId && t.SolutionId == solutionId).ToListAsync();
+                if (query.Count() < 1)
+                {
+                    throw new FriendlyException("没有对应文件");
+
+                }
+                long SorFileId = JsonConvert.DeserializeObject<List<long>>(query[0].FileId.ToString()).FirstOrDefault();
+
+                //long SorFileId = long.Parse(priceInfo.SorFile);
+                if (null != SorFileId)
+                {
+                    return await _fileCommonService.DownloadFile(SorFileId);
+                }
+                else
+                {
+                    throw new FriendlyException("文件找不到");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
+
+
+        /// <summary>
+        /// 结构下载
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async Task<FileResult> GetStructureBom(long auditFlowId,long solutionId)
+        {
+            try
+            {
+                var query = _structureBomInfoRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == auditFlowId && t.SolutionId == solutionId).ToList();
+                if (query.Count() < 1)
+                {
+                    throw new FriendlyException("没有对应文件");
+
+                }
+
+                long SorFileId = JsonConvert.DeserializeObject<List<long>>(query[0].FileId.ToString()).FirstOrDefault();
+                //long SorFileId = long.Parse(priceInfo.SorFile);
+                if (null != SorFileId)
+                {
+                    return await _fileCommonService.DownloadFile(SorFileId);
+                }
+                else
+                {
+                    throw new FriendlyException("文件找不到");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+        }
 
 
         /// <summary>
