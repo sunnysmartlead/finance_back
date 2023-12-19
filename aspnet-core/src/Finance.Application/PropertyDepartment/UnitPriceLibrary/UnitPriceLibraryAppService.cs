@@ -475,11 +475,13 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                     {
                         throw new FriendlyException(ex.Message);
                     }
-                    //根据财务要求手动添加 删除/覆盖同子项目代码物料的值      
+                    //根据财务要求手动添加 删除/覆盖同(子项目代码和产品名称和方案名称)物料的值      
                     #region 添加之前删除同子项目代码的数据            
-                    List<string> projectSubcodes = sharedMaterialWarehouses.Select(p => p.ProjectSubcode).Distinct().ToList();
-                    await _sharedMaterialWarehouse.HardDeleteAsync(p => projectSubcodes.Contains(p.ProjectSubcode));
-                    #endregion                 
+                    foreach (SharedMaterialWarehouse item in sharedMaterialWarehouses)
+                    {
+                        await _sharedMaterialWarehouse.HardDeleteAsync(p => p.ProjectSubcode.Equals(item.ProjectSubcode) && p.ProductName.Equals(item.ProductName) && p.SolutionName.Equals(item.SolutionName));
+                    }
+                    #endregion
                     await _sharedMaterialWarehouse.BulkInsertAsync(sharedMaterialWarehouses);
                 }
             }
@@ -505,6 +507,8 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                 {
                     { "项目名称", item.EntryName },
                     { "项目子代码", item.ProjectSubcode },
+                    { "产品名称", item.ProductName },
+                    { "方案名称", item.SolutionName},
                     { "物料编码", item.MaterialCode },
                     { "物料名称", item.MaterialName },
                     { "装配数量", item.AssemblyQuantity }
@@ -612,10 +616,12 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         {
             try
             {
-                //根据财务要求手动添加 覆盖同子项目代码物料的值                
-                #region 添加之前删除同子项目代码的数据           
-                List<string> projectSubcodes = sharedMaterialWarehouseModes.Select(p => p.ProjectSubcode).Distinct().ToList();
-                await _sharedMaterialWarehouse.HardDeleteAsync(p => projectSubcodes.Contains(p.ProjectSubcode));
+                //根据财务要求手动添加 删除/覆盖同(子项目代码和产品名称和方案名称)物料的值      
+                #region 添加之前删除同子项目代码的数据            
+                foreach (SharedMaterialWarehouseMode item in sharedMaterialWarehouseModes)
+                {
+                    await _sharedMaterialWarehouse.HardDeleteAsync(p => p.ProjectSubcode.Equals(item.ProjectSubcode) &&p.ProductName.Equals(item.ProductName)&& p.SolutionName.Equals(item.SolutionName));
+                }                            
                 #endregion
                 List<SharedMaterialWarehouse> sharedMaterialWarehouses = ObjectMapper.Map<List<SharedMaterialWarehouse>>(sharedMaterialWarehouseModes);
                 await _sharedMaterialWarehouse.BulkInsertAsync(sharedMaterialWarehouses);
@@ -628,6 +634,26 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             catch (Exception ex)
             {
                 throw new FriendlyException(ex.Message);
+            }
+        }
+        /// <summary>
+        /// 共用物料库模版下载
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public IActionResult ExportSharedMaterialWarehouseDownload(string FileName = "共用物料库模版")
+        {
+            try
+            {
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\共用库模版.xlsx";
+                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"{FileName}.xlsx"
+                };
+            }
+            catch (Exception e)
+            {
+                throw new UserFriendlyException(e.Message);
             }
         }
         /// <summary>

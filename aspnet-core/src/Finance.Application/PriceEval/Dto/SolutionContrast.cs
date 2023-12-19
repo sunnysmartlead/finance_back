@@ -80,6 +80,12 @@ namespace Finance.PriceEval.Dto
         public virtual decimal? Rate_1 { get; set; }
 
         /// <summary>
+        /// 方案1：MOQ分摊成本
+        /// </summary>
+        [ExcelColumn(Name = "方案1：MOQ分摊成本", Width = FinanceConsts.ExcelColumnWidth)]
+        public virtual decimal? MoqShareCount_1 { get; set; }
+
+        /// <summary>
         /// 方案1：合计
         /// </summary>
         [ExcelColumn(Name = "方案1：合计", Width = FinanceConsts.ExcelColumnWidth)]
@@ -102,6 +108,12 @@ namespace Finance.PriceEval.Dto
         /// </summary>
         [ExcelColumn(Name = "方案2：汇率", Width = FinanceConsts.ExcelColumnWidth)]
         public virtual decimal? Rate_2 { get; set; }
+
+        /// <summary>
+        /// 方案2：MOQ分摊成本
+        /// </summary>
+        [ExcelColumn(Name = "方案2：MOQ分摊成本", Width = FinanceConsts.ExcelColumnWidth)]
+        public virtual decimal? MoqShareCount_2 { get; set; }
 
         /// <summary>
         /// 方案2：合计
