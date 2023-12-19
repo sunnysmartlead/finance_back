@@ -1104,6 +1104,24 @@ namespace Finance.PriceEval
                 throw new FriendlyException("获取NRE核价表时出错！", e.StackTrace);
             }
 
+            #region 快速核报价上传
+
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+            var fuBom = await _fu_BomRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == input.Year && p.UpDown == input.UpDown);
+
+            if ((!fuBom.Any()) && isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
+            if (data.ProductionEquipmentCost is null && isUploadAuditFlow)
+            {
+                throw new FriendlyException("NRE核价表未上传！");
+            }
+
+            #endregion
+
             //var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
             var modelCountYears = await (from g in _gradientRepository.GetAll()
                                          join gm in _gradientModelRepository.GetAll() on g.Id equals gm.GradientId
@@ -1655,6 +1673,7 @@ namespace Finance.PriceEval
                                         SecondaryProcessingMethod = sb.SecondaryProcessingMethod,
                                         SurfaceTreatmentMethod = sb.SurfaceTreatmentMethod,
                                         DimensionalAccuracyRemark = sb.DimensionalAccuracyRemark,
+                                        StructureMaterialName = sb.MaterialName,
                                     };
                     var structureList = await structure.ToListAsync();
 
