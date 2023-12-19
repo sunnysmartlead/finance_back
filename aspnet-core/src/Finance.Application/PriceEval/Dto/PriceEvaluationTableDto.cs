@@ -857,6 +857,12 @@ namespace Finance.PriceEval.Dto
         [ExcelIgnore]
         public string DimensionalAccuracyRemark { get; set; }
 
+        /// <summary>
+        /// 结构材料名称
+        /// </summary>
+        [ExcelIgnore]
+        public string StructureMaterialName { get; set; }
+
         #endregion
     }
 
