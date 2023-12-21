@@ -666,6 +666,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.Remark = structureElectronic.Remark;//备注
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                         
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
+                            construction.EnclosureFileId = structureElectronic.EnclosureFileId;//附件id
                             int countUp = structureBOMIdModify.Where(p => p.Equals(construction.StructureId)).Count();//如果修改了,重置参数
                             if (countUp != 0)
                             {
@@ -823,6 +824,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.SolutionId = item.SolutionId;//方案ID
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                          
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
+                            construction.EnclosureFileId = structureElectronic.EnclosureFileId;//附件id
                             continue;//直接进行下一个循环
                         }
                         else
@@ -1665,6 +1667,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
                         structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                        structureElectronic.EnclosureFileId= item.EnclosureFileId;//附件id
                         await _configStructureElectronic.UpdateAsync(structureElectronic);
                     }
                     //删除结构差异表中的数据  
@@ -1711,6 +1714,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
                         structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                        structureElectronic.EnclosureFileId = item.EnclosureFileId;//附件id
                         await _configStructureElectronic.UpdateAsync(structureElectronic);
                     }
                     //删除结构差异表中的数据  
