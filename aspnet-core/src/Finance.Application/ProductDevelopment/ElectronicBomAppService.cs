@@ -339,15 +339,15 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveElectronicBom(ProductDevelopmentInputDto dto)
         {
-            var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-            if (boardInfoByProductIds.Count == 0) {
-                throw new FriendlyException( "板部件没数据");
-            }
+            //var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+            //if (boardInfoByProductIds.Count == 0) {
+            //    throw new FriendlyException( "板部件没数据");
+            //}
 
                 List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
                 if (productIsSubmits.Count is not 0)
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+                    throw new FriendlyException(dto.SolutionId + ":该零件方案id电子BOM已经提交过了");
                 }
                 else
                 {
@@ -464,7 +464,7 @@ namespace Finance.ProductDevelopment
                 if (productIsSubmits.Count is not 0)
                 {
                     //return;
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+                    throw new FriendlyException(dto.SolutionId + ":该零件方案拼版数据已经提交过了");
                 }
                 else
                 {
