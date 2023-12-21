@@ -1055,6 +1055,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <returns></returns>
     public async Task PostQuotationApproved(ExcelApprovalDto quotationListSecondDto)
     {
+      var auditFlowId=  quotationListSecondDto.auditFlowId;
+        
+        if (auditFlowId ==0)
+        {
+            throw new FriendlyException($"流程编号为空");
+        }
         _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
     }
 
