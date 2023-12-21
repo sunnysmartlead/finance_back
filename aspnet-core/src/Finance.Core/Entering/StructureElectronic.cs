@@ -80,5 +80,9 @@ namespace Finance.Entering
         /// 物料管制状态
         /// </summary>     
         public virtual string MaterialControlStatus { get; set; }
+        /// <summary>
+        /// 附件id
+        /// </summary>
+        public long EnclosureFileId { get; set; }
     }
 }

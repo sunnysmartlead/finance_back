@@ -139,6 +139,10 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// 物料管制状态
         /// </summary> 
         public virtual string MaterialControlStatus { get; set; }
+        /// <summary>
+        /// 附件id
+        /// </summary>
+        public long EnclosureFileId { get; set; }
     }
     /// <summary>
     /// 结构BOM表单复制项 模型
