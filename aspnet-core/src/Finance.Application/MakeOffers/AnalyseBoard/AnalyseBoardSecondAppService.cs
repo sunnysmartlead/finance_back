@@ -1106,29 +1106,21 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    /// 营销部报价保存/修改
+    /// 营销部报价保存
     /// </summary>
     /// <param name="auditFlowId">必输</param>
     ///  /// <param name="version">必输</param>
     /// <returns></returns>
-    public async Task PostQuotationApprovedMarketingSave(QuotationListSecondDto quotationListSecondDto)
+    public async Task PostQuotationApprovedMarketingSave(ExcelApprovalDto quotationListSecondDto)
 
     {
-        var au = await _analysisBoardSecondMethod.GetfinanceAuditQuotationList(quotationListSecondDto.AuditFlowId,
-            quotationListSecondDto.version, 1, 0);
-        if (au is not null)
+        var auditFlowId=  quotationListSecondDto.auditFlowId;
+        
+        if (auditFlowId ==0)
         {
-            string content = JsonConvert.SerializeObject(quotationListSecondDto);
-            await _analysisBoardSecondMethod.UpadatefinanceAuditQuotationList(content,
-                quotationListSecondDto.AuditFlowId,
-                quotationListSecondDto.version, 1, 0);
+            throw new FriendlyException($"流程编号为空");
         }
-        else
-        {
-            string content = JsonConvert.SerializeObject(quotationListSecondDto);
-            await _analysisBoardSecondMethod.InsertfinanceAuditQuotationList(content,
-                quotationListSecondDto.AuditFlowId, quotationListSecondDto.version, 1, 0);
-        }
+        _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
     }
 
 
