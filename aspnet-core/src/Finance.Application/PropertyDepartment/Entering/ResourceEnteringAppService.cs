@@ -12,6 +12,7 @@ using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment;
 using Finance.ProductDevelopment.Dto;
+using Finance.ProjectManagement;
 using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
@@ -533,6 +534,15 @@ namespace Finance.Entering
             List<ConstructionDto> prop = await _resourceElectronicStructuralMethod.ConstructionBomList(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单           
 
             return prop;
+        }
+        /// <summary>
+        /// 下载附件
+        /// </summary>
+        /// <param name="Id"></param>    
+        /// <returns></returns>
+        public async Task<FileResult> DownloadEnclosure(long Id)
+        {
+            return await _resourceElectronicStructuralMethod.DownloadEnclosure(Id);
         }
         /// <summary>
         ///  结构料BOM单价审核加载初始值(单个零件)
