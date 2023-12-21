@@ -147,20 +147,21 @@ namespace Finance.Web.Host.Startup
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute("defaultWithArea", "{area}/{controller=Home}/{action=Index}/{id?}");
             });
-
-            // Enable middleware to serve generated Swagger as a JSON endpoint
-            app.UseSwagger(c => { c.RouteTemplate = "swagger/{documentName}/swagger.json"; });
-
-            // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
-            app.UseSwaggerUI(options =>
+            if (env.IsDevelopment())
             {
-                // specifying the Swagger JSON endpoint.
-                options.SwaggerEndpoint($"/swagger/{_apiVersion}/swagger.json", $"Finance API {_apiVersion}");
-                options.IndexStream = () => Assembly.GetExecutingAssembly()
-                    .GetManifestResourceStream("Finance.Web.Host.wwwroot.swagger.ui.index.html");
-                options.DisplayRequestDuration(); // Controls the display of the request duration (in milliseconds) for "Try it out" requests.  
-            }); // URL: /swagger
-            app.UseScheduleUI();
+                // Enable middleware to serve generated Swagger as a JSON endpoint
+                app.UseSwagger(c => { c.RouteTemplate = "swagger/{documentName}/swagger.json"; });
+                // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
+                app.UseSwaggerUI(options =>
+                {
+                    // specifying the Swagger JSON endpoint.
+                    options.SwaggerEndpoint($"/swagger/{_apiVersion}/swagger.json", $"Finance API {_apiVersion}");
+                    options.IndexStream = () => Assembly.GetExecutingAssembly()
+                        .GetManifestResourceStream("Finance.Web.Host.wwwroot.swagger.ui.index.html");
+                    options.DisplayRequestDuration(); // Controls the display of the request duration (in milliseconds) for "Try it out" requests.  
+                }); // URL: /swagger
+                app.UseScheduleUI();
+            }          
         }
 
         private void ConfigureSwagger(IServiceCollection services)
