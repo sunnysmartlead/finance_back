@@ -543,14 +543,14 @@ namespace Finance.ProductDevelopment
 
 
 
-                #region 录入完成之后
-                //为提交操作才执行插库、流转工作流操作
-                if (dto.Opinion == FinanceConsts.Done)
-                    {
-                        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
+                //#region 录入完成之后
+                ////为提交操作才执行插库、流转工作流操作
+                //if (dto.Opinion == FinanceConsts.Done)
+                //    {
+                //        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImportPb });
 
-                    }
-                    #endregion
+                //    }
+                //    #endregion
                 }
            
 
