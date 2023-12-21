@@ -198,6 +198,84 @@ namespace Finance.Audit
         }
 
         /// <summary>
+        /// 获取完成实际和完成状态
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <param name="list"></param>
+        /// <returns></returns>
+        private async Task<List<AuditFlowRightDetailDto>> GetRequiredTime(long auditFlowId, List<AuditFlowRightDetailDto> list)
+        {
+            var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
+
+            //若实际完成时间为空，则当前时间>=大于等于要求时间，超时，否则，不超时
+            //不为空，则判断实际完成时间
+            Func<DateTime, DateTime?, FlowStatus> getFlowStatus = (requiredTime, time) =>
+            time.HasValue ?
+                time >= requiredTime ? FlowStatus.Timeout : FlowStatus.Normal
+               : DateTime.Now >= requiredTime ? FlowStatus.Timeout : FlowStatus.Normal;
+
+            if (pricingTeam is not null)
+            {
+                foreach (var item in list)
+                {
+                    if (item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                    {
+                        item.RequiredTime = pricingTeam.ElecEngineerTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                    {
+                        item.RequiredTime = pricingTeam.StructEngineerTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                    {
+                        item.RequiredTime = pricingTeam.EMCTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                    {
+                        item.RequiredTime = pricingTeam.QualityBenchTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == "ElectronicUnitPriceEntry")
+                    {
+                        item.RequiredTime = pricingTeam.ResourceElecTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == "StructureUnitPriceEntry")
+                    {
+                        item.RequiredTime = pricingTeam.ResourceStructTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == "NRE_MoldFeeEntry")
+                    {
+                        item.RequiredTime = pricingTeam.MouldWorkHourTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                    {
+                        item.RequiredTime = pricingTeam.EngineerWorkHourTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                    {
+                        item.RequiredTime = pricingTeam.ProductManageTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                    if (item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                    {
+                        item.RequiredTime = pricingTeam.ProductCostInputTime;
+                        item.FlowStatus = getFlowStatus(item.RequiredTime.Value, item.Time);
+                    }
+                }
+
+            }
+
+            return list;
+        }
+
+        /// <summary>
         /// 过滤待办项
         /// </summary>
         /// <param name="auditFlowId"></param>
@@ -231,7 +309,7 @@ namespace Finance.Audit
             var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
 
 
-            return list
+            var dto =  list
 
                 //如果当前用户不是电子工程师，就把电子BOM录入页面过滤掉
                 .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM || p.IsReset)
@@ -289,6 +367,9 @@ namespace Finance.Audit
 
 
                 .ToList();
+
+            return await GetRequiredTime(auditFlowId, dto);
+
         }
 
 
@@ -300,10 +381,6 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> TaskCompleted(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
-            //if (auditFlowId == 546)
-            //{
-            //    var g34 = "";
-            //}
             //核价需求录入
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
 
@@ -374,7 +451,7 @@ namespace Finance.Audit
             }
 
 
-            return list
+            var dto = list
 
                 //如果当前用户不是本流程的项目经理或流程发起人（业务员），就把开始页面过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "开始" || p.IsReset)
@@ -419,8 +496,10 @@ namespace Finance.Audit
                 && (!isFinanceTableAdmin) && (!isEvalTableAdmin) && (!isBjdgdgly)
                 , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
 
-                .OrderBy(p=>p.ProcessName.GetTypeNameSort())
+                .OrderBy(p => p.ProcessName.GetTypeNameSort())
                 .ToList();
+
+            return await GetRequiredTime(auditFlowId, dto);
         }
 
         /// <summary>
@@ -574,7 +653,8 @@ namespace Finance.Audit
                         Id = o.Id,
                         ProcessName = o.NodeName,
                         Right = RIGHTTYPE.ReadOnly,
-                        ProcessIdentifier = o.ProcessIdentifier
+                        ProcessIdentifier = o.ProcessIdentifier,
+                        Time = o.Time,
                     }).ToList())
                 })).Where(p => p.AuditFlowRightDetailList.Any());
 
@@ -593,7 +673,8 @@ namespace Finance.Audit
                         Id = o.Id,
                         ProcessName = o.NodeName,
                         Right = RIGHTTYPE.ReadOnly,
-                        ProcessIdentifier = o.ProcessIdentifier
+                        ProcessIdentifier = o.ProcessIdentifier,
+                        Time = o.Time,
                     }).ToList()
                 }).Where(p => p.AuditFlowRightDetailList.Any());
 

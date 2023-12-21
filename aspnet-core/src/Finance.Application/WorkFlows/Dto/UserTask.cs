@@ -85,5 +85,10 @@ namespace Finance.WorkFlows.Dto
         /// 操作角色
         /// </summary>
         internal virtual string RoleId { get; set; }
+
+        /// <summary>
+        /// 实际完成时间
+        /// </summary>
+        public DateTime? Time { get; set; }
     }
 }
