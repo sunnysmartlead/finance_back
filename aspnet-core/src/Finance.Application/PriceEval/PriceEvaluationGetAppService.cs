@@ -57,6 +57,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Security.Policy;
+using System.Text;
 using System.Threading.Tasks;
 using test;
 
@@ -4055,6 +4056,20 @@ namespace Finance.PriceEval
         }
 
         #endregion
+
+
+        /// <summary>
+        /// 获取核价表模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetEvalTableModel()
+        {
+            FileStream fs = new FileStream("wwwroot/Excel/EvalTableModel.xlsx", FileMode.Open, FileAccess.Read);
+            byte[] infbytes = new byte[(int)fs.Length];
+            await fs.ReadAsync(infbytes);
+            fs.Close();
+            return new FileContentResult(infbytes, "application/octet-stream") { FileDownloadName = "核价表模板.xlsx" };
+        }
 
     }
 }
