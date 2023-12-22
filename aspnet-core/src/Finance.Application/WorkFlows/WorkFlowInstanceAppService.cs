@@ -868,8 +868,8 @@ namespace Finance.WorkFlows
             || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
             )))
 
-            || (projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
-            && (!endUserIds.Contains(AbpSession.UserId.Value) && item.ProcessIdentifier == "ArchiveEnd")
+            || (projectPm == null || (projectPm.CreatorUserId != userId && projectPm.ProjectManager != userId)
+            && (!endUserIds.Contains(userId) && item.ProcessIdentifier == "ArchiveEnd")
                         )
                         )
                     {

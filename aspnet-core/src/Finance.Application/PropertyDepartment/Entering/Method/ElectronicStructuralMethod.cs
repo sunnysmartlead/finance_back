@@ -851,6 +851,8 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                          
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
                             construction.EnclosureFileId = structureElectronic.EnclosureFileId;//附件id
+                            FileManagement fileNames = await _fileManagementRepository.FirstOrDefaultAsync(p => structureElectronic.EnclosureFileId == p.Id);
+                            if (fileNames is not null) construction.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
                             continue;//直接进行下一个循环
                         }
                         else
