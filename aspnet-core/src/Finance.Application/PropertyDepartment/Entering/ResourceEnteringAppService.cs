@@ -540,6 +540,7 @@ namespace Finance.Entering
         /// </summary>
         /// <param name="Id"></param>    
         /// <returns></returns>
+        [HttpGet]
         public async Task<FileResult> DownloadEnclosure(long Id)
         {
             return await _resourceElectronicStructuralMethod.DownloadEnclosure(Id);
