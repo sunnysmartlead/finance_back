@@ -3108,8 +3108,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         Pcs = sampleQuotation.Pcs.ToString(),
                         Cost = sampleQuotation.Cost.ToString(),
                         UnitPrice = sampleQuotation.UnitPrice.ToString(),
-                        GrossMargin = sampleQuotation.GrossMargin.ToString() + '%',
-                        SalesRevenue = sampleQuotation.SalesRevenue.ToString()
+                        GrossMargin = Math.Round(sampleQuotation.GrossMargin,2).ToString() + '%',
+                        SalesRevenue = Math.Round(sampleQuotation.SalesRevenue,2).ToString()
                     }).ToList();
 
                 list.AddRange(samples);
