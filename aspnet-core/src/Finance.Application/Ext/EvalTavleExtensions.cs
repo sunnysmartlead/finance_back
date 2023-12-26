@@ -31,7 +31,7 @@ namespace Finance.Ext
         private const int StartRow = 8;
 
         //在核价表Excel中，【制造成本】在【BOM成本】下的行数
-        private const int ManufacturingCostRow = 9;
+        private const int ManufacturingCostRow = 8;
 
         //在核价表Excel中，【损耗成本】在【制造成本】下的行数
         private const int LossCostRow = 3;
