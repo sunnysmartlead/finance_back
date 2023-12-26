@@ -875,8 +875,8 @@ namespace Finance.NerPricing
                         {
                             var ModelName = row.GetCell(2).GetCellString();
                             var MoldCavityCount = Convert.ToInt32(row.GetCell(3).GetCellString());
-                            var Count = Convert.ToDouble(row.GetCell(4).GetCellString());
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(5).GetCellString());
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Count = Convert.ToDouble(row.GetCell(5).GetCellString());                            
                             var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
                             var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count, UnitPrice = UnitPrice, Cost = Cost, Remark = Remark });
