@@ -272,7 +272,7 @@ namespace Finance.Audit
 
             }
 
-            return list;
+            return list.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace Finance.Audit
             var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
 
 
-            var dto =  list
+            var dto = list
 
                 //如果当前用户不是电子工程师，就把电子BOM录入页面过滤掉
                 .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM || p.IsReset)
@@ -496,7 +496,7 @@ namespace Finance.Audit
                 && (!isFinanceTableAdmin) && (!isEvalTableAdmin) && (!isBjdgdgly)
                 , p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
 
-                .OrderBy(p => p.ProcessName.GetTypeNameSort())
+                //.OrderBy(p => p.ProcessName.GetTypeNameSort())
                 .ToList();
 
             return await GetRequiredTime(auditFlowId, dto);
@@ -664,19 +664,19 @@ namespace Finance.Audit
             {
                 // 超级管理员的已办
                 var tasked = await _workflowInstanceAppService.GetTaskCompleted();
-                var taskedDto = tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).Select(p => new AuditFlowRightInfoDto
+                var taskedDto = (await tasked.Items.GroupBy(p => new { p.WorkFlowInstanceId, p.Title }).SelectAsync(async p => new AuditFlowRightInfoDto
                 {
                     AuditFlowId = p.Key.WorkFlowInstanceId,
                     AuditFlowTitle = p.Key.Title,
-                    AuditFlowRightDetailList = p.Select(o => new AuditFlowRightDetailDto
+                    AuditFlowRightDetailList = await GetRequiredTime(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                     {
                         Id = o.Id,
                         ProcessName = o.NodeName,
                         Right = RIGHTTYPE.ReadOnly,
                         ProcessIdentifier = o.ProcessIdentifier,
                         Time = o.Time,
-                    }).ToList()
-                }).Where(p => p.AuditFlowRightDetailList.Any());
+                    }).ToList())
+                })).Where(p => p.AuditFlowRightDetailList.Any());
 
                 auditFlowRightInfoDtoList.AddRange(taskedDto);
             }
