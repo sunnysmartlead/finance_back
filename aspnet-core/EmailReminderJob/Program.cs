@@ -19,12 +19,15 @@ namespace EmailReminderJob
                     services.AddTransient<MailAppService>();
                     services.AddSchedule(options =>
                     {
-                        var triggerBuilder = Triggers.PeriodSeconds(3)
+                        var triggerBuilder = Triggers.DailyAt(8)
                        .SetTriggerId("ExamineMail")   // 作业触发器 Id
                        .SetDescription("每天的早上八点触发(检查密码是否快过期)")  // 作业触发器描述
                        .SetRunOnStart(true);   // 作业触发器是否启动时执行一次    
+                       //.SetMaxNumberOfErrors(9999)// 作业触发器最大出错次数
+                       //.SetNumRetries(999)   // 作业触发器出错重试次数
+                       //.SetRetryTimeout(5); // 作业触发器重试间隔时间                      
                         // 注册作业，并配置作业触发器  每天的早上八点触发
-                       options.AddJob<MailJob>("ExamineMail", triggerBuilder);
+                        options.AddJob<MailJob>("ExamineMail", triggerBuilder);
                     });                  
                     //services.AddHostedService<Worker>();
 
