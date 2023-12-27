@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using Abp.Authorization.Users;
+using Abp.BackgroundJobs;
 using Abp.Collections.Extensions;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
@@ -12,6 +13,7 @@ using Finance.DemandApplyAudit;
 using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.Infrastructure.Dto;
+using Finance.Job;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
@@ -66,8 +68,9 @@ namespace Finance.WorkFlows
 
         private readonly IRepository<Gradient, long> _gradientRepository;
         private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
+        private readonly IBackgroundJobManager _backgroundJobManager;
 
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm)
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
@@ -90,6 +93,7 @@ namespace Finance.WorkFlows
             _fu_BomRepository = fu_BomRepository;
             _gradientRepository = gradientRepository;
             _auditFlowIdPricingForm = auditFlowIdPricingForm;
+            _backgroundJobManager = backgroundJobManager;
         }
 
         /// <summary>
@@ -570,15 +574,19 @@ namespace Finance.WorkFlows
                 entity.IsActive = false;
             }
 
-
             //再把任务重置给别人
-            await _taskResetRepository.InsertAsync(new TaskReset
+            var taskReset = new TaskReset
             {
                 IsActive = true,
                 NodeInstanceId = input.NodeInstanceId,
                 ResetUserId = AbpSession.UserId.Value,
                 TargetUserId = input.TargetUserId,
-            });
+            };
+            await _taskResetRepository.InsertAsync(taskReset);
+
+            //发送邮件
+            await _backgroundJobManager.EnqueueAsync<SendResetEmailJob, TaskReset>(taskReset);
+
         }
 
         /// <summary>
@@ -796,21 +804,16 @@ namespace Finance.WorkFlows
                                   RoleId = n.RoleId,
                               }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
 
-
             foreach (var item in data)
             {
                 var roleids = item.RoleId.Split(",").Select(p => p.To<int>());
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
 
-
-
                 //查询重置
                 var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
                 foreach (var reset in resets)
                 {
-
-
                     item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
                     item.TaskUserIds.Add(reset.TargetUserId.To<int>());
                 }
@@ -829,7 +832,6 @@ namespace Finance.WorkFlows
                 //获取核价需求录入保存项
                 var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
 
-
                 //项目经理控制的页面
                 var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
 
@@ -839,7 +841,6 @@ namespace Finance.WorkFlows
                                 || p.Name == StaticRoleNames.Host.EvalTableAdmin
                         || p.Name == StaticRoleNames.Host.Bjdgdgly);
                 var endUserIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
-
 
                 var deleteUserIds = new List<int>();
 
@@ -857,8 +858,8 @@ namespace Finance.WorkFlows
             || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
 
-            || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId)
-            || (projectPm != null && projectPm.ProjectManager != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+            || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+            || (projectPm != null && projectPm.ProjectManager != userId && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
 
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
