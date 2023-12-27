@@ -88,31 +88,31 @@ namespace Finance.Job
         /// <summary>
         /// 没有密码时候发送的邮件(使用默认密码)
         /// </summary>
-        public void NoEmailPassword()
+        internal  void NoEmailPassword()
         {
-            NoticeEmailInfo emailInfo = EmailService.emailInfoListL;
+            NoticeEmailInfo emailInfoList = nticeEmailInfo.FirstOrDefault(p => p.Id != 0);
             string loginIp = _sendEmail.GetLoginAddr();
             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":" + JobConstant.Port;
             string Subject = "报价核价系统发送邮件模块未设置密码!";
             string Body = "报价核价系统发送邮件模块未设置密码,请尽快设置,否则系统将无法运行";
             string emailBody = Body + "（" + " <a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
             Task.Run(async () => {
-                await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, "wslinzhang@sunnyoptical.com", emailInfo == null ? null : emailInfo);
+                await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, "wslinzhang@sunnyoptical.com", emailInfoList == null ? null : emailInfoList);
             });   
         }
         /// <summary>
         /// 密码即将过期时候发动的邮件
         /// </summary>
-        public void EmailPasswordWillExpire()
+        internal void EmailPasswordWillExpire()
         {
-            NoticeEmailInfo emailInfo = EmailService.emailInfoListL;
+            NoticeEmailInfo emailInfoList = nticeEmailInfo.FirstOrDefault(p => p.Id != 0);
             string loginIp = _sendEmail.GetLoginAddr();
             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":" + JobConstant.Port;
             string Subject = "报价核价系统发送邮件模块密码即将过期!";
             string Body = "报价核价系统发送邮件模块密码即将过期,请尽快修改密码,切记,密码必须与集团邮箱服务器域账号密码一致,请确认后修改,否则系统将无法运行";
             string emailBody = Body + "（" + " <a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
             Task.Run(async () => {
-                await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, emailInfo.MaintainerEmail, emailInfo == null ? null : emailInfo);
+                await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, emailInfoList.MaintainerEmail, emailInfoList == null ? null : emailInfoList);
             });        
         }
     }
