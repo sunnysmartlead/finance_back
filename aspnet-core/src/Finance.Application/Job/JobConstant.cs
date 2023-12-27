@@ -12,6 +12,6 @@ namespace Finance.Job
         /// <summary>
         /// 端口
         /// </summary>
-        public const int Port = 8080;
+        public const int Port = 8081;
     }
 }
