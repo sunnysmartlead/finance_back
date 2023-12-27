@@ -103,7 +103,7 @@ namespace Finance.Job
         /// <summary>
         /// 密码即将过期时候发动的邮件
         /// </summary>
-        internal void EmailPasswordWillExpire()
+        internal  void EmailPasswordWillExpire()
         {
             NoticeEmailInfo emailInfoList = nticeEmailInfo.FirstOrDefault(p => p.Id != 0);
             string loginIp = _sendEmail.GetLoginAddr();
