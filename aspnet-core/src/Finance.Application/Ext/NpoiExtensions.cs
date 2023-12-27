@@ -1,4 +1,5 @@
 ﻿using Finance.Authorization.Users;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.Util;
@@ -160,6 +161,26 @@ namespace Finance.Ext
             var memoryStream = new MemoryStream();
             workbook.Write(memoryStream);
             return memoryStream;
+        }
+        /// <summary>
+        /// 获取带公式的单元格
+        /// </summary>
+        /// <param name="cell"></param>
+        /// <returns></returns>
+        public static string GetCellString(this ICell cell)
+        {
+            //如果是公式Cell 
+            //则仅读取其Cell单元格的显示值 而不是读取公式
+            if (cell.CellType == CellType.Formula)
+            {
+                cell.SetCellType(CellType.String);
+                var prop = cell.StringCellValue;
+                return prop;
+            }
+            else
+            {
+               return cell.ToString();
+            }
         }
     }
 }

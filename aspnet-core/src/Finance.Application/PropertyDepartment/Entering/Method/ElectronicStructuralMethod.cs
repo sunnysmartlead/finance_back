@@ -13,18 +13,22 @@ using Finance.FinanceMaintain;
 using Finance.Infrastructure;
 using Finance.PriceEval;
 using Finance.ProductDevelopment;
+using Finance.ProjectManagement;
+using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.PropertyDepartment.UnitPriceLibrary.Model;
 using Finance.Roles.Dto;
 using Finance.Users;
 using Finance.Users.Dto;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Finance.Authorization.Roles.StaticRoleNames;
+using static Finance.Ext.FriendlyRequiredAttribute;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace Finance.PropertyDepartment.Entering.Method
@@ -119,6 +123,11 @@ namespace Finance.PropertyDepartment.Entering.Method
         /// 用户表
         /// </summary>
         private readonly IRepository<User, long> _user;
+        private readonly IRepository<FileManagement, long> _fileManagementRepository;
+        /// <summary>
+        /// 文件管理接口
+        /// </summary>
+        private readonly FileCommonService _fileCommonService;
 
         /// <summary>
         /// 构造函数
@@ -166,7 +175,9 @@ namespace Finance.PropertyDepartment.Entering.Method
             IRepository<GradientModel, long> gradientModelRepository,
             IRepository<GradientModelYear, long> gradientModelYearRepository,
             IRepository<CustomerTargetPrice, long> customerTargetPrice,
-            IRepository<User, long> user)
+            IRepository<User, long> user,
+            IRepository<FileManagement, long> fileManagementRepository,
+            FileCommonService fileCommonService)
         {
             _resourceFinanceDictionaryDetail = resourceFinanceDictionaryDetail;
             _resourceElectronicBomInfo = electronicBomInfo;
@@ -189,6 +200,8 @@ namespace Finance.PropertyDepartment.Entering.Method
             _gradientModelYear = gradientModelYearRepository;
             _customerTargetPrice = customerTargetPrice;
             _user = user;
+            _fileManagementRepository = fileManagementRepository;
+            _fileCommonService = fileCommonService;
         }
 
         /// <summary>
@@ -666,6 +679,9 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.Remark = structureElectronic.Remark;//备注
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                         
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
+                            construction.EnclosureFileId = structureElectronic.EnclosureFileId;//附件id
+                            FileManagement fileNames = await _fileManagementRepository.FirstOrDefaultAsync(p => structureElectronic.EnclosureFileId == p.Id);
+                            if (fileNames is not null) construction.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
                             int countUp = structureBOMIdModify.Where(p => p.Equals(construction.StructureId)).Count();//如果修改了,重置参数
                             if (countUp != 0)
                             {
@@ -726,6 +742,17 @@ namespace Finance.PropertyDepartment.Entering.Method
                 }
             }
             return constructionDtos;
+        }
+        /// <summary>
+        /// 下载附件
+        /// </summary>
+        /// <param name="Id"></param>    
+        /// <returns></returns>
+        internal async Task<FileResult> DownloadEnclosure(long Id)
+        {
+            //通过 流程id  零件id  物料表单 id  查询数据库是否有信息,如果有信息就说明以及确认过了,然后就拿去之前确认过的信息
+            StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.Id.Equals(Id));
+            return await _fileCommonService.DownloadFile(structureElectronic.EnclosureFileId);
         }
         /// <summary>
         /// 结构件单价录入数量
@@ -823,6 +850,9 @@ namespace Finance.PropertyDepartment.Entering.Method
                             construction.SolutionId = item.SolutionId;//方案ID
                             construction.IsSystemiginal = structureElectronic.IsSystemiginal;// 系统单价是否从单价库中带出                          
                             construction.PeopleName = await GetUserName(structureElectronic.PeopleId);
+                            construction.EnclosureFileId = structureElectronic.EnclosureFileId;//附件id
+                            FileManagement fileNames = await _fileManagementRepository.FirstOrDefaultAsync(p => structureElectronic.EnclosureFileId == p.Id);
+                            if (fileNames is not null) construction.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
                             continue;//直接进行下一个循环
                         }
                         else
@@ -1665,6 +1695,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
                         structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                        structureElectronic.EnclosureFileId= item.EnclosureFileId;//附件id
                         await _configStructureElectronic.UpdateAsync(structureElectronic);
                     }
                     //删除结构差异表中的数据  
@@ -1711,6 +1742,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         structureElectronic.MaterialsUseCount = JsonConvert.SerializeObject(item.MaterialsUseCount);//项目物料的使用量
                         structureElectronic.SystemiginalCurrency = JsonConvert.SerializeObject(item.SystemiginalCurrency);//系统单价（原币）
                         structureElectronic.InTheRate = JsonConvert.SerializeObject(item.InTheRate);//项目物料的年降率
+                        structureElectronic.EnclosureFileId = item.EnclosureFileId;//附件id
                         await _configStructureElectronic.UpdateAsync(structureElectronic);
                     }
                     //删除结构差异表中的数据  

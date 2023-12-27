@@ -83,5 +83,9 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// </summary> 
         [FriendlyRequired("物料管制状态",skip: true)]
         public virtual string MaterialControlStatus { get; set; }
+        /// <summary>
+        /// 附件id
+        /// </summary>
+        public long EnclosureFileId { get; set; }
     }
 }

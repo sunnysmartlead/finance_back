@@ -48,6 +48,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using test;
 using static Finance.Ext.FriendlyRequiredAttribute;
@@ -824,24 +825,24 @@ namespace Finance.NerPricing
                     {
                         if (row.GetCell(1).ToString().Equals("（不含税人民币）NRE 总费用"))
                         {
-                            pricingFormDto.RMBAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            pricingFormDto.RMBAllCost = Convert.ToDecimal(row.GetCell(9).GetCellString());
                         }
                     }
                     catch (Exception e)
                     {
-                        throw new FriendlyException($"（不含税人民币）NRE 总费用值有误!{rowIndex + 1}行,G列");
+                        throw new FriendlyException($"（不含税人民币）NRE 总费用值有误!{rowIndex + 1}行,J列");
                     }
                     try
                     {
 
                         if (row.GetCell(1).ToString().Equals("（不含税美金）NRE 总费用"))
                         {
-                            pricingFormDto.USDAllCost = Convert.ToDecimal(row.GetCell(6).ToString());
+                            pricingFormDto.USDAllCost = Convert.ToDecimal(row.GetCell(9).GetCellString());
                         }
                     }
                     catch (Exception e)
                     {
-                        throw new FriendlyException($"（不含税美金）NRE 总费用值有误!{rowIndex + 1}行,G列");
+                        throw new FriendlyException($"（不含税美金）NRE 总费用值有误!{rowIndex + 1}行,J列");
                     }
                 }
                 // 遍历行
@@ -854,12 +855,12 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var PartName = row.GetCell(2).ToString();
-                            var PartNumber = row.GetCell(3).ToString();
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var Quantity = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var PartName = row.GetCell(2).GetCellString();
+                            var PartNumber = row.GetCell(3).GetCellString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Quantity = Convert.ToInt32(row.GetCell(5).GetCellString());                      
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.HandPieceCost.Add(new HandPieceCostModel() { PartName = PartName, PartNumber = PartNumber, UnitPrice = UnitPrice, Quantity = Quantity, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -872,12 +873,12 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var ModelName = row.GetCell(2).ToString();
-                            var MoldCavityCount = Convert.ToInt32(row.GetCell(3).ToString());
-                            var Count = Convert.ToDouble(row.GetCell(4).ToString());
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var ModelName = row.GetCell(2).GetCellString();
+                            var MoldCavityCount = Convert.ToInt32(row.GetCell(3).GetCellString());
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Count = Convert.ToDouble(row.GetCell(5).GetCellString());                            
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.MouldInventory.Add(new MouldInventoryModel() { ModelName = ModelName, MoldCavityCount = MoldCavityCount, Count = Count, UnitPrice = UnitPrice, Cost = Cost, Remark = Remark });
 
                         }
@@ -891,11 +892,11 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var WorkName = row.GetCell(2).ToString();
-                            var UnitPriceOfTooling = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var ToolingCount = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var WorkName = row.GetCell(2).GetCellString();
+                            var UnitPriceOfTooling = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var ToolingCount = Convert.ToInt32(row.GetCell(5).GetCellString());
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.ToolingCost.Add(new() { WorkName = WorkName, UnitPriceOfTooling = UnitPriceOfTooling, ToolingCount = ToolingCount, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -908,11 +909,11 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var ToolingName = row.GetCell(2).ToString();
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var Number = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var ToolingName = row.GetCell(2).GetCellString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Number = Convert.ToInt32(row.GetCell(5).GetCellString());
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.FixtureCost.Add(new() { ToolingName = ToolingName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -925,11 +926,11 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var Qc = row.GetCell(2).ToString();
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var Count = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var Qc = row.GetCell(2).GetCellString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Count = Convert.ToInt32(row.GetCell(5).GetCellString());
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.QAQCDepartments.Add(new() { Qc = Qc, UnitPrice = UnitPrice, Count = Count, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -940,7 +941,7 @@ namespace Finance.NerPricing
                     //生产设备费用
                     if (rowIndex >= ProductionEquipmentCost[0] && rowIndex <= ProductionEquipmentCost[1])
                     {
-                        var DeviceStatusName = row.GetCell(3).ToString();
+                        var DeviceStatusName = row.GetCell(3).GetCellString();
                         var DeviceStatus = _financeDictionaryDetailRepository.FirstOrDefault(p => p.DisplayName.Equals(DeviceStatusName))?.Id;
                         if (string.IsNullOrEmpty(DeviceStatus))
                         {
@@ -948,11 +949,11 @@ namespace Finance.NerPricing
                         }
                         try
                         {
-                            var EquipmentName = row.GetCell(2).ToString();
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var Number = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var EquipmentName = row.GetCell(2).GetCellString();
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var Number = Convert.ToInt32(row.GetCell(5).GetCellString());
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.ProductionEquipmentCost.Add(new() { EquipmentName = EquipmentName, DeviceStatus = DeviceStatus, DeviceStatusName = DeviceStatusName, UnitPrice = UnitPrice, Number = Number, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -965,15 +966,16 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var ProjectName = row.GetCell(2).ToString();
-                            var IsThirdParty = row.GetCell(3).ToString() == "是" ? true : false;
-                            var CountBottomingOut = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var CountDV = Convert.ToDecimal(row.GetCell(5).ToString());
-                            var CountPV = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var AllCost = Convert.ToDecimal(row.GetCell(7).ToString());
-                            var UnitPrice = Convert.ToDecimal(row.GetCell(8).ToString());
-                            var Remark = row.GetCell(9).ToString();
-                            pricingFormDto.LaboratoryFeeModels.Add(new() {UnitPrice= UnitPrice, ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
+                            var ProjectName = row.GetCell(2).GetCellString();
+                            var IsThirdParty = row.GetCell(3).GetCellString() == "是" ? true : false;
+                            var UnitPrice = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var AdjustmentCoefficient = Convert.ToDecimal(row.GetCell(5).GetCellString());
+                            var CountBottomingOut = Convert.ToDecimal(row.GetCell(6).GetCellString());
+                            var CountDV = Convert.ToDecimal(row.GetCell(7).GetCellString());
+                            var CountPV = Convert.ToDecimal(row.GetCell(8).GetCellString());
+                            var AllCost = Convert.ToDecimal(row.GetCell(9).GetCellString());                           
+                            var Remark = row.GetCell(10).GetCellString();
+                            pricingFormDto.LaboratoryFeeModels.Add(new () { AdjustmentCoefficient= AdjustmentCoefficient,UnitPrice = UnitPrice, ProjectName = ProjectName, IsThirdParty = IsThirdParty, CountBottomingOut = CountBottomingOut, CountDV = CountDV, CountPV = CountPV, AllCost = AllCost, Remark = Remark });
                         }
                         catch (Exception e)
                         {
@@ -985,9 +987,9 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var SoftwareProject = row.GetCell(2).ToString();
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var SoftwareProject = row.GetCell(2).GetCellString();
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.SoftwareTestingCost.Add(new() { SoftwareProject = SoftwareProject, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -998,16 +1000,16 @@ namespace Finance.NerPricing
                     //差旅费
                     if (rowIndex >= TravelExpense[0] && rowIndex <= TravelExpense[1])
                     {
-                        var ReasonsName = row.GetCell(2).ToString();
+                        var ReasonsName = row.GetCell(2).GetCellString();
                         var ReasonsId = _financeDictionaryDetailRepository.FirstOrDefault(p => p.DisplayName.Equals(ReasonsName))?.Id;
                         if (string.IsNullOrEmpty(ReasonsId)) { throw new FriendlyException($"差旅费!{rowIndex + 1}行,事由:{ReasonsName}在库中找不到,值存在问题!"); }
                         try
                         {
-                            var PeopleCount = Convert.ToInt32(row.GetCell(3).ToString());
-                            var CostSky = Convert.ToDecimal(row.GetCell(4).ToString());
-                            var SkyCount = Convert.ToInt32(row.GetCell(5).ToString());
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var PeopleCount = Convert.ToInt32(row.GetCell(3).GetCellString());
+                            var CostSky = Convert.ToDecimal(row.GetCell(4).GetCellString());
+                            var SkyCount = Convert.ToInt32(row.GetCell(5).GetCellString());
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.TravelExpense.Add(new() { ReasonsId = ReasonsId, ReasonsName = ReasonsName, PeopleCount = PeopleCount, CostSky = CostSky, SkyCount = SkyCount, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -1020,9 +1022,9 @@ namespace Finance.NerPricing
                     {
                         try
                         {
-                            var ConstName = row.GetCell(2).ToString();
-                            var Cost = Convert.ToDecimal(row.GetCell(6).ToString());
-                            var Remark = row.GetCell(7).ToString();
+                            var ConstName = row.GetCell(2).GetCellString();
+                            var Cost = Convert.ToDecimal(row.GetCell(9).GetCellString());
+                            var Remark = row.GetCell(10).GetCellString();
                             pricingFormDto.RestsCost.Add(new() { ConstName = ConstName, Cost = Cost, Remark = Remark });
                         }
                         catch (Exception e)
@@ -1093,6 +1095,27 @@ namespace Finance.NerPricing
             PricingFormDto pricingFormDto = new();
             if (auditFlowIdPricingForms is not null && auditFlowIdPricingForms.JsonData is not null) pricingFormDto = JsonConvert.DeserializeObject<PricingFormDto>(auditFlowIdPricingForms.JsonData);
             return pricingFormDto;
+        }
+        /// <summary>
+        /// Nre合计表模板下载
+        /// </summary>
+        /// <param name="FileName"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public  IActionResult FastDownloadNreTemplate(string FileName = "NRE核价表模版下载")
+        {
+            try
+            {
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\NRE核价表下载模版.xlsx";
+                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"{FileName}.xlsx"
+                };
+            }
+            catch (Exception e)
+            {
+                throw new UserFriendlyException(e.Message);
+            }
         }
         #endregion
         /// <summary>
@@ -2858,7 +2881,7 @@ namespace Finance.NerPricing
         /// <param name="solutionId"></param>
         /// <returns></returns>
         public async Task<ModifyItemPricingFormDto> GetPricingForm([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
-        {
+        {             
             try
             {
                 PriceEvaluation priceEvaluation = await _resourcePriceEvaluation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);

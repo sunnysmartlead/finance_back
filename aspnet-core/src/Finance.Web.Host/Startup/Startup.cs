@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Finance.Job;
 using Sundial;
 using Abp;
+using Finance.Ext;
 
 namespace Finance.Web.Host.Startup
 {
@@ -114,15 +115,15 @@ namespace Finance.Web.Host.Startup
             });
             services.AddMvc();
             services.AddHttpClient();//将HttpClient注入进来         
-            services.AddSchedule(options =>
-            {
-                var triggerBuilder = Triggers.DailyAt(8)
-               .SetTriggerId("ExamineMail")   // 作业触发器 Id
-               .SetDescription("每天的早上八点触发(检查密码是否快过期)");  // 作业触发器描述
-                //.SetRunOnStart(true);   // 作业触发器是否启动时执行一次    
-                // 注册作业，并配置作业触发器  每天的早上八点触发
-                options.AddJob<MailJob>("ExamineMail",triggerBuilder);
-            });
+            //services.AddSchedule(options =>
+            //{
+            //    var triggerBuilder = Triggers.DailyAt(8)
+            //   .SetTriggerId("ExamineMail")   // 作业触发器 Id
+            //   .SetDescription("每天的早上八点触发(检查密码是否快过期)");  // 作业触发器描述
+            //    //.SetRunOnStart(true);   // 作业触发器是否启动时执行一次    
+            //    // 注册作业，并配置作业触发器  每天的早上八点触发
+            //    options.AddJob<MailJob>("ExamineMail",triggerBuilder);
+            //});
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
@@ -140,6 +141,7 @@ namespace Finance.Web.Host.Startup
 
             app.UseAbpRequestLocalization();
 
+            app.UseCheckTokenAndUserId();
 
             app.UseEndpoints(endpoints =>
             {
@@ -147,20 +149,21 @@ namespace Finance.Web.Host.Startup
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute("defaultWithArea", "{area}/{controller=Home}/{action=Index}/{id?}");
             });
-
-            // Enable middleware to serve generated Swagger as a JSON endpoint
-            app.UseSwagger(c => { c.RouteTemplate = "swagger/{documentName}/swagger.json"; });
-
-            // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
-            app.UseSwaggerUI(options =>
+            if (env.IsDevelopment())
             {
-                // specifying the Swagger JSON endpoint.
-                options.SwaggerEndpoint($"/swagger/{_apiVersion}/swagger.json", $"Finance API {_apiVersion}");
-                options.IndexStream = () => Assembly.GetExecutingAssembly()
-                    .GetManifestResourceStream("Finance.Web.Host.wwwroot.swagger.ui.index.html");
-                options.DisplayRequestDuration(); // Controls the display of the request duration (in milliseconds) for "Try it out" requests.  
-            }); // URL: /swagger
-            app.UseScheduleUI();
+                // Enable middleware to serve generated Swagger as a JSON endpoint
+                app.UseSwagger(c => { c.RouteTemplate = "swagger/{documentName}/swagger.json"; });
+                // Enable middleware to serve swagger-ui assets (HTML, JS, CSS etc.)
+                app.UseSwaggerUI(options =>
+                {
+                    // specifying the Swagger JSON endpoint.
+                    options.SwaggerEndpoint($"/swagger/{_apiVersion}/swagger.json", $"Finance API {_apiVersion}");
+                    options.IndexStream = () => Assembly.GetExecutingAssembly()
+                        .GetManifestResourceStream("Finance.Web.Host.wwwroot.swagger.ui.index.html");
+                    options.DisplayRequestDuration(); // Controls the display of the request duration (in milliseconds) for "Try it out" requests.  
+                }); // URL: /swagger
+                //app.UseScheduleUI();
+            }          
         }
 
         private void ConfigureSwagger(IServiceCollection services)

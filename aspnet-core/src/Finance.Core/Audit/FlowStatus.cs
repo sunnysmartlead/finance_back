@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Finance.Job
+namespace Finance.Audit
 {
-    internal class JobConstant
+    public enum FlowStatus : byte
     {
         /// <summary>
-        /// 端口
+        /// 正常
         /// </summary>
-        public const int Port = 8081;
+        Normal,
+
+        /// <summary>
+        /// 超时
+        /// </summary>
+        Timeout
     }
 }

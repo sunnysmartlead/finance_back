@@ -1,4 +1,5 @@
 ﻿using Finance.Ext;
+using Finance.ProjectManagement.Dto;
 using Finance.PropertyDepartment.Entering.Dto;
 using Finance.PropertyDepartment.Entering.Method;
 using System;
@@ -139,6 +140,14 @@ namespace Finance.PropertyDepartment.Entering.Model
         /// 物料管制状态
         /// </summary> 
         public virtual string MaterialControlStatus { get; set; }
+        /// <summary>
+        /// 附件id
+        /// </summary>
+        public long EnclosureFileId { get; set; }
+        /// <summary>
+        /// 上传的文件信息（只有Id和FileName有值）
+        /// </summary>
+        public virtual FileUploadOutputDto File { get; set; }
     }
     /// <summary>
     /// 结构BOM表单复制项 模型

@@ -57,6 +57,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Security.Policy;
+using System.Text;
 using System.Threading.Tasks;
 using test;
 
@@ -1104,6 +1105,24 @@ namespace Finance.PriceEval
                 throw new FriendlyException("获取NRE核价表时出错！", e.StackTrace);
             }
 
+            #region 快速核报价上传
+
+            var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
+
+            var fuBom = await _fu_BomRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                     && p.Year == input.Year && p.UpDown == input.UpDown);
+
+            if ((!fuBom.Any()) && isUploadAuditFlow)
+            {
+                throw new FriendlyException($"核价表未上传！");
+            }
+            if (data.ProductionEquipmentCost is null && isUploadAuditFlow)
+            {
+                throw new FriendlyException("NRE核价表未上传！");
+            }
+
+            #endregion
+
             //var modelCountYears = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld);
             var modelCountYears = await (from g in _gradientRepository.GetAll()
                                          join gm in _gradientModelRepository.GetAll() on g.Id equals gm.GradientId
@@ -1655,6 +1674,7 @@ namespace Finance.PriceEval
                                         SecondaryProcessingMethod = sb.SecondaryProcessingMethod,
                                         SurfaceTreatmentMethod = sb.SurfaceTreatmentMethod,
                                         DimensionalAccuracyRemark = sb.DimensionalAccuracyRemark,
+                                        StructureMaterialName = sb.MaterialName,
                                     };
                     var structureList = await structure.ToListAsync();
 
@@ -1753,7 +1773,6 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<List<ManufacturingCost>> GetManufacturingCostNoChange(GetManufacturingCostInput input)
         {
-
             #region 缓存
 
             var json = await _panelJsonRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId
@@ -1894,88 +1913,6 @@ namespace Finance.PriceEval
                 List<ManufacturingCost> entity = await GetDbCost(input, isChange);
                 entity.Add(dto);
 
-                //SMT 暂时为0，待需求确定后补充
-                //ManufacturingCost allYearSmt = new();
-                //allYearSmt =
-                //    new ManufacturingCost
-                //    {
-                //        EditId = CostType.SMT.ToString(),
-                //        Id = input.Year,
-                //        CostType = CostType.SMT,
-                //        GradientKy = 0,
-                //        MonthlyDemand = 0,
-                //        ManufacturingCostDirect = new ManufacturingCostDirect
-                //        {
-                //            Id = input.Year,
-                //            DirectLabor = 0,
-                //            EquipmentDepreciation = 0,
-                //            LineChangeCost = 0,
-                //            ManufacturingExpenses = 0,
-                //            Subtotal = 0,
-                //        },
-                //        ManufacturingCostIndirect = new ManufacturingCostIndirect
-                //        {
-                //            Id = input.Year,
-                //            DirectLabor = 0,
-                //            EquipmentDepreciation = 0,
-                //            ManufacturingExpenses = 0,
-                //            Subtotal = 0
-                //        },
-                //        Subtotal = 0
-                //    };
-
-                //if (isChange)
-                //{
-                //    //取得修改项
-                //    var updateItem = await _updateItemRepository
-                //        .FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId
-                //        && p.UpdateItemType == UpdateItemType.ManufacturingCost && p.GradientId == input.GradientId
-                //        && p.SolutionId == input.SolutionId
-                //        && p.Year == input.Year);
-
-                //    var smtManufacturingCostEdit = ObjectMapper.Map<SetUpdateItemInput<List<ManufacturingCost>>>(updateItem);
-                //    if (smtManufacturingCostEdit is not null)
-                //    {
-                //        var smtEdit = smtManufacturingCostEdit.UpdateItem.FirstOrDefault(p => p.EditId == CostType.SMT.ToString());
-                //        if (smtEdit is not null)
-                //        {
-                //            entity.Add(smtEdit);
-                //        }
-                //        else
-                //        {
-                //            allYearSmt = new ManufacturingCost
-                //            {
-                //                Id = input.Year,
-                //                CostType = CostType.SMT,
-                //                GradientKy = 0,
-                //                MonthlyDemand = 0,
-                //                ManufacturingCostDirect = new ManufacturingCostDirect
-                //                {
-                //                    Id = input.Year,
-                //                    DirectLabor = 0,
-                //                    EquipmentDepreciation = 0,
-                //                    LineChangeCost = 0,
-                //                    ManufacturingExpenses = 0,
-                //                    Subtotal = 0,
-                //                },
-                //                ManufacturingCostIndirect = new ManufacturingCostIndirect
-                //                {
-                //                    Id = input.Year,
-                //                    DirectLabor = 0,
-                //                    EquipmentDepreciation = 0,
-                //                    ManufacturingExpenses = 0,
-                //                    Subtotal = 0
-                //                },
-                //                Subtotal = 0
-                //            };
-                //        }
-                //    }
-                //}
-
-                //entity.Add(allYearSmt);
-
-
-                //entity.Insert(2, dto);
                 #endregion
 
                 #region 合计
@@ -2022,9 +1959,6 @@ namespace Finance.PriceEval
 
                 return entity.OrderBy(p => p.CostTypeSort()).ToList();
             }
-
-
-
         }
         async Task<List<ManufacturingCost>> GetData(GetManufacturingCostInput input, Gradient gradient, long sProductld, bool isChange = true)
         {
@@ -2054,41 +1988,9 @@ namespace Finance.PriceEval
 
             #region SMT和COB 其他
             List<ManufacturingCost> entity = await GetDbCost(input, isChange);
-            //if (dto != null)
-            //{
 
             //COB、其他
             entity.Add(dto);
-            //}
-            //entity.Insert(2, dto);
-
-            //SMT 暂时为0，待需求确定后补充
-            //entity.Add(new ManufacturingCost
-            //{
-            //    EditId = CostType.SMT.ToString(),
-            //    Id = input.Year,
-            //    CostType = CostType.SMT,
-            //    GradientKy = 0,
-            //    MonthlyDemand = 0,
-            //    ManufacturingCostDirect = new ManufacturingCostDirect
-            //    {
-            //        Id = input.Year,
-            //        DirectLabor = 0,
-            //        EquipmentDepreciation = 0,
-            //        LineChangeCost = 0,
-            //        ManufacturingExpenses = 0,
-            //        Subtotal = 0,
-            //    },
-            //    ManufacturingCostIndirect = new ManufacturingCostIndirect
-            //    {
-            //        Id = input.Year,
-            //        DirectLabor = 0,
-            //        EquipmentDepreciation = 0,
-            //        ManufacturingExpenses = 0,
-            //        Subtotal = 0
-            //    },
-            //    Subtotal = 0
-            //});
 
             #endregion
 
@@ -2108,105 +2010,261 @@ namespace Finance.PriceEval
 
             if (inputDto.Year == PriceEvalConsts.AllYear)
             {
-                var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == inputDto.GradientId);
-                var gradientValue = gradient.GradientValue.ToString();
+                #region 快速核价：上传
 
-                var cob = await (from b in _bomEnterRepository.GetAll()
-                                 where b.AuditFlowId == inputDto.AuditFlowId && b.SolutionId == inputDto.SolutionId && b.ModelCountYearId == PriceEvalConsts.AllYear
-                                 && b.Classification == gradientValue
-                                 select new ManufacturingCost
-                                 {
-                                     Id = inputDto.Year,
-                                     CostType = CostType.COB,
-                                     GradientKy = 0,
-                                     MonthlyDemand = 0,
-                                     ManufacturingCostDirect = new ManufacturingCostDirect
-                                     {
-                                         Id = inputDto.Year,
-                                         DirectLabor = b.DirectLaborPrice.GetValueOrDefault(),
-                                         EquipmentDepreciation = b.DirectDepreciation.GetValueOrDefault(),
-                                         LineChangeCost = b.DirectLineChangeCost.GetValueOrDefault(),
-                                         ManufacturingExpenses = b.DirectManufacturingCosts.GetValueOrDefault(),
-                                         Subtotal = b.DirectSummary.GetValueOrDefault(),
-                                     },
-                                     ManufacturingCostIndirect = new ManufacturingCostIndirect
-                                     {
-                                         Id = inputDto.Year,
-                                         DirectLabor = b.IndirectLaborPrice.GetValueOrDefault(),
-                                         EquipmentDepreciation = b.IndirectDepreciation.GetValueOrDefault(),
-                                         ManufacturingExpenses = b.IndirectManufacturingCosts.GetValueOrDefault(),
-                                         Subtotal = b.IndirectSummary.GetValueOrDefault()
-                                     },
-                                     Subtotal = b.TotalCost.GetValueOrDefault()
-                                 }).FirstOrDefaultAsync();
+                //判断是否为快速核价上传流程
+                var isUploadAuditFlow = await IsUploadAuditFlow(inputDto.AuditFlowId);
+                if (isUploadAuditFlow)
+                {
+                    var solution = await _solutionRepository.GetAsync(inputDto.SolutionId);
+                    //var gradient = await _gradientRepository.GetAsync(input.GradientId);
 
-                var other = await (from b in _bomEnterTotalRepository.GetAll()
-                                   where b.AuditFlowId == inputDto.AuditFlowId && b.SolutionId == inputDto.SolutionId && b.ModelCountYearId == PriceEvalConsts.AllYear
+                    var gradientModelYear = await (from gm in _gradientModelRepository.GetAll()
+                                                   join gmy in _gradientModelYearRepository.GetAll() on gm.Id equals gmy.GradientModelId
+                                                   where gm.GradientId == inputDto.GradientId && gm.AuditFlowId == inputDto.AuditFlowId
+                                                   && gm.ProductId == solution.Productld
+                                                   select gmy).ToListAsync();
+                    var gradientModelYearSum = gradientModelYear.Sum(p => p.Count);
+
+                    //筛选COB
+                    var cob = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
+                      && p.CostType == CostType.COB);
+
+                    var cobManufacturingCostDirect = new ManufacturingCostDirect
+                    {
+                        Id = 0,
+                        DirectLabor = cob.Sum(p => p.DDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        EquipmentDepreciation = cob.Sum(p => p.DEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        LineChangeCost = cob.Sum(p => p.DLineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        ManufacturingExpenses = cob.Sum(p => p.DManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    cobManufacturingCostDirect.Subtotal = cobManufacturingCostDirect.DirectLabor + cobManufacturingCostDirect.EquipmentDepreciation + cobManufacturingCostDirect.LineChangeCost + cobManufacturingCostDirect.ManufacturingExpenses;
+
+                    var cobManufacturingCostIndirect = new ManufacturingCostIndirect
+                    {
+                        Id = 0,
+                        DirectLabor = cob.Sum(p => p.IDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        ManufacturingExpenses = cob.Sum(p => p.IManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        EquipmentDepreciation = cob.Sum(p => p.IEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    cobManufacturingCostIndirect.Subtotal = cobManufacturingCostIndirect.DirectLabor + cobManufacturingCostIndirect.EquipmentDepreciation + cobManufacturingCostIndirect.ManufacturingExpenses;
+
+                    var cobDto = new ManufacturingCost
+                    {
+                        Id = inputDto.Year,
+                        CostType = CostType.COB,
+                        CostItem = PriceEvalConsts.COB,
+                        GradientKy = cob.Sum(p => p.GradientKy),
+                        ManufacturingCostDirect = cobManufacturingCostDirect,
+                        ManufacturingCostIndirect = cobManufacturingCostIndirect,
+                        Subtotal = cobManufacturingCostDirect.Subtotal + cobManufacturingCostIndirect.Subtotal
+                    };
+
+                    //筛选other
+                    var other = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
+                      && p.CostType == CostType.Other);
+
+                    var otherManufacturingCostDirect = new ManufacturingCostDirect
+                    {
+                        Id = 0,
+                        DirectLabor = other.Sum(p => p.DDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        EquipmentDepreciation = other.Sum(p => p.DEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        LineChangeCost = other.Sum(p => p.DLineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        ManufacturingExpenses = other.Sum(p => p.DManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    otherManufacturingCostDirect.Subtotal = otherManufacturingCostDirect.DirectLabor + otherManufacturingCostDirect.EquipmentDepreciation + otherManufacturingCostDirect.LineChangeCost + otherManufacturingCostDirect.ManufacturingExpenses;
+
+                    var otherManufacturingCostIndirect = new ManufacturingCostIndirect
+                    {
+                        Id = 0,
+                        DirectLabor = other.Sum(p => p.IDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        ManufacturingExpenses = other.Sum(p => p.IManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        EquipmentDepreciation = other.Sum(p => p.IEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    otherManufacturingCostIndirect.Subtotal = otherManufacturingCostIndirect.DirectLabor + otherManufacturingCostIndirect.EquipmentDepreciation + otherManufacturingCostIndirect.ManufacturingExpenses;
+
+                    var otherDto = new ManufacturingCost
+                    {
+                        Id = inputDto.Year,
+                        CostType = CostType.Other,
+                        CostItem = PriceEvalConsts.Other,
+                        GradientKy = other.Sum(p => p.GradientKy),
+                        ManufacturingCostDirect = otherManufacturingCostDirect,
+                        ManufacturingCostIndirect = otherManufacturingCostIndirect,
+                        Subtotal = otherManufacturingCostDirect.Subtotal + otherManufacturingCostIndirect.Subtotal
+                    };
+
+                    //筛选SMT
+                    var smt = await _fu_ManufacturingCostRepository.GetAllListAsync(p => p.AuditFlowId == inputDto.AuditFlowId && p.GradientId == inputDto.GradientId && p.SolutionId == inputDto.SolutionId
+                      && p.CostType == CostType.SMT);
+
+                    var smtManufacturingCostDirect = new ManufacturingCostDirect
+                    {
+                        Id = 0,
+                        DirectLabor = smt.Sum(p => p.DDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        EquipmentDepreciation = smt.Sum(p => p.DEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        LineChangeCost = smt.Sum(p => p.DLineChangeCost * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+
+                        ManufacturingExpenses = smt.Sum(p => p.DManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    smtManufacturingCostDirect.Subtotal = smtManufacturingCostDirect.DirectLabor + smtManufacturingCostDirect.EquipmentDepreciation + smtManufacturingCostDirect.LineChangeCost + smtManufacturingCostDirect.ManufacturingExpenses;
+
+                    var smtManufacturingCostIndirect = new ManufacturingCostIndirect
+                    {
+                        Id = 0,
+                        DirectLabor = smt.Sum(p => p.IDirectLabor * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        ManufacturingExpenses = smt.Sum(p => p.IManufacturingExpenses * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                        EquipmentDepreciation = smt.Sum(p => p.IEquipmentDepreciation * gradientModelYear.FirstOrDefault(o => o.Year == p.Year && o.UpDown == p.UpDown
+                        ).Count) / gradientModelYearSum,
+                    };
+                    smtManufacturingCostIndirect.Subtotal = smtManufacturingCostIndirect.DirectLabor + smtManufacturingCostIndirect.EquipmentDepreciation + smtManufacturingCostIndirect.ManufacturingExpenses;
+
+                    var smtDto = new ManufacturingCost
+                    {
+                        Id = inputDto.Year,
+                        CostType = CostType.SMT,
+                        CostItem = PriceEvalConsts.SMT,
+                        GradientKy = smt.Sum(p => p.GradientKy),
+                        ManufacturingCostDirect = smtManufacturingCostDirect,
+                        ManufacturingCostIndirect = smtManufacturingCostIndirect,
+                        Subtotal = smtManufacturingCostDirect.Subtotal + smtManufacturingCostIndirect.Subtotal
+                    };
+
+                    data.Add(cobDto);
+                    data.Add(otherDto);
+                    data.Add(smtDto);
+
+                }
+                else
+                {
+                    var gradient = await _gradientRepository.FirstOrDefaultAsync(p => p.Id == inputDto.GradientId);
+                    var gradientValue = gradient.GradientValue.ToString();
+
+                    var cob = await (from b in _bomEnterRepository.GetAll()
+                                     where b.AuditFlowId == inputDto.AuditFlowId && b.SolutionId == inputDto.SolutionId && b.ModelCountYearId == PriceEvalConsts.AllYear
                                      && b.Classification == gradientValue
-                                   select new ManufacturingCost
-                                   {
-                                       Id = inputDto.Year,
-                                       CostType = CostType.Other,
-                                       GradientKy = 0,
-                                       MonthlyDemand = 0,
-                                       ManufacturingCostDirect = new ManufacturingCostDirect
+                                     select new ManufacturingCost
+                                     {
+                                         Id = inputDto.Year,
+                                         CostType = CostType.COB,
+                                         GradientKy = 0,
+                                         MonthlyDemand = 0,
+                                         ManufacturingCostDirect = new ManufacturingCostDirect
+                                         {
+                                             Id = inputDto.Year,
+                                             DirectLabor = b.DirectLaborPrice.GetValueOrDefault(),
+                                             EquipmentDepreciation = b.DirectDepreciation.GetValueOrDefault(),
+                                             LineChangeCost = b.DirectLineChangeCost.GetValueOrDefault(),
+                                             ManufacturingExpenses = b.DirectManufacturingCosts.GetValueOrDefault(),
+                                             Subtotal = b.DirectSummary.GetValueOrDefault(),
+                                         },
+                                         ManufacturingCostIndirect = new ManufacturingCostIndirect
+                                         {
+                                             Id = inputDto.Year,
+                                             DirectLabor = b.IndirectLaborPrice.GetValueOrDefault(),
+                                             EquipmentDepreciation = b.IndirectDepreciation.GetValueOrDefault(),
+                                             ManufacturingExpenses = b.IndirectManufacturingCosts.GetValueOrDefault(),
+                                             Subtotal = b.IndirectSummary.GetValueOrDefault()
+                                         },
+                                         Subtotal = b.TotalCost.GetValueOrDefault()
+                                     }).FirstOrDefaultAsync();
+
+                    var other = await (from b in _bomEnterTotalRepository.GetAll()
+                                       where b.AuditFlowId == inputDto.AuditFlowId && b.SolutionId == inputDto.SolutionId && b.ModelCountYearId == PriceEvalConsts.AllYear
+                                         && b.Classification == gradientValue
+                                       select new ManufacturingCost
                                        {
                                            Id = inputDto.Year,
-                                           DirectLabor = 0,
-                                           EquipmentDepreciation = 0,
-                                           LineChangeCost = 0,
-                                           ManufacturingExpenses = 0,
-                                           Subtotal = 0,
-                                       },
-                                       ManufacturingCostIndirect = new ManufacturingCostIndirect
-                                       {
-                                           Id = inputDto.Year,
-                                           DirectLabor = 0,
-                                           EquipmentDepreciation = 0,
-                                           ManufacturingExpenses = b.TotalCost.Value,
-                                           Subtotal = 0
-                                       },
-                                       Subtotal = b.TotalCost.Value
-                                   }).FirstOrDefaultAsync();
+                                           CostType = CostType.Other,
+                                           GradientKy = 0,
+                                           MonthlyDemand = 0,
+                                           ManufacturingCostDirect = new ManufacturingCostDirect
+                                           {
+                                               Id = inputDto.Year,
+                                               DirectLabor = 0,
+                                               EquipmentDepreciation = 0,
+                                               LineChangeCost = 0,
+                                               ManufacturingExpenses = 0,
+                                               Subtotal = 0,
+                                           },
+                                           ManufacturingCostIndirect = new ManufacturingCostIndirect
+                                           {
+                                               Id = inputDto.Year,
+                                               DirectLabor = 0,
+                                               EquipmentDepreciation = 0,
+                                               ManufacturingExpenses = b.TotalCost.Value,
+                                               Subtotal = 0
+                                           },
+                                           Subtotal = b.TotalCost.Value
+                                       }).FirstOrDefaultAsync();
 
-                if (cob is not null)
-                {
-                    data.Add(cob);
-
-                }
-                if (other is not null)
-                {
-                    data.Add(other);
-
-                }
-
-                //SMT 暂时为0，待需求确定后补充
-                data.Add(new ManufacturingCost
-                {
-                    EditId = CostType.SMT.ToString(),
-                    Id = inputDto.Year,
-                    CostType = CostType.SMT,
-                    GradientKy = 0,
-                    MonthlyDemand = 0,
-                    ManufacturingCostDirect = new ManufacturingCostDirect
+                    if (cob is not null)
                     {
-                        Id = inputDto.Year,
-                        DirectLabor = 0,
-                        EquipmentDepreciation = 0,
-                        LineChangeCost = 0,
-                        ManufacturingExpenses = 0,
-                        Subtotal = 0,
-                    },
-                    ManufacturingCostIndirect = new ManufacturingCostIndirect
+                        data.Add(cob);
+
+                    }
+                    if (other is not null)
                     {
+                        data.Add(other);
+
+                    }
+
+                    //SMT 暂时为0，待需求确定后补充
+                    data.Add(new ManufacturingCost
+                    {
+                        EditId = CostType.SMT.ToString(),
                         Id = inputDto.Year,
-                        DirectLabor = 0,
-                        EquipmentDepreciation = 0,
-                        ManufacturingExpenses = 0,
+                        CostType = CostType.SMT,
+                        GradientKy = 0,
+                        MonthlyDemand = 0,
+                        ManufacturingCostDirect = new ManufacturingCostDirect
+                        {
+                            Id = inputDto.Year,
+                            DirectLabor = 0,
+                            EquipmentDepreciation = 0,
+                            LineChangeCost = 0,
+                            ManufacturingExpenses = 0,
+                            Subtotal = 0,
+                        },
+                        ManufacturingCostIndirect = new ManufacturingCostIndirect
+                        {
+                            Id = inputDto.Year,
+                            DirectLabor = 0,
+                            EquipmentDepreciation = 0,
+                            ManufacturingExpenses = 0,
+                            Subtotal = 0
+                        },
                         Subtotal = 0
-                    },
-                    Subtotal = 0
-                });
+                    });
+                }
             }
             else
             {
@@ -4037,5 +4095,20 @@ namespace Finance.PriceEval
 
         #endregion
 
+
+        /// <summary>
+        /// 获取核价表模板
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<FileResult> GetEvalTableModel()
+        {
+            FileStream fs = new FileStream("wwwroot/Excel/EvalTableModel.xlsx", FileMode.Open, FileAccess.Read);
+            byte[] infbytes = new byte[(int)fs.Length];
+            await fs.ReadAsync(infbytes);
+            fs.Close();
+            return new FileContentResult(infbytes, "application/octet-stream") { FileDownloadName = "核价表模板.xlsx" };
+        }
+
     }
+    #endregion
 }
