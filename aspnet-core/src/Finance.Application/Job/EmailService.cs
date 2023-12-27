@@ -103,7 +103,7 @@ namespace Finance.Job
         /// <summary>
         /// 密码即将过期时候发动的邮件
         /// </summary>
-        internal void EmailPasswordWillExpire()
+        internal async void EmailPasswordWillExpire()
         {
             NoticeEmailInfo emailInfoList = nticeEmailInfo.FirstOrDefault(p => p.Id != 0);
             string loginIp = _sendEmail.GetLoginAddr();
@@ -111,9 +111,9 @@ namespace Finance.Job
             string Subject = "报价核价系统发送邮件模块密码即将过期!";
             string Body = "报价核价系统发送邮件模块密码即将过期,请尽快修改密码,切记,密码必须与集团邮箱服务器域账号密码一致,请确认后修改,否则系统将无法运行";
             string emailBody = Body + "（" + " <a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-            Task.Run(async () => {
+            //Task.Run(async () => {
                 await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, emailInfoList.MaintainerEmail, emailInfoList == null ? null : emailInfoList);
-            });        
+            //});        
         }
     }
     /// <summary>
