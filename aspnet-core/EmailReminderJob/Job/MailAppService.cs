@@ -54,7 +54,7 @@ namespace EmailReminderJob.Job
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>GetIsMain {DateTime.Now},接口访问错误");
+                _logger.LogError($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>GetIsMain {DateTime.Now},接口访问错误");
             }
         }
         public async  void SendEmail(SendMailDto resultDto)
