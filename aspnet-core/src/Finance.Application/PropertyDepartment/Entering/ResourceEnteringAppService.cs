@@ -408,7 +408,7 @@ namespace Finance.Entering
                 Count += await _configEnteringElectronic.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsSubmit);//数据库实际提交的条数
             }
             List<ElectronicDto> electronicDtos = electronicDto.ElectronicDtoList;       
-            electronicDtos = electronicDtos.Where(a => a.IsSubmit).ToList();
+            electronicDtos = electronicDtos.Where(a => electronicDto.IsSubmit).ToList();
             Count += electronicDtos.Count();
             return AllCount == Count;
         }
@@ -624,7 +624,7 @@ namespace Finance.Entering
                 Count += await _configStructureElectronic.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsSubmit);//数据库实际提交的条数
             }
             List<StructuralMaterialModel> structuralMaterialModels = structuralMemberEnteringModel.StructuralMaterialEntering;        
-            structuralMaterialModels = structuralMaterialModels.Where(a=>a.IsSubmit).ToList();
+            structuralMaterialModels = structuralMaterialModels.Where(a=> structuralMemberEnteringModel.IsSubmit).ToList();
             Count += structuralMaterialModels.Count();
             return AllCount == Count;
         }
