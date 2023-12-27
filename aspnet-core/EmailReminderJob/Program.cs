@@ -1,6 +1,7 @@
 using EmailReminderJob.Job;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using Sundial;
 
 namespace EmailReminderJob
@@ -28,9 +29,8 @@ namespace EmailReminderJob
                        //.SetRetryTimeout(5); // 作业触发器重试间隔时间                      
                         // 注册作业，并配置作业触发器  每天的早上八点触发
                         options.AddJob<MailJob>("ExamineMail", triggerBuilder);
-                    });                  
-                    //services.AddHostedService<Worker>();
-
+                    });
+                    //services.AddHostedService<Worker>();                
                 })
                 .ConfigureWebHostDefaults(builder => builder.Configure(app =>
                 {
@@ -43,6 +43,10 @@ namespace EmailReminderJob
                 .UseWindowsService(options =>
                 {
                     options.ServiceName="财务邮件提醒服务";
+                })
+                .ConfigureLogging(logging =>
+                {                     
+                   logging.AddLog4Net("log4net.config");
                 })
                 .Build();
             host.Run();

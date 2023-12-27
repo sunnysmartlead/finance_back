@@ -1,17 +1,16 @@
 ﻿
 
+
 using EmailReminderJob.Dto;
 using EmailReminderJob.Ext;
 using RestSharp;
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EmailReminderJob.Job
 {
     public class MailAppService 
     {
-        private readonly ILogger<MailAppService> _logger;
+        private readonly ILogger<MailAppService> _logger; 
         /// <summary>
         /// 私钥
         /// </summary>
@@ -31,7 +30,7 @@ namespace EmailReminderJob.Job
         public async void GetIsMain()
         {
             try
-            {           
+            {
                 RestClientOptions options = new RestClientOptions(Api + "api/services/app/EmailJob/CheckEmailPassword");
                 RestClient client = new RestClient(options);
                 RestRequest request = new RestRequest();
@@ -51,12 +50,12 @@ namespace EmailReminderJob.Job
                             break;
                     }
                 }
-                _logger.LogInformation($"MailAppService=>GetIsMain {DateTime.Now},data:{JsonSerializer.Serialize(response)}");
+                _logger.LogInformation($"MailAppService=>GetIsMain {DateTime.Now},data:{JsonSerializer.Serialize(response)},接口访问");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>GetIsMain {DateTime.Now}");
-            }         
+                _logger.LogInformation($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>GetIsMain {DateTime.Now},接口访问错误");
+            }
         }
         public async  void SendEmail(SendMailDto resultDto)
         {
@@ -67,11 +66,11 @@ namespace EmailReminderJob.Job
                 var request = new RestRequest().AddJsonBody(resultDto);
                 var response = await client.PostAsync(request);
 
-                _logger.LogInformation($"MailAppService=>SendEmail {DateTime.Now},data:{JsonSerializer.Serialize(response)}");
+                _logger.LogInformation($"MailAppService=>SendEmail {DateTime.Now},data:{JsonSerializer.Serialize(response)},接口访问");
             }
             catch (Exception ex)
             {
-                _logger.LogInformation($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>SendEmail {DateTime.Now}");
+                _logger.LogError($"Error:=>>>>>>>>>>>>>>>>{ex.Message} MailAppService=>SendEmail {DateTime.Now},接口访问错误");
             }          
         }      
     }    
