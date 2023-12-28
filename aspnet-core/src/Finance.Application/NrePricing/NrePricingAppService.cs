@@ -2124,6 +2124,13 @@ namespace Finance.NerPricing
                     experimentItemsModel.EnvironmentalExperimentFeeModels = new();
                     List<EnvironmentalExperimentFee> qADepartmentTests = await _resourceEnvironmentalExperimentFee.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(partModel.SolutionId));
                     if (qADepartmentTests is not null) experimentItemsModel.EnvironmentalExperimentFeeModels = ObjectMapper.Map<List<EnvironmentalExperimentFeeModel>>(qADepartmentTests);
+                    experimentItemsModel.EnvironmentalExperimentFeeModels.Select(async  p =>
+                    {
+                        //获取某个ID的人员信息
+                        User user = await _userRepository.FirstOrDefaultAsync(m=>m.Id.Equals(p.LastModifierUserId!=null?p.LastModifierUserId:p.CreatorUserId));
+                        if (user is not null) p.CreatorUserName = user.Name;//提交人名称                      
+                        return p;
+                    }).ToList();
                     experimentItemsModels.Add(experimentItemsModel);
                 }
                 return experimentItemsModels.FirstOrDefault();
