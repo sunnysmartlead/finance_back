@@ -63,7 +63,7 @@ namespace Finance.NrePricing.Model
         /// <summary>
         /// 创建人ID
         /// </summary>
-        public long CreatorUserId { get; set; }
+        public long? CreatorUserId { get; set; }
         /// <summary>
         /// 修改人ID
         /// </summary>
