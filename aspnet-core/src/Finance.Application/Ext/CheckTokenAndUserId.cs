@@ -26,7 +26,7 @@ namespace Finance.Ext
         }
         public async Task InvokeAsync(HttpContext context, IWebHostEnvironment env)
         {
-            [] var HttpTpye = context.Request.Headers["HttpTpye"].FirstOrDefault();
+             var HttpTpye = context.Request.Headers["HttpTpye"].FirstOrDefault();
             //本地运行直接跳过和登录地址
             if (!env.IsDevelopment() && !context.Request.Path.Value.Equals("/api/AccountManagement/Login") && HttpTpye.Equals("axios"))
             {
