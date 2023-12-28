@@ -399,7 +399,7 @@ namespace Finance.Entering
         /// <returns></returns>
         internal async Task<bool> GetElectronicIsAllEntering(long auditFlowId, SubmitElectronicDto electronicDto)
         {
-            int AllCount = await InitialValueQuantityOfElectronicMaterials(auditFlowId);//应该录入数据库这么多条数据          
+            int AllCount = await InitialValueQuantityOfElectronicMaterials(auditFlowId);//应该录入数据库这么多条数据
             //总共的方案
             List<SolutionModel> solutionModel = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId);
             int Count = 0;
@@ -407,14 +407,8 @@ namespace Finance.Entering
             {
                 Count += await _configEnteringElectronic.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsSubmit);//数据库实际提交的条数
             }
-            List<ElectronicDto> electronicDtos = electronicDto.ElectronicDtoList;
-            List<EnteringElectronic> enteringElectronics = new();
-            foreach (ElectronicDto item in electronicDtos)
-            {
-                EnteringElectronic enteringElectronic = await _configEnteringElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsEntering && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(item.ElectronicId));
-                if (enteringElectronic is not null) enteringElectronics.Add(enteringElectronic);
-            }
-            electronicDtos = electronicDtos.Where(a => enteringElectronics.Where(t => a.SolutionId == t.SolutionId && a.ElectronicId.Equals(t.ElectronicId)).Any() || a.IsEntering).ToList();
+            List<ElectronicDto> electronicDtos = electronicDto.ElectronicDtoList;       
+            electronicDtos = electronicDtos.Where(a => electronicDto.IsSubmit).ToList();
             Count += electronicDtos.Count();
             return AllCount == Count;
         }
@@ -629,14 +623,8 @@ namespace Finance.Entering
             {
                 Count += await _configStructureElectronic.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsSubmit);//数据库实际提交的条数
             }
-            List<StructuralMaterialModel> structuralMaterialModels = structuralMemberEnteringModel.StructuralMaterialEntering;
-            List<StructureElectronic> structureElectronics = new();
-            foreach (StructuralMaterialModel item in structuralMaterialModels)
-            {
-                StructureElectronic structureElectronic = await _configStructureElectronic.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsEntering && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(item.StructureId));
-                if (structureElectronic is not null) structureElectronics.Add(structureElectronic);
-            }
-            structuralMaterialModels = structuralMaterialModels.Where(a => structureElectronics.Where(t => a.SolutionId == t.SolutionId && a.StructureId.Equals(t.StructureId)).Any() || a.IsEntering).ToList();
+            List<StructuralMaterialModel> structuralMaterialModels = structuralMemberEnteringModel.StructuralMaterialEntering;        
+            structuralMaterialModels = structuralMaterialModels.Where(a=> structuralMemberEnteringModel.IsSubmit).ToList();
             Count += structuralMaterialModels.Count();
             return AllCount == Count;
         }

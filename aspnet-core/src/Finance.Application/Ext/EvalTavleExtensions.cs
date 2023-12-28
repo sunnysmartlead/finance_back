@@ -31,7 +31,7 @@ namespace Finance.Ext
         private const int StartRow = 8;
 
         //在核价表Excel中，【制造成本】在【BOM成本】下的行数
-        private const int ManufacturingCostRow = 9;
+        private const int ManufacturingCostRow = 8;
 
         //在核价表Excel中，【损耗成本】在【制造成本】下的行数
         private const int LossCostRow = 3;
@@ -65,20 +65,20 @@ namespace Finance.Ext
                     Sap = row.Cells[4].ToString(),
                     MaterialName = row.Cells[5].ToString(),
                     IsCustomerSupply = row.Cells[6].ToString().GetIsCustomerSupply(),
-                    AssemblyCount = row.Cells[7].ToString().ToDouble(),
-                    MaterialPrice = row.Cells[8].ToString().ToDecimal(),
+                    AssemblyCount = row.Cells[7].NumericCellValue.ToString().ToDouble(),
+                    MaterialPrice = row.Cells[8].NumericCellValue.ToString().ToDecimal(),
                     CurrencyText = row.Cells[9].ToString(),
-                    ExchangeRate = row.Cells[10].ToString().ToDecimal(),
-                    MaterialPriceCyn = row.Cells[11].ToString().ToDecimal(),
-                    TotalMoneyCyn = row.Cells[12].ToString().ToDecimal(),
-                    TotalMoneyCynNoCustomerSupply = row.Cells[13].ToString().ToDecimal(),
-                    Loss = row.Cells[14].ToString().ToDecimal(),
-                    MaterialCost = row.Cells[15].ToString().ToDecimal(),
-                    InputCount = row.Cells[16].ToString().ToDecimal(),
-                    PurchaseCount = row.Cells[17].ToString().ToDecimal(),
-                    MoqShareCount = row.Cells[18].ToString().ToDecimal(),
-                    Moq = row.Cells[19].ToString().ToDecimal(),
-                    AvailableInventory = row.Cells[20].ToString().ToInt(),
+                    ExchangeRate = row.Cells[10].NumericCellValue.ToString().ToDecimal(),
+                    MaterialPriceCyn = row.Cells[11].NumericCellValue.ToString().ToDecimal(),
+                    TotalMoneyCyn = row.Cells[12].NumericCellValue.ToString().ToDecimal(),
+                    TotalMoneyCynNoCustomerSupply = row.Cells[13].NumericCellValue.ToString().ToDecimal(),
+                    Loss = row.Cells[14].NumericCellValue.ToString().ToDecimal(),
+                    MaterialCost = row.Cells[15].NumericCellValue.ToString().ToDecimal(),
+                    InputCount = row.Cells[16].NumericCellValue.ToString().ToDecimal(),
+                    PurchaseCount = row.Cells[17].NumericCellValue.ToString().ToDecimal(),
+                    MoqShareCount = row.Cells[18].NumericCellValue.ToString().ToDecimal(),
+                    Moq = row.Cells[19].NumericCellValue.ToString().ToDecimal(),
+                    AvailableInventory = row.Cells[20].NumericCellValue.ToString().ToInt(),
                     Remarks = row.Cells[21].ToString(),
                 };
             }
@@ -107,22 +107,22 @@ namespace Finance.Ext
                     {
                         Id = year,
                         UpDown = upDonw,
-                        DirectLabor = row.Cells[7].ToString().ToDecimal(),
-                        EquipmentDepreciation = row.Cells[8].ToString().ToDecimal(),
-                        LineChangeCost = row.Cells[9].ToString().ToDecimal(),
-                        ManufacturingExpenses = row.Cells[10].ToString().ToDecimal(),
-                        Subtotal = row.Cells[11].ToString().ToDecimal(),
+                        DirectLabor = row.Cells[7].NumericCellValue.ToString().ToDecimal(),
+                        EquipmentDepreciation = row.Cells[8].NumericCellValue.ToString().ToDecimal(),
+                        LineChangeCost = row.Cells[9].NumericCellValue.ToString().ToDecimal(),
+                        ManufacturingExpenses = row.Cells[10].NumericCellValue.ToString().ToDecimal(),
+                        Subtotal = row.Cells[11].NumericCellValue.ToString().ToDecimal(),
                     },
                     ManufacturingCostIndirect = new ManufacturingCostIndirect
                     {
                         Id = year,
                         UpDown = upDonw,
-                        DirectLabor = row.Cells[12].ToString().ToDecimal(),
-                        EquipmentDepreciation = row.Cells[13].ToString().ToDecimal(),
-                        ManufacturingExpenses = row.Cells[14].ToString().ToDecimal(),
-                        Subtotal = row.Cells[15].ToString().ToDecimal(),
+                        DirectLabor = row.Cells[12].NumericCellValue.ToString().ToDecimal(),
+                        EquipmentDepreciation = row.Cells[13].NumericCellValue.ToString().ToDecimal(),
+                        ManufacturingExpenses = row.Cells[14].NumericCellValue.ToString().ToDecimal(),
+                        Subtotal = row.Cells[15].NumericCellValue.ToString().ToDecimal(),
                     },
-                    Subtotal = row.Cells[16].ToString().ToDecimal(),
+                    Subtotal = row.Cells[16].NumericCellValue.ToString().ToDecimal(),
                 };
 
 
@@ -163,8 +163,8 @@ namespace Finance.Ext
                     UpDown = upDonw,
                     EditId = i.ToString(),
                     Name = nameRow.Cells[i].ToString(),
-                    WastageCost = lossRow.Cells[i].ToString().ToDecimal(),
-                    MoqShareCount = moqRow.Cells[i].ToString().ToDecimal(),
+                    WastageCost = lossRow.Cells[i].NumericCellValue.ToString().ToDecimal(),
+                    MoqShareCount = moqRow.Cells[i].NumericCellValue.ToString().ToDecimal(),
                 };
             }
         }
@@ -222,15 +222,15 @@ namespace Finance.Ext
                 Id = year,
                 Year = year,
                 UpDown = upDonw,
-                Fixture = row.Cells[7].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].ToString().ToDecimal(),
-                LogisticsFee = row.Cells[8].ToString().ToDecimal(),
+                Fixture = row.Cells[7].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].NumericCellValue.ToString().ToDecimal(),
+                LogisticsFee = row.Cells[8].NumericCellValue.ToString().ToDecimal(),
                 ProductCategory = row.Cells[9].ToString(),
                 CostProportion = row.Cells[10].ToString().Replace("%", string.Empty).ToDecimal(),
-                QualityCost = row.Cells[11].ToString().ToDecimal(),
+                QualityCost = row.Cells[11].NumericCellValue.ToString().ToDecimal(),
                 AccountingPeriod = row.Cells[12].ToString().ToInt(),
-                CapitalCostRate = row.Cells[14].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].ToString().ToDecimal(),
-                TaxCost = row.Cells[16].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].ToString().ToDecimal(),
-                Total = row.Cells[17].ToString().ToDecimal(),
+                CapitalCostRate = row.Cells[14].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].NumericCellValue.ToString().ToDecimal(),
+                TaxCost = row.Cells[16].ToString().IsNullOrWhiteSpace() ? null : row.Cells[7].NumericCellValue.ToString().ToDecimal(),
+                Total = row.Cells[17].NumericCellValue.ToString().ToDecimal(),
             };
         }
 
@@ -252,7 +252,7 @@ namespace Finance.Ext
                 EditId = UpdateItemType.QualityCost.ToString(),
                 ProductCategory = row.Cells[9].ToString(),
                 CostProportion = row.Cells[10].ToString().Replace("%", string.Empty).ToDecimal(),
-                QualityCost = row.Cells[11].ToString().ToDecimal(),
+                QualityCost = row.Cells[11].NumericCellValue.ToString().ToDecimal(),
             };
         }
 
@@ -272,7 +272,7 @@ namespace Finance.Ext
                 Year = year.ToString(),
                 UpDown = upDonw,
                 EditId = "logisticsCost",
-                PerTotalLogisticsCost = row.Cells[8].ToString().ToDecimal(),
+                PerTotalLogisticsCost = row.Cells[8].NumericCellValue.ToString().ToDecimal(),
             };
         }
         #endregion

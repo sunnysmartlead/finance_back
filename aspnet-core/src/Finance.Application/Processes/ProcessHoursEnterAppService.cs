@@ -1597,9 +1597,23 @@ namespace Finance.Processes
                             for (int g = 0; g < 1; g++)
                             {
                                 Solution entity = await _resourceSchemeTable.GetAsync((long)SolutionId);
+                                string str2 = Regex.Replace(yearstr, @"[^0-9]+", "");
+                                foundationWorkingHourItem.YearInt = Decimal.Parse(str2);
+                                string uph = "";
+                                var str = "上";
+                                var str1 = "下";
+                                if (yearstr.Contains(str)) {
+                                    uph = YearType.FirstHalf.ToString();
+                                }
+                                if (yearstr.Contains(str1))
+                                {
+                                    uph = YearType.SecondHalf.ToString();
+                                }
+                                else {
+                                    uph = YearType.Year.ToString();
+                                }
 
-                                var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == AuditFlowId && t.ProductId == entity.Productld).ToList();
-
+                                var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == AuditFlowId && t.ProductId == entity.Productld && t.Year.Equals(foundationWorkingHourItem.YearInt) && t.UpDown.Equals(uph)).ToList();
                                 ProcessHoursEnteritemDto processHoursEnteritem = new ProcessHoursEnteritemDto();
                                 processHoursEnteritem.LaborHour = decimal.Parse(val0.ToString());
                                 processHoursEnteritem.MachineHour = decimal.Parse(val1.ToString());
@@ -1610,8 +1624,7 @@ namespace Finance.Processes
                                 }
                                 processHoursEnteritems.Add(processHoursEnteritem);
                             }
-                            string str2 = Regex.Replace(yearstr, @"[^0-9]+", "");
-                            foundationWorkingHourItem.YearInt = Decimal.Parse(str2);
+                           
                             foundationWorkingHourItem.Issues = processHoursEnteritems;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
 

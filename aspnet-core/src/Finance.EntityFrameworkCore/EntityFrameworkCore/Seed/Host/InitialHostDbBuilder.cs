@@ -1,4 +1,5 @@
 ﻿using Abp.Domain.Uow;
+using Finance.EntityFrameworkCore.Seed.Tenants;
 
 namespace Finance.EntityFrameworkCore.Seed.Host
 {
@@ -24,7 +25,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
             new DefaultDepartmentCreator(_context).Create();
 
-            
+            new AdminRoleBuilder(_context).Create();
+
 
 
             new DefaultFinanceDictionaryCreator(_context, _unitOfWorkManager).Create();
