@@ -56,7 +56,18 @@ namespace Finance.NrePricing.Model
         /// 备注
         /// </summary>       
         public string Remark { get; set; }
-
+        /// <summary>
+        /// 创建人名称
+        /// </summary>
+        public string CreatorUserName { get; set; }
+        /// <summary>
+        /// 创建人ID
+        /// </summary>
+        public long? CreatorUserId { get; set; }
+        /// <summary>
+        /// 修改人ID
+        /// </summary>
+        public long? LastModifierUserId { get; set; }
     }
     /// <summary>
     ///品保录入  试验项目表 模型

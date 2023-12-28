@@ -2625,6 +2625,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
     {
         List<Solution> solutions = isOfferDto.Solutions;
+        if(solutions is null || solutions.Count == 0)
+        {
+            throw new UserFriendlyException("方案组不能为空");
+
+        }
+
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
         int ntype = isOfferDto.ntype;
