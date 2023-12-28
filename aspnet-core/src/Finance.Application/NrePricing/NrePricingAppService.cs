@@ -58,8 +58,7 @@ namespace Finance.NerPricing
 {
     /// <summary>
     /// Nre核价api
-    /// </summary>
-    [AbpAuthorize]
+    /// </summary>   
     public class NrePricingAppService : FinanceAppServiceBase
     {
         /// <summary>
@@ -2057,6 +2056,7 @@ namespace Finance.NerPricing
         /// Nre 品保部=>环境实验费 录入(单个方案)
         /// </summary>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task PostExperimentItemsSingle(ExperimentItemsSingleDto experimentItems)
         {
             //判断 该方案 是否已经录入
@@ -2106,6 +2106,7 @@ namespace Finance.NerPricing
         /// Nre 品保部=>环境实验费 录入过的值(单个方案)
         /// </summary>
         /// <returns></returns>
+        [AbpAuthorize]
         public async Task<ExperimentItemsModel> GetReturnExperimentItemsSingle([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, [FriendlyRequired("方案id", SpecialVerification.SolutionIdVerification)] long solutionId)
         {
             try

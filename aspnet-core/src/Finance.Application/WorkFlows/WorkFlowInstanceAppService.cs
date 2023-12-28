@@ -565,6 +565,17 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task ResetTask(ResetTaskInput input)
         {
+            if (AbpSession.UserId.Value == input.TargetUserId)
+            {
+                throw new FriendlyException("不能将任务重置给自己！");
+            }
+
+            var isHas = await _taskResetRepository.GetAll().AnyAsync(p=>p.ResetUserId == AbpSession.UserId && p.TargetUserId == input.TargetUserId && p.IsActive);
+            if (isHas)
+            {
+                throw new FriendlyException("此任务已经重置给这个用户了");
+            }
+
             //将重置给自己的任务取消激活
             var entity = await _taskResetRepository.FirstOrDefaultAsync(
                 p => p.NodeInstanceId == input.NodeInstanceId && p.IsActive

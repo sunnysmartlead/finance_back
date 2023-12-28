@@ -24,13 +24,14 @@ namespace Finance.Ext
             _next = next;
             _abpSession = abpSession;
         }
-        public async Task InvokeAsync(HttpContext context, IWebHostEnvironment env)        
+        public async Task InvokeAsync(HttpContext context, IWebHostEnvironment env)
         {
+             var HttpTpye = context.Request.Headers["HttpTpye"].FirstOrDefault();
             //本地运行直接跳过和登录地址
-            if (!env.IsDevelopment()&&!context.Request.Path.Value.Equals("/api/AccountManagement/Login"))
-            {                
+            if (!env.IsDevelopment() && !context.Request.Path.Value.Equals("/api/AccountManagement/Login") && HttpTpye=="axios")
+            {
                 // 获取当前用户的ID  
-                var userId = _abpSession.UserId; 
+                var userId = _abpSession.UserId;
                 //获取Headers中的UserId
                 var UserId = context.Request.Headers["UserId"].FirstOrDefault();
                 try
@@ -60,8 +61,8 @@ namespace Finance.Ext
                     context.Response.StatusCode = 401;
                     return;
                 }
-            }         
-            await _next.Invoke(context);            
+            }
+            await _next.Invoke(context);
         }
     }
     public static class CheckTokenAndUserIdExtensions
