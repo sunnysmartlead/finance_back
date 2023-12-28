@@ -28,7 +28,7 @@ namespace Finance.Ext
         {
              var HttpTpye = context.Request.Headers["HttpTpye"].FirstOrDefault();
             //本地运行直接跳过和登录地址
-            if (!env.IsDevelopment() && !context.Request.Path.Value.Equals("/api/AccountManagement/Login") && HttpTpye.Equals("axios"))
+            if (!env.IsDevelopment() && !context.Request.Path.Value.Equals("/api/AccountManagement/Login") && HttpTpye=="axios")
             {
                 // 获取当前用户的ID  
                 var userId = _abpSession.UserId;
