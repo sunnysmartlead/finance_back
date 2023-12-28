@@ -866,6 +866,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 throw new FriendlyException($"此报价方案组合已存在");
             }
             //进行报价
+
+            isOfferDto.IsFirst = false;
+            isOfferDto.ntype = 0;
             await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
         }
         else
