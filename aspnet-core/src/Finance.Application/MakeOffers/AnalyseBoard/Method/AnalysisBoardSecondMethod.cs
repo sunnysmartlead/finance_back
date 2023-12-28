@@ -2572,8 +2572,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         await _dynamicUnitPriceOffers.DeleteAsync(p =>
             p.version == version && p.AuditFlowId == AuditFlowId && p.ntype == ntype);
     }
-    
-    
+
+
     public async Task deleteNoSolution(long AuditFlowId, int version, int ntype)
     {
         //应陈梦瑶要求，不删除方案
@@ -2625,14 +2625,197 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task PostIsOfferSaveSecond(IsOfferSecondDto isOfferDto)
     {
         List<Solution> solutions = isOfferDto.Solutions;
-        if(solutions is null || solutions.Count == 0)
+        if (solutions is null || solutions.Count == 0)
         {
             throw new UserFriendlyException("方案组不能为空");
-
         }
 
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
+
+
+        var priceEvaluationStartInputResult =
+            await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
+        var pricetype = priceEvaluationStartInputResult.PriceEvalType;
+
+
+        if ("PriceEvalType_Sample".Equals(pricetype))
+        {
+            //样品数据完整校验
+
+            var samples = isOfferDto.SampleOffer;
+
+            if (samples is null || samples.Count == 0)
+            {
+                throw new UserFriendlyException("样品数据不完整");
+            }
+
+            foreach (var sample in samples)
+            {
+                var sampleModelsmodel = sample.OnlySampleModels;
+                if (sampleModelsmodel is null || sampleModelsmodel.Count == 0)
+                {
+                    throw new UserFriendlyException("样品数据不完整");
+                }
+            }
+        }
+        else if (priceEvaluationStartInputResult.IsHasSample == true)
+        {
+            //样品数据完整校验
+            var samples = isOfferDto.SampleOffer;
+
+            if (samples is null || samples.Count == 0)
+            {
+                throw new UserFriendlyException("样品数据不完整");
+            }
+
+            foreach (var sample in samples)
+            {
+                var sampleModelsmodel = sample.OnlySampleModels;
+                if (sampleModelsmodel is null || sampleModelsmodel.Count == 0)
+                {
+                    throw new UserFriendlyException("样品数据不完整");
+                }
+            }
+
+            var nress = isOfferDto.nres;
+            if (nress is null || nress.Count == 0)
+            {
+                throw new UserFriendlyException("NRE数据不完整");
+            }
+
+            foreach (var nresss in nress)
+            {
+                var nremodel = nresss.models;
+                if (nremodel is null || nremodel.Count == 0)
+                {
+                    throw new UserFriendlyException("NRE数据不完整");
+                }
+            }
+
+
+            var sopss = isOfferDto.Sops;
+            if (sopss is null || sopss.Count == 0)
+            {
+                throw new UserFriendlyException("单价表数据不完整");
+            }
+
+            var fulls = isOfferDto.FullLifeCycle;
+            if (fulls is null || fulls.Count == 0)
+            {
+                throw new UserFriendlyException("汇总分析数据不完整");
+            }
+
+
+            var boardSecondModels = isOfferDto.ProjectBoard;
+
+            if (boardSecondModels is null || boardSecondModels.Count == 0)
+            {
+                throw new UserFriendlyException("看板数据不完整");
+            }
+
+            foreach (var boardModel in boardSecondModels)
+            {
+                var nremodel = boardModel.ProjectBoardModels;
+                if (nremodel is null || nremodel.Count == 0)
+                {
+                    throw new UserFriendlyException("看板数据不完整");
+                }
+            }
+
+            var jtmlss = isOfferDto.GradientQuotedGrossMargins;
+            if (jtmlss is null || jtmlss.Count == 0)
+            {
+                throw new UserFriendlyException("阶梯毛利率数据不完整");
+            }
+
+            var sjmll = isOfferDto.QuotedGrossMargins;
+
+            if (sjmll is null || sjmll.Count == 0)
+            {
+                throw new UserFriendlyException("实际毛利率数据不完整");
+            }
+
+            foreach (var sjmlls in sjmll)
+            {
+                var list = sjmlls.QuotedGrossMarginActualList;
+                if (list is null || list.Count == 0)
+                {
+                    throw new UserFriendlyException("实际毛利率数据不完整");
+                }
+            }
+        }
+        else
+        {
+            var nress = isOfferDto.nres;
+            if (nress is null || nress.Count == 0)
+            {
+                throw new UserFriendlyException("NRE数据不完整");
+            }
+
+            foreach (var nresss in nress)
+            {
+                var nremodel = nresss.models;
+                if (nremodel is null || nremodel.Count == 0)
+                {
+                    throw new UserFriendlyException("NRE数据不完整");
+                }
+            }
+
+
+            var sopss = isOfferDto.Sops;
+            if (sopss is null || sopss.Count == 0)
+            {
+                throw new UserFriendlyException("单价表数据不完整");
+            }
+
+            var fulls = isOfferDto.FullLifeCycle;
+            if (fulls is null || fulls.Count == 0)
+            {
+                throw new UserFriendlyException("汇总分析数据不完整");
+            }
+
+
+            var boardSecondModels = isOfferDto.ProjectBoard;
+
+            if (boardSecondModels is null || boardSecondModels.Count == 0)
+            {
+                throw new UserFriendlyException("看板数据不完整");
+            }
+
+            foreach (var boardModel in boardSecondModels)
+            {
+                var nremodel = boardModel.ProjectBoardModels;
+                if (nremodel is null || nremodel.Count == 0)
+                {
+                    throw new UserFriendlyException("看板数据不完整");
+                }
+            }
+
+            var jtmlss = isOfferDto.GradientQuotedGrossMargins;
+            if (jtmlss is null || jtmlss.Count == 0)
+            {
+                throw new UserFriendlyException("阶梯毛利率数据不完整");
+            }
+
+            var sjmll = isOfferDto.QuotedGrossMargins;
+
+            if (sjmll is null || sjmll.Count == 0)
+            {
+                throw new UserFriendlyException("实际毛利率数据不完整");
+            }
+
+            foreach (var sjmlls in sjmll)
+            {
+                var list = sjmlls.QuotedGrossMarginActualList;
+                if (list is null || list.Count == 0)
+                {
+                    throw new UserFriendlyException("实际毛利率数据不完整");
+                }
+            }
+        }
+
+
         int ntype = isOfferDto.ntype;
 
         int time = isOfferDto.ntime;
@@ -3114,8 +3297,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                         Pcs = sampleQuotation.Pcs.ToString(),
                         Cost = sampleQuotation.Cost.ToString(),
                         UnitPrice = sampleQuotation.UnitPrice.ToString(),
-                        GrossMargin = Math.Round(sampleQuotation.GrossMargin,2).ToString() + '%',
-                        SalesRevenue = Math.Round(sampleQuotation.SalesRevenue,2).ToString()
+                        GrossMargin = Math.Round(sampleQuotation.GrossMargin, 2).ToString() + '%',
+                        SalesRevenue = Math.Round(sampleQuotation.SalesRevenue, 2).ToString()
                     }).ToList();
 
                 list.AddRange(samples);
@@ -3158,19 +3341,20 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task InsertSolution(List<Solution> solutions, int version, int time, long processId, bool isfirst)
     {
-       var sol= await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
-       long id = 0;
-       if (sol is not null)
-       {
-           id = sol.Id;
-       }
+        var sol = await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
+        long id = 0;
+        if (sol is not null)
+        {
+            id = sol.Id;
+        }
+
         SolutionQuotation solutionQuotation = new()
         {
             AuditFlowId = processId,
             SolutionListJson = JsonConvert.SerializeObject(solutions),
             ntime = time,
             status = 0,
-            Id=id,
+            Id = id,
             IsFirst = isfirst,
             version = version
         };
@@ -3854,18 +4038,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     solutionName = solution.Product,
                     Index = i + "",
                     CostName = nre.FormName,
-                    PricingMoney =Math.Round(nre.PricingMoney,2).ToString(),
-                    OfferCoefficient = Math.Round(nre.OfferCoefficient,2).ToString(),
-                    OfferMoney = Math.Round(nre.OfferMoney,2).ToString(),
+                    PricingMoney = Math.Round(nre.PricingMoney, 2).ToString(),
+                    OfferCoefficient = Math.Round(nre.OfferCoefficient, 2).ToString(),
+                    OfferMoney = Math.Round(nre.OfferMoney, 2).ToString(),
                     Remark = nre.Remark
                 });
             }
 
             list.Add(new NreExcel()
             {
-                PricingMoney = Math.Round(nres.Sum(p => p.PricingMoney),2).ToString(),
+                PricingMoney = Math.Round(nres.Sum(p => p.PricingMoney), 2).ToString(),
                 OfferCoefficient = "",
-                OfferMoney = Math.Round(nres.Sum(p => p.OfferMoney),2).ToString(),
+                OfferMoney = Math.Round(nres.Sum(p => p.OfferMoney), 2).ToString(),
                 Remark = ""
             });
             list.Add(new NreExcel()
@@ -3883,9 +4067,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 {
                     solutionName = solution.SolutionName,
                     Index = dev.DeviceName,
-                    CostName =Math.Round( dev.DevicePrice,2).ToString(),
-                    PricingMoney =Math.Round( dev.Number,2).ToString(),
-                    OfferCoefficient = Math.Round(dev.equipmentMoney,2).ToString()
+                    CostName = Math.Round(dev.DevicePrice, 2).ToString(),
+                    PricingMoney = Math.Round(dev.Number, 2).ToString(),
+                    OfferCoefficient = Math.Round(dev.equipmentMoney, 2).ToString()
                 });
             }
         }
@@ -3911,18 +4095,18 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 solutionName = "汇总",
                 Index = i + "",
                 CostName = nre.FormName,
-                PricingMoney = Math.Round( nre.PricingMoney,2).ToString(),
-                OfferCoefficient =Math.Round(  nre.OfferCoefficient,2).ToString(),
-                OfferMoney =Math.Round(  nre.OfferMoney,2).ToString(),
+                PricingMoney = Math.Round(nre.PricingMoney, 2).ToString(),
+                OfferCoefficient = Math.Round(nre.OfferCoefficient, 2).ToString(),
+                OfferMoney = Math.Round(nre.OfferMoney, 2).ToString(),
                 Remark = nre.Remark
             });
         }
 
         list.Add(new NreExcel()
         {
-            PricingMoney = Math.Round(hzre.Sum(p => p.PricingMoney),2).ToString(),
+            PricingMoney = Math.Round(hzre.Sum(p => p.PricingMoney), 2).ToString(),
             OfferCoefficient = "",
-            OfferMoney = Math.Round(hzre.Sum(p => p.OfferMoney),2).ToString(),
+            OfferMoney = Math.Round(hzre.Sum(p => p.OfferMoney), 2).ToString(),
             Remark = ""
         });
 
@@ -3943,9 +4127,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 solutionName = "汇总",
                 Index = dev.DeviceName,
-                CostName = Math.Round(dev.DevicePrice,2).ToString(),
-                PricingMoney = Math.Round(dev.Number,2).ToString(),
-                OfferCoefficient = Math.Round(dev.equipmentMoney,2).ToString()
+                CostName = Math.Round(dev.DevicePrice, 2).ToString(),
+                PricingMoney = Math.Round(dev.Number, 2).ToString(),
+                OfferCoefficient = Math.Round(dev.equipmentMoney, 2).ToString()
             });
         }
 
@@ -4771,8 +4955,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             NREUnitSumModel nreUnitSumModel = new()
             {
                 Product = solution.Product,
-                cost = Math.Round(cost,2),
-                number = Math.Round(number,2)
+                cost = Math.Round(cost, 2),
+                number = Math.Round(number, 2)
             };
 
             unitPriceSumModels.Add(unitPriceSumModel);
@@ -5167,11 +5351,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 0);
         int ntype = 0;
-        if (dowm is not null && dowm.Count>0)
+        if (dowm is not null && dowm.Count > 0)
         {
             ntype = dowm.Max(p => p.ntype);
         }
-       
+
         string content = JsonConvert.SerializeObject(quotationListSecondDto);
 
         _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
@@ -5322,7 +5506,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             List<NreQuotationList> nreQuotationLists =
                 await _NreQuotationList.GetAllListAsync(p => p.ExternalQuotationId.Equals(externalQuotation.Id));
             externalQuotationDto = ObjectMapper.Map<ExternalQuotationDto>(externalQuotation);
+
             #region 不去数据库中取值,而是取报价看板返回的值
+
             //externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
             //externalQuotationDto.ProductQuotationListDtos = productDtos.Select((a, index) =>
             //    new ProductQuotationListDto()
@@ -5366,11 +5552,14 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             //    if (nreQuotationList is not null) p.Remark = nreQuotationList.Remark;
             //    return p;
             //}).ToList();
+
             #endregion
+
             externalQuotationDto.ProductQuotationListDtos = new List<ProductQuotationListDto>();
-            externalQuotationDto.ProductQuotationListDtos = ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);          
+            externalQuotationDto.ProductQuotationListDtos =
+                ObjectMapper.Map<List<ProductQuotationListDto>>(externalQuotationMxs);
             externalQuotationDto.NreQuotationListDtos = new List<NreQuotationListDto>();
-            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);         
+            externalQuotationDto.NreQuotationListDtos = ObjectMapper.Map<List<NreQuotationListDto>>(nreQuotationLists);
         }
         else
         {
