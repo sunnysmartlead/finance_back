@@ -27,8 +27,8 @@ namespace Finance.Ext
         public async Task InvokeAsync(HttpContext context, IWebHostEnvironment env)        
         {
             //本地运行直接跳过和登录地址
-            if (!env.IsDevelopment())
-            {
+            if (!env.IsDevelopment()&&!context.Request.Path.Value.Equals("/api/AccountManagement/Login"))
+            {                
                 // 获取当前用户的ID  
                 var userId = _abpSession.UserId; 
                 //获取Headers中的UserId
