@@ -59,6 +59,7 @@ namespace Finance.NerPricing
     /// <summary>
     /// Nre核价api
     /// </summary>
+    [AbpAuthorize]
     public class NrePricingAppService : FinanceAppServiceBase
     {
         /// <summary>
