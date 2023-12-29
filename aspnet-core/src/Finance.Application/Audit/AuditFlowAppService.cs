@@ -456,8 +456,8 @@ namespace Finance.Audit
                 //如果当前用户不是本流程的项目经理或流程发起人（业务员），就把开始页面过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "开始" || p.IsReset)
 
-                //如果当前用户不是贸易合规审核员，或该流程的项目经理，就把贸易合规页面过滤掉
-                .WhereIf((priceEvaluation == null) || (!isTradeComplianceAuditor) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+                //如果当前用户不是贸易合规审核员，并且也不是该流程的项目经理，就把贸易合规页面过滤掉
+                .WhereIf((priceEvaluation == null || priceEvaluation.ProjectManager != AbpSession.UserId) && (!isTradeComplianceAuditor), p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
 
                 //如果当前用户不是流程发起人（业务员），就把【生成报价分析界面选择报价方案】、【报价反馈】过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId,
