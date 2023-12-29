@@ -1560,7 +1560,6 @@ namespace Finance.Processes
                         {
                             foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[36]].ToString());
 
-
                         }
                         //检具数量
                         if (null != row[keys[35 + 1]])
@@ -3224,6 +3223,7 @@ namespace Finance.Processes
                 entity.FixtureName = listItem.ToolInfo.FixtureName;
                 entity.FrockPrice = listItem.ToolInfo.FrockPrice;
                 entity.FixtureNumber = listItem.ToolInfo.FixtureNumber;
+                entity.FixturePrice = listItem.ToolInfo.FixturePrice;
                 entity.FrockPrice = listItem.ToolInfo.FrockPrice;
                 entity.FrockName = listItem.ToolInfo.FrockName;
                 entity.FrockNumber = listItem.ToolInfo.FrockNumber;
