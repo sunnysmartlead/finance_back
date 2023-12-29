@@ -181,22 +181,6 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
 
-    /// <summary>
-    /// 用于调试接口
-    /// </summary>
-    /// <param name="analyseBoardSecondInputDto"></param>
-    /// <returns></returns>
-    /// <exception cref="UserFriendlyException"></exception>
-    public async Task<List<Gradient>> getInterface(
-        long auid)
-    {
-        //获取梯度
-        List<Gradient> gradients =
-            await _gradientRepository.GetAllListAsync(p => p.AuditFlowId == auid);
-        gradients = gradients.OrderBy(p => p.GradientValue).ToList();
-
-        return gradients;
-    }
 
     /// <summary>
     /// 根据流程id,版本version 查看报表分析看板  查看报价分析看板不含样品,查看报价分析看板含样品,查看报价分析看板仅含样品  报价反馈1、报价分析看板0
@@ -834,7 +818,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new FriendlyException($"此报价方案组合已存在");
         }
-
+        isOfferDto.ntype = 0;
         //进行报价
         await _analysisBoardSecondMethod.PostIsOfferSaveSecond(isOfferDto);
     }
