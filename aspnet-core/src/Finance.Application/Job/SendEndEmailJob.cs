@@ -76,7 +76,7 @@ namespace Finance.Job
                         {
                             string emailAddr = userInfo.EmailAddress;
                             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                            string emailBody = "核价报价提醒：您有新的工作流（" + nodeInstance.Name + "——流程号：" + nodeInstance.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+                            string emailBody = $"核价报价提醒：您有新的工作流{priceEvaluation.Title}（{nodeInstance.Name}——流程号：{nodeInstance.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
 
                             try
                             {
