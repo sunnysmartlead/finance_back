@@ -267,6 +267,56 @@ namespace Finance.Entering
             return initialElectronicDto.ElectronicBomList.Count;
         }
         /// <summary>
+        /// 资源部输入时,电子料初始值数量(单个方案)
+        /// </summary>
+        /// <param name="AuditFlowId">流程表主键</param>
+        /// <param name="solutionId">方案Id</param>
+        /// <returns></returns>         
+
+        internal async Task<int> InitialValueQuantityOfElectronicMaterials(long AuditFlowId, long solutionId)
+        {
+            //总共的方案
+            List<SolutionModel> solutionList = await _resourceElectronicStructuralMethod.TotalSolution(AuditFlowId,p=>p.Id.Equals(solutionId));
+            InitialElectronicDto initialElectronicDto = new();
+            //从字典明细表取 零件名称和id
+            initialElectronicDto.PartDtoList = solutionList;
+            initialElectronicDto.ElectronicBomList = await _resourceElectronicStructuralMethod.ElectronicBomListCount(solutionList, AuditFlowId);// 电子BOM单价表单           
+            #region 电子BOM退回差异处理
+            foreach (var item in solutionList)//循环所有方案
+            {
+                List<ElecBomDifferent> elecBomDifferents = await _configElecBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.SolutionId.Equals(item.SolutionId));
+                if (elecBomDifferents.Count is not 0)//有差异
+                {
+                    foreach (ElecBomDifferent elecBom in elecBomDifferents)
+                    {
+                        //判断差异类型
+                        if (elecBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
+                        {
+                            //删除存在数据库里的数据和返回数据中的数据即可
+                            //1.删除数据库中的数据
+                            await _configEnteringElectronic.HardDeleteAsync(p => p.AuditFlowId.Equals(AuditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(elecBom.ElectronicId));
+                            //2.删除返回数据库中的数据
+                            ElectronicDto electronicDto = initialElectronicDto.ElectronicBomList.Where(p => p.SolutionId.Equals(item.SolutionId) && p.ElectronicId.Equals(elecBom.ElectronicId)).FirstOrDefault();
+                            initialElectronicDto.ElectronicBomList.Remove(electronicDto);
+                        }
+                        else if (elecBom.ModifyTypeValue.Equals(MODIFYTYPE.MODIFYNEWDATA))//修改
+                        {
+                            //重新加载项目使用量和系统单价
+                            ElectronicDto electronicDto = initialElectronicDto.ElectronicBomList.Where(p => p.ElectronicId.Equals(elecBom.ElectronicId)).FirstOrDefault();
+                            //索引
+                            if (electronicDto is not null)
+                            {
+                                int index = initialElectronicDto.ElectronicBomList.FindIndex(p => p.ElectronicId.Equals(elecBom.ElectronicId));
+                                initialElectronicDto.ElectronicBomList[index] = electronicDto;
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+            return initialElectronicDto.ElectronicBomList.Count;
+        }
+        /// <summary>
         /// 资源部输入时,加载电子料初始值(单个零件)
         /// </summary>
         /// <param name="auditFlowId"></param>
@@ -334,7 +384,9 @@ namespace Finance.Entering
             //指定的方案
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));
             isALLElectronicDto.ElectronicDtos = await _resourceElectronicStructuralMethod.BOMElectronicBomList(partList, auditFlowId);// 电子BOM单价表单          
-            isALLElectronicDto.isAll = await this.GetElectronicIsAllEntering(auditFlowId);
+            isALLElectronicDto.isAll = await this.GetElectronicIsAllEntering(auditFlowId);//是否全部提交完成
+            isALLElectronicDto.TotalNumber = await InitialValueQuantityOfElectronicMaterials(auditFlowId, solutionId);//总条数(所有方案)
+            isALLElectronicDto.NumberOfSubmissions = isALLElectronicDto.ElectronicDtos.Count();//提交的条数
             return isALLElectronicDto;
         }
         /// <summary>
@@ -488,6 +540,52 @@ namespace Finance.Entering
             return AllCount;
         }
         /// <summary>
+        /// 资源部输入时,加载结构料初始值数量(单方案)
+        /// </summary>
+        /// <param name="auditFlowId">流程Id</param>
+        /// <param name="solutionId">方案Id</param>
+        /// <returns></returns>
+        internal async Task<int> InitialValueOfLoadingStructuralMaterials([FriendlyRequired("流程id", SpecialVerification.AuditFlowIdVerification)] long auditFlowId, long solutionId)
+        {
+            //总共的零件
+            List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId,p=>p.Id.Equals(solutionId));
+            //删除的结构BOMid
+            List<long> structureBOMIdDeleted = new();
+            //修改的结构BOMid
+            List<long> structureBOMIdModify = new();
+            #region 结构BOM退回差异处理
+            foreach (var item in partList)//循环所有零件
+            {
+                List<StructBomDifferent> structBomDifferents = await _configStructBomDifferent.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId));
+                if (structBomDifferents.Count is not 0)//有差异
+                {
+                    foreach (StructBomDifferent structBom in structBomDifferents)
+                    {
+                        //判断差异类型
+                        if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.DELNEWDATA))//删除
+                        {
+                            //删除存在数据库里的数据和返回数据中的数据即可
+                            //1.删除数据库中的数据
+                            await _configStructureElectronic.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.StructureId.Equals(structBom.StructureId));
+                            structureBOMIdDeleted.Add(structBom.StructureId);
+                        }
+                        else if (structBom.ModifyTypeValue.Equals(MODIFYTYPE.MODIFYNEWDATA))//修改
+                        {
+                            structureBOMIdModify.Add(structBom.StructureId);
+                        }
+                    }
+                }
+            }
+            #endregion
+            InitialStructuralDto initialStructuralDto = new();
+            initialStructuralDto.PartDtoList = partList;
+            initialStructuralDto.ConstructionBomList = await _resourceElectronicStructuralMethod.ConstructionBomListCount(partList, auditFlowId, structureBOMIdDeleted, structureBOMIdModify);// 结构料BOM单价表单
+
+            int AllCount = 0;//应该录入数据库这么多条数据
+            initialStructuralDto.ConstructionBomList.ForEach(p => { AllCount += p.StructureMaterial.Count(); });
+            return AllCount;
+        }
+        /// <summary>
         ///  资源部输入时,加载结构料初始值(单个零件)
         /// </summary>
         /// <param name="auditFlowId"></param>
@@ -553,6 +651,8 @@ namespace Finance.Entering
             List<SolutionModel> partList = await _resourceElectronicStructuralMethod.TotalSolution(auditFlowId, item => item.Id.Equals(solutionId));
             List<ConstructionDto> prop = await _resourceElectronicStructuralMethod.BOMConstructionBomList(partList, auditFlowId);// 结构料BOM单价审核
             isALLConstructionDto.ConstructionDtos = prop;
+            isALLConstructionDto.TotalNumber = await InitialValueOfLoadingStructuralMaterials(auditFlowId, solutionId);//总条数
+            isALLConstructionDto.NumberOfSubmissions= prop.Count();//提交的条数
             return isALLConstructionDto;
         }
         /// <summary>
