@@ -89,10 +89,11 @@ namespace Finance.MakeOffers.AnalyseBoard.Model
         /// 目标价(客户)
         /// </summary>
         public decimal ClientTarget { get; set; }
+
         /// <summary>
         /// 本次报价
         /// </summary>
-        public decimal? Offer { get; set; }       
+        public decimal? Offer { get; set; } = 0;       
         /// <summary>
         /// 之前几轮的 本次报价的值
         /// </summary>

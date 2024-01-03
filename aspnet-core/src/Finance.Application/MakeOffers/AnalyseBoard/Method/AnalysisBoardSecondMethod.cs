@@ -235,7 +235,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var ntype = analyseBoardSecondInputDto.ntype; // 0 报价分析看板，1 报价反馈
         int last = ntime - 1; //上一个提交的版本
 
-
+        analyseBoardSecondDto.AuditFlowId = auditFlowId;
+        analyseBoardSecondDto.ntype = ntype;
         //获取核价营销相关数据
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(analyseBoardSecondInputDto.auditFlowId);
@@ -2543,6 +2544,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         analyseBoardSecondDto.QuotedGrossMargins = quotedGrossMarginProjectModels;
         analyseBoardSecondDto.GradientQuotedGrossMargins = gradis;
         analyseBoardSecondDto.ProjectBoard = boards;
+        analyseBoardSecondDto.AuditFlowId = auditFlowId;
+        analyseBoardSecondDto.version = version;
+        analyseBoardSecondDto.ntype = ntype;
         return analyseBoardSecondDto;
     }
 
@@ -2846,7 +2850,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }
 
             solutionQuotation.status = 1;
-            _solutionQutation.UpdateAsync(solutionQuotation);
+            await _solutionQutation.UpdateAsync(solutionQuotation);
         }
 
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
@@ -2986,7 +2990,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var dynamicUnitPriceOffers in list)
         {
-            _dynamicUnitPriceOffers.InsertAsync(dynamicUnitPriceOffers);
+            await _dynamicUnitPriceOffers.InsertAsync(dynamicUnitPriceOffers);
         }
     }
 
@@ -3070,7 +3074,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         foreach (var actual in list)
         {
             actual.version = version;
-            _actualUnitPriceOffer.InsertAsync(actual);
+            await _actualUnitPriceOffer.InsertAsync(actual);
         }
     }
 
@@ -3233,7 +3237,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             }).ToList();
         foreach (var uns in unitPriceOffersList)
         {
-            _resourceUnitPriceOffers.InsertAsync(uns);
+            await _resourceUnitPriceOffers.InsertAsync(uns);
         }
     }
 
@@ -3345,20 +3349,26 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         long id = 0;
         if (sol is not null)
         {
-            id = sol.Id;
+            sol.SolutionListJson = JsonConvert.SerializeObject(solutions);
+            sol.ntime = time;
+            sol.status = 0;
+            sol.IsFirst = isfirst;
+            sol.version = version;
+            await _solutionQutation.InsertOrUpdateAsync(sol);
         }
-
-        SolutionQuotation solutionQuotation = new()
+        else
         {
-            AuditFlowId = processId,
-            SolutionListJson = JsonConvert.SerializeObject(solutions),
-            ntime = time,
-            status = 0,
-            Id = id,
-            IsFirst = isfirst,
-            version = version
-        };
-        _solutionQutation.InsertOrUpdateAsync(solutionQuotation);
+            SolutionQuotation solutionQuotation = new()
+            {
+                AuditFlowId = processId,
+                SolutionListJson = JsonConvert.SerializeObject(solutions),
+                ntime = time,
+                status = 0,
+                IsFirst = isfirst,
+                version = version
+            };
+            await _solutionQutation.InsertOrUpdateAsync(solutionQuotation);
+        }
     }
 
     public async Task updateSolution(int version, long processId, int status)
@@ -5358,7 +5368,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         string content = JsonConvert.SerializeObject(quotationListSecondDto);
 
-        _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
+        await _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
         {
             AuditFlowId = auditFlowId,
             ntype = ntype + 1,
@@ -5410,7 +5420,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task InsertfinanceAuditQuotationList(string content, long auditFlowId, int version, int ntype,
         int nsource)
     {
-        _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
+        await _financeAuditQuotationList.InsertAsync(new AuditQuotationList()
         {
             AuditFlowId = auditFlowId,
             ntype = ntype,
