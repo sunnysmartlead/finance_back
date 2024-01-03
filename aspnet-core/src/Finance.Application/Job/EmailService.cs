@@ -1,6 +1,8 @@
-﻿using Abp.Dependency;
+﻿using Abp.Authorization;
+using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Finance.Audit;
+using Finance.Authorization.Users;
 using Finance.Ext;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +12,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,15 +34,18 @@ namespace Finance.Job
         private readonly string PrivateKey = "6L+Z5piv5LiA5Liq6LSi5Yqh57O757uf6LCD55So6YKu5Lu25Y+R5Yqo55qE56eB6ZKlIQ==";
         private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> nticeEmailInfo;
+        private readonly IRepository<User, long> _userRepository;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="sendEmail"></param>
         /// <param name="_noticeEmailInfo"></param>
-        public EmailJobAppService(SendEmail sendEmail, IRepository<NoticeEmailInfo, long> _noticeEmailInfo)
+        /// <param name="user"></param>
+        public EmailJobAppService(SendEmail sendEmail, IRepository<NoticeEmailInfo, long> _noticeEmailInfo, IRepository<User, long> user)
         {
             this._sendEmail = sendEmail;
             nticeEmailInfo= _noticeEmailInfo;
+            _userRepository = user;
         }
         /// <summary>
         /// 检查邮箱密码
@@ -114,6 +120,25 @@ namespace Finance.Job
             Task.Run(async () => {
                 await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject, Body: emailBody, emailInfoList.MaintainerEmail, emailInfoList == null ? null : emailInfoList);
             });        
+        }
+        /// <summary>
+        /// 测试邮件接口(必须以admin账号登录)
+        /// </summary>
+        /// <param name="Subject"></param>
+        /// <param name="emailBody"></param>
+        /// <param name="emailTo"></param>
+        /// <returns></returns>
+        [AbpAuthorize]
+        [HttpGet]
+        public async Task TestEmail([FriendlyRequired("主题",skip:true)]string Subject, [FriendlyRequired("email正文", skip: true)] string emailBody, [FriendlyRequired("email收件人", skip: true)] string emailTo)
+        {
+            User user= await _userRepository.FirstOrDefaultAsync(p=>p.Id.Equals(AbpSession.UserId));
+            if(user.Name!="admin") new FriendlyException($"无权限发送！");
+            NoticeEmailInfo emailInfoList = nticeEmailInfo.FirstOrDefault(p => p.Id != 0);
+            bool isemail = Regex.IsMatch(emailTo, "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$");
+            if (!isemail) throw new FriendlyException($"邮箱格式不正确！");
+            string loginIp = _sendEmail.GetLoginAddr();
+            await _sendEmail.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), Subject: Subject+"(该邮件为测试邮件)", Body: emailBody+ "(该邮件为测试邮件)", emailTo, emailInfoList == null ? null : emailInfoList);
         }
     }
     /// <summary>

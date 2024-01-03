@@ -120,7 +120,17 @@ namespace Finance.PropertyDepartment.Entering.Dto
         /// 是否全部提交完成
         /// </summary>
         public bool isAll { get; set; }
-
+        /// <summary>
+        /// 总条数
+        /// </summary>
+        public int TotalNumber { get; set; }
+        /// <summary>
+        /// 提交的条数
+        /// </summary>
+        public int NumberOfSubmissions { get; set; }
+        /// <summary>
+        /// table表格中的内容
+        /// </summary>
         public List<ElectronicDto> ElectronicDtos { get; set; }
     }
     /// <summary>
