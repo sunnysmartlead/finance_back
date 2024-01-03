@@ -570,7 +570,11 @@ namespace Finance.WorkFlows
                 throw new FriendlyException("不能将任务重置给自己！");
             }
 
-            var isHas = await _taskResetRepository.GetAll().AnyAsync(p=>p.ResetUserId == AbpSession.UserId && p.TargetUserId == input.TargetUserId && p.IsActive);
+            var isHas = await _taskResetRepository.GetAll().AnyAsync(p=>
+            p.NodeInstanceId == input.NodeInstanceId &&
+            p.ResetUserId == AbpSession.UserId 
+            && p.TargetUserId == input.TargetUserId 
+            && p.IsActive);
             if (isHas)
             {
                 throw new FriendlyException("此任务已经重置给这个用户了");
