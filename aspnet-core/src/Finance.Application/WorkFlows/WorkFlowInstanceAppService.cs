@@ -1076,6 +1076,16 @@ namespace Finance.WorkFlows
         }
 
         /// <summary>
+        /// 获取流程历史
+        /// </summary>
+        /// <param name="workflowInstanceId"></param>
+        /// <returns></returns>
+        public async virtual Task<PagedResultDto<InstanceHistorys>> GetInstanceHistorys(long workflowInstanceId)
+        {
+            return null;
+        }
+
+        /// <summary>
         /// 获取当前用户的已办
         /// </summary>
         /// <returns></returns>
