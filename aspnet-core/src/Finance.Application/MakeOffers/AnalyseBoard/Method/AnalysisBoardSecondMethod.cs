@@ -5448,9 +5448,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p =>
                 p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(solutionId));
-        List<long> prop = externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
-        long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsSubmit);
         List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(auditFlowId);
+
+        List<long> prop = externalQuotations.Select(p => p.NumberOfQuotations).OrderBy(p => p).ToList();
+        long ii = await _externalQuotation.CountAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.IsSubmit && solutionQuotations.Select(p => p.Id).Contains(p.SolutionId));
+  
         if (solutionQuotations.Count() == 0) throw new FriendlyException("报价看板的组合方案未查询到");
         var icount = Convert.ToDecimal(ii / solutionQuotations.Count());
         int icount2 = Convert.ToInt32(Math.Floor(icount).ToString());
@@ -5636,14 +5638,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     {
 
         List<ExternalQuotation> externalQuotations =
-            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
-        
-        if (externalQuotations.Count != 0 && externalQuotationDto.NumberOfQuotations == 0 &&
+            await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));  
+ 
+        if (externalQuotations.Count != 0 && 
             externalQuotations.Max(p => p.NumberOfQuotations) + 1 < externalQuotationDto.NumberOfQuotations)
         {
             throw new FriendlyException($"version:{externalQuotationDto.NumberOfQuotations}版本号有误!");
         }
-
+        if (externalQuotationDto.NumberOfQuotations == 0)
+        {
+            throw new FriendlyException($"version:{externalQuotationDto.NumberOfQuotations}版本号有误!");
+        }
         if ((externalQuotations.Count == 0 && externalQuotationDto.NumberOfQuotations != 1) ||
             externalQuotationDto.NumberOfQuotations < 1)
         {
