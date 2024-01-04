@@ -670,7 +670,7 @@ namespace Finance.Entering
             List<ConstructionDto> prop = await _resourceElectronicStructuralMethod.BOMConstructionBomList(partList, auditFlowId);// 结构料BOM单价审核
             isALLConstructionDto.ConstructionDtos = prop;
             isALLConstructionDto.TotalNumber = await InitialValueOfLoadingStructuralMaterials(auditFlowId, solutionId);//总条数
-            isALLConstructionDto.NumberOfSubmissions= prop.Count();//提交的条数
+            isALLConstructionDto.NumberOfSubmissions= prop.Sum(p=>p.StructureMaterial.Count());//提交的条数
             return isALLConstructionDto;
         }
         /// <summary>
