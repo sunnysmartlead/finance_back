@@ -1,6 +1,7 @@
 ﻿using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Abp.Runtime.Session;
+using Castle.MicroKernel.Registration;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Dto;
@@ -72,6 +73,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
 
 
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
+        private readonly IRepository<InstanceHistory, long> _instanceHistoryRepository;
 
         /// <summary>
         /// 构造函数
@@ -84,7 +86,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
         /// <param name="fileManagementRepository"></param>
         /// <param name="workflowInstanceAppService"></param>
         /// <param name="fileCommonService"></param>
-        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationAppService, IRepository<NodeInstance, long> nodeInstanceRepository)
+        public DemandApplyAuditAppService(IRepository<PricingTeam, long> resourcePricingTeam, IRepository<DesignSolution, long> resourceDesignScheme, IRepository<Solution, long> resourceSchemeTable, IRepository<ModelCount, long> resourceModelCount, IRepository<PriceEvaluation, long> resourcePriceEvaluation, IRepository<FileManagement, long> fileManagementRepository, WorkflowInstanceAppService workflowInstanceAppService, FileCommonService fileCommonService, PriceEvaluationGetAppService priceEvaluationAppService, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository)
         {
             _resourcePricingTeam = resourcePricingTeam;
             _resourceDesignScheme = resourceDesignScheme;
@@ -96,6 +98,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
             _fileCommonService = fileCommonService;
             _priceEvaluationAppService = priceEvaluationAppService;
             _nodeInstanceRepository = nodeInstanceRepository;
+            _instanceHistoryRepository = instanceHistoryRepository;
         }
         #region 快速核报价内容
         /// <summary>
@@ -264,15 +267,7 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                     await _resourceDesignScheme.HardDeleteAsync(p => p.AuditFlowId.Equals(auditEntering.AuditFlowId));
                 }
 
-                #region 工作流
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                {
-                    NodeInstanceId = auditEntering.NodeInstanceId,
-                    FinanceDictionaryDetailId = auditEntering.Opinion,
-                    Comment = auditEntering.Comment,
-                });
-                #endregion
+                
 
                 //直接上传快速核价流程的核价原因
                 var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
@@ -289,11 +284,34 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                         var shenPi = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价审批录入");
                         shenPi.NodeInstanceStatus = NodeInstanceStatus.Passed;
 
+                        //增加历史记录
+                        await _instanceHistoryRepository.InsertAsync(new InstanceHistory 
+                        {
+                             WorkFlowId = "主流程",
+                            WorkFlowInstanceId = auditEntering.AuditFlowId,
+                            NodeId= "主流程_核价审批录入",
+                            NodeInstanceId = auditEntering.NodeInstanceId,
+                            FinanceDictionaryDetailId = auditEntering.Opinion,
+                            Comment = auditEntering.Comment,
+                        });
+
                     }
                     else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                     {
                         throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
                     }
+                }
+                else
+                {
+                    #region 工作流
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        NodeInstanceId = auditEntering.NodeInstanceId,
+                        FinanceDictionaryDetailId = auditEntering.Opinion,
+                        Comment = auditEntering.Comment,
+                    });
+                    #endregion
                 }
             }
             catch (Exception ex)
