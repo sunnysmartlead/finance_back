@@ -5634,9 +5634,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     internal async Task SaveExternalQuotation(ExternalQuotationDto externalQuotationDto)
     {
+
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId));
-
+        
         if (externalQuotations.Count != 0 && externalQuotationDto.NumberOfQuotations == 0 &&
             externalQuotations.Max(p => p.NumberOfQuotations) + 1 < externalQuotationDto.NumberOfQuotations)
         {
@@ -5652,6 +5653,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         ExternalQuotation external = externalQuotations.FirstOrDefault(p =>
             p.SolutionId.Equals(externalQuotationDto.SolutionId) &&
             p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
+        if(external is not null&& externalQuotationDto.Id is 0)
+        {
+            throw new FriendlyException("该数据已经被别人录入了,请刷新后修改!");
+        }
         //将报价单存入库中
         ExternalQuotation externalQuotation = ObjectMapper.Map<ExternalQuotation>(externalQuotationDto);
         if (external != null && external.NumberOfQuotations == externalQuotationDto.NumberOfQuotations &&
@@ -5664,10 +5669,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             throw new FriendlyException("报价已经超过三次,不可继续流转");
         }
+        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
 
         long i = await _externalQuotation.CountAsync(p =>
             p.AuditFlowId.Equals(externalQuotationDto.AuditFlowId) && p.IsSubmit &&
-            p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations));
+            p.NumberOfQuotations.Equals(externalQuotationDto.NumberOfQuotations)&& solutionQuotations.Select(p=>p.Id).Contains(p.SolutionId));
         ExternalQuotation prop = await _externalQuotation.BulkInsertOrUpdateAsync(externalQuotation);
         long id = prop.Id;
         await _externalQuotationMx.HardDeleteAsync(p => p.ExternalQuotationId.Equals(id));
@@ -5681,8 +5687,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             ObjectMapper.Map<List<NreQuotationList>>(externalQuotationDto.NreQuotationListDtos);
         nreQuotationLists.ForEach(p => p.ExternalQuotationId = id);
         await _NreQuotationList.BulkInsertAsync(nreQuotationLists);
-
-        List<SolutionQuotationDto> solutionQuotations = await GeCatalogue(externalQuotationDto.AuditFlowId);
+    
         //流程流转
         if (solutionQuotations.Count == i + 1 && externalQuotationDto.IsSubmit)
         {
