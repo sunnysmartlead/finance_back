@@ -1799,65 +1799,6 @@ namespace Finance.Audit
         public async virtual Task DeleteAuditFlowById(AuditFlowDeleteDto auditFlowDeleteDto)
         {
             await _workflowInstanceAppService.OverWorkflow(new OverWorkflowInput { AuditFlowId = auditFlowDeleteDto.AuditFlowId, DeleteReason = auditFlowDeleteDto.DeleteReason });
-
-            #region 一开逻辑
-            //AuditFlowDelete auditFlowDelete = new();
-            //auditFlowDelete.AuditFlowId = auditFlowDeleteDto.AuditFlowId;
-            //auditFlowDelete.DeleteReason = auditFlowDeleteDto.DeleteReason;
-
-            //PriceEvaluation priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //if (priceEvaluation != null)
-            //{
-            //    auditFlowDelete.AuditFlowName = priceEvaluation.Title;
-            //    User user = await _userRepository.FirstOrDefaultAsync(p => p.Name.Equals(priceEvaluation.Drafter));
-            //    if (user != null)
-            //    {
-            //        auditFlowDelete.AuditFlowUserId = user.Id;
-            //    }
-            //    if (AbpSession.UserId != null)
-            //    {
-            //        auditFlowDelete.AuditFlowDeleterId = (long)AbpSession.UserId;
-            //    }
-            //}
-
-            //var auditFlowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == auditFlowDeleteDto.AuditFlowId);
-            //if (auditFlowList.Count > 0)
-            //{
-            //    auditFlowDelete.AuditFlowVersion = auditFlowList.FirstOrDefault().QuoteVersion;
-            //    await _auditFlowRepository.HardDeleteAsync(auditFlowList.FirstOrDefault());
-            //}
-            //else
-            //{
-            //    throw new FriendlyException("流程已删除！");
-            //}
-
-            //var auditFlowCurrentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowCurrent in auditFlowCurrentList)
-            //{
-            //    await _auditCurrentProcessRepository.HardDeleteAsync(auditFlowCurrent);
-            //}
-
-            //var auditFlowFinishedList = await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFinished in auditFlowFinishedList)
-            //{
-            //    await _auditFinishedProcessRepository.HardDeleteAsync(auditFinished);
-            //}
-
-            //var auditFlowDetailList = await _auditFlowDetailRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowDetail in auditFlowDetailList)
-            //{
-            //    await _auditFlowDetailRepository.HardDeleteAsync(auditFlowDetail);
-            //}
-
-            //var auditFlowRightList = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowRight in auditFlowRightList)
-            //{
-            //    await _auditFlowRightRepository.HardDeleteAsync(auditFlowRight);
-            //}
-
-            //await _auditFlowDeleteRepository.InsertAsync(auditFlowDelete);
-
-            #endregion
         }
 
         /// <summary>

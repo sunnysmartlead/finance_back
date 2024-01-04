@@ -203,7 +203,7 @@ namespace Finance.VersionManagement
                            n.NodeInstanceStatus,
                            UserName = u2.Name,
                            //RoleName = 
-                           n.CreationTime,
+                           CreationTime = i2 == null ? DateTime.MinValue : i2.CreationTime,
                            n.LastModificationTime,
                            n.RoleId,
                            n.WorkFlowInstanceId,
@@ -291,85 +291,7 @@ namespace Finance.VersionManagement
 
                 auditFlowOperateReocrdDto.Add(dto);
             }
-
-
             return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
-            #region 一开逻辑
-
-            //string projectName = null;
-            //int version = 0;
-            //var flowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == flowId);
-            //if (flowList.Count > 0)
-            //{
-            //    projectName = (await _auditFlowRepository.SingleAsync(p => p.Id == flowId)).QuoteProjectName;
-            //    version = (await _auditFlowRepository.SingleAsync(p => p.Id == flowId)).QuoteVersion;
-            //    List<FlowProcess> allProcesses = await _flowProcessRepository.GetAllListAsync();
-            //    List<AuditFlowOperateReocrdDto> auditFlowOperates = (from a in await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == flowId)
-            //                                                         join c in await _userRepository.GetAllListAsync() on a.UserId equals c.Id
-            //                                                         join d in await _userRoleRepository.GetAllListAsync() on c.Id equals d.UserId
-            //                                                         join e in await _roleRepository.GetAllListAsync() on d.RoleId equals e.Id
-            //                                                         join f in allProcesses on a.ProcessIdentifier equals f.ProcessIdentifier
-            //                                                         where e.Name == f.EditRole
-            //                                                         select new AuditFlowOperateReocrdDto
-            //                                                         {
-            //                                                             ProjectName = projectName,
-            //                                                             Version = version,
-            //                                                             ProcessName = f.ProcessName,
-            //                                                             ProcessState = (PROCESSTYPE)a.RightType,
-            //                                                             UserName = c.Name,
-            //                                                             RoleName = e.DisplayName,
-            //                                                             RequiredTime = this.GetRequiredTime(flowId, a.ProcessIdentifier),
-            //                                                             auditFlowOperateTimes = (a.ProcessIdentifier == AuditFlowConsts.AF_RequirementInput) ? //判断是否是第一个界面，第一个界面的创建时间和完成时间可以直接取自权限表
-            //                                                             new List<AuditFlowOperateTime> { new AuditFlowOperateTime() { StartTime = a.CreationTime, LastModifyTime = a.CreationTime } }
-            //                                                             :
-            //                                                             (from b in _auditFlowDetailRepository.GetAllList(p => p.AuditFlowId == flowId && p.ReceiveProcessIdentifier == a.ProcessIdentifier && p.ReceiverId == a.UserId)
-            //                                                              select new AuditFlowOperateTime
-            //                                                              {
-            //                                                                  StartTime = b.CreationTime,
-            //                                                                  LastModifyTime = this.GetLastModifyTime(flowId, a.ProcessIdentifier, a.UserId, b.CreationTime)
-            //                                                              }).OrderBy(p => p.StartTime).ToList()
-            //                                                         }).ToList();
-
-            //    List<string> allProcessIdentifiers = (from a in allProcesses.Select(p => p.ProcessIdentifier).Distinct() orderby a ascending select a).ToList();
-
-            //    List<AuditFlowRight> runProcesses = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == flowId);
-            //    List<string> runProcessIdentifiers = (from a in runProcesses.Select(p => p.ProcessIdentifier).Distinct() orderby a ascending select a).ToList();
-
-            //    //去除掉权限表中的流程（取剩余流程）
-            //    allProcessIdentifiers.RemoveAll(it => runProcessIdentifiers.Contains(it));
-
-            //    List<AuditFlowOperateReocrdDto> auditFlowOtherOperates = (from a in allProcessIdentifiers
-            //                                                              join b in allProcesses on a equals b.ProcessIdentifier
-            //                                                              select new AuditFlowOperateReocrdDto
-            //                                                              {
-            //                                                                  ProjectName = projectName,
-            //                                                                  Version = version,
-            //                                                                  ProcessName = b.ProcessName,
-            //                                                                  ProcessState = PROCESSTYPE.ProcessNoStart,
-            //                                                                  UserName = null,
-            //                                                                  RoleName = null,
-            //                                                                  RequiredTime = this.GetRequiredTime(flowId, b.ProcessIdentifier),
-            //                                                                  auditFlowOperateTimes =
-            //                                                             (from f in _auditFlowDetailRepository.GetAllList(p => p.AuditFlowId == flowId && p.ReceiveProcessIdentifier == b.ProcessIdentifier)
-            //                                                              join c in _roleRepository.GetAllList() on b.EditRole equals c.Name
-            //                                                              join d in _userRoleRepository.GetAllList() on c.Id equals d.RoleId
-            //                                                              join e in _userRepository.GetAllList() on d.UserId equals e.Id
-            //                                                              where f.ReceiverId == e.Id
-            //                                                              select new AuditFlowOperateTime
-            //                                                              {
-            //                                                                  StartTime = f.CreationTime,
-            //                                                                  LastModifyTime = this.GetLastModifyTime(flowId, b.ProcessIdentifier, e.Id, f.CreationTime)
-            //                                                              }).OrderBy(p => p.StartTime).ToList()
-            //                                                              }).ToList();
-            //    auditFlowOperates.AddRange(auditFlowOtherOperates);
-            //    return auditFlowOperates;
-            //}
-            //else
-            //{
-            //    throw new FriendlyException("获取核报价流程失败");
-            //}
-
-            #endregion
         }
 
         /// <summary>
@@ -698,21 +620,6 @@ namespace Finance.VersionManagement
                        };
 
             return data.ToList();
-            #region 一开逻辑
-            //List<ProjectNameAndVersionDto> projectNameAndVersions = new List<ProjectNameAndVersionDto>();
-            //var projectNames = (from a in _auditFlowRepository.GetAll().Select(p => p.QuoteProjectName).Distinct() select a).ToList();
-            //foreach (var name in projectNames)
-            //{
-            //    var versions = await _auditFlowRepository.GetAllListAsync(p => p.QuoteProjectName == name);
-            //    projectNameAndVersions.Add(new ProjectNameAndVersionDto()
-            //    {
-            //        ProjectName = name,
-            //        ProjectNumber = (await _auditFlowRepository.GetAllListAsync(p => p.QuoteProjectName == name)).FirstOrDefault().QuoteProjectNumber,
-            //        Versions = (from e in versions.Select(p => p.QuoteVersion).Distinct() orderby e ascending select e).ToList()
-            //    });
-            //}
-            //return projectNameAndVersions;
-            #endregion
         }
 
         /// <summary>
