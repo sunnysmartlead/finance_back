@@ -56,7 +56,7 @@ namespace Finance.Job
                         string emailBody = $"核价报价提醒：您有新的工作流{workflowInstance.Title}，由{resetUser.Name}重置给您。（{task.Name}——流程号：{task.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
                         try
                         {
-                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.Name},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{workflowInstance.Title}{task.Name},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
                         }
                         catch (Exception)
                         {
