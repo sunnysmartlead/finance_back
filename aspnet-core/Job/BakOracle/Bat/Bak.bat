@@ -10,11 +10,12 @@ echo  设置用户名、密码和要备份的数据库
 set USER=WISSEN_TEST_V2
 set PASSWORD=admin
 set DATABASE=WISSEN_TEST_V2
+set curdir=%~dp0
 echo  创建备份目录
-if not exist ".\backup\data"       mkdir .\backup\data  
-if not exist ".\backup\log"        mkdir .\backup\log  
-set DATADIR=.\backup\data
-set LOGDIR=.\backup\log
+if not exist "%curdir%backup\data"       mkdir %curdir%backup\data
+if not exist "%curdir%backup\log"        mkdir %curdir%backup\log
+set DATADIR=%curdir%backup\data
+set LOGDIR=%curdir%backup\log
 exp %USER%/%PASSWORD%@10.1.1.131/ORCL file=%DATADIR%\data_%BACKUPDATE%.dmp owner=%DATABASE% log=%LOGDIR%\log_%BACKUPDATE%.log
 echo  删除7天前的备份。
 forfiles /p "%DATADIR%" /s /m *.* /d -7 /c "cmd /c del @path"
