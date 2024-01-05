@@ -272,6 +272,9 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                 //直接上传快速核价流程的核价原因
                 var list = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
 
+                //引用快速核价流程的核价原因
+                var yyList = new List<string> { FinanceConsts.EvalReason_Ffabg, FinanceConsts.EvalReason_Qtyylc};
+
                 //在这里要判断：如果是直接上传核报价，就直接激活核价看板
                 var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditEntering.AuditFlowId && p.NodeId == "主流程_核价需求录入");
                 if (list.Contains(node.FinanceDictionaryDetailId))
@@ -296,11 +299,29 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                         });
 
                     }
-                    else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                    //else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
+                    //{
+                    //    throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
+                    //}
+                }
+
+                else if (yyList.Contains(node.FinanceDictionaryDetailId))
+                {
+                    if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                     {
                         throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
                     }
+                    #region 工作流
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        NodeInstanceId = auditEntering.NodeInstanceId,
+                        FinanceDictionaryDetailId = auditEntering.Opinion,
+                        Comment = auditEntering.Comment,
+                    });
+                    #endregion
                 }
+
                 else
                 {
                     #region 工作流
