@@ -428,6 +428,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"梯度数量不能为0！");
             }
 
+            if (input.GradientModel.Any(p => p.GradientModelYear.Any(o => o.Count <= 0)))
+            {
+                throw new FriendlyException($"梯度模组年份的具体数量不能为0！");
+            }
+
             if (input.Gradient.GroupBy(p => p.GradientValue).Any(p => p.Count() > 1))
             {
                 throw new FriendlyException($"梯度数量不能重复！");
