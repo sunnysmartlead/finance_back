@@ -22,6 +22,9 @@ namespace Finance
         typeof(AbpWebCommonModule))]
     public class FinanceApplicationModule : AbpModule
     {
+        /// <summary>
+        /// 这是在应用程序启动时调用的第一个事件。代码可以放在这里在依赖项注入注册之前运行。
+        /// </summary>
         public override void PreInitialize()
         {
             Configuration.Authorization.Providers.Add<FinanceAuthorizationProvider>();
@@ -40,7 +43,9 @@ namespace Finance
             Configuration.Modules.AbpWebCommon().SendAllExceptionsToClients = true;
 
         }
-
+        /// <summary>
+        /// 此方法用于注册此模块的依赖项。
+        /// </summary>
         public override void Initialize()
         {
             var thisAssembly = typeof(FinanceApplicationModule).GetAssembly();
@@ -52,7 +57,9 @@ namespace Finance
                 cfg => cfg.AddMaps(thisAssembly)
             );
         }
-
+        /// <summary>
+        /// 此方法最后在应用程序启动时调用。
+        /// </summary>
         public override void PostInitialize()
         {
             //注册定时任务
