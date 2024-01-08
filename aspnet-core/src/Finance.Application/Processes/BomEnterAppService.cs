@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Abp.Domain.Repositories;
+using Abp.Extensions;
 using Finance.Authorization.Users;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
@@ -15,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Finance.Processes
@@ -286,8 +288,8 @@ namespace Finance.Processes
 
 
                     }
-                // 数据返回 
-                return logisticscostResponseList;
+                // 数据返回              
+                return BomEnterDtoOrderBy(logisticscostResponseList);
             }
             catch (Exception)
             {
@@ -296,8 +298,68 @@ namespace Finance.Processes
             }
          
         }
+        /// <summary>
+        /// List<BomEnterDto>排序
+        /// </summary>
+        /// <param name="bomEnterDtos"></param>
+        /// <returns></returns>
+        internal static List<BomEnterDto> BomEnterDtoOrderBy(List<BomEnterDto> bomEnterDtos)
+        {
+            //根据年份排序
+            foreach (var item in bomEnterDtos)
+            {
+                item.ListBomEnter = item.ListBomEnter.OrderBy(p =>
+                {
+                    //只读取数字
+                    var year = Regex.Replace(p.Year, @"[^0-9]+", "");
+                    //强转 如果是默认值就返回int类型最大值
+                    return Convert.ToInt32(year.IsNullOrEmpty() ? Int32.MaxValue : year);
 
+                }).ThenBy(p => {
+                    //在年份排序的基础上增加 上下半年全生命周期的排序
+                    if (p.Year.Contains("上半年"))
+                    {
+                        return 1;
+                    }
+                    else if (p.Year.Contains("下半年"))
+                    {
+                        return 2;
+                    }
+                    else if (p.Year.Contains("全生命周期"))
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        return 4;
+                    }
+                }).ToList();
+                item.ListBomEnterTotal = item.ListBomEnterTotal.OrderBy(p =>
+                {
+                    var year = Regex.Replace(p.Year, @"[^0-9]+", "");
+                    return Convert.ToInt32(year.IsNullOrEmpty() ? Int32.MaxValue : year);
 
+                }).ThenBy(p => {
+                    if (p.Year.Contains("上半年"))
+                    {
+                        return 1;
+                    }
+                    else if (p.Year.Contains("下半年"))
+                    {
+                        return 2;
+                    }
+                    else if (p.Year.Contains("全生命周期"))
+                    {
+                        return 3;
+                    }
+                    else
+                    {
+                        return 4;
+                    }
+                }).ToList();
+            }
+            return bomEnterDtos;
+        }
 
 
         /// <summary>
