@@ -15,7 +15,9 @@ namespace Finance.EntityFrameworkCore
         public bool SkipDbContextRegistration { get; set; }
 
         public bool SkipDbSeed { get; set; }
-
+        /// <summary>
+        /// 这是在应用程序启动时调用的第一个事件。代码可以放在这里在依赖项注入注册之前运行。
+        /// </summary>
         public override void PreInitialize()
         {
             if (!SkipDbContextRegistration)
@@ -35,12 +37,16 @@ namespace Finance.EntityFrameworkCore
                 });
             }
         }
-
+        /// <summary>
+        /// 此方法用于注册此模块的依赖项。
+        /// </summary>
         public override void Initialize()
         {
             IocManager.RegisterAssemblyByConvention(typeof(FinanceEntityFrameworkModule).GetAssembly());
         }
-
+        /// <summary>
+        /// 此方法最后在应用程序启动时调用。
+        /// </summary>
         public override void PostInitialize()
         {
             if (!SkipDbSeed)
