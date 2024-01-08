@@ -14,4 +14,19 @@
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Sundial.Dashboard" Version="2.31.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="A停止服务.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="A卸载服务.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="A启动服务.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="A安装服务.bat">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

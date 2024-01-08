@@ -82,7 +82,7 @@ namespace Finance.Job
                             {
                                 if (!emailAddr.Contains("@qq.com"))
                                 {
-                                    await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{nodeInstance.Name},流程号{nodeInstance.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                    await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{priceEvaluation.Title}{nodeInstance.Name},流程号{nodeInstance.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
                                 }
                             }
                             catch (Exception)

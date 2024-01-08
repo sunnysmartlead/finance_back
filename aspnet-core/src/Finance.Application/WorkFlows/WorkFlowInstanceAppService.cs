@@ -11,6 +11,7 @@ using Finance.Authorization.Roles;
 using Finance.Authorization.Users;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
+using Finance.Hr;
 using Finance.Infrastructure;
 using Finance.Infrastructure.Dto;
 using Finance.Job;
@@ -69,8 +70,9 @@ namespace Finance.WorkFlows
         private readonly IRepository<Gradient, long> _gradientRepository;
         private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
         private readonly IBackgroundJobManager _backgroundJobManager;
+        private readonly IRepository<Department, long> _departmentRepository;
 
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager)
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager, IRepository<Department, long> departmentRepository)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
@@ -94,6 +96,7 @@ namespace Finance.WorkFlows
             _gradientRepository = gradientRepository;
             _auditFlowIdPricingForm = auditFlowIdPricingForm;
             _backgroundJobManager = backgroundJobManager;
+            _departmentRepository = departmentRepository;
         }
 
         /// <summary>
@@ -570,10 +573,10 @@ namespace Finance.WorkFlows
                 throw new FriendlyException("不能将任务重置给自己！");
             }
 
-            var isHas = await _taskResetRepository.GetAll().AnyAsync(p=>
+            var isHas = await _taskResetRepository.GetAll().AnyAsync(p =>
             p.NodeInstanceId == input.NodeInstanceId &&
-            p.ResetUserId == AbpSession.UserId 
-            && p.TargetUserId == input.TargetUserId 
+            p.ResetUserId == AbpSession.UserId
+            && p.TargetUserId == input.TargetUserId
             && p.IsActive);
             if (isHas)
             {
@@ -1082,7 +1085,31 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async virtual Task<PagedResultDto<InstanceHistorys>> GetInstanceHistorys(long workflowInstanceId)
         {
-            return null;
+            var data = from i in _instanceHistoryRepository.GetAll()
+                       join u in _userManager.Users on i.CreatorUserId equals u.Id
+                       join d in _departmentRepository.GetAll() on u.DepartmentId equals d.Id
+                       join n in _nodeInstanceRepository.GetAll() on i.NodeInstanceId equals n.Id
+                       join f in _financeDictionaryDetailRepository.GetAll() on i.FinanceDictionaryDetailId equals f.Id
+                       where i.WorkFlowInstanceId == workflowInstanceId
+                       select new InstanceHistorys
+                       {
+                           Id = i.Id,
+                           CreatorUserId = i.CreatorUserId,
+                           CreationTime = i.CreationTime,
+                           LastModificationTime = i.LastModificationTime,
+                           LastModifierUserId = i.LastModifierUserId,
+                           DeleterUserId = i.DeleterUserId,
+                           DeletionTime = i.DeletionTime,
+                           IsDeleted = i.IsDeleted,
+
+                           UserName = u.Name,
+                           UserDepartmentName = d.Name,
+                           NodeName = n.Name,
+                           DisplayName = f.DisplayName,
+                           Comment = i.Comment
+                       };
+            var result = await data.ToListAsync();
+            return new PagedResultDto<InstanceHistorys>(result.Count, result);
         }
 
         /// <summary>
