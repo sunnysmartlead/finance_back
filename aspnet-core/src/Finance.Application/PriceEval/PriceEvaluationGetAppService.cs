@@ -514,6 +514,14 @@ namespace Finance.PriceEval
                                    where mc.AuditFlowId == input.AuditFlowId && mc.Id == productId
                                    select mc.Product).FirstOrDefaultAsync();
 
+            //获取核价类型
+            var priceEvalType = string.Empty;
+            if (!priceEvaluation.PriceEvalType.IsNullOrWhiteSpace())
+            {
+                var fd = await _financeDictionaryDetailRepository.GetAsync(priceEvaluation.PriceEvalType);
+                priceEvalType = fd.DisplayName;
+            }
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
@@ -581,7 +589,9 @@ namespace Finance.PriceEval
                 {
                     Year = 0,
                     UpDown = YearType.Year,
-                    Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
+                    //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -662,7 +672,9 @@ namespace Finance.PriceEval
                 {
                     Year = year,
                     UpDown = upDown,
-                    Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
+                    //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -3390,7 +3402,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
+        internal async virtual Task<FileNameMemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
@@ -3420,9 +3432,21 @@ namespace Finance.PriceEval
             streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
             var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
-            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
-
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex).As<FileNameMemoryStream>();
+            memoryStream2.FileName = dtoAll.FileTitle;
             return memoryStream2;
+        }
+
+        private string GetYearName(int year)
+        {
+            if (year == 0)
+            {
+                return "全生命周期";
+            }
+            else
+            {
+                return $"{year}年";
+            }
         }
 
         private string GetYearName(YearType yearType)
@@ -3458,7 +3482,7 @@ namespace Finance.PriceEval
         {
             var memoryStream2 = await PriceEvaluationTableDownloadStream(input);
 
-            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{memoryStream2.FileName}.xlsx" };
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,5 +22,10 @@ namespace Finance.PriceEval.Dto
 
         public virtual decimal Value { get; set; }
 
+    }
+
+    public class FileNameMemoryStream : MemoryStream 
+    {
+        public virtual string FileName { get; set; }
     }
 }
