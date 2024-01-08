@@ -3400,8 +3400,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
+            DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3519,6 +3520,24 @@ namespace Finance.PriceEval
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
 
             return dtoAll;
+        }
+
+        /// <summary>
+        /// Dto Excel导出处理（保留5位小数）
+        /// </summary>
+        /// <param name="dto"></param>
+        private static void DtoExcelRound5(ExcelPriceEvaluationTableDto dto)
+        {
+            dto.Material.ForEach(p =>
+            {
+                p.MaterialPrice = Math.Round(p.MaterialPrice, 5);
+                p.ExchangeRate = Math.Round(p.ExchangeRate, 5);
+                p.MaterialPriceCyn = Math.Round(p.MaterialPriceCyn, 5);
+                p.TotalMoneyCyn = Math.Round(p.TotalMoneyCyn, 5);
+                p.TotalMoneyCynNoCustomerSupply = Math.Round(p.TotalMoneyCynNoCustomerSupply, 5);
+                p.Loss = Math.Round(p.Loss, 5);
+                p.MaterialCost = Math.Round(p.MaterialCost, 5);
+            });
         }
 
 
@@ -3663,13 +3682,13 @@ namespace Finance.PriceEval
                     Price_1 = one?.MaterialPrice,
                     Count_1 = one?.AssemblyCount.To<decimal>(),
                     Rate_1 = one?.ExchangeRate,
-                    MoqShareCount_1 = one?.MoqShareCount,
+                    //MoqShareCount_1 = one?.MoqShareCount,
                     Sum_1 = one?.TotalMoneyCynNoCustomerSupply,
 
                     Price_2 = two?.MaterialPrice,
                     Count_2 = two?.AssemblyCount.To<decimal>(),
                     Rate_2 = two?.ExchangeRate,
-                    MoqShareCount_2 = two?.MoqShareCount,
+                    //MoqShareCount_2 = two?.MoqShareCount,
                     Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
                 });
             }
@@ -3832,9 +3851,7 @@ namespace Finance.PriceEval
 
             var memoryStream = new MemoryStream();
 
-            //await MiniExcel.SaveAsAsync(memoryStream, data);
             await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/SolutionContrast.xlsx", dto);
-
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
         }
