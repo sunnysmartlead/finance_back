@@ -46,6 +46,7 @@ using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
 using Spire.Pdf.Exporting.XPS.Schema;
+using Spire.Xls;
 using Spire.Xls.Core;
 using System;
 using System.Collections;
@@ -3402,7 +3403,7 @@ namespace Finance.PriceEval
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        internal async virtual Task<FileNameMemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
+        internal async virtual Task<MemoryStream> PriceEvaluationTableDownloadStream(PriceEvaluationTableDownloadInput input)//PriceEvaluationTableDownloadStreamInput
         {
             var solution = await _solutionRepository.GetAsync(input.SolutionId);
             var productId = solution.Productld;
@@ -3432,8 +3433,8 @@ namespace Finance.PriceEval
             streams.Add(new { stream = memoryStream, excels = "全生命周期" });
 
             var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
-            var memoryStream2 = NpoiExtensions.ExcelMerge(ex).As<FileNameMemoryStream>();
-            memoryStream2.FileName = dtoAll.FileTitle;
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+
             return memoryStream2;
         }
 
@@ -3480,9 +3481,37 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            var memoryStream2 = await PriceEvaluationTableDownloadStream(input);
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+            var productId = solution.Productld;
 
-            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{memoryStream2.FileName}.xlsx" };
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
+
+            DtoExcel(dtoAll);
+            DtoExcelRound5(dtoAll);//新增保留5位小数
+            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+
+            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
+                .SelectAsync(async p =>
+                {
+                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
+                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
+                })).ToList();
+
+            var memoryStream = new MemoryStream();
+
+
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
+
+
+            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
+
+            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{dtoAll.FileTitle}.xlsx" };
         }
 
         /// <summary>
