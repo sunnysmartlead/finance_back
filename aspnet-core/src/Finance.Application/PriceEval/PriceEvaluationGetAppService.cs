@@ -591,7 +591,7 @@ namespace Finance.PriceEval
                     Year = 0,
                     UpDown = YearType.Year,
                     //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
-                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}",
                     FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
@@ -3446,7 +3446,7 @@ namespace Finance.PriceEval
             }
             else
             {
-                return $"{year}年";
+                return $"{year}";
             }
         }
 
