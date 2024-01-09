@@ -46,6 +46,7 @@ using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Tsp;
 using Rougamo;
 using Spire.Pdf.Exporting.XPS.Schema;
+using Spire.Xls;
 using Spire.Xls.Core;
 using System;
 using System.Collections;
@@ -514,6 +515,14 @@ namespace Finance.PriceEval
                                    where mc.AuditFlowId == input.AuditFlowId && mc.Id == productId
                                    select mc.Product).FirstOrDefaultAsync();
 
+            //获取核价类型
+            var priceEvalType = string.Empty;
+            if (!priceEvaluation.PriceEvalType.IsNullOrWhiteSpace())
+            {
+                var fd = await _financeDictionaryDetailRepository.GetAsync(priceEvaluation.PriceEvalType);
+                priceEvalType = fd.DisplayName;
+            }
+
             //物料成本
             var electronicAndStructureList = await this.GetBomCost(new GetBomCostInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
@@ -581,7 +590,9 @@ namespace Finance.PriceEval
                 {
                     Year = 0,
                     UpDown = YearType.Year,
-                    Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
+                    //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -662,7 +673,9 @@ namespace Finance.PriceEval
                 {
                     Year = year,
                     UpDown = upDown,
-                    Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
+                    //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -3400,8 +3413,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
+            DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => DtoExcel(p));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3422,6 +3436,18 @@ namespace Finance.PriceEval
             var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
 
             return memoryStream2;
+        }
+
+        private string GetYearName(int year)
+        {
+            if (year == 0)
+            {
+                return "全生命周期";
+            }
+            else
+            {
+                return $"{year}";
+            }
         }
 
         private string GetYearName(YearType yearType)
@@ -3455,9 +3481,37 @@ namespace Finance.PriceEval
         [HttpGet]
         public async virtual Task<FileResult> PriceEvaluationTableDownload(PriceEvaluationTableDownloadInput input)
         {
-            var memoryStream2 = await PriceEvaluationTableDownloadStream(input);
+            var solution = await _solutionRepository.GetAsync(input.SolutionId);
+            var productId = solution.Productld;
 
-            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = "产品核价表.xlsx" };
+            var year = await _modelCountYearRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == productId);
+
+            var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
+
+            DtoExcel(dtoAll);
+            DtoExcelRound5(dtoAll);//新增保留5位小数
+            var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+
+            var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
+                .SelectAsync(async p =>
+                {
+                    await MiniExcel.SaveAsByTemplateAsync(p.stream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", p.p);
+                    return new { stream = p.stream, excels = $"{p.p.Year}{GetYearName(p.p.UpDown)}" };
+                })).ToList();
+
+            var memoryStream = new MemoryStream();
+
+
+            await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/PriceEvaluationTableModel.xlsx", dtoAll);
+
+
+            streams.Add(new { stream = memoryStream, excels = "全生命周期" });
+
+            var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
+            var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
+
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{dtoAll.FileTitle}.xlsx" };
         }
 
         /// <summary>
@@ -3519,6 +3573,24 @@ namespace Finance.PriceEval
             dtoAll.LossRateCount = dtoAll.Material.Sum(p => p.LossRate);
 
             return dtoAll;
+        }
+
+        /// <summary>
+        /// Dto Excel导出处理（保留5位小数）
+        /// </summary>
+        /// <param name="dto"></param>
+        private static void DtoExcelRound5(ExcelPriceEvaluationTableDto dto)
+        {
+            dto.Material.ForEach(p =>
+            {
+                p.MaterialPrice = Math.Round(p.MaterialPrice, 5);
+                p.ExchangeRate = Math.Round(p.ExchangeRate, 5);
+                p.MaterialPriceCyn = Math.Round(p.MaterialPriceCyn, 5);
+                p.TotalMoneyCyn = Math.Round(p.TotalMoneyCyn, 5);
+                p.TotalMoneyCynNoCustomerSupply = Math.Round(p.TotalMoneyCynNoCustomerSupply, 5);
+                p.Loss = Math.Round(p.Loss, 5);
+                p.MaterialCost = Math.Round(p.MaterialCost, 5);
+            });
         }
 
 
@@ -3663,13 +3735,13 @@ namespace Finance.PriceEval
                     Price_1 = one?.MaterialPrice,
                     Count_1 = one?.AssemblyCount.To<decimal>(),
                     Rate_1 = one?.ExchangeRate,
-                    MoqShareCount_1 = one?.MoqShareCount,
+                    //MoqShareCount_1 = one?.MoqShareCount,
                     Sum_1 = one?.TotalMoneyCynNoCustomerSupply,
 
                     Price_2 = two?.MaterialPrice,
                     Count_2 = two?.AssemblyCount.To<decimal>(),
                     Rate_2 = two?.ExchangeRate,
-                    MoqShareCount_2 = two?.MoqShareCount,
+                    //MoqShareCount_2 = two?.MoqShareCount,
                     Sum_2 = two?.TotalMoneyCynNoCustomerSupply,
                 });
             }
@@ -3680,52 +3752,52 @@ namespace Finance.PriceEval
                     Price_1 = null,
                     Count_1 = null,//bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
                     Rate_1 = null,
-                    MoqShareCount_1 = bom1.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_1 = bom1.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.MoqShareCount),
                     Sum_1 =bom1.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
 
                     Price_2 = null,
                     Count_2 = null,//bom1.Material.Count(p => p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片"),
                     Rate_2 = null,
-                    MoqShareCount_2 = bom2.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_2 = bom2.Material.Where(p =>p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.MoqShareCount),
                     Sum_2 =bom2.Material.Where(p => p.SuperType == FinanceConsts.ElectronicName && p.TypeName !="串行芯片" && p.TypeName !="Sensor芯片").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
                 },
                 new SolutionContrast { ItemName="结构件（除lens）",ItemName2="结构件（除lens）",
                     Price_1 = null,
                     Count_1 = bom1.Material.Count(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头"),
                     Rate_1 = null,
-                    MoqShareCount_1 =bom1.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_1 =bom1.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.MoqShareCount),
                     Sum_1 =bom1.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
 
                     Price_2 = null,
                     Count_2 = bom2.Material.Count(p=>p.SuperType != FinanceConsts.ElectronicName  && p.TypeName != "镜头"),
                     Rate_2 = null,
-                    MoqShareCount_2 = bom2.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_2 = bom2.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName && p.TypeName != "镜头").Sum(p=>p.MoqShareCount),
                     Sum_2 =bom2.Material.Where(p=>p.SuperType != FinanceConsts.ElectronicName  && p.TypeName != "镜头").Sum(p=>p.TotalMoneyCynNoCustomerSupply),
                 },
                 new SolutionContrast { ItemName="损耗成本",ItemName2="损耗成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = bom1.LossCost.Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_1 = bom1.LossCost.Sum(p=>p.MoqShareCount),
                     Sum_1 =bom1.LossCost.Sum(p=>p.WastageCost),
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = bom2.LossCost.Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_2 = bom2.LossCost.Sum(p=>p.MoqShareCount),
                     Sum_2 =bom2.LossCost.Sum(p=>p.WastageCost),
                 },
                 new SolutionContrast { ItemName="制造成本",ItemName2="制造成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = null,
+                    //MoqShareCount_1 = null,
                     Sum_1 = bom1.ManufacturingCost.FirstOrDefault(p=>p.CostType == CostType.Total).Subtotal,
 
                      Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = null,
+                    //MoqShareCount_2 = null,
                     Sum_2 = bom2.ManufacturingCost.FirstOrDefault(p=>p.CostType == CostType.Total).Subtotal
                 },
 
@@ -3733,52 +3805,65 @@ namespace Finance.PriceEval
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = null,
+                    //MoqShareCount_1 = null,
                     Sum_1 = bom1.OtherCostItem.LogisticsFee,
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = null,
+                    //MoqShareCount_2 = null,
                     Sum_2 = bom2.OtherCostItem.LogisticsFee,
                 },
                 new SolutionContrast { ItemName="质量成本",ItemName2="质量成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = null,
+                    //MoqShareCount_1 = null,
                     Sum_1 = bom1.OtherCostItem.QualityCost,
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = null,
+                    //MoqShareCount_2 = null,
                     Sum_2 = bom2.OtherCostItem.QualityCost,
                 },
                 new SolutionContrast { ItemName="其他成本",ItemName2="其他成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = null,
+                    //MoqShareCount_1 = null,
                     Sum_1 = bom1.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total,
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = null,
+                    //MoqShareCount_2 = null,
                     Sum_2 = bom2.OtherCostItem2.FirstOrDefault(p=>p.ItemName == "单颗成本").Total,
+                },
+                new SolutionContrast { ItemName="MOQ分摊成本",ItemName2="MOQ分摊成本",
+                    Price_1 = null,
+                    Count_1 = null,
+                    Rate_1 = null,
+                    //MoqShareCount_1 = null,
+                    Sum_1 = bom1.Material.Sum(p=>p.MoqShareCount),
+
+                    Price_2 = null,
+                    Count_2 = null,
+                    Rate_2 = null,
+                    //MoqShareCount_2 = null,
+                    Sum_2 = bom2.Material.Sum(p=>p.MoqShareCount),
                 },
                 new SolutionContrast { ItemName="总成本",ItemName2="总成本",
                     Price_1 = null,
                     Count_1 = null,
                     Rate_1 = null,
-                    MoqShareCount_1 = bom1.LossCost.Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_1 = bom1.LossCost.Sum(p=>p.MoqShareCount),
                     Sum_1 = bom1.TotalCost,
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
-                    MoqShareCount_2 = bom2.LossCost.Sum(p=>p.MoqShareCount),
+                    //MoqShareCount_2 = bom2.LossCost.Sum(p=>p.MoqShareCount),
                     Sum_2 = bom2.TotalCost
                 },
             };
@@ -3819,9 +3904,7 @@ namespace Finance.PriceEval
 
             var memoryStream = new MemoryStream();
 
-            //await MiniExcel.SaveAsAsync(memoryStream, data);
             await MiniExcel.SaveAsByTemplateAsync(memoryStream, "wwwroot/Excel/SolutionContrast.xlsx", dto);
-
 
             return new FileContentResult(memoryStream.ToArray(), "application/octet-stream") { FileDownloadName = "方案成本对比表.xlsx" };
         }
