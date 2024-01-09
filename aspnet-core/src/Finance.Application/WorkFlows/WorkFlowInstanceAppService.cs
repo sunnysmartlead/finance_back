@@ -105,9 +105,13 @@ namespace Finance.WorkFlows
         /// <returns></returns>
         public async Task GG(long id)
         {
-            var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_贸易合规");
-            hg.LastModificationTime = DateTime.UtcNow;
+            //var hg = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_贸易合规");
+            //hg.LastModificationTime = DateTime.UtcNow;
             //hg.NodeInstanceStatus = NodeInstanceStatus.Current;
+
+            var fg = await _nodeInstanceRepository.GetAll().Where(p => p.WorkFlowInstanceId == id && p.NodeId == "主流程_贸易合规")
+                .UpdateFromQueryAsync(p => new NodeInstance { LastModificationTime = DateTime.Now });
+
         }
 
         /// <summary>

@@ -229,7 +229,7 @@ namespace Finance.VersionManagement
                     auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
                     {
                         LastModifyTime = item.LastModificationTime,
-                        StartTime =item.CreationTime == DateTime.MinValue ? null : item.ResetTime,
+                        StartTime = item.CreationTime == DateTime.MinValue ? null : item.CreationTime,
                     }
                     },
                     ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
