@@ -248,7 +248,7 @@ namespace Finance.VersionManagement.Dto
         /// <summary>
         /// 创建时间
         /// </summary>
-        public DateTime StartTime { get; set; }
+        public DateTime? StartTime { get; set; }
         /// <summary>
         /// 最后修改时间
         /// </summary>
