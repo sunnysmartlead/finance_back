@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Finance.Processes
 {
     /// <summary>
-    /// 列表
+    /// 工时工序
     /// </summary>
     public class ProcessHoursEnterDto: EntityDto<long>
     {
@@ -43,9 +43,17 @@ namespace Finance.Processes
         public ProcessHoursEnterToolInfoDto ToolInfo { get; set; } = new ProcessHoursEnterToolInfoDto();
 
         public List<ProcessHoursEnterSopInfoDto> SopInfo { get; set; } = new List<ProcessHoursEnterSopInfoDto>();
+        /// <summary>
+        /// 工时工序列表
+        /// </summary>
         public List<ProcessHoursEnteritemDto> SopInfoAll { get; set; } = new List<ProcessHoursEnteritemDto>();
-
+        /// <summary>
+        /// uph列表
+        /// </summary>
         public List<ProcessHoursEnterUphListDto> processHoursEnterUphList { get; set; } =  new List<ProcessHoursEnterUphListDto>();
+        /// <summary>
+        /// 线体数量；列表
+        /// </summary>
         public List<ProcessHoursEnterLineDtoList> processHoursEnterLineList { get; set; } =  new List<ProcessHoursEnterLineDtoList>();
 
 

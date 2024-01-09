@@ -4,7 +4,7 @@ using System;
 namespace Finance.Processes
 {
     /// <summary>
-    /// 列表
+    /// 治具
     /// </summary>
     public class ProcessHoursEnterFixtureDto: EntityDto<long>
     {
@@ -15,9 +15,21 @@ namespace Finance.Processes
         public System.Nullable<System.Int64> LastModifierUserId { get; set; }
         public System.DateTime CreationTime { get; set; }
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
+        /// <summary>
+        /// 名称
+        /// </summary>
         public string FixtureName { get; set; }
+        /// <summary>
+        /// 数量
+        /// </summary>
         public System.Nullable<System.Decimal> FixtureNumber { get; set; }
+        /// <summary>
+        /// 单价
+        /// </summary>
         public System.Nullable<System.Decimal> FixturePrice { get; set; }
+        /// <summary>
+        /// 工时工序id
+        /// </summary>
         public System.Nullable<System.Decimal> ProcessHoursEnterId { get; set; }
     }
 }
