@@ -1095,6 +1095,7 @@ namespace Finance.WorkFlows
                        join n in _nodeInstanceRepository.GetAll() on i.NodeInstanceId equals n.Id
                        join f in _financeDictionaryDetailRepository.GetAll() on i.FinanceDictionaryDetailId equals f.Id
                        where i.WorkFlowInstanceId == workflowInstanceId
+                       orderby i.CreationTime descending
                        select new InstanceHistorys
                        {
                            Id = i.Id,
