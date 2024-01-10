@@ -1091,7 +1091,11 @@ namespace Finance.WorkFlows
         {
             var data = from i in _instanceHistoryRepository.GetAll()
                        join u in _userManager.Users on i.CreatorUserId equals u.Id
-                       join d in _departmentRepository.GetAll() on u.DepartmentId equals d.Id
+
+                       join d in _departmentRepository.GetAll() on u.DepartmentId equals d.Id into d1
+                       from d2 in d1.DefaultIfEmpty()
+
+
                        join n in _nodeInstanceRepository.GetAll() on i.NodeInstanceId equals n.Id
                        join f in _financeDictionaryDetailRepository.GetAll() on i.FinanceDictionaryDetailId equals f.Id
                        where i.WorkFlowInstanceId == workflowInstanceId
@@ -1108,7 +1112,7 @@ namespace Finance.WorkFlows
                            IsDeleted = i.IsDeleted,
 
                            UserName = u.Name,
-                           UserDepartmentName = d.Name,
+                           UserDepartmentName = d2 == null ? string.Empty : d2.Name,
                            NodeName = n.Name,
                            DisplayName = f.DisplayName,
                            Comment = i.Comment
