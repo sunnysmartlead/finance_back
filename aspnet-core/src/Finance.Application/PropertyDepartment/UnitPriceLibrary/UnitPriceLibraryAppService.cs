@@ -372,7 +372,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
                             int AllCount = await _configUInitPriceForm.CountAsync();
                             if (AllCount is not 0)
                             {
-                                await _configUInitPriceForm.GetDbContext().Database.ExecuteSqlRawAsync("DELETE FROM \"UInitPriceForm\"");
+                                await _configUInitPriceForm.DeleteAllEntities();
                             }
                             List<UInitPriceForm> price = ObjectMapper.Map<List<UInitPriceForm>>(rows);
                             await _configUInitPriceForm.BulkInsertAsync(price);
@@ -396,6 +396,27 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
             catch (Exception e)
             {
                 throw new FriendlyException(e.Message);
+            }
+        }
+        /// <summary>
+        /// 单价库模版下载
+        /// </summary>
+        /// <param name="FileName"></param>
+        /// <returns></returns>
+        /// <exception cref="UserFriendlyException"></exception>
+        public  IActionResult UnitPriceLibraryTemplateDownload(string FileName = "单价库模版")
+        {
+            try
+            {
+                string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\单价库模版.xlsx";
+                return new FileStreamResult(File.OpenRead(templatePath), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                {
+                    FileDownloadName = $"{FileName}.xlsx"
+                };
+            }
+            catch (Exception e)
+            {
+                throw new UserFriendlyException(e.Message);
             }
         }
         /// <summary>
