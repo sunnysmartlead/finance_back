@@ -299,6 +299,18 @@ namespace Finance.PropertyDepartment.DemandApplyAudit
                         });
 
                     }
+                    else
+                    {
+                        #region 工作流
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                        {
+                            NodeInstanceId = auditEntering.NodeInstanceId,
+                            FinanceDictionaryDetailId = auditEntering.Opinion,
+                            Comment = auditEntering.Comment,
+                        });
+                        #endregion
+                    }
                     //else if (auditEntering.Opinion == FinanceConsts.YesOrNo_No)
                     //{
                     //    throw new FriendlyException($"快速核报价引用流程不允许退回到核价需求录入！");
