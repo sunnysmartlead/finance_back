@@ -227,7 +227,11 @@ namespace Finance.VersionManagement
                     ProcessState = item.UserName.IsNullOrWhiteSpace() ? PROCESSTYPE.ProcessNoStart : PROCESSTYPE.ProcessFinished,
                     UserName = item.UserName,
                     auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
-                    { LastModifyTime = item.LastModificationTime, StartTime =item. CreationTime } },
+                    {
+                        LastModifyTime = item.LastModificationTime,
+                        StartTime = item.CreationTime == DateTime.MinValue ? null : item.CreationTime,
+                    }
+                    },
                     ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
                 };
                 if (item.NodeInstanceStatus == NodeInstanceStatus.Current)

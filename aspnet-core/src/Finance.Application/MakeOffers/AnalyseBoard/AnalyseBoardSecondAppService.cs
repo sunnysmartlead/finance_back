@@ -249,6 +249,24 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     {
         try
         {
+            var solutionTables = analyseBoardSecondInputDto.solutionTables;
+            if (solutionTables is null || solutionTables.Count == 0)
+            {
+                var version = analyseBoardSecondInputDto.version;
+                SolutionQuotation sol =
+                    await _solutionQutation.FirstOrDefaultAsync(p =>
+                        p.AuditFlowId == analyseBoardSecondInputDto.auditFlowId && p.version == version);
+                var solutionList = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson);
+                if (solutionList is null || solutionList.Count == 0)
+                {
+                    throw new FriendlyException("方案为空");
+
+                }
+                
+                analyseBoardSecondInputDto.solutionTables = solutionList;
+
+            }
+
             string FileName = "成本信息表下载";
             return await _analysisBoardSecondMethod.DownloadMessageSecond(analyseBoardSecondInputDto, FileName);
         }
@@ -794,6 +812,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException("已经提交流程不能删除");
         }
     }
+
     /// <summary>
     /// 流程退回到报价分析看板修改方案状态
     /// </summary>
@@ -805,7 +824,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         foreach (var sol in sols)
         {
             sol.IsFirst = false;
-          await  _solutionQutation.UpdateAsync(sol);
+            await _solutionQutation.UpdateAsync(sol);
         }
     }
 
