@@ -1963,11 +1963,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         for (int i = 0; i < solutionidscarnums.Count; i++)
         {
+            
             var solutionidscarnum = solutionidscarnums[i];
             var carnum = solutionidscarnum.carNum;
             YearDimensionalityComparisonSecondDto nddb = new();
             if (!string.IsNullOrEmpty(carModel))
             {
+                if (solutionidscarnum.SolutionId == 0)
+                {
+                    continue;
+                }
                 nddb = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()
                 {
                     AuditFlowId = AuditFlowId,
@@ -2898,6 +2903,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<DynamicUnitPriceOffers> dynamicUnitPriceOffers =
             await _dynamicUnitPriceOffers.GetAllListAsync(p =>
                 p.AuditFlowId == AuditFlowId && p.version == version && p.ntype == ntype);
+        dynamicUnitPriceOffers=  dynamicUnitPriceOffers.OrderByDescending(p => p.SolutionId).ToList();//排序
         var dymap = from dy in dynamicUnitPriceOffers group dy by dy.title;
 
         foreach (var d in dymap)
