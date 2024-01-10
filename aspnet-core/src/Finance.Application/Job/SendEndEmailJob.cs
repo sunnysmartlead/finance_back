@@ -76,13 +76,13 @@ namespace Finance.Job
                         {
                             string emailAddr = userInfo.EmailAddress;
                             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                            string emailBody = "核价报价提醒：您有新的工作流（" + nodeInstance.Name + "——流程号：" + nodeInstance.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
+                            string emailBody = $"核价报价提醒：您有新的工作流{priceEvaluation.Title}（{nodeInstance.Name}——流程号：{nodeInstance.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
 
                             try
                             {
                                 if (!emailAddr.Contains("@qq.com"))
                                 {
-                                    await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{nodeInstance.Name},流程号{nodeInstance.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                                    await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{priceEvaluation.Title}{nodeInstance.Name},流程号{nodeInstance.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
                                 }
                             }
                             catch (Exception)

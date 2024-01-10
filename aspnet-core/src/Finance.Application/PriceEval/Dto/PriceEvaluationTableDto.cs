@@ -232,6 +232,11 @@ namespace Finance.PriceEval.Dto
     public class PriceEvaluationTableDto
     {
         /// <summary>
+        /// 文件标题
+        /// </summary>
+        public virtual string FileTitle { get; set; }
+
+        /// <summary>
         /// 电子大类料合计值
         /// </summary>
         public virtual decimal ElectronicSumValue { get; set; }

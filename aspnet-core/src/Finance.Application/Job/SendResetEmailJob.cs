@@ -19,13 +19,15 @@ namespace Finance.Job
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
+        private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
-        public SendResetEmailJob(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<User, long> userRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IUnitOfWorkManager unitOfWorkManager)
+        public SendResetEmailJob(IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<User, long> userRepository, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IUnitOfWorkManager unitOfWorkManager)
         {
             _nodeInstanceRepository = nodeInstanceRepository;
             _userRepository = userRepository;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
+            _workflowInstanceRepository = workflowInstanceRepository;
             _unitOfWorkManager = unitOfWorkManager;
         }
 
@@ -45,14 +47,16 @@ namespace Finance.Job
                     var task = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.Id == resetTaskInput.NodeInstanceId);
                     var resetUser = await _userRepository.FirstOrDefaultAsync(p => p.Id == resetTaskInput.ResetUserId);
 
+                    var workflowInstance = await _workflowInstanceRepository.GetAsync(task.WorkFlowInstanceId);
+
                     if (userInfo != null)
                     {
                         string emailAddr = userInfo.EmailAddress;
                         string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                        string emailBody = $"核价报价提醒：您有新的工作流，由{resetUser.Name}重置给您。（{task.Name}——流程号：{ task.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
+                        string emailBody = $"核价报价提醒：您有新的工作流{workflowInstance.Title}，由{resetUser.Name}重置给您。（{task.Name}——流程号：{task.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
                         try
                         {
-                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.Name},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
+                            await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{workflowInstance.Title}{task.Name},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
                         }
                         catch (Exception)
                         {

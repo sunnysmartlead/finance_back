@@ -15,7 +15,18 @@ public class AnalyseBoardSecondDto : ResultDto
     /// </summary>
     public long AuditFlowId { get; set; }
 
-   
+    /// <summary>
+    /// 版本
+    /// </summary>
+    public int version { get; set; }
+    /// <summary>
+    /// 报价次数
+    /// </summary>
+    public int ntime { get; set; }
+    /// <summary>
+    /// 0 报价分析看板，1 报价反馈
+    /// </summary>
+    public int ntype { get; set; }
 
     /// <summary>
     /// Nre相关

@@ -456,8 +456,8 @@ namespace Finance.Audit
                 //如果当前用户不是本流程的项目经理或流程发起人（业务员），就把开始页面过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "开始" || p.IsReset)
 
-                //如果当前用户不是贸易合规审核员，或该流程的项目经理，就把贸易合规页面过滤掉
-                .WhereIf((priceEvaluation == null) || (!isTradeComplianceAuditor) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
+                //如果当前用户不是贸易合规审核员，并且也不是该流程的项目经理，就把贸易合规页面过滤掉
+                .WhereIf((priceEvaluation == null || priceEvaluation.ProjectManager != AbpSession.UserId) && (!isTradeComplianceAuditor), p => p.ProcessIdentifier != FinanceConsts.TradeCompliance || p.IsReset)
 
                 //如果当前用户不是流程发起人（业务员），就把【生成报价分析界面选择报价方案】、【报价反馈】过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.CreatorUserId != AbpSession.UserId,
@@ -1799,65 +1799,6 @@ namespace Finance.Audit
         public async virtual Task DeleteAuditFlowById(AuditFlowDeleteDto auditFlowDeleteDto)
         {
             await _workflowInstanceAppService.OverWorkflow(new OverWorkflowInput { AuditFlowId = auditFlowDeleteDto.AuditFlowId, DeleteReason = auditFlowDeleteDto.DeleteReason });
-
-            #region 一开逻辑
-            //AuditFlowDelete auditFlowDelete = new();
-            //auditFlowDelete.AuditFlowId = auditFlowDeleteDto.AuditFlowId;
-            //auditFlowDelete.DeleteReason = auditFlowDeleteDto.DeleteReason;
-
-            //PriceEvaluation priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //if (priceEvaluation != null)
-            //{
-            //    auditFlowDelete.AuditFlowName = priceEvaluation.Title;
-            //    User user = await _userRepository.FirstOrDefaultAsync(p => p.Name.Equals(priceEvaluation.Drafter));
-            //    if (user != null)
-            //    {
-            //        auditFlowDelete.AuditFlowUserId = user.Id;
-            //    }
-            //    if (AbpSession.UserId != null)
-            //    {
-            //        auditFlowDelete.AuditFlowDeleterId = (long)AbpSession.UserId;
-            //    }
-            //}
-
-            //var auditFlowList = await _auditFlowRepository.GetAllListAsync(p => p.Id == auditFlowDeleteDto.AuditFlowId);
-            //if (auditFlowList.Count > 0)
-            //{
-            //    auditFlowDelete.AuditFlowVersion = auditFlowList.FirstOrDefault().QuoteVersion;
-            //    await _auditFlowRepository.HardDeleteAsync(auditFlowList.FirstOrDefault());
-            //}
-            //else
-            //{
-            //    throw new FriendlyException("流程已删除！");
-            //}
-
-            //var auditFlowCurrentList = await _auditCurrentProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowCurrent in auditFlowCurrentList)
-            //{
-            //    await _auditCurrentProcessRepository.HardDeleteAsync(auditFlowCurrent);
-            //}
-
-            //var auditFlowFinishedList = await _auditFinishedProcessRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFinished in auditFlowFinishedList)
-            //{
-            //    await _auditFinishedProcessRepository.HardDeleteAsync(auditFinished);
-            //}
-
-            //var auditFlowDetailList = await _auditFlowDetailRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowDetail in auditFlowDetailList)
-            //{
-            //    await _auditFlowDetailRepository.HardDeleteAsync(auditFlowDetail);
-            //}
-
-            //var auditFlowRightList = await _auditFlowRightRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowDeleteDto.AuditFlowId);
-            //foreach (var auditFlowRight in auditFlowRightList)
-            //{
-            //    await _auditFlowRightRepository.HardDeleteAsync(auditFlowRight);
-            //}
-
-            //await _auditFlowDeleteRepository.InsertAsync(auditFlowDelete);
-
-            #endregion
         }
 
         /// <summary>

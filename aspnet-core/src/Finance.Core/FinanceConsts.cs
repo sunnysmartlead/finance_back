@@ -15,7 +15,7 @@ namespace Finance
         public const string MailFrom_Sunny = "zlcwhjbjxt@sunnyoptical.com"; //登陆用户名，邮箱
         public const string MailUserPassword_Sunny = "mb395$BQ";//登录密码
 
-        public const string MailForMaintainer = "wslinzhang@sunnyoptical.com";
+        public const string MailForMaintainer = "wslinzhang@sunnyoptical.com";//邮箱密码默认维护人邮箱地址
 
         public const string AliServer_In_IP = "172.26.144.105"; //阿里云内网IP地址
         public const string AliServer_Out_IP = "139.196.216.165"; //阿里云外网IP地址
