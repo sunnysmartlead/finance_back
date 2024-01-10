@@ -404,6 +404,7 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         /// <param name="FileName"></param>
         /// <returns></returns>
         /// <exception cref="UserFriendlyException"></exception>
+        [HttpGet]
         public  IActionResult UnitPriceLibraryTemplateDownload(string FileName = "单价库模版")
         {
             try
