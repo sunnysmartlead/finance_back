@@ -591,8 +591,8 @@ namespace Finance.PriceEval
                     Year = 0,
                     UpDown = YearType.Year,
                     //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
-                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}",
-                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}（{GetYearName(input.Year)}）",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -674,8 +674,8 @@ namespace Finance.PriceEval
                     Year = year,
                     UpDown = upDown,
                     //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
-                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
-                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}（{GetYearName(input.Year)}{GetYearName(input.UpDown)}）",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -893,17 +893,23 @@ namespace Finance.PriceEval
 
                 var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
 
-                var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                //var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                // && p.Year == year && p.UpDown == upDown);
+                //if (fuOtherCostItem2.Any())
+                //{
+                //    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                //}
+                //else if (isUploadAuditFlow)
+                //{
+                //    throw new FriendlyException($"核价表未上传！");
+                //}
+                var fuOtherCostItem2 = await _fu_BomRepository.GetAll()
+                    .AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
                  && p.Year == year && p.UpDown == upDown);
-                if (fuOtherCostItem2.Any())
-                {
-                    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
-                }
-                else if (isUploadAuditFlow)
+                if ((!fuOtherCostItem2) && isUploadAuditFlow)
                 {
                     throw new FriendlyException($"核价表未上传！");
                 }
-
                 #endregion
 
                 //修改项
