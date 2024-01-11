@@ -1087,5 +1087,38 @@ namespace Finance
         /// </summary>
         public const string Spbjclyhjb_Bjfxkb = "Spbjclyhjb_Bjfxkb";
 
+
+        #region 零星报价
+        /// <summary>
+        /// 零部件类型
+        /// </summary>
+        public const string ComponentType = "ComponentType";
+
+        /// <summary>
+        /// 零件
+        /// </summary>
+        public const string SpareParts = "SpareParts";
+
+        /// <summary>
+        /// 公推样品
+        /// </summary>
+        public const string PubliclyRecommendedSamples = "PubliclyRecommendedSamples";
+
+        /// <summary>
+        /// 测试验证品
+        /// </summary>
+        public const string TestValidationProducts = "TestValidationProducts";
+
+        /// <summary>
+        /// 工装/模具
+        /// </summary>
+        public const string ToolingMold = "ToolingMold";
+
+        /// <summary>
+        /// 其他
+        /// </summary>
+        public const string Other = "Other";
+        #endregion
+
     }
 }

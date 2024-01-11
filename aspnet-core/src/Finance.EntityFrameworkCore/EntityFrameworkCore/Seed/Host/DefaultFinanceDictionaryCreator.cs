@@ -52,31 +52,33 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionary { Id=FinanceConsts.Currency,DisplayName="报价币种",},
                 new FinanceDictionary { Id=FinanceConsts.ShippingType,DisplayName="运输方式",},
                 new FinanceDictionary { Id=FinanceConsts.PackagingType,DisplayName="包装方式",},
-                 new FinanceDictionary { Id=FinanceConsts.NreReasons,DisplayName="NRE事由",},
-                 new FinanceDictionary { Id=FinanceConsts.TradeMethod,DisplayName="贸易方式",},
+                new FinanceDictionary { Id=FinanceConsts.NreReasons,DisplayName="NRE事由",},
+                new FinanceDictionary { Id=FinanceConsts.TradeMethod,DisplayName="贸易方式",},
 
-                 new FinanceDictionary { Id=FinanceConsts.UpdateFrequency,DisplayName="价格有效期",},
-                 new FinanceDictionary { Id=FinanceConsts.PriceEvalType,DisplayName="核价类型",},
-                 new FinanceDictionary { Id=FinanceConsts.SampleName,DisplayName="样品阶段",},
+                new FinanceDictionary { Id=FinanceConsts.UpdateFrequency,DisplayName="价格有效期",},
+                new FinanceDictionary { Id=FinanceConsts.PriceEvalType,DisplayName="核价类型",},
+                new FinanceDictionary { Id=FinanceConsts.SampleName,DisplayName="样品阶段",},
 
-                 new FinanceDictionary { Id=FinanceConsts.YesOrNo,DisplayName="同意|不同意",},
-                 new FinanceDictionary { Id=FinanceConsts.EvalReason,DisplayName="核价原因",},
-                 new FinanceDictionary { Id=FinanceConsts.Done,DisplayName="完成",},
-                 new FinanceDictionary { Id=FinanceConsts.EvalFeedback,DisplayName="报价反馈",},
+                new FinanceDictionary { Id=FinanceConsts.YesOrNo,DisplayName="同意|不同意",},
+                new FinanceDictionary { Id=FinanceConsts.EvalReason,DisplayName="核价原因",},
+                new FinanceDictionary { Id=FinanceConsts.Done,DisplayName="完成",},
+                new FinanceDictionary { Id=FinanceConsts.EvalFeedback,DisplayName="报价反馈",},
 
-                 new FinanceDictionary { Id=FinanceConsts.StructBomEvalSelect,DisplayName="结构BOM单价审核选项",},
-                 new FinanceDictionary { Id=FinanceConsts.BomEvalSelect,DisplayName="BOM成本审核选项",},
-                 new FinanceDictionary { Id=FinanceConsts.MybhgSelect,DisplayName="贸易不合规选项",},
-                 new FinanceDictionary { Id=FinanceConsts.HjkbSelect,DisplayName="核价看板选项",},
-                 new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="电子BOM单价审核选项",},
+                new FinanceDictionary { Id=FinanceConsts.StructBomEvalSelect,DisplayName="结构BOM单价审核选项",},
+                new FinanceDictionary { Id=FinanceConsts.BomEvalSelect,DisplayName="BOM成本审核选项",},
+                new FinanceDictionary { Id=FinanceConsts.MybhgSelect,DisplayName="贸易不合规选项",},
+                new FinanceDictionary { Id=FinanceConsts.HjkbSelect,DisplayName="核价看板选项",},
+                new FinanceDictionary { Id=FinanceConsts.ElectronicBomEvalSelect,DisplayName="电子BOM单价审核选项",},
 
-                 new FinanceDictionary { Id=FinanceConsts.Sbzt,DisplayName="设备状态",},
+                new FinanceDictionary { Id=FinanceConsts.Sbzt,DisplayName="设备状态",},
 
-                 new FinanceDictionary { Id=FinanceConsts.QualityCostType,DisplayName="质量成本比例",},
+                new FinanceDictionary { Id=FinanceConsts.QualityCostType,DisplayName="质量成本比例",},
 
-                 new FinanceDictionary { Id=FinanceConsts.Spbjclyhjb,DisplayName="审批报价策略与核价表选项",},
+                new FinanceDictionary { Id=FinanceConsts.Spbjclyhjb,DisplayName="审批报价策略与核价表选项",},
 
-
+                #region 零星报价
+                  new FinanceDictionary { Id=FinanceConsts.ComponentType,DisplayName="零部件类型",},
+                #endregion              
             };
 
             var noDb = financeDictionaryList.Where(p => !_context.FinanceDictionary.Contains(p));
@@ -310,7 +312,14 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Spbjclyhjb, Id = FinanceConsts.Spbjclyhjb_Hjkb, DisplayName="退回到核价看板",},
                 new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.Spbjclyhjb, Id = FinanceConsts.Spbjclyhjb_Bjfxkb, DisplayName="退回到报价分析看板界面",},
 
-
+                
+                #region 零星报价
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ComponentType, Id = FinanceConsts.SpareParts, DisplayName="零件",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ComponentType, Id = FinanceConsts.PubliclyRecommendedSamples, DisplayName="公推样品",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ComponentType, Id = FinanceConsts.TestValidationProducts, DisplayName="测试验证品",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ComponentType, Id = FinanceConsts.ToolingMold, DisplayName="工装/模具",},
+                new FinanceDictionaryDetail {FinanceDictionaryId = FinanceConsts.ComponentType, Id = FinanceConsts.Other, DisplayName="其他",},
+                #endregion
             };
 
             var noDbDetail = financeDictionaryDetailList.Where(p => !_context.FinanceDictionaryDetail.Contains(p));
