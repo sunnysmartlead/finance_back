@@ -188,12 +188,34 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version, int ntype)
+    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version, int ntype,int ntime)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
         {
+            var sou = await _solutionQutation.FirstOrDefaultAsync(p =>
+                p.AuditFlowId == auditFlowId && p.version == version && p.ntime == ntime);
+        if (sou is null)
+        {
+            sou = await _solutionQutation.FirstOrDefaultAsync(p =>
+                p.AuditFlowId == auditFlowId && p.version == version);
+            var solutionList = JsonConvert.DeserializeObject<List<Solution>>(sou.SolutionListJson);
+            AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new AnalyseBoardSecondInputDto()
+            {
+                solutionTables = solutionList,
+                auditFlowId = auditFlowId,
+                ntype = ntype,
+                ntime = ntime
+            };
+          
+            return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
+
+
+        }
+        else
+        {
             return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
+        }
         }
         catch (Exception e)
         {
@@ -897,7 +919,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
 
     /// <summary>
-    /// 获取对应单价  ntype 上轮报价0 ，本轮报价
+    /// 获取对应方案、梯度、单价  ntype 上轮报价0 ，本轮报价，用于报价反馈时比较值
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
@@ -1056,7 +1078,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);//是否经过报价反馈
         int ntype = isQuotation ? 1 : 0;
         return await _analysisBoardSecondMethod.getAppExcel(auditFlowId, version, ntype);
         /*
@@ -1187,11 +1209,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version,int ntime)
     {
         AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new()
         {
             auditFlowId = auditFlowId,
+            ntime=ntime,
             version = version
         };
         SolutionQuotation solutionQuotation =
@@ -1351,12 +1374,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostAuditQuotationList(AuditQuotationListDto quotationListDto)
     {
         var IsQuotation = quotationListDto.IsQuotation;
-        if (IsQuotation)
+        if (IsQuotation)//报价归档
         {
             await this.GetDownloadListSave(quotationListDto.AuditFlowId);
         }
         else
-        {
+        {//不报价归档
             await this.GetDownloadListSaveNoQuotation(quotationListDto.AuditFlowId);
         }
     }
