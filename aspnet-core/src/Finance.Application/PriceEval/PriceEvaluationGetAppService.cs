@@ -591,8 +591,8 @@ namespace Finance.PriceEval
                     Year = 0,
                     UpDown = YearType.Year,
                     //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）（全生命周期）",
-                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}",
-                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}（{GetYearName(input.Year)}）",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -674,8 +674,8 @@ namespace Finance.PriceEval
                     Year = year,
                     UpDown = upDown,
                     //Title = $"{priceEvaluation?.Title}项目{modelName}核价表（量产/样品）({year}年)",
-                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}{GetYearName(input.Year)}{GetYearName(input.UpDown)}",
-                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-DD}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
+                    Title = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}（{GetYearName(input.Year)}{GetYearName(input.UpDown)}）",
+                    FileTitle = $"{priceEvaluation.CreationTime:yyyy-MM-dd}{priceEvaluation.DraftingDepartment}{priceEvaluation.CustomerName}{priceEvaluation.ProjectName}版本{priceEvaluation.QuoteVersion}{modelName}{priceEvalType}",
                     Date = DateTime.Now,
                     InputCount = input.InputCount,//项目经理填写
                     RequiredCount = moudelCount,
@@ -893,17 +893,23 @@ namespace Finance.PriceEval
 
                 var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
 
-                var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                //var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                // && p.Year == year && p.UpDown == upDown);
+                //if (fuOtherCostItem2.Any())
+                //{
+                //    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                //}
+                //else if (isUploadAuditFlow)
+                //{
+                //    throw new FriendlyException($"核价表未上传！");
+                //}
+                var fuOtherCostItem2 = await _fu_BomRepository.GetAll()
+                    .AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
                  && p.Year == year && p.UpDown == upDown);
-                if (fuOtherCostItem2.Any())
-                {
-                    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
-                }
-                else if (isUploadAuditFlow)
+                if ((!fuOtherCostItem2) && isUploadAuditFlow)
                 {
                     throw new FriendlyException($"核价表未上传！");
                 }
-
                 #endregion
 
                 //修改项
@@ -3413,9 +3419,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
-            DtoExcelRound5(dtoAll);//新增保留5位小数
+            //DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); return p; });//DtoExcelRound5(p); 
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3489,9 +3495,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
-            DtoExcelRound5(dtoAll);//新增保留5位小数
+            //DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p);  return p; });//DtoExcelRound5(p);
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3511,7 +3517,8 @@ namespace Finance.PriceEval
             var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
             var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
 
-            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{dtoAll.FileTitle}.xlsx" };
+            var fileName = dtoAll.FileTitle.IsNullOrWhiteSpace() ? "产品核价表.xlsx" : dtoAll.FileTitle;
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{fileName}.xlsx" };
         }
 
         /// <summary>
