@@ -893,17 +893,23 @@ namespace Finance.PriceEval
 
                 var isUploadAuditFlow = await IsUploadAuditFlow(input.AuditFlowId);
 
-                var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                //var fuOtherCostItem2 = await _fu_OtherCostItem2Repository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
+                // && p.Year == year && p.UpDown == upDown);
+                //if (fuOtherCostItem2.Any())
+                //{
+                //    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
+                //}
+                //else if (isUploadAuditFlow)
+                //{
+                //    throw new FriendlyException($"核价表未上传！");
+                //}
+                var fuOtherCostItem2 = await _fu_BomRepository.GetAll()
+                    .AnyAsync(p => p.AuditFlowId == input.AuditFlowId && p.GradientId == input.GradientId && p.SolutionId == input.SolutionId
                  && p.Year == year && p.UpDown == upDown);
-                if (fuOtherCostItem2.Any())
-                {
-                    return ObjectMapper.Map<List<OtherCostItem2>>(fuOtherCostItem2);
-                }
-                else if (isUploadAuditFlow)
+                if ((!fuOtherCostItem2) && isUploadAuditFlow)
                 {
                     throw new FriendlyException($"核价表未上传！");
                 }
-
                 #endregion
 
                 //修改项
