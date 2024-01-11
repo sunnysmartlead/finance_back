@@ -25,6 +25,7 @@ using Finance.FinanceMaintain;
 using Finance.FinanceParameter;
 using Finance.Hr;
 using Finance.Infrastructure;
+using Finance.LXRequirementEntry;
 using Finance.MakeOffers;
 using Finance.MultiTenancy;
 using Finance.Nre;
@@ -452,6 +453,11 @@ namespace Finance.EntityFrameworkCore
         /// 对外报价单
         /// </summary>
         public virtual DbSet<ExternalQuotation> ExternalQuotation { get; set; }
+        #endregion
+
+        #region 零星报价
+        public virtual DbSet<RequirementEnt> RequirementEnt { get; set; }
+        public virtual DbSet<DataList> DataList { get; set; }
         #endregion
         public FinanceDbContext(DbContextOptions<FinanceDbContext> options)
             : base(options)

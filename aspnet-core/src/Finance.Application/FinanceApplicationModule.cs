@@ -10,6 +10,7 @@ using Finance.NrePricing.Method;
 using Finance.PropertyDepartment.DemandApplyAudit.Method;
 using Finance.PropertyDepartment.Entering.Method;
 using Finance.PropertyDepartment.UnitPriceLibrary;
+using Finance.SporadicQuotation.RequirementEntry.Method;
 using Finance.UpdateLog.Method;
 using Finance.WorkFlows;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,8 @@ namespace Finance
             //营销部审核
             Configuration.Modules.AbpAutoMapper().Configurators.Add(AuditMapper.CreateMappings);
             Configuration.Modules.AbpWebCommon().SendAllExceptionsToClients = true;
+
+            Configuration.Modules.AbpAutoMapper().Configurators.Add(LXRequirementEntMapper.CreateMappings);
 
         }
         /// <summary>
