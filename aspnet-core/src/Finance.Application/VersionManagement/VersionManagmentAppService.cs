@@ -218,7 +218,7 @@ namespace Finance.VersionManagement
             foreach (var item in result)
             {
                 var dto = new AuditFlowOperateReocrdDto
-                {
+                 {
                     Title = item.ProcessName.GetTitle(),
                     TypeName = item.ProcessName.GetTypeName(),
                     ProjectName = item.ProjectName,
