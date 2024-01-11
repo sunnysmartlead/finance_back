@@ -3419,9 +3419,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
-            DtoExcelRound5(dtoAll);//新增保留5位小数
+            //DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); return p; });//DtoExcelRound5(p); 
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3495,9 +3495,9 @@ namespace Finance.PriceEval
             var dtoAll = ObjectMapper.Map<ExcelPriceEvaluationTableDto>(await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = 0, UpDown = YearType.Year }));
 
             DtoExcel(dtoAll);
-            DtoExcelRound5(dtoAll);//新增保留5位小数
+            //DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); DtoExcelRound5(p); return p; });
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p);  return p; });//DtoExcelRound5(p);
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3517,7 +3517,8 @@ namespace Finance.PriceEval
             var ex = streams.Select(p => (p.stream, p.excels)).ToArray();
             var memoryStream2 = NpoiExtensions.ExcelMerge(ex);
 
-            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{dtoAll.FileTitle}.xlsx" };
+            var fileName = dtoAll.FileTitle.IsNullOrWhiteSpace() ? "产品核价表.xlsx" : dtoAll.FileTitle;
+            return new FileContentResult(memoryStream2.ToArray(), "application/octet-stream") { FileDownloadName = $"{fileName}.xlsx" };
         }
 
         /// <summary>
