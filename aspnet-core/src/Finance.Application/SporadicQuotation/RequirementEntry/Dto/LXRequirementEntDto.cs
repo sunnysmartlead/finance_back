@@ -93,9 +93,9 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         public virtual string EndCustomerNature { get; set; }
 
         /// <summary>
-        /// 零部件类型
+        /// 零部件类型(字典明细表主键)
         /// </summary>
-        public virtual long ComponentType { get; set; }
+        public virtual string ComponentType { get; set; }
 
         /// <summary>
         /// 附件Id
@@ -140,6 +140,6 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         /// <summary>
         /// 数据
         /// </summary>
-        public virtual string Data { get; set; }
+        public virtual List<string> Data { get; set; }
     } 
 }
