@@ -30,6 +30,10 @@ namespace Finance.Processes
         /// 年
         /// </summary>
         public decimal YearInt { get; set; }
+
+        /// <summary>
+        /// Uph
+        /// </summary>
         public string Uph { get; set; }
 
 

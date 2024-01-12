@@ -19,18 +19,42 @@ namespace Finance.BaseLibrary
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
         public System.Nullable<System.Int64> AuditFlowId { get; set; }
         public string Classification { get; set; }
+        /// <summary>
+        /// 运输月
+        /// </summary>
         public System.Nullable<System.Decimal> FreightPrice { get; set; }
+        /// <summary>
+        /// 运输月
+        /// </summary>
         public System.Nullable<System.Decimal> MonthlyDemandPrice { get; set; }
+
+        /// <summary>
+        ///     单PCS包装价格/元
+        /// </summary>
         public System.Nullable<System.Decimal> PackagingPrice { get; set; }
         public System.Nullable<System.Int64> SolutionId { get; set; }
         public string Remark { get; set; }
+        /// <summary>
+        ///  单PCS运输费
+        /// </summary>
         public System.Nullable<System.Decimal> SinglyDemandPrice { get; set; }
         public System.Nullable<System.Decimal> StoragePrice { get; set; }
+
+        /// <summary>
+        /// 单PCS总物流成本
+        /// </summary>
         public System.Nullable<System.Decimal> TransportPrice { get; set; }
         public string Year { get; set; }
+
+        /// <summary>
+        /// 需求量
+        /// </summary>
         public decimal YearMountCount { get; set; }
         public long ModelCountYearId { get; set; }
 
+        /// <summary>
+        /// 月度
+        /// </summary>
         public long Moon { get; set; }
 
 

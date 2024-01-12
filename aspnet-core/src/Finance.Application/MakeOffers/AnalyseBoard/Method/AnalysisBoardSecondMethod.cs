@@ -3533,6 +3533,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     Year = 0,
                     UpDown = YearType.Year
                 };
+                //结尾是sop是sop的值 ,FULL是全生命周期的值
                 var fullex = await _priceEvaluationAppService.GetPriceEvaluationTable(
                     full);
                 var ScSop = sopex.ManufacturingCost.FirstOrDefault(p => p.CostType.Equals(CostType.Total))
@@ -3920,7 +3921,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             };
             nres.Add(nreSecondModel);
         }
-
+//客户目标价
         var customprice = priceEvaluationStartInputResult.CustomerTargetPrice;
         string bz = "";
         decimal hl = 0;
@@ -4029,7 +4030,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
     /// <summary>
-    /// 数据库获取NR用于Excel
+    /// 数据库获取NR用于Excel，因为网页和excel一样所以表头也是后端生成
     /// </summary>     
     /// <returns></returns>
     public async Task<List<NreExcel>> getNreForExcel(long processId, int version, int ntype)
@@ -4038,6 +4039,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         SolutionQuotation solutionQuotation =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
         var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+        //从数据库获取
         List<DeviceQuotation> deviceQuotations =
             await _deviceQuotation.GetAllListAsync(
                 p => p.AuditFlowId == processId && p.version == version && p.ntype == ntype);
@@ -5270,7 +5272,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             p.AuditFlowId == processId && p.version == version && p.ntype == ntype);
         gtsls = gtsls.OrderBy(p => p.GradientId).ToList();
         var soltionGradPrices = (from gtsl in gtsls
-            select new SoltionGradPrice()
+            select new SoltionGradPrice()  //方案、阶梯、单价
             {
                 Gradientid = gtsl.GradientId,
                 SolutionId = gtsl.SolutionId,
@@ -5289,6 +5291,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientGrossMargin = gtsl.OfferClientGrossMargin,
                 NreGrossMargin = gtsl.OfferNreGrossMargin
             };
+            //获取阶梯数量的成本、数据
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = processId,
@@ -5324,6 +5327,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientGrossMargin = sjslss.ClientGrossMargin,
                 NreGrossMargin = sjslss.NreGrossMargin
             };
+            //获取实际数量的成本
             var niandu = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = processId,
@@ -5348,7 +5352,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return pp;
     }
-
+    /// <summary>
+    /// 获取、阶梯数量的、方案、阶梯、单价
+    /// </summary>
+    /// <returns></returns>
     public async Task<List<SoltionGradPrice>> getSpc(long auditFlowId, int version)
     {
         var Au = await _financeAuditQuotationList.FirstOrDefaultAsync(p =>
@@ -5360,7 +5367,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         return JsonConvert.DeserializeObject<List<SoltionGradPrice>>(Au.AuditQuotationListJson);
     }
-
+    /// <summary>
+    /// 保存、阶梯数量的、方案、阶梯、单价，只保存上轮
+    /// </summary>
+    /// <returns></returns>
     public async Task UpdateOrInsert(long auditFlowId, int version, List<SoltionGradPrice> spc)
     {
         await _financeAuditQuotationList.HardDeleteAsync(p =>
@@ -5379,7 +5389,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             AuditQuotationListJson = content
         });
     }
-
+    /// <summary>
+    /// 报价审批表保存
+    /// </summary>
+    /// <param name="auditFlowId">必输</param>
+    ///  /// <param name="version">必输</param>
+    /// <returns></returns>
     public async Task PostQuotationApproved(ExcelApprovalDto quotationListSecondDto)
     {
         var auditFlowId = quotationListSecondDto.auditFlowId;
@@ -5847,7 +5862,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return coreComponentAndNreDto;
     }
 
-
+    /// <summary>
+    /// 获取对应方案、梯度、单价 
+    /// </summary>
+    /// <param name="processId"></param>
+    /// <param name="version"></param>
+    /// <returns></returns>
     public async Task<List<SoltionGradPrice>> GetSoltionGradPriceList(long auditFlowId, int version, int type)
     {
         var sps = await _actualUnitPriceOffer.GetAllListAsync(p =>
@@ -5865,7 +5885,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
 
     /// <summary>
-    /// 用于对外报价产品清单
+    ///  用于对外报价产品清单
     /// <param name="auditFlowId"></param>
     /// <param name="version">报价方案版本</param>
     ///  <param name="version">0报价看板数据，1报价反馈数据</param>
@@ -6001,7 +6021,12 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         return productDtos;
     }
 
-
+    /// <summary>
+    /// 跟getAppExcel一样
+    ///<param name="auditFlowId"></param>
+    /// <param name="version">报价方案版本</param>
+    /// </summary>
+    /// <returns></returns>
     public async Task<Object> getApp(long auditFlowId, int version, int ntype)
     {
         var sol =
@@ -6383,6 +6408,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         var customprice = priceEvaluationStartInputResult.CustomerTargetPrice;
         string bz = "";
         decimal hl = 0;
+        //客户目标价
         if (customprice is not null)
         {
             hl = customprice[0].ExchangeRate == null ? 0 : customprice[0].ExchangeRate.Value;
@@ -6625,6 +6651,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<PricingSecondModel> pricingMessageSecondModels = await GetPriceCost(solutions, auditFlowId);
         //报价策略
         List<BiddingStrategySecondModel> BiddingStrategySecondModels = new();
+        //从数据库获取阶梯数量
         var gtsls = await _actualUnitPriceOffer.GetAllListAsync(p =>
             p.AuditFlowId == auditFlowId && p.version == version && p.ntype == ntype);
         gtsls = gtsls.OrderBy(p => p.GradientId).ToList();
@@ -6634,7 +6661,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Gradientid = gtsl.GradientId,
                 SolutionId = gtsl.SolutionId,
                 UnitPrice = gtsl.OfferUnitPrice
-            }).ToList();
+            }).ToList();//用于实际数量获取sop年和全生命周期成本、毛利值
 
         foreach (var gtsl in gtsls)
         {
@@ -6648,6 +6675,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientGrossMargin = Math.Round(gtsl.OfferClientGrossMargin, 2),
                 NreGrossMargin = Math.Round(gtsl.OfferNreGrossMargin, 2)
             };
+            //用于阶梯数量获取sop年和全生命周期成本、毛利值
             var niandu = await YearDimensionalityComparisonForGradient(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = auditFlowId,
@@ -6681,6 +6709,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 ClientGrossMargin = Math.Round(sjslss.ClientGrossMargin, 2),
                 NreGrossMargin = Math.Round(sjslss.NreGrossMargin, 2)
             };
+            //用于实际数量获取sop年和全生命周期成本、毛利值
             var niandu = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()
             {
                 AuditFlowId = auditFlowId,
