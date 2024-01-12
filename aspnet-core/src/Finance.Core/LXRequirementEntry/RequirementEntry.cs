@@ -85,9 +85,9 @@ namespace Finance.LXRequirementEntry
         public virtual string EndCustomerNature { get; set; }
 
         /// <summary>
-        /// 零部件类型
+        /// 零部件类型(字典明细表主键)
         /// </summary>
-        public virtual long ComponentType { get; set; }
+        public virtual string ComponentType { get; set; }
 
         /// <summary>
         /// 附件Id
@@ -110,7 +110,7 @@ namespace Finance.LXRequirementEntry
         public virtual ListName ListName { get; set; }
 
         /// <summary>
-        /// 数据
+        /// 数据 用逗号分割
         /// </summary>
         public virtual string Data { get; set; } 
     }
