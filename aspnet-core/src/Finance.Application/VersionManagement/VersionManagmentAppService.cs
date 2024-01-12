@@ -179,6 +179,7 @@ namespace Finance.VersionManagement
         /// <returns></returns>
         public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrd(long flowId)
         {
+
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
 
             var data = from n in _nodeInstanceRepository.GetAll()
@@ -218,7 +219,7 @@ namespace Finance.VersionManagement
             foreach (var item in result)
             {
                 var dto = new AuditFlowOperateReocrdDto
-                 {
+                {
                     Title = item.ProcessName.GetTitle(),
                     TypeName = item.ProcessName.GetTypeName(),
                     ProjectName = item.ProjectName,
