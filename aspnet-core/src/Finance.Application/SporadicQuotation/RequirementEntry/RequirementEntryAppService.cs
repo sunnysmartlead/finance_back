@@ -86,8 +86,8 @@ namespace Finance.SporadicQuotation.RequirementEntry
                 }             
                 List<DataList> dataLists =await _dataList.GetAllListAsync(p=>p.RequirementEntryId.Equals(lXRequirementEntDto.Id));
                 List<LXDataListDto> dataList = new();
-                if(dataList is null||dataList.Count is 0)
-                {
+                if (dataLists is null|| dataLists.Count is 0)
+                {                    
                     dataList = new();
                     List<ListName> strings = new List<ListName>() { ListName.零件名称, ListName.数量, ListName.单价, ListName.单位成本, ListName.销售收入, ListName.销售成本, ListName.销售毛利, ListName.毛利率, ListName.备注 };
                     foreach (var item in strings)
