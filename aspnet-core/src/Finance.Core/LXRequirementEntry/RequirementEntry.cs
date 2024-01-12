@@ -110,7 +110,7 @@ namespace Finance.LXRequirementEntry
         public virtual ListName ListName { get; set; }
 
         /// <summary>
-        /// 数据
+        /// 数据 用逗号分割
         /// </summary>
         public virtual string Data { get; set; } 
     }
