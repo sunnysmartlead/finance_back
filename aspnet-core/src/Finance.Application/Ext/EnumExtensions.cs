@@ -1,5 +1,7 @@
 ﻿using Finance.PriceEval;
 using Finance.PriceEval.Dto;
+using Finance.VersionManagement.Dto;
+using Finance.WorkFlows;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -102,6 +104,29 @@ namespace Finance.Ext
                 }
             }
             return e.ToString();
+        }
+
+        /// <summary>
+        /// 把节点实力状态类型转换为界面节点状态类型
+        /// </summary>
+        /// <returns></returns>
+        internal static PROCESSTYPE ToProcessType(this NodeInstanceStatus nodeInstanceStatus,bool isOver, string processIdentifier)
+        {
+            if (isOver)
+            {
+                return PROCESSTYPE.ProcessFinished;
+            }
+            //如果节点是归档，且其状态是“当前”，返回“已完成”
+            if (processIdentifier == "ArchiveEnd" && nodeInstanceStatus == NodeInstanceStatus.Current)
+            {
+                return PROCESSTYPE.ProcessFinished;
+            }
+            return nodeInstanceStatus switch
+            {
+                NodeInstanceStatus.NotPassed => PROCESSTYPE.ProcessNoStart,
+                NodeInstanceStatus.Current => PROCESSTYPE.ProcessRunning,
+                _ => PROCESSTYPE.ProcessFinished,
+            };
         }
 
     }
