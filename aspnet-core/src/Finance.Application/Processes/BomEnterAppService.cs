@@ -68,7 +68,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 详情
+        /// 详情---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -80,7 +80,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 列表
+        /// 列表---无用接口
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
@@ -112,6 +112,7 @@ namespace Finance.Processes
                 Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
 
                 //有数据的返回
+                //查询年度信息
                 var query = (from a in _bomEnterRepository.GetAllList(p =>
          p.IsDeleted == false && p.SolutionId == entity.Id && p.AuditFlowId == input.AuditFlowId
          ).Select(c => c.Classification).Distinct()
@@ -439,11 +440,11 @@ namespace Finance.Processes
             // 数据返回
             return "复制成功";
             }
-          
 
-        
+
+
         /// <summary>
-        /// 获取修改
+        /// 获取修改---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -570,7 +571,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 编辑
+        /// 编辑---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <param name="input"></param>
@@ -584,7 +585,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 删除
+        /// 删除---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>

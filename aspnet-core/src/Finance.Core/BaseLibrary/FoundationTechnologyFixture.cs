@@ -7,7 +7,7 @@ namespace Finance.BaseLibrary
 {
 
     /// <summary>
-    /// 基础库--工序工时工装治置
+    /// 标准工艺库--工序工时工装治置
     /// </summary>
     [Table("FTFixture")]
 	public class FoundationTechnologyFixture : FullAuditedEntity<long>
