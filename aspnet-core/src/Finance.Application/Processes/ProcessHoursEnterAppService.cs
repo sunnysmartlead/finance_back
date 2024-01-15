@@ -369,15 +369,15 @@ namespace Finance.Processes
         public virtual async Task<List<ProcessHoursEnterDto>> GetListAllAsync(GetProcessHoursEntersInput input)
         {
             // 根据方案id和流程id获取工时工序信息
-            var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
-            //查出来的数据根据工序编号进行排序、先转化成int 如果转化失败就按照查出来的排序
-            list.Sort((a, b) => {
-                int aProcessNumber = 0;
-                int.TryParse(a.ProcessNumber, out aProcessNumber);
-                int bProcessNumber = 0;
-                int.TryParse(b.ProcessNumber, out bProcessNumber);
-                return aProcessNumber.CompareTo(bProcessNumber);
-            });
+            var list = await this._processHoursEnterRepository.GetAllListAsync(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId);
+            //查出来的数据根据工序编号进行排序、先转化成int 如果转化失败就按照查出来的排序  财务要求不排序
+            //list.Sort((a, b) => {
+            //    int aProcessNumber = 0;
+            //    int.TryParse(a.ProcessNumber, out aProcessNumber);
+            //    int bProcessNumber = 0;
+            //    int.TryParse(b.ProcessNumber, out bProcessNumber);
+            //    return aProcessNumber.CompareTo(bProcessNumber);
+            //});
             //数据组装给前端需要的格式
             List<ProcessHoursEnterDto> processHoursEnterDtoList = new List<ProcessHoursEnterDto>();
             foreach (var item in list)
@@ -3158,9 +3158,9 @@ namespace Finance.Processes
             var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId).ToList();
             foreach (var item in query)
             {
-                _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
             }
             //并把关联表也删除
             await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
@@ -3216,7 +3216,7 @@ namespace Finance.Processes
                         processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
                         processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
                         processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
-                        _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                        await _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
                     }
                 }
                 //追溯部分(硬件及软件开发费用)
@@ -3229,7 +3229,7 @@ namespace Finance.Processes
                         processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
                         processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
                         processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
-                        _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
+                        await _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
                     }
                 }
 
@@ -3243,7 +3243,7 @@ namespace Finance.Processes
                         processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
                         processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
                         processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
-                        _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
+                        await _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
                     }
                 }
                 Solution solution = await _resourceSchemeTable.GetAsync(input.SolutionId);
@@ -3266,7 +3266,7 @@ namespace Finance.Processes
                             }
                             ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(processHoursEnteritem.ModelCountYearId);
                             processHoursEnteritem.Year = modelCountYear.Year.ToString();
-                            _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                            await _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
                     }
                 }
             }
