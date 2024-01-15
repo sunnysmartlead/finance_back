@@ -1,4 +1,5 @@
-﻿using NPOI.SS.Formula.Functions;
+﻿using NPOI.POIFS.Crypt.Dsig;
+using NPOI.SS.Formula.Functions;
 using NUglify.JavaScript.Syntax;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,16 @@ namespace Finance.Ext
         public static List<string> StrToList(this string str)
         {
             return str.Split(',').ToList();
+        }
+
+        /// <summary>
+        /// 集合转字符串 按照逗号分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string ListToStr(this List<string> str)
+        {
+            return string.Join(",", str);
         }
         /// <summary>
         /// 压缩字符串
