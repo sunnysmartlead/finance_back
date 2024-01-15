@@ -1388,24 +1388,23 @@ namespace Finance.WorkFlows
                     NodeInstanceId = input.NodeInstanceId,
                     FinanceDictionaryDetailId = input.FinanceDictionaryDetailIds[0]
                 });
-            }
-
-
-            #endregion
-
-            #region 退回
-
-            foreach (var financeDictionaryDetailId in input.FinanceDictionaryDetailIds)
+            }else
             {
-                //正常调用流程流转接口
-                await SubmitNodeInterfece(new SubmitNodeInput
-                {
-                    Comment = input.Comment,
-                    NodeInstanceId = input.NodeInstanceId,
-                    FinanceDictionaryDetailId = financeDictionaryDetailId
-                }, false);
-            }
+                #region 退回
 
+                foreach (var financeDictionaryDetailId in input.FinanceDictionaryDetailIds)
+                {
+                    //正常调用流程流转接口
+                    await SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        Comment = input.Comment,
+                        NodeInstanceId = input.NodeInstanceId,
+                        FinanceDictionaryDetailId = financeDictionaryDetailId
+                    }, false);
+                }
+
+                #endregion
+            }
             #endregion
         }
 
