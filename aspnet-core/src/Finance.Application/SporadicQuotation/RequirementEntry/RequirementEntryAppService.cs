@@ -3,7 +3,10 @@
 using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Finance.Ext;
+using Finance.Hr;
 using Finance.LXRequirementEntry;
+using Finance.PriceEval;
+using Finance.ProjectManagement.Dto;
 using Finance.SporadicQuotation.RequirementEntry.Dto;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -15,7 +18,7 @@ namespace Finance.SporadicQuotation.RequirementEntry
     /// <summary>
     /// 零星报价的需求录入页面
     /// </summary>
-    public class RequirementEntryAppService: ApplicationService
+    public class RequirementEntryAppService: FinanceAppServiceBase
     {
         /// <summary>
         /// 零星报价需求录入表
@@ -26,15 +29,28 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// 数据列表
         /// </summary>
         private readonly IRepository<DataList, long> _dataList;
+
+        /// <summary>
+        /// 部门
+        /// </summary>
+        private readonly IRepository<Department, long> _department;
+        /// <summary>
+        /// 文件管理表
+        /// </summary>
+        private readonly IRepository<FileManagement, long> _fileManagement;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="requirementEnt"></param>
         /// <param name="dataList"></param>
-        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList)
+        /// <param name="department"></param>
+        /// <param name="fileManagement"></param>
+        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList, IRepository<Department, long> department ,IRepository<FileManagement, long> fileManagement)
         {
             _requirementEnt= requirementEnt;
             _dataList= dataList;
+            _department= department;
+            _fileManagement= fileManagement;
         }
         /// <summary>
         /// 零星报价需求录入 保存\提交
@@ -45,6 +61,13 @@ namespace Finance.SporadicQuotation.RequirementEntry
         {
             try
             {
+                var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
+                lXRequirementEntDto.DraftingDepartmentId = user.DepartmentId;
+                var department = await _department.FirstOrDefaultAsync(user.DepartmentId);
+                if (department is not null)
+                {
+                    lXRequirementEntDto.DraftingCompanyId = department.CompanyId;
+                }
                 //保存\修改 需求录入实体类
                 RequirementEnt requirementEnt = ObjectMapper.Map<RequirementEnt>(lXRequirementEntDto);
                 long id= await _requirementEnt.InsertOrUpdateAndGetIdAsync(requirementEnt);
@@ -99,6 +122,9 @@ namespace Finance.SporadicQuotation.RequirementEntry
                     dataList=ObjectMapper.Map<List<LXDataListDto>>(dataLists);
                 }
                 lXRequirementEntDto.LXDataListDtos = dataList;
+
+                FileManagement fileNames = await _fileManagement.FirstOrDefaultAsync(p => lXRequirementEntDto.EnclosureId == p.Id);
+                if (fileNames is not null) lXRequirementEntDto.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
                 return lXRequirementEntDto;
             }
             catch (System.Exception ex)
