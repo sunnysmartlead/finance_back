@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Finance.Ext;
+using Z.EntityFramework.Plus;
 
 namespace Finance.VersionManagement
 {
@@ -179,124 +180,121 @@ namespace Finance.VersionManagement
         /// <returns></returns>
         public async virtual Task<List<AuditFlowOperateReocrdDto>> GetAuditFlowOperateReocrd(long flowId)
         {
-
             var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
 
-            var data = from n in _nodeInstanceRepository.GetAll()
+            var data = (from n in _nodeInstanceRepository.GetAll()
 
-                       join i in _instanceHistoryRepository.GetAll() on n.Id equals i.NodeInstanceId into i1
-                       from i2 in i1.DefaultIfEmpty()
+                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1//
+                        from t2 in t1.DefaultIfEmpty()
 
-                       join u in _userRepository.GetAll() on i2.CreatorUserId equals u.Id into u1
-                       from u2 in u1.DefaultIfEmpty()
-
-                       join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
-                       from t2 in t1.DefaultIfEmpty()
-
-                       where n.WorkFlowInstanceId == flowId
-
-                       select new// AuditFlowOperateReocrdDto
-                       {
-                           ProjectName = priceEvaluation.ProjectName,
-                           Version = priceEvaluation.QuoteVersion,
-                           ProcessName = n.Name,
-                           //ProcessState = n.NodeInstanceStatus,
-                           n.NodeInstanceStatus,
-                           UserName = u2.Name,
-                           //RoleName = 
-                           CreationTime = i2 == null ? DateTime.MinValue : i2.CreationTime,
-                           n.LastModificationTime,
-                           n.RoleId,
-                           n.WorkFlowInstanceId,
-                           n.ProcessIdentifier,
-                           ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime
-                       };
+                        where n.WorkFlowInstanceId == flowId
+                        select new
+                        {
+                            priceEvaluation.ProjectName,
+                            Version = priceEvaluation.QuoteVersion,
+                            ProcessName = n.Name,
+                            n.NodeInstanceStatus,
+                            //UserName = string.Empty,//u2.Name,
+                            CreationTime = n.StartTime,
+                            n.LastModificationTime,
+                            n.RoleId,
+                            n.WorkFlowInstanceId,
+                            n.ProcessIdentifier,
+                            ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime,
+                            Id = t2 == null ? 0 : t2.Id,
+                            NodeInstanceId = n.Id,
+                        });//.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId);
             var result = await data.ToListAsync();
 
             var roles = await _roleRepository.GetAllListAsync();
 
-            var auditFlowOperateReocrdDto = new List<AuditFlowOperateReocrdDto>();
-            foreach (var item in result)
+            //获取期望完成时间
+            var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
+
+            //获取核价团队姓名
+            var pricingTeamUser = GetPricingTeamUser(pricingTeam);
+
+            var isOver = result.First(p => p.ProcessIdentifier == "ArchiveEnd").NodeInstanceStatus == NodeInstanceStatus.Current;
+
+            var dto = result.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId).Select(item => new AuditFlowOperateReocrdDto
             {
-                var dto = new AuditFlowOperateReocrdDto
-                {
-                    Title = item.ProcessName.GetTitle(),
-                    TypeName = item.ProcessName.GetTypeName(),
-                    ProjectName = item.ProjectName,
-                    Version = item.Version,
-                    ProcessName = item.ProcessName,
-                    ProcessState = item.UserName.IsNullOrWhiteSpace() ? PROCESSTYPE.ProcessNoStart : PROCESSTYPE.ProcessFinished,
-                    UserName = item.UserName,
-                    auditFlowOperateTimes = new List<AuditFlowOperateTime> { new AuditFlowOperateTime
+                ProcessIdentifier = item.ProcessIdentifier,
+                Title = item.ProcessName.GetTitle(),
+                TypeName = item.ProcessName.GetTypeName(),
+                ProjectName = item.ProjectName,
+                Version = item.Version,
+                ProcessName = item.ProcessName,
+                ProcessState = item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),
+                UserName = item.ProcessIdentifier.GetPricingTeamUserName(pricingTeamUser),
+                auditFlowOperateTimes = new List<AuditFlowOperateTime>
                     {
-                        LastModifyTime = item.LastModificationTime,
-                        StartTime = item.CreationTime == DateTime.MinValue ? null : item.CreationTime,
-                    }
+                        new ()
+                        {
+                            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),// item.LastModificationTime,
+                            StartTime = item.CreationTime,
+                        }
                     },
-                    ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
-                };
-                if (item.NodeInstanceStatus == NodeInstanceStatus.Current)
-                {
-                    dto.ProcessState = PROCESSTYPE.ProcessRunning;
-                }
+                ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
+                RoleName = item.RoleId.IsNullOrWhiteSpace() ? string.Empty : string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name)),
+                RequiredTime = item.ProcessIdentifier.GetRequiredTime(pricingTeam),
 
+            }).OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
 
-                if (!item.RoleId.IsNullOrWhiteSpace())
-                {
-                    var roleNames = string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name));
-                    dto.RoleName = roleNames;
-                }
+            return dto;
+        }
 
-                //获取期望完成时间
-                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == item.WorkFlowInstanceId);
-                if (pricingTeam is not null)
-                {
-                    //dto.ProcessName
-                    if (item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
-                    {
-                        dto.RequiredTime = pricingTeam.ElecEngineerTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.StructureBOM)
-                    {
-                        dto.RequiredTime = pricingTeam.StructEngineerTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
-                    {
-                        dto.RequiredTime = pricingTeam.EMCTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
-                    {
-                        dto.RequiredTime = pricingTeam.QualityBenchTime;
-                    }
-                    if (item.ProcessIdentifier == "ElectronicUnitPriceEntry")
-                    {
-                        dto.RequiredTime = pricingTeam.ResourceElecTime;
-                    }
-                    if (item.ProcessIdentifier == "StructureUnitPriceEntry")
-                    {
-                        dto.RequiredTime = pricingTeam.ResourceStructTime;
-                    }
-                    if (item.ProcessIdentifier == "NRE_MoldFeeEntry")
-                    {
-                        dto.RequiredTime = pricingTeam.MouldWorkHourTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
-                    {
-                        dto.RequiredTime = pricingTeam.EngineerWorkHourTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
-                    {
-                        dto.RequiredTime = pricingTeam.ProductManageTime;
-                    }
-                    if (item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
-                    {
-                        dto.RequiredTime = pricingTeam.ProductCostInputTime;
-                    }
-                }
-
-                auditFlowOperateReocrdDto.Add(dto);
+        private DateTime? GetLastModifyTime(string processIdentifier, PROCESSTYPE processType, DateTime? creationTime, DateTime? lastModificationTime)
+        {
+            //如果节点正在进行中，返回空，即没有更新时间
+            if (processType == PROCESSTYPE.ProcessRunning)
+            {
+                return null;
             }
-            return auditFlowOperateReocrdDto.OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
+
+            //如果不是正在进行中，又是核价需求录入。就判断其最后更新时间是否存在，如果存在，返回最后更新时间。不存在，返回创建时间
+            if (processIdentifier == FinanceConsts.PricingDemandInput)
+            {
+                if (lastModificationTime.HasValue)
+                {
+                    return lastModificationTime;
+                }
+                else
+                {
+                    return creationTime;
+                }
+            }
+
+            //以上条件都不满足，返回最后更新时间
+            return lastModificationTime;
+        }
+
+        /// <summary>
+        /// 获取核价团队人员的姓名
+        /// </summary>
+        /// <param name="pricingTeam"></param>
+        /// <returns></returns>
+        private PricingTeamUser GetPricingTeamUser(PricingTeam pricingTeam)
+        {
+            if (pricingTeam is null)
+            {
+                return null;
+            }
+            var engineer = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EngineerId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+            var qualityBench = _userRepository.GetAll().Where(p => p.Id == pricingTeam.QualityBenchId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+            var emc = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EMCId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+            var productCostInput = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductCostInputId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+            var productManageTime = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductManageTimeId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+            var audit = _userRepository.GetAll().Where(p => p.Id == pricingTeam.AuditId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+
+            return new PricingTeamUser
+            {
+                Engineer = engineer.Value,
+                QualityBench = qualityBench.Value,
+                EMC = emc.Value,
+                ProductCostInput = productCostInput.Value,
+                ProductManageTime = productManageTime.Value,
+                Audit = audit.Value,
+            };
         }
 
         /// <summary>
