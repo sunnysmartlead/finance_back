@@ -153,7 +153,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 详情
+        /// 详情 --- 无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -165,7 +165,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 列表
+        /// 列表--- 无用接口
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
@@ -184,7 +184,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 根据工序编号获取数据
+        ///  根据工序编号获取数据   
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -198,7 +198,7 @@ namespace Finance.Processes
                 processHoursEnterDto.ProcessNumber = query[0].ProcessNumber;
                 processHoursEnterDto.ProcessName = query[0].ProcessName;
             }
-            //设备的
+            //根据工序编号获取设备信息
             var queryDevice = this._foundationDeviceRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
             if (queryDevice.Count > 0)
             {
@@ -230,7 +230,7 @@ namespace Finance.Processes
                 }
                 processHoursEnterDto.DeviceInfo.DeviceArr = processHoursEnterDeviceDtos;
             }
-            //追溯部分(硬件及软件开发费用)
+            //根据工序编号获取追溯部分(硬件及软件开发费用)
             var queryHardware = this._foundationHardwareRepository.GetAll().Where(t => t.ProcessNumber == ProcessNumber && t.IsDeleted == false).ToList();
             if (queryHardware.Count > 0)
             {
@@ -281,7 +281,7 @@ namespace Finance.Processes
                 
                 processHoursEnterDto.DevelopCostInfo.HardwareInfo = processHoursEnterDeviceDtos;
             }
-            //工装治具部分
+            //根据工序编号获取工装治具部分
             var queryFixture = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
             if (queryFixture.Count > 0)
             {
@@ -314,7 +314,7 @@ namespace Finance.Processes
                 processHoursEnterDto.ToolInfo.FixturePrice = queryFixture[0].FixtureGaugePrice;
                 processHoursEnterDto.ToolInfo.ZhiJuArr = processHoursEnterDeviceDtos;
             }
-            //工装
+            //根据工序编号获取工装
             var queryProcedure = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
             if (queryProcedure.Count > 0)
             if (queryProcedure.Count > 0)
@@ -327,7 +327,7 @@ namespace Finance.Processes
                 processHoursEnterDto.ToolInfo.TestLinePrice = queryProcedure[0].TestPrice;
                 processHoursEnterDto.ToolInfo.TestLineNumber = 0;
             }
-            //工时
+            //根据工序编号获取工时
             var queryWorkingHour = _foundationWorkingHourRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == ProcessNumber).ToList();
             if (queryWorkingHour.Count > 0)
             {
@@ -362,41 +362,36 @@ namespace Finance.Processes
             return processHoursEnterDto;
         }
         /// <summary>
-        /// 列表-无分页功能
+        /// 工时工序列表-无分页功能
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
         public virtual async Task<List<ProcessHoursEnterDto>> GetListAllAsync(GetProcessHoursEntersInput input)
         {
-            // 设置查询条件
-            var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
-            //排序
-            list.Sort((a, b) => {
-                int aProcessNumber = 0;
-                int.TryParse(a.ProcessNumber, out aProcessNumber);
-                int bProcessNumber = 0;
-                int.TryParse(b.ProcessNumber, out bProcessNumber);
-                return aProcessNumber.CompareTo(bProcessNumber);
-            });
-            // 查询数据
-            //数据转换
-
+            // 根据方案id和流程id获取工时工序信息
+            var list = await this._processHoursEnterRepository.GetAllListAsync(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId);
+            //查出来的数据根据工序编号进行排序、先转化成int 如果转化失败就按照查出来的排序  财务要求不排序
+            //list.Sort((a, b) => {
+            //    int aProcessNumber = 0;
+            //    int.TryParse(a.ProcessNumber, out aProcessNumber);
+            //    int bProcessNumber = 0;
+            //    int.TryParse(b.ProcessNumber, out bProcessNumber);
+            //    return aProcessNumber.CompareTo(bProcessNumber);
+            //});
+            //数据组装给前端需要的格式
             List<ProcessHoursEnterDto> processHoursEnterDtoList = new List<ProcessHoursEnterDto>();
             foreach (var item in list)
             {
                 ProcessHoursEnterDto processHoursEnter = new ProcessHoursEnterDto();
-
                 processHoursEnter.Id = item.Id;
                 processHoursEnter.ProcessNumber = item.ProcessNumber;
                 processHoursEnter.ProcessName = item.ProcessName;
-                //设备的信息
+                //设备的信息查询
                 var listDevice = _processHoursEnterDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
                 processHoursEnter.DeviceInfo.DeviceTotalCost = item.DeviceTotalPrice;
-
                 List<ProcessHoursEnterDeviceDto> ProcessHoursEnterDeviceDtoList = new List<ProcessHoursEnterDeviceDto>();
                 foreach (var device in listDevice)
                 {
-
                     ProcessHoursEnterDeviceDto processHoursEnterDeviceDto = new ProcessHoursEnterDeviceDto();
                     processHoursEnterDeviceDto.DevicePrice = device.DevicePrice;
                     processHoursEnterDeviceDto.ProcessHoursEnterId = device.ProcessHoursEnterId;
@@ -407,17 +402,14 @@ namespace Finance.Processes
 
                 }
                 processHoursEnter.DeviceInfo.DeviceArr = ProcessHoursEnterDeviceDtoList;
-
-                //追溯部分(硬件及软件开发费用)
+                //追溯部分(硬件及软件开发费用)查询
                 var listFrock = _processHoursEnterFrockRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
-
                 processHoursEnter.DevelopCostInfo.HardwareTotalPrice = item.HardwareTotalPrice;
                 processHoursEnter.DevelopCostInfo.SoftwarePrice = item.SoftwarePrice;
                 processHoursEnter.DevelopCostInfo.OpenDrawingSoftware = item.OpenDrawingSoftware;
                 processHoursEnter.DevelopCostInfo.HardwareDeviceTotalPrice = item.HardwareTotalPrice;
                 processHoursEnter.DevelopCostInfo.TraceabilitySoftwareCost = item.TraceabilitySoftwareCost;
                 processHoursEnter.DevelopCostInfo.TraceabilitySoftware = item.TraceabilitySoftware;
-
                 List<ProcessHoursEnterFrockDto> ProcessHoursEnterFrockDtoList = new List<ProcessHoursEnterFrockDto>();
                 foreach (var device in listFrock)
                 {
@@ -431,13 +423,8 @@ namespace Finance.Processes
 
                 }
                 processHoursEnter.DevelopCostInfo.HardwareInfo = ProcessHoursEnterFrockDtoList;
-
-
-
-
-                //工装治具部分
+                //工装治具部分查询
                 var listFixture = _processHoursEnterFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == item.Id).ToList();
-
                 processHoursEnter.ToolInfo.FixturePrice = item.FixturePrice;
                 processHoursEnter.ToolInfo.FixtureName = item.FixtureName;
                 processHoursEnter.ToolInfo.FixtureNumber = item.FixtureNumber;
@@ -451,7 +438,6 @@ namespace Finance.Processes
                 List<ProcessHoursEnterFixtureDto> processHoursEnterFixtures = new List<ProcessHoursEnterFixtureDto>();
                 foreach (var device in listFixture)
                 {
-
                     ProcessHoursEnterFixtureDto processHoursEnterFixture = new ProcessHoursEnterFixtureDto();
                     processHoursEnterFixture.ProcessHoursEnterId = device.Id;
                     processHoursEnterFixture.FixtureNumber = device.FixtureNumber;
@@ -461,17 +447,15 @@ namespace Finance.Processes
 
                 }
                 processHoursEnter.ToolInfo.ZhiJuArr = processHoursEnterFixtures;
-
-                //标准工时
+                //标准工时查询
                 Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
+                //先查出年份
                 var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).OrderBy(y => y.Year).ToList();
-
-                //var queryYear = (from a in _processHoursEnterItemRepository.GetAllList(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id).Select(p => p.ModelCountYearId).Distinct()
-                  //               select a).ToList();
                 List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
                 foreach (var device in queryYear)
                 {
                     ProcessHoursEnterSopInfoDto processHoursEnteritem = new ProcessHoursEnterSopInfoDto();
+                    //查询出工时工序的信息
                     var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == item.Id && p.ModelCountYearId == device.Id).ToList();
                     List<ProcessHoursEnteritemDto> processHoursEnteritems1 = new List<ProcessHoursEnteritemDto>();
                     foreach (var yearItem in deviceYear)
@@ -509,26 +493,16 @@ namespace Finance.Processes
                     }
                     processHoursEnteritems.Add(processHoursEnteritem);
                 }
-
                 processHoursEnter.SopInfo = processHoursEnteritems;
-                //Uph查询
-
-
-                //线体数量、共线分摊率
-
-
                 processHoursEnterDtoList.Add(processHoursEnter);
 
 
             }
-            // 数据返回
+            // 数据库无数据的情况下，后端组装一条数据返回给前端
             if (null == processHoursEnterDtoList || processHoursEnterDtoList.Count < 1)
             {
-
-
-                //无数据的情况下
                 Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
-
+                //年度信息查询
                 var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
                 ProcessHoursEnterDto processHoursEnterDto = new ProcessHoursEnterDto();
                 List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
@@ -567,9 +541,7 @@ namespace Finance.Processes
 
 
                 processHoursEnterDto.DeviceInfo.DeviceTotalCost = 0;
-
-
-
+              
                 List<ProcessHoursEnterDeviceDto> ProcessHoursEnterDeviceDtoList = new List<ProcessHoursEnterDeviceDto>();
                 for (int i = 0; i < 3; i++)
                 {
@@ -581,19 +553,14 @@ namespace Finance.Processes
                     ProcessHoursEnterDeviceDtoList.Add(processHoursEnterDeviceDto);
                 }
                 processHoursEnterDto.DeviceInfo.DeviceArr = ProcessHoursEnterDeviceDtoList;
-
-
-
-
                 processHoursEnterDto.DevelopCostInfo.HardwareTotalPrice = 0;
                 processHoursEnterDto.DevelopCostInfo.SoftwarePrice = 0;
                 processHoursEnterDto.DevelopCostInfo.OpenDrawingSoftware = "";
                 processHoursEnterDto.DevelopCostInfo.HardwareDeviceTotalPrice = 0;
-
+                
                 List<ProcessHoursEnterFrockDto> ProcessHoursEnterFrockDtoList = new List<ProcessHoursEnterFrockDto>();
                 for (int i = 0; i < 2; i++)
                 {
-
                     ProcessHoursEnterFrockDto processHoursEnterFrock = new ProcessHoursEnterFrockDto();
                     processHoursEnterFrock.HardwareDeviceName = "";
                     processHoursEnterFrock.HardwareDeviceNumber = 0;
@@ -643,12 +610,14 @@ namespace Finance.Processes
             idMappingListHoursEnter.ProcessHoursEnterUph = new();
             idMappingListHoursEnter.ProcessHoursEnterLine = new();
             idMappingListHoursEnter.ProcessHoursEnteritem = new();
-            // 设置查询条件
+            // 循环方案数组
             if (SolutionIdAndQuoteSolutionIds.Count>0)
             {
                 foreach (var itemProcessHoursEnterCopy in SolutionIdAndQuoteSolutionIds)
-                {
+                { 
+                    //查询出数据库有没有新流程和新方案的数据
                     var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId).ToList();
+                    //有的话先做清除操作
                     foreach (var item in query)
                     {
                        await _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
@@ -658,8 +627,9 @@ namespace Finance.Processes
                     await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
                     await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
                     await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == AuditFlowNewId && s.SolutionId == itemProcessHoursEnterCopy.NewSolutionId);
+                    //查询老的流程和方案id的数据
                     var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
-                    // 查询数据
+                    //循环插入数据库
                     foreach (var input in list)
                     {
                         ProcessHoursEnter entity = new ProcessHoursEnter();
@@ -693,6 +663,7 @@ namespace Finance.Processes
                         }
                         entity.LastModificationTime = DateTime.Now;
                         long inputQuoteId = input.Id;
+                        //工时工序主表数据
                         var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
                         idMappingListHoursEnter.ProcessHoursEnter.Add(new() { QuoteId = inputQuoteId, NewId = foundationDevice });
                         var listDevice = _processHoursEnterDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
@@ -701,6 +672,7 @@ namespace Finance.Processes
                         //工装治具部分
                         var listFixture = _processHoursEnterFixtureRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessHoursEnterId == input.Id).ToList();
                         var deviceYear = _processHoursEnterItemRepository.GetAll().Where(p => p.IsDeleted == false && p.ProcessHoursEnterId == input.Id).ToList();
+                        //根据主表数据插入设备信息
                         if (null != listDevice)
                         {
                             foreach (var DeviceInfoItem in listDevice)
@@ -716,7 +688,7 @@ namespace Finance.Processes
                                 idMappingListHoursEnter.ProcessHoursEnterDevice.Add(new() { QuoteId= QuoteId , NewId= NewId });
                             }
                         }
-                        //追溯部分(硬件及软件开发费用)
+                        //插入追溯部分(硬件及软件开发费用)
                         if (null != listFrock)
                         {
                             foreach (var hardwareInfoItem in listFrock)
@@ -731,7 +703,7 @@ namespace Finance.Processes
                                 idMappingListHoursEnter.ProcessHoursEnterFrock.Add(new() { QuoteId = QuoteId, NewId = NewId });
                             }
                         }
-                        //工装治具部分
+                        //插入工装治具部分
                         if (null != listFixture)
                         {
                             foreach (var zoolInfo in listFixture)
@@ -746,13 +718,12 @@ namespace Finance.Processes
                                 idMappingListHoursEnter.ProcessHoursEnterFixture.Add(new() { QuoteId = QuoteId, NewId = NewId });
                             }
                         }
+                        //插入工时的数据
                         if (null != deviceYear)
                         {
                             foreach (var year in deviceYear)
                             {
-
                                 ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
-
                                 processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
                                 processHoursEnteritem.LaborHour = year.LaborHour;
                                 processHoursEnteritem.PersonnelNumber = year.PersonnelNumber;
@@ -765,9 +736,9 @@ namespace Finance.Processes
                             }
                         }
                     }
-                    //uph
+                    //根据老的流程id和方案id查询uph
                     var listUph = this._processHoursEnterUphRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
-                    //uph
+                    //根据新的流程和方案插入
                     if (null != listUph)
                     {
                         foreach (var item in listUph)
@@ -784,9 +755,9 @@ namespace Finance.Processes
                             idMappingListHoursEnter.ProcessHoursEnterUph.Add(new() { QuoteId = QuoteId, NewId = NewId });
                         }
                     }
-                    //线体
+                    //根据老的流程id和方案id查询线体
                     var listLine = this._processHoursEnterLineRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == AuditFlowId && t.SolutionId == itemProcessHoursEnterCopy.QuoteSolutionId).ToList();
-                    //线体数量、共线分摊率
+                    //根据新的流程id和老的方案线体数量、共线分摊率
                     if (null != listLine)
                     {
                         foreach (var item in listLine)
@@ -811,7 +782,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 列表-无分页功能
+        /// 工时工序获取年份列表
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
@@ -821,7 +792,7 @@ namespace Finance.Processes
 
                 //无数据的情况下
                 Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
-
+               // 查询年份列表展示给前端
                 var query = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
             List<ProcessHoursEnterSopInfoDto> processHoursEnteritems = new List<ProcessHoursEnterSopInfoDto>();
             foreach (var device in query)
@@ -863,7 +834,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 查看项目走量        /// </summary>
+        /// 查看项目走量   ---无用接口     /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
         public virtual async Task<List<ModuleNumberDto>> GetListModuleNumberDtoAsync(ProcessHoursEnterModuleNumberDto input)
@@ -1032,7 +1003,7 @@ namespace Finance.Processes
 
         }
         /// <summary>
-        /// 获取修改
+        /// 获取修改--无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -1044,7 +1015,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 创建
+        /// 创建--无用接口
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -1191,7 +1162,7 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 编辑
+        /// 编辑---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <param name="input"></param>
@@ -1578,6 +1549,7 @@ namespace Finance.Processes
                         processHoursEnterDto.ToolInfo = foundationReliableProcessHoursFixtureResponseDto;
 
                         // 解析年度部分
+                      
                         List<ProcessHoursEnterSopInfoDto> foundationWorkingHourItemDtos = new List<ProcessHoursEnterSopInfoDto>();
                         List<Dictionary<string, object>> years = new List<Dictionary<string, object>>();
                         int yearNum = (keys.Count -44) / 3;
@@ -1595,6 +1567,7 @@ namespace Finance.Processes
                             List<ProcessHoursEnteritemDto> processHoursEnteritems = new List<ProcessHoursEnteritemDto>();
                             for (int g = 0; g < 1; g++)
                             {
+                                //注意 这里 获取到表格里面的数据要和数据库做下映射关系，根据搜索关键字判断是否上上下年度
                                 Solution entity = await _resourceSchemeTable.GetAsync((long)SolutionId);
                                 string str2 = Regex.Replace(yearstr, @"[^0-9]+", "");
                                 foundationWorkingHourItem.YearInt = Decimal.Parse(str2);
@@ -1656,8 +1629,8 @@ namespace Finance.Processes
             {
                 foreach (var item in input.ProcessHoursEnterUphListDtos)
                 {
-                    ProcessHoursEnterLineDtoList processHoursEnterLineDto = new ProcessHoursEnterLineDtoList();
-                    //=组测UPH
+                    //共线分摊率 = 每月需求 / (每月产能 * 线体数量）/ 制造成本计算参数维护里面的产能利用率；如果计算结果大于100 %，则取100 %，反之就取计算出来的数
+                    ProcessHoursEnterLineDtoList processHoursEnterLineDto = new ProcessHoursEnterLineDtoList();      
                     decimal Zcuph = (decimal)item.Zcuph;
 
                     decimal rateOfMobilization = 0;
@@ -1799,9 +1772,8 @@ namespace Finance.Processes
         /// <returns></returns>
         public async virtual Task<FileStreamResult> TemplateDownload(GetProcessHoursEntersInput input)
         {
-            //无数据的情况下
+            //根据方案id和流程id查询工时年度
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
-
             var yearCountList = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
 
             IWorkbook wk = new XSSFWorkbook();
@@ -1832,12 +1804,12 @@ namespace Finance.Processes
             int colIndex = 0;
 
 
-            // 副表头
+           
             IRow herdRow2 = sheet.CreateRow(1);
             CreateCell(herdRow2, 0, string.Empty, wk);
+            //查询出工序编号和工序名称，放入表格下拉筛选中，注意这里表格有规定，设置多的情况下写入表格会报错
             var query = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessNumber).Distinct() select a).ToList();
             var queryName = (from a in _fProcessesRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.ProcessName).Distinct()  select a).ToList();
-
             List<string> list = new List<string>();
             int index = 0;
             foreach (var item in queryName)
@@ -1891,8 +1863,7 @@ namespace Finance.Processes
             
 
             }
-
-
+            //查询设备名称，放入表格下拉筛选中，注意这里表格有规定，设置多的情况下写入表格会报错
             var DeviceItem = (from a in _foundationDeviceItemRepository.GetAllList(p => p.IsDeleted == false).OrderByDescending(i => i.Id).Select(p => p.DeviceName).Distinct()  select a).ToList();
 
             List<string> listDeviceItem = new List<string>();
@@ -2120,6 +2091,7 @@ namespace Finance.Processes
             row003.CreateCell(16).SetCellValue("维护人");
             sheet3.SetColumnWidth(18, 10 * 500);
             /*硬件软件库*/
+            //查询硬件名称，放入表格下拉筛选中，注意这里表格有规定，设置多的情况下写入表格会报错
             var foundationHardwareQuery = _foundationHardwareRepository.GetAllList(p => p.IsDeleted == false).ToList();
 
             int rowfoundationHardware = 0;
@@ -2248,6 +2220,8 @@ namespace Finance.Processes
             CreateCell(herdRow2, 25, "开图软件", wk);
             CreateCell(herdRow2, 26, "开发费(开图)", wk);
             CreateCell(herdRow2, 27, "软硬件总价", wk);
+            //查询硬件名称，放入表格下拉筛选中，注意这里表格有规定，设置多的情况下写入表格会报错
+
             var FixtureItem = (from a in _foundationFoundationFixtureItemRepository.GetAllList(p => p.IsDeleted == false).Select(p => p.FixtureName).Distinct() select a).ToList();
             CreateCell(herdRow2, 28, "治具1名称", wk);
             List<string> FixtureItemList = new List<string>();
@@ -2300,7 +2274,7 @@ namespace Finance.Processes
             sheet4.SetColumnWidth(15, 10 * 500);
 
 
-            /*检具库*/
+            /*检具库导出*/
             var foundationFixtureQuery = _foundationFixtureRepository.GetAllList(p => p.IsDeleted == false).ToList();
 
             int rowfoundationFixture = 0;
@@ -2504,7 +2478,7 @@ namespace Finance.Processes
             }
 
 
-
+            /*工时库导出*/
             ISheet sheet6 = wk.CreateSheet("工时库");
             //创建头部
             IRow row006 = sheet6.CreateRow(0);
@@ -2681,7 +2655,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 导出工时工序
+        /// 导出工时工序 根据方案id流程id
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
@@ -2689,13 +2663,12 @@ namespace Finance.Processes
         {
             //无数据的情况下
             Solution entity = await _resourceSchemeTable.GetAsync((long)input.SolutionId);
-
+            //根据方案id和流程id查询年度信息
             var yearCountList = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
-
+            //创建表头
             IWorkbook wk = new XSSFWorkbook();
             ISheet sheet = wk.CreateSheet("Sheet1");
             sheet.DefaultRowHeight = 25 * 20;
-            // 表头设置
             IRow herdRow = sheet.CreateRow(0);
             CreateCell(herdRow, 0, "序号", wk);
             sheet.SetColumnWidth(0, 10 * 300);
@@ -2709,18 +2682,13 @@ namespace Finance.Processes
             sheet.SetColumnWidth(4, 10 * 500);
             CreateCell(herdRow, 5, "工装治具部分", wk);
             sheet.SetColumnWidth(5, 10 * 500);
-
             MergedRegion(sheet, 0, 1, 0, 0);
             MergedRegion(sheet, 0, 1, 1, 1);
             MergedRegion(sheet, 0, 1, 2, 2);
             MergedRegion(sheet, 0, 0, 3, 15);
             MergedRegion(sheet, 0, 0, 16, 27);
             MergedRegion(sheet, 0, 0, 28, 43);
-
             int colIndex = 0;
-
-
-            // 副表头
             IRow herdRow2 = sheet.CreateRow(1);
             CreateCell(herdRow2, 0, string.Empty, wk);
             CreateCell(herdRow2, 1, string.Empty, wk);
@@ -2738,7 +2706,6 @@ namespace Finance.Processes
             CreateCell(herdRow2, 13, "设备3数量", wk);
             CreateCell(herdRow2, 14, "设备3单价", wk);
             CreateCell(herdRow2, 15, "设备总价", wk);
-
             CreateCell(herdRow2, 16, "硬件设备1", wk);
             CreateCell(herdRow2, 17, "数量", wk);
             CreateCell(herdRow2, 18, "单价设备1", wk);
@@ -2751,7 +2718,6 @@ namespace Finance.Processes
             CreateCell(herdRow2, 25, "开图软件", wk);
             CreateCell(herdRow2, 26, "开发费(开图)", wk);
             CreateCell(herdRow2, 27, "软硬件总价", wk);
-
             CreateCell(herdRow2, 28, "治具1名称", wk);
             CreateCell(herdRow2, 29, "数量", wk);
             CreateCell(herdRow2, 30, "治具单价", wk);
@@ -2768,10 +2734,9 @@ namespace Finance.Processes
             CreateCell(herdRow2, 41, "数量", wk);
             CreateCell(herdRow2, 42, "线束单价", wk);
             CreateCell(herdRow2, 43, "工装治具检具总价", wk);
-
             int c = 43;
             int d = 6;
-
+            //根据查询出来的年度信息创建动态表头
             for (int i = 0; i < yearCountList.Count; i++)
             {
                 if (i == 0)
@@ -2838,12 +2803,10 @@ namespace Finance.Processes
                 e += 3;
             }
 
-            // 设置查询条件
+            //根据方案id 流程id查询出对应的数据
             var list = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.SolutionId == input.SolutionId && t.AuditFlowId == input.AuditFlowId).ToList();
-
-            // 查询数据
-            //数据转换
             int row = 1;
+            //循环每一行的数据，把对应的每个值塞进去，如果值是空的情况下就塞进去空字符串进去
             foreach (var item in list)
             {
                 row =row +1;
@@ -3156,17 +3119,12 @@ namespace Finance.Processes
                     processHoursEnteritem.Issues = processHoursEnteritems1;
                     processHoursEnteritems.Add(processHoursEnteritem);
                 }
-
-                //标准工时
-     
+                //标准工时写入
                 int yaer = 43;
-
-
                 if (queryYear.Count > 0)
                 {
                     for (int i = 0; i < queryYear.Count; i++)
                     {
-
                         yaer += 3;
                         CreateCell(herdRow3, yaer - 2, processHoursEnteritems[i].Issues[0].LaborHour.ToString(), wk);
                         CreateCell(herdRow3, yaer - 1, processHoursEnteritems[i].Issues[0].MachineHour.ToString(), wk);
@@ -3174,7 +3132,6 @@ namespace Finance.Processes
                     }
 
                 }
-
 
             }
 
@@ -3191,22 +3148,25 @@ namespace Finance.Processes
         }
 
         /// <summary>
-        /// 创建整个界面保存
+        /// 工时工序创建整个界面保存
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
         public virtual async Task CreateListAsync(ProcessHoursEnterListDto input)
         {
+            //先根据方案id和零件id查询数据库有没有 有的话进行删除操作
             var query = this._processHoursEnterRepository.GetAll().Where(s => s.IsDeleted == false && s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId).ToList();
             foreach (var item in query)
             {
-                _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
-                _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterDeviceRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterFixtureRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
+                await _processHoursEnterFrockRepository.DeleteAsync(t => t.ProcessHoursEnterId == item.Id);
             }
+            //并把关联表也删除
             await _processHoursEnterRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
             await _processHoursEnterUphRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
             await _processHoursEnterLineRepository.DeleteAsync(s => s.AuditFlowId == input.AuditFlowId && s.SolutionId == input.SolutionId);
+            //循环插入数据
             foreach (var listItem in input.ListItemDtos)
             {
 
@@ -3241,7 +3201,9 @@ namespace Finance.Processes
                     entity.LastModifierUserId = AbpSession.UserId.Value;
                 }
                 entity.LastModificationTime = DateTime.Now;
+                //插入工时工序主表数据
                 entity = await _processHoursEnterRepository.InsertAsync(entity);
+                //根据插入信息获取主表id
                 var foundationDevice = _processHoursEnterRepository.InsertAndGetId(entity);
                 //设备信息
                 if (null != listItem.DeviceInfo.DeviceArr)
@@ -3254,7 +3216,7 @@ namespace Finance.Processes
                         processHoursEnterDevice.DevicePrice = DeviceInfoItem.DevicePrice;
                         processHoursEnterDevice.DeviceStatus = DeviceInfoItem.DeviceStatus;
                         processHoursEnterDevice.DeviceName = DeviceInfoItem.DeviceName;
-                        _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
+                        await _processHoursEnterDeviceRepository.InsertAsync(processHoursEnterDevice);
                     }
                 }
                 //追溯部分(硬件及软件开发费用)
@@ -3267,7 +3229,7 @@ namespace Finance.Processes
                         processHoursEnterFrock.HardwareDevicePrice = hardwareInfoItem.HardwareDevicePrice;
                         processHoursEnterFrock.HardwareDeviceNumber = hardwareInfoItem.HardwareDeviceNumber;
                         processHoursEnterFrock.HardwareDeviceName = hardwareInfoItem.HardwareDeviceName;
-                        _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
+                        await _processHoursEnterFrockRepository.InsertAsync(processHoursEnterFrock);
                     }
                 }
 
@@ -3281,23 +3243,18 @@ namespace Finance.Processes
                         processHoursEnterFixture.FixturePrice = zoolInfo.FixturePrice;
                         processHoursEnterFixture.FixtureNumber = zoolInfo.FixtureNumber;
                         processHoursEnterFixture.FixtureName = zoolInfo.FixtureName;
-                        _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
+                        await _processHoursEnterFixtureRepository.InsertAsync(processHoursEnterFixture);
                     }
                 }
                 Solution solution = await _resourceSchemeTable.GetAsync(input.SolutionId);
-
+                //查询出年度id 根据年度id插入工时信息
                 var queryYear = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == solution.Productld).ToList();
-
-
-
                 //年
                 if (null != listItem.SopInfo)
                 {
                     foreach (var year in listItem.SopInfo)
                     {
-
                             ProcessHoursEnteritem processHoursEnteritem = new ProcessHoursEnteritem();
-
                             processHoursEnteritem.ProcessHoursEnterId = foundationDevice;
                             processHoursEnteritem.LaborHour = year.Issues[0].LaborHour;
                             processHoursEnteritem.PersonnelNumber = year.Issues[0].PersonnelNumber;
@@ -3306,17 +3263,14 @@ namespace Finance.Processes
                             if (queryYear.Count > 0 && null != queryYear[listItem.SopInfo.IndexOf(year)] && processHoursEnteritem.ModelCountYearId == 0)
                             {
                                 processHoursEnteritem.ModelCountYearId = queryYear[listItem.SopInfo.IndexOf(year)].Id;
-
                             }
                             ModelCountYear modelCountYear = await _modelCountYearRepository.GetAsync(processHoursEnteritem.ModelCountYearId);
                             processHoursEnteritem.Year = modelCountYear.Year.ToString();
-
-                            _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
+                            await _processHoursEnterItemRepository.InsertAsync(processHoursEnteritem);
                     }
                 }
-
             }
-            //uph
+            //插入uph数据
             if (null != input.ProcessHoursEnterUphList)
             {
                 foreach (var item in input.ProcessHoursEnterUphList)
@@ -3346,7 +3300,7 @@ namespace Finance.Processes
                 }
             }
 
-            //线体数量、共线分摊率
+            //插入线体数量、共线分摊率
             if (null != input.ProcessHoursEnterLineList)
             {
                 foreach (var item in input.ProcessHoursEnterLineList)
@@ -3368,6 +3322,7 @@ namespace Finance.Processes
 
                 }
             }
+            //从新保存
             await _resourceNreIsSubmit.DeleteAsync(t => t.AuditFlowId == (long)input.AuditFlowId && t.SolutionId == (long)input.SolutionId && t.EnumSole == NreIsSubmitDto.ProcessHoursEnter.ToString());
 
             await _resourceNreIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = (long)input.AuditFlowId, SolutionId = (long)input.SolutionId, EnumSole = NreIsSubmitDto.ProcessHoursEnter.ToString() });
@@ -3378,7 +3333,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 删除
+        /// 删除--无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -3468,7 +3423,7 @@ namespace Finance.Processes
         {
             ProcessHoursEnterTotalDto process = new ProcessHoursEnterTotalDto();
          
-        // 设置查询条件
+           //根据方案id和流程查询工时工序录入的信息 循环相加
             List<ProcessHoursEnter> query = this._processHoursEnterRepository.GetAll().Where(t => t.IsDeleted == false && t.AuditFlowId == input.AuditFlowId && t.SolutionId == input.SolutionId ).ToList();
             decimal HardwareTotalPrice = 0;
             decimal SoftwarePrice = 0;
@@ -3513,7 +3468,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 电子下载
+        /// 工时工序电子下载
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
@@ -3547,7 +3502,7 @@ namespace Finance.Processes
 
 
         /// <summary>
-        /// 结构下载
+        /// 工时工序结构下载
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>

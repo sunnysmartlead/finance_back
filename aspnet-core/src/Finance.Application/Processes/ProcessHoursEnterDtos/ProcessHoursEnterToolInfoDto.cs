@@ -13,12 +13,6 @@ namespace Finance.Processes
     {
 
 
-
-
-
-   
-
-
         public List<ProcessHoursEnterFixtureDto> ZhiJuArr { get; set; }
 
         /// <summary>
@@ -66,9 +60,14 @@ namespace Finance.Processes
         /// 测试线单价
         /// </summary>
         public decimal TestLinePrice { get; set; }
-
+        /// <summary>
+        ///设备总价
+        /// </summary>
         public string DevelopTotalPrice { get; set; }
 
+        /// <summary>
+        /// 软件单价
+        /// </summary>
         public decimal SoftwarePrice { get; set; }
 
     }

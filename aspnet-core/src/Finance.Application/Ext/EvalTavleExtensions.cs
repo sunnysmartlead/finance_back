@@ -251,7 +251,7 @@ namespace Finance.Ext
                 UpDown = upDonw,
                 EditId = UpdateItemType.QualityCost.ToString(),
                 ProductCategory = row.Cells[9].ToString(),
-                CostProportion = row.Cells[10].ToString().Replace("%", string.Empty).ToDecimal(),
+                CostProportion = row.Cells[10].ToString().Replace("%", string.Empty).ToDecimal() * 100,
                 QualityCost = row.Cells[11].NumericCellValue.ToString().ToDecimal(),
             };
         }

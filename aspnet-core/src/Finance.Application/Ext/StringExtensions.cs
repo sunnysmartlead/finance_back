@@ -1,4 +1,9 @@
-﻿using NPOI.SS.Formula.Functions;
+﻿using Finance.DemandApplyAudit;
+using Finance.Dto;
+using Finance.VersionManagement.Dto;
+using Finance.WorkFlows;
+using NPOI.POIFS.Crypt.Dsig;
+using NPOI.SS.Formula.Functions;
 using NUglify.JavaScript.Syntax;
 using System;
 using System.Collections.Generic;
@@ -23,6 +28,16 @@ namespace Finance.Ext
         public static List<string> StrToList(this string str)
         {
             return str.Split(',').ToList();
+        }
+
+        /// <summary>
+        /// 集合转字符串 按照逗号分割
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string ListToStr(this List<string> str)
+        {
+            return string.Join(",", str);
         }
         /// <summary>
         /// 压缩字符串
@@ -271,8 +286,53 @@ namespace Finance.Ext
                 case "归档": return 40;
 
                 default: return 999;
-
             }
+        }
+
+        /// <summary>
+        /// 获取要求完成时间
+        /// </summary>
+        /// <param name="processIdentifier"></param>
+        /// <param name="pricingTeam"></param>
+        /// <returns></returns>
+        internal static DateTime? GetRequiredTime(this string processIdentifier, PricingTeam pricingTeam)
+        {
+            if (pricingTeam is null)
+            {
+                return null;
+            }
+            return processIdentifier switch
+            {
+                FinanceConsts.ElectronicsBOM => pricingTeam.ElecEngineerTime,
+                FinanceConsts.StructureBOM => pricingTeam.StructEngineerTime,
+                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeam.EMCTime,
+                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeam.QualityBenchTime,
+                "ElectronicUnitPriceEntry" => pricingTeam.ResourceElecTime,
+                "StructureUnitPriceEntry" => pricingTeam.ResourceStructTime,
+                "NRE_MoldFeeEntry" => pricingTeam.MouldWorkHourTime,
+                FinanceConsts.FormulaOperationAddition => pricingTeam.EngineerWorkHourTime,
+                FinanceConsts.LogisticsCostEntry => pricingTeam.ProductManageTime,
+                FinanceConsts.COBManufacturingCostEntry => pricingTeam.ProductCostInputTime,
+                _ => null,
+            };
+        }
+
+        internal static string GetPricingTeamUserName(this string processIdentifier, PricingTeamUser pricingTeamUser)
+        {
+            if (pricingTeamUser is null)
+            {
+                return string.Empty;
+            }
+            return processIdentifier switch
+            {
+                FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
+                FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
+                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
+                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
+                FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
+                FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
+                _ => string.Empty,
+            };
         }
     }
 }

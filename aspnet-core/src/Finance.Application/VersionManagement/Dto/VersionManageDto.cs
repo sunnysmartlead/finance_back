@@ -194,6 +194,11 @@ namespace Finance.VersionManagement.Dto
     public class AuditFlowOperateReocrdDto
     {
         /// <summary>
+        /// 流程流程标识符
+        /// </summary>
+        internal virtual string ProcessIdentifier { get; set; }
+
+        /// <summary>
         /// 任务标题
         /// </summary>
         public string Title { get; set; }

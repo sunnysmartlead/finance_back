@@ -1388,24 +1388,23 @@ namespace Finance.WorkFlows
                     NodeInstanceId = input.NodeInstanceId,
                     FinanceDictionaryDetailId = input.FinanceDictionaryDetailIds[0]
                 });
-            }
-
-
-            #endregion
-
-            #region 退回
-
-            foreach (var financeDictionaryDetailId in input.FinanceDictionaryDetailIds)
+            }else
             {
-                //正常调用流程流转接口
-                await SubmitNodeInterfece(new SubmitNodeInput
-                {
-                    Comment = input.Comment,
-                    NodeInstanceId = input.NodeInstanceId,
-                    FinanceDictionaryDetailId = financeDictionaryDetailId
-                }, false);
-            }
+                #region 退回
 
+                foreach (var financeDictionaryDetailId in input.FinanceDictionaryDetailIds)
+                {
+                    //正常调用流程流转接口
+                    await SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        Comment = input.Comment,
+                        NodeInstanceId = input.NodeInstanceId,
+                        FinanceDictionaryDetailId = financeDictionaryDetailId
+                    }, false);
+                }
+
+                #endregion
+            }
             #endregion
         }
 
@@ -1522,7 +1521,10 @@ namespace Finance.WorkFlows
         public async virtual Task ActivateStructBomEval(long auditFlowId)
         {
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
-            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            if (node.NodeInstanceStatus != NodeInstanceStatus.Current)
+            {
+                node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            }
         }
 
         /// <summary>
@@ -1532,7 +1534,10 @@ namespace Finance.WorkFlows
         public async virtual Task DeactivateStructBomEval(long auditFlowId)
         {
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "结构BOM单价审核");
-            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            if (node.NodeInstanceStatus != NodeInstanceStatus.Passed)
+            {
+                node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            }
         }
 
         /// <summary>
@@ -1542,7 +1547,10 @@ namespace Finance.WorkFlows
         public async virtual Task ActivateElectronicBomEval(long auditFlowId)
         {
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
-            node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            if (node.NodeInstanceStatus != NodeInstanceStatus.Current)
+            {
+                node.NodeInstanceStatus = NodeInstanceStatus.Current;
+            }
         }
 
         /// <summary>
@@ -1552,9 +1560,10 @@ namespace Finance.WorkFlows
         public async virtual Task DeactivateElectronicBomEval(long auditFlowId)
         {
             var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.Name == "电子BOM单价审核");
-            node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            if (node.NodeInstanceStatus != NodeInstanceStatus.Passed)
+            {
+                node.NodeInstanceStatus = NodeInstanceStatus.Passed;
+            }
         }
-
-
     }
 }

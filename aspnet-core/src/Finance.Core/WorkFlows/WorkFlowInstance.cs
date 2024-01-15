@@ -137,6 +137,10 @@ namespace Finance.WorkFlows
         /// </summary>
         public virtual string Comment { get; set; }
 
+        /// <summary>
+        /// 开始时间
+        /// </summary>
+        public virtual DateTime? StartTime { get; set; }
     }
 
     /// <summary>
