@@ -87,7 +87,7 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
-        /// 详情
+        /// 详情---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -99,7 +99,7 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
-        /// 列表
+        /// 列表---无用接口
         /// </summary>
         /// <param name="input">查询条件</param>
         /// <returns>结果</returns>
@@ -130,6 +130,7 @@ namespace Finance.BaseLibrary
             p.IsDeleted == false && p.SolutionId == entity.Id && p.AuditFlowId == input.AuditFlowId
             ).Select(p => p.Classification).Distinct()
                          select a).ToList();
+            //获取年度方案
             var year = this._modelCountYearRepository.GetAll().Where(t => t.AuditFlowId == input.AuditFlowId && t.ProductId == entity.Productld).ToList();
             var dtos = ObjectMapper.Map<List<String>, List<String>>(query, new List<String>());
             List<LogisticscostResponseDto> logisticscostResponseList = new List<LogisticscostResponseDto>();
@@ -189,6 +190,7 @@ namespace Finance.BaseLibrary
                 }
                 logisticscostResponseList.Add(logisticscostResponse);
             }
+            //无数据的情况下返回
 
             if (null == logisticscostResponseList || logisticscostResponseList.Count<1)
             {
@@ -344,7 +346,7 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
-        /// 获取修改
+        /// 获取修改--无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>
@@ -438,10 +440,10 @@ namespace Finance.BaseLibrary
 
         }
 
-    
+
 
         /// <summary>
-        /// 编辑
+        /// 编辑---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <param name="input"></param>
@@ -455,7 +457,7 @@ namespace Finance.BaseLibrary
         }
 
         /// <summary>
-        /// 删除
+        /// 删除---无用接口
         /// </summary>
         /// <param name="id">主键</param>
         /// <returns></returns>

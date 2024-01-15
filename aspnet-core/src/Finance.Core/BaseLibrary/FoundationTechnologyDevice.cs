@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Finance.BaseLibrary
 {
     /// <summary>
-    /// 基础库--设备信息
+    /// 标准工艺库--设备信息
     /// </summary>
     [Table("FTDevice")]
 	public class FoundationTechnologyDevice : FullAuditedEntity<long>
