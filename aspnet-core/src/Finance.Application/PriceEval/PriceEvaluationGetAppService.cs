@@ -3714,7 +3714,7 @@ namespace Finance.PriceEval
                 Year = input.Year,
                 UpDown = input.UpDown,
             });
-
+            
 
 
 
@@ -3854,13 +3854,13 @@ namespace Finance.PriceEval
                     Count_1 = null,
                     Rate_1 = null,
                     //MoqShareCount_1 = null,
-                    Sum_1 = bom1.Material.Sum(p=>p.MoqShareCount),
+                    Sum_1 = bom1.LossCost.Sum(p=>p.MoqShareCount),
 
                     Price_2 = null,
                     Count_2 = null,
                     Rate_2 = null,
                     //MoqShareCount_2 = null,
-                    Sum_2 = bom2.Material.Sum(p=>p.MoqShareCount),
+                    Sum_2 = bom2.LossCost.Sum(p=>p.MoqShareCount),
                 },
                 new SolutionContrast { ItemName="总成本",ItemName2="总成本",
                     Price_1 = null,
