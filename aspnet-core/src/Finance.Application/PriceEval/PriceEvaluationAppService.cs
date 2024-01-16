@@ -1346,8 +1346,9 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="制造成本", Proportion= manufacturingCost},
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
-                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
                 new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq},
+                new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
+                
             };
 
             //var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
