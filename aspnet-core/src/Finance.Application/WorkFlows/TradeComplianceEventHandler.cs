@@ -120,7 +120,7 @@ namespace Finance.WorkFlows
                     if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Current)
                     {
                         //更改其开始时间
-                        await _nodeInstanceRepository.GetAll().UpdateFromQueryAsync(p => new NodeInstance { StartTime = DateTime.Now });
+                        await _nodeInstanceRepository.GetAll().Where(p => p.Id == eventData.Entity.Id).UpdateFromQueryAsync(p => new NodeInstance { StartTime = DateTime.Now });
 
                         if (eventData.Entity.NodeId == "主流程_贸易合规")
                         {
