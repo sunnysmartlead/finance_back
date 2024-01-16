@@ -3337,7 +3337,7 @@ namespace Finance.PriceEval
         /// <returns></returns>
         public async virtual Task<ListResultDto<ProportionOfProductCostListDto>> GetPricingPanelProportionOfProductCost(GetPricingPanelProportionOfProductCostInput input)
         {
-            var data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
+            ExcelPriceEvaluationTableDto data = await this.GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, InputCount = 0, GradientId = input.GradientId, SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown });
 
             //bom成本
             var bomCost = data.Material.Sum(p => p.TotalMoneyCynNoCustomerSupply);
@@ -3357,6 +3357,8 @@ namespace Finance.PriceEval
             //其他成本
             var other = data.OtherCostItem2.Where(p => p.ItemName == "单颗成本").Sum(p => p.Total).GetValueOrDefault();//.GetValueOrDefault();
 
+            //MOQ分摊成本
+            var moq = data.MoqShareCountCount;
 
             var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
 
@@ -3368,7 +3370,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee/sum},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost/sum},
                 new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other/sum},
-
+                new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq},
             };
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
