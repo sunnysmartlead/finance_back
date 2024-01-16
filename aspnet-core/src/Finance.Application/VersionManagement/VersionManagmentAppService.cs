@@ -184,7 +184,7 @@ namespace Finance.VersionManagement
 
             var data = (from n in _nodeInstanceRepository.GetAll()
 
-                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1//
+                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
                         from t2 in t1.DefaultIfEmpty()
 
                         where n.WorkFlowInstanceId == flowId
@@ -194,7 +194,6 @@ namespace Finance.VersionManagement
                             Version = priceEvaluation.QuoteVersion,
                             ProcessName = n.Name,
                             n.NodeInstanceStatus,
-                            //UserName = string.Empty,//u2.Name,
                             CreationTime = n.StartTime,
                             n.LastModificationTime,
                             n.RoleId,
@@ -203,7 +202,7 @@ namespace Finance.VersionManagement
                             ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime,
                             Id = t2 == null ? 0 : t2.Id,
                             NodeInstanceId = n.Id,
-                        });//.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId);
+                        });
             var result = await data.ToListAsync();
 
             var roles = await _roleRepository.GetAllListAsync();
@@ -230,7 +229,7 @@ namespace Finance.VersionManagement
                     {
                         new ()
                         {
-                            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),// item.LastModificationTime,
+                            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),
                             StartTime = item.CreationTime,
                         }
                     },
