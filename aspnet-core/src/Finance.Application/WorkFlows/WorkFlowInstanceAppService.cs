@@ -812,7 +812,7 @@ namespace Finance.WorkFlows
         {
             var data = await (from n in _nodeInstanceRepository.GetAll()
                               join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
-                              where n.WorkFlowInstanceId == workflowInstanceId && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                              where n.WorkFlowInstanceId == workflowInstanceId //&& n.NodeInstanceStatus == NodeInstanceStatus.Current
                               select new UserTask
                               {
                                   Id = n.Id,
@@ -824,10 +824,15 @@ namespace Finance.WorkFlows
                                   WorkflowState = w.WorkflowState,
                                   ProcessIdentifier = n.ProcessIdentifier,
                                   RoleId = n.RoleId,
+
                               }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
 
             foreach (var item in data)
             {
+                if (item.RoleId.IsNullOrWhiteSpace())
+                {
+                    return null;
+                }
                 var roleids = item.RoleId.Split(",").Select(p => p.To<int>());
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
