@@ -59,11 +59,12 @@ namespace Finance.VersionManagement
         private readonly AuditFlowAppService _auditFlowAppService;
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
         private readonly IRepository<TaskReset, long> _taskResetRepository;
+        private readonly IRepository<NodeTime, long> _nodeTimeRepository;
 
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<NodeTime, long> nodeTimeRepository)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -87,6 +88,7 @@ namespace Finance.VersionManagement
             _auditFlowAppService = auditFlowAppService;
             _pricingTeamRepository = pricingTeamRepository;
             _taskResetRepository = taskResetRepository;
+            _nodeTimeRepository = nodeTimeRepository;
         }
 
 
@@ -218,6 +220,9 @@ namespace Finance.VersionManagement
 
             var isOver = result.First(p => p.ProcessIdentifier == "ArchiveEnd").NodeInstanceStatus == NodeInstanceStatus.Current;
 
+            var nodeTimes = await _nodeTimeRepository.GetAllListAsync(p => p.WorkFlowInstanceId == flowId);
+
+
             var dto = result.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId).Select(item => new AuditFlowOperateReocrdDto
             {
                 ProcessIdentifier = item.ProcessIdentifier,
@@ -228,14 +233,19 @@ namespace Finance.VersionManagement
                 ProcessName = item.ProcessName,
                 ProcessState = item.NodeInstanceStatus.ToProcessType(isOver, item.ProcessIdentifier),
                 UserName = item.ProcessIdentifier.GetPricingTeamUserName(pricingTeamUser),
-                auditFlowOperateTimes = new List<AuditFlowOperateTime>
-                    {
-                        new ()
-                        {
-                            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),
-                            StartTime = item.CreationTime,
-                        }
-                    },
+                //auditFlowOperateTimes = new List<AuditFlowOperateTime>
+                //    {
+                //        new ()
+                //        {
+                //            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),
+                //            StartTime = item.CreationTime,
+                //        }
+                //    },
+                auditFlowOperateTimes = nodeTimes.Where(p => p.NodeInstance == item.NodeInstanceId).OrderBy(p => p.Id).Select(p => new AuditFlowOperateTime
+                {
+                    LastModifyTime = p.UpdateTime,
+                    StartTime = p.StartTime
+                }).ToList(),
                 ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
                 RoleName = item.RoleId.IsNullOrWhiteSpace() ? string.Empty : string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name)),
                 RequiredTime = item.ProcessIdentifier.GetRequiredTime(pricingTeam),
