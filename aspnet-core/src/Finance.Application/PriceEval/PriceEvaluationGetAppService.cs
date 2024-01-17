@@ -3360,7 +3360,7 @@ namespace Finance.PriceEval
             //MOQ分摊成本
             var moq = data.MoqShareCountCount;
 
-            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
+            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other + moq;
 
             var list = new List<ProportionOfProductCostListDto>
             {
@@ -3370,7 +3370,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee/sum},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost/sum},
                 new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other/sum},
-                new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq},
+                new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq / sum},
             };
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
@@ -3499,7 +3499,7 @@ namespace Finance.PriceEval
             DtoExcel(dtoAll);
             //DtoExcelRound5(dtoAll);//新增保留5位小数
             var dto = await year.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, SolutionId = input.SolutionId, InputCount = 0, Year = p.Year, UpDown = p.UpDown }));
-            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p);  return p; });//DtoExcelRound5(p);
+            var dtos = dto.Select(p => ObjectMapper.Map<ExcelPriceEvaluationTableDto>(p)).Select(p => { DtoExcel(p); return p; });//DtoExcelRound5(p);
 
             var streams = (await dtos.Select(p => new { stream = new MemoryStream(), p })
                 .SelectAsync(async p =>
@@ -3714,7 +3714,7 @@ namespace Finance.PriceEval
                 Year = input.Year,
                 UpDown = input.UpDown,
             });
-            
+
 
 
 

@@ -197,6 +197,10 @@ namespace Finance.VersionManagement
                         from t2 in t1.DefaultIfEmpty()
 
                         where n.WorkFlowInstanceId == flowId
+
+                        //根据陈梦瑶在24.01.17给出的需求，这两个节点不再显示在时效性页面中
+                        && (n.NodeId == "主流程_开始" || n.NodeId == "主流程_生成报价分析界面选择报价方案")
+
                         select new ResultDto
                         {
                             ProjectName = priceEvaluation.ProjectName,
@@ -237,14 +241,6 @@ namespace Finance.VersionManagement
                 ProcessName = item.ProcessName,
                 ProcessState = item.NodeInstanceStatus.ToProcessType(isOver, item.ProcessIdentifier),
                 UserName = await GetPricingTeamUserName(item.ProcessIdentifier, pricingTeamUser, flowId, item.NodeInstanceId),
-                //auditFlowOperateTimes = new List<AuditFlowOperateTime>
-                //    {
-                //        new ()
-                //        {
-                //            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),
-                //            StartTime = item.CreationTime,
-                //        }
-                //    },
                 auditFlowOperateTimes = nodeTimes.Where(p => p.NodeInstance == item.NodeInstanceId).OrderBy(p => p.Id).Select(p => new AuditFlowOperateTime
                 {
                     LastModifyTime = p.UpdateTime,
