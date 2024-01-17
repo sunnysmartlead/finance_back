@@ -881,7 +881,7 @@ namespace Finance.WorkFlows
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
 
             || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
-            || (projectPm != null && projectPm.ProjectManager != userId && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+            || (projectPm != null  && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
 
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
