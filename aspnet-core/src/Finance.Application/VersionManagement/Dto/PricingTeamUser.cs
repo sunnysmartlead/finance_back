@@ -35,5 +35,15 @@ namespace Finance.VersionManagement.Dto
         /// 项目核价审核员
         /// </summary>
         public string Audit { get; set; }
+
+        /// <summary>
+        /// 核价需求录入员
+        /// </summary>
+        public string PriceInput { get; set; }
+
+        /// <summary>
+        /// 核价需求录入的项目经理
+        /// </summary>
+        public string ProjectManager { get; set; }
     }
 }

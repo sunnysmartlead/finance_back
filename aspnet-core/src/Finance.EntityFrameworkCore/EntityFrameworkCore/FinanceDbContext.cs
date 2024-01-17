@@ -438,7 +438,8 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<Fu_QualityCostListDto> Fu_QualityCostListDto { get; set; }
         public virtual DbSet<Fu_LogisticsCost> Fu_LogisticsCost { get; set; }
 
-
+        public virtual DbSet<NodeTime> NodeTime { get; set; }
+        
 
         #region 报价单新增表
         /// <summary>

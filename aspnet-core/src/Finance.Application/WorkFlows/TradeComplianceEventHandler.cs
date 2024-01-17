@@ -75,8 +75,9 @@ namespace Finance.WorkFlows
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
 
         private readonly IBackgroundJobManager _backgroundJobManager;
-
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager)
+        private readonly NodeTimeManager _nodeTimeManager;
+        
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -104,6 +105,7 @@ namespace Finance.WorkFlows
             _roleRepository = roleRepository;
             _nodeInstanceRepository = nodeInstanceRepository;
             _backgroundJobManager = backgroundJobManager;
+            _nodeTimeManager = nodeTimeManager;
         }
 
         /// <summary>
@@ -120,7 +122,8 @@ namespace Finance.WorkFlows
                     if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Current)
                     {
                         //更改其开始时间
-                        await _nodeInstanceRepository.GetAll().Where(p => p.Id == eventData.Entity.Id).UpdateFromQueryAsync(p => new NodeInstance { StartTime = DateTime.Now });
+                        //await _nodeInstanceRepository.GetAll().Where(p => p.Id == eventData.Entity.Id).UpdateFromQueryAsync(p => new NodeInstance { StartTime = DateTime.Now });
+                        await _nodeTimeManager.Start(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
 
                         if (eventData.Entity.NodeId == "主流程_贸易合规")
                         {
@@ -465,6 +468,9 @@ namespace Finance.WorkFlows
                     }
                     else if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Passed)
                     {
+                        //更改其结束时间
+                        await _nodeTimeManager.Start(eventData.Entity.WorkFlowInstanceId,eventData.Entity.Id);
+
                         //如果是流转到主流程_电子BOM单价审核
                         if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
                         {

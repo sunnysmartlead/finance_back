@@ -317,22 +317,6 @@ namespace Finance.Ext
             };
         }
 
-        internal static string GetPricingTeamUserName(this string processIdentifier, PricingTeamUser pricingTeamUser)
-        {
-            if (pricingTeamUser is null)
-            {
-                return string.Empty;
-            }
-            return processIdentifier switch
-            {
-                FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
-                FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
-                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
-                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
-                FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
-                FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
-                _ => string.Empty,
-            };
-        }
+
     }
 }
