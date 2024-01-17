@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Finance.Ext;
 using Z.EntityFramework.Plus;
+using NPOI.SS.Formula.Functions;
 
 namespace Finance.VersionManagement
 {
@@ -99,8 +100,10 @@ namespace Finance.VersionManagement
             var data = (from p in _priceEvaluationRepository.GetAll()
                         join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
                         join n in _nodeInstanceRepository.GetAll() on p.AuditFlowId equals n.WorkFlowInstanceId
-                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id
-                        join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
+
+                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id into f1
+                        from f2 in f1.DefaultIfEmpty()
+                            //join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
                         where
                         //w.WorkflowState == WorkflowState.Running &&
                         n.NodeId == "主流程_核价需求录入"
@@ -111,7 +114,7 @@ namespace Finance.VersionManagement
                             Version = p.QuoteVersion,
                             Number = p.Number,
                             ProjectManager = u.Name,
-                            QuoteTypeName = f.DisplayName,
+                            QuoteTypeName = f2 == null ? string.Empty : f2.DisplayName,
                             DraftTime = p.DraftDate,
                             //FinishedTime = p.FinishedTime
                         }).WhereIf(versionFilterInput.Version != default, p => p.Version == versionFilterInput.Version)
@@ -223,7 +226,7 @@ namespace Finance.VersionManagement
                 ProjectName = item.ProjectName,
                 Version = item.Version,
                 ProcessName = item.ProcessName,
-                ProcessState = item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),
+                ProcessState = item.NodeInstanceStatus.ToProcessType(isOver, item.ProcessIdentifier),
                 UserName = item.ProcessIdentifier.GetPricingTeamUserName(pricingTeamUser),
                 auditFlowOperateTimes = new List<AuditFlowOperateTime>
                     {
