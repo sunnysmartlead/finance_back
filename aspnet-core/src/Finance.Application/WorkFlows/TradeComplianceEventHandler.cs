@@ -469,7 +469,7 @@ namespace Finance.WorkFlows
                     else if (eventData.Entity.NodeInstanceStatus == NodeInstanceStatus.Passed)
                     {
                         //更改其结束时间
-                        await _nodeTimeManager.Start(eventData.Entity.WorkFlowInstanceId,eventData.Entity.Id);
+                        await _nodeTimeManager.Update(eventData.Entity.WorkFlowInstanceId,eventData.Entity.Id);
 
                         //如果是流转到主流程_电子BOM单价审核
                         if (eventData.Entity.NodeId == "主流程_电子BOM匹配修改")
