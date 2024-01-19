@@ -26,6 +26,7 @@ using Finance.Ext;
 using Z.EntityFramework.Plus;
 using NPOI.SS.Formula.Functions;
 using Microsoft.AspNetCore.Identity;
+using Abp.Collections.Extensions;
 
 namespace Finance.VersionManagement
 {
@@ -61,11 +62,12 @@ namespace Finance.VersionManagement
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
         private readonly IRepository<TaskReset, long> _taskResetRepository;
         private readonly IRepository<NodeTime, long> _nodeTimeRepository;
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<NodeTime, long> nodeTimeRepository)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<NodeTime, long> nodeTimeRepository, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -90,6 +92,7 @@ namespace Finance.VersionManagement
             _pricingTeamRepository = pricingTeamRepository;
             _taskResetRepository = taskResetRepository;
             _nodeTimeRepository = nodeTimeRepository;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -194,6 +197,10 @@ namespace Finance.VersionManagement
                         from t2 in t1.DefaultIfEmpty()
 
                         where n.WorkFlowInstanceId == flowId
+
+                        //根据陈梦瑶在24.01.17给出的需求，这两个节点不再显示在时效性页面中
+                        && (n.NodeId != "主流程_开始" || n.NodeId != "主流程_生成报价分析界面选择报价方案")
+
                         select new ResultDto
                         {
                             ProjectName = priceEvaluation.ProjectName,
@@ -233,15 +240,7 @@ namespace Finance.VersionManagement
                 Version = item.Version,
                 ProcessName = item.ProcessName,
                 ProcessState = item.NodeInstanceStatus.ToProcessType(isOver, item.ProcessIdentifier),
-                UserName = await GetPricingTeamUserName(item.ProcessIdentifier, pricingTeamUser, item.NodeInstanceId),
-                //auditFlowOperateTimes = new List<AuditFlowOperateTime>
-                //    {
-                //        new ()
-                //        {
-                //            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),
-                //            StartTime = item.CreationTime,
-                //        }
-                //    },
+                UserName = await GetPricingTeamUserName(item.ProcessIdentifier, pricingTeamUser, flowId, item.NodeInstanceId),
                 auditFlowOperateTimes = nodeTimes.Where(p => p.NodeInstance == item.NodeInstanceId).OrderBy(p => p.Id).Select(p => new AuditFlowOperateTime
                 {
                     LastModifyTime = p.UpdateTime,
@@ -260,26 +259,38 @@ namespace Finance.VersionManagement
         /// 获取责任人
         /// </summary>
         /// <returns></returns>
-        private async Task<string> GetPricingTeamUserName(string processIdentifier, PricingTeamUser pricingTeamUser, long nodeInstanceId)
+        private async Task<string> GetPricingTeamUserName(string processIdentifier, PricingTeamUser pricingTeamUser, long flowId, long nodeInstanceId)
         {
-            if (pricingTeamUser is null)
+            if (processIdentifier == "QuoteApproval")
             {
-                return string.Empty;
+                return "张宝忠";
             }
-            return processIdentifier switch
-            {
-                FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
-                FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
-                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
-                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
-                FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
-                FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
-                "QuoteApproval" => "张宝忠",//硬编码，以免暴露陈梦瑶的账号
-                FinanceConsts.PricingDemandInput => pricingTeamUser.PriceInput,
-                FinanceConsts.PriceDemandReview => pricingTeamUser.ProjectManager,
+            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(flowId, nodeInstanceId);
+            if (allAuditFlowInfos.IsNullOrEmpty()) { return string.Empty; }
+            var allAuditFlowInfo = allAuditFlowInfos.FirstOrDefault();
+            if (allAuditFlowInfo == null) { return string.Empty; }
+            if (allAuditFlowInfo.TaskUserIds.IsNullOrEmpty()) { return string.Empty; }
+            var userNames = await _userRepository.GetAll().Where(p => allAuditFlowInfo.TaskUserIds.Select(x => x.To<long>()).Contains(p.Id)).Select(p => p.Name).ToListAsync();
 
-                _ => await GetRoleUserName(nodeInstanceId),
-            };
+            return string.Join("，", userNames);
+            //if (pricingTeamUser is null)
+            //{
+            //    return string.Empty;
+            //}
+            //return processIdentifier switch
+            //{
+            //    FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
+            //    FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
+            //    FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
+            //    FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
+            //    FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
+            //    FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
+            //    "QuoteApproval" => "张宝忠",//硬编码，以免暴露陈梦瑶的账号
+            //    FinanceConsts.PricingDemandInput => pricingTeamUser.PriceInput,
+            //    FinanceConsts.PriceDemandReview => pricingTeamUser.ProjectManager,
+
+            //    _ => await GetRoleUserName(nodeInstanceId),
+            //};
         }
 
         private async Task<string> GetRoleUserName(long nodeInstanceId)
