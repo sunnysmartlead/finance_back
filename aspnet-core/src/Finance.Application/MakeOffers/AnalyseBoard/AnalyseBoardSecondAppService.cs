@@ -207,14 +207,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 ntype = ntype,
                 ntime = ntime
             };
-          
-            return await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
 
-
+            analyseBoardSecondDto= await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
         }
         else
         {
-            return await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
+           analyseBoardSecondDto= await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
         }
         }
         catch (Exception e)
@@ -222,6 +220,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             analyseBoardSecondDto.mes = e.Message;
             return analyseBoardSecondDto;
         }
+        //财务需求 ProjectBoard 按照指定顺序进行排序
+        List<string> sort = new() { "数量", "销售成本", "单位平均成本", "销售收入", "平均单价", "佣金", "销售毛利", "毛利率" };
+        analyseBoardSecondDto.ProjectBoard.ForEach(p =>
+        {
+            p.ProjectBoardModels=p.ProjectBoardModels?.OrderByFunc(m => m.ProjectName, sort);
+        });
+        return analyseBoardSecondDto;
     }
 
     /// <summary>
