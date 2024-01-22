@@ -3401,7 +3401,8 @@ namespace Finance.PriceEval
             var yearCount = await _modelCountYearRepository.GetAll().Where(p => p.AuditFlowId == input.AuditFlowId && p.ProductId == solution.Productld)
                 .Select(p => new { p.Year, p.UpDown }).OrderBy(p => p.Year).ToListAsync();
             var dtoList = (await yearCount.SelectAsync(async p => await GetPriceEvaluationTable(new GetPriceEvaluationTableInput { Year = p.Year, GradientId = input.GradientId, AuditFlowId = input.AuditFlowId, InputCount = input.InputCount, SolutionId = input.SolutionId, UpDown = p.UpDown }))).ToList();
-            var dto = dtoList.Select(p => new GoTable { Year = p.Year, UpDown = p.UpDown, Value = p.TotalCost }).ToList();
+            var dto = dtoList.Select(p => new GoTable { Year = p.Year, UpDown = p.UpDown, Value = p.TotalCost })
+                .OrderBy(p => p.Year).ThenBy(p => p.UpDown).ToList();
             return new ListResultDto<GoTable>(dto);
         }
 
