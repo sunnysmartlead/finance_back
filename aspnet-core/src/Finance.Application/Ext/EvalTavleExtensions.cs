@@ -49,12 +49,12 @@ namespace Finance.Ext
         {
             //获取核价表结束的行
             var bomEndRow = sheet.GetBomEndRow();
-
+            
             // 遍历行
             for (int rowIndex = StartRow; rowIndex <= bomEndRow; rowIndex++)
             {
-                var row = sheet.GetRow(rowIndex);
-
+                var row = sheet.GetRow(rowIndex); 
+                
                 yield return new Material
                 {
                     Id = $"import{rowIndex}",
@@ -440,7 +440,7 @@ namespace Finance.Ext
             }
             catch (Exception e)
             {
-                throw new FriendlyException($"核价表第{row.RowNum + 1}行{columnIndex.ToName()}列读取错误。\r\n错误原因：{e.Message}", e.StackTrace);
+                throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列读取错误。\r\n错误原因：{e.Message}", e.StackTrace);
             }
         }
 
