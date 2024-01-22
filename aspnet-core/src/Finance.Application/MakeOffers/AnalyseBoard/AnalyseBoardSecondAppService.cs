@@ -1403,7 +1403,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlow);
 
 
-            var time = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow).Max(p => p.ntime);
+            //var time = _solutionQutation.GetAllList(p => p.AuditFlowId == auditFlow).Max(p => p.ntime);
 
 
             List<Solution> solutions = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == auditFlow);
