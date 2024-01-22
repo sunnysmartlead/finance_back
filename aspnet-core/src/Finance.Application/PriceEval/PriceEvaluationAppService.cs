@@ -1372,7 +1372,7 @@ namespace Finance.PriceEval
             }
 
             decimal proportion;
-            if (customerTargetPrice.ExchangeRate is null)
+            if (customerTargetPrice.ExchangeRate is null || targetPrice == 0)
             {
                 proportion = 0;
             }
