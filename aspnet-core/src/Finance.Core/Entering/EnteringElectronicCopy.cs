@@ -26,6 +26,7 @@ namespace Finance.Entering
         /// <summary>
         /// 电子bom表单id
         /// </summary>
+        [Index(IsUnique = true)]
         public long ElectronicId { get; set; }
         /// <summary>
         /// 币种
