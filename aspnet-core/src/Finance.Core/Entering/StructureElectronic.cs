@@ -1,12 +1,5 @@
 ﻿using Abp.Domain.Entities.Auditing;
-using Castle.MicroKernel.SubSystems.Conversion;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Finance.Entering
 {
@@ -25,7 +18,8 @@ namespace Finance.Entering
         public long SolutionId { get; set; }
         /// <summary>
         /// 结构bom单价表单id
-        /// </summary>
+        /// </summary>      
+        [Index(IsUnique = true)]
         public long StructureId { get; set; }
         /// <summary>
         /// 币种
