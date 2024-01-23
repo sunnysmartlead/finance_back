@@ -17,6 +17,7 @@ namespace BakOracle
                 .ConfigureServices(services =>
                 {
                     services.AddTransient<Backups>();
+                    services.AddTransient<DapperBack>();
                     services.AddSchedule(options =>
                     {
                         var triggerBuilder = Triggers.DailyAt(3)

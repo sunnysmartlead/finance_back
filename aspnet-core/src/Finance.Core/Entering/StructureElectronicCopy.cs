@@ -19,8 +19,7 @@ namespace Finance.Entering
         public long SolutionId { get; set; }
         /// <summary>
         /// 结构bom单价表单id
-        /// </summary>
-        [Index(IsUnique = true)]
+        /// </summary>     
         public long StructureId { get; set; }
         /// <summary>
         /// 币种
