@@ -49,26 +49,26 @@ namespace Finance.Ext
         {
             //获取核价表结束的行
             var bomEndRow = sheet.GetBomEndRow();
-            
+
             // 遍历行
             for (int rowIndex = StartRow; rowIndex <= bomEndRow; rowIndex++)
             {
-                var row = sheet.GetRow(rowIndex); 
-                
+                var row = sheet.GetRow(rowIndex);
+
                 yield return new Material
                 {
                     Id = $"import{rowIndex}",
                     Year = year,
                     UpDown = upDonw,
-                    SuperType = row.Try(1, p => p.ToString()),
-                    CategoryName = row.Try(2, p => p.ToString()),
-                    TypeName = row.Try(3, p => p.ToString()),
-                    Sap = row.Try(4, p => p.ToString()),
-                    MaterialName = row.Try(5, p => p.ToString()),
+                    SuperType = row.Try(1, p => p.StringCellValue.ToString()),
+                    CategoryName = row.Try(2, p => p.StringCellValue.ToString()),
+                    TypeName = row.Try(3, p => p.StringCellValue.ToString()),
+                    Sap = row.Try(4, p => p.StringCellValue.ToString()),
+                    MaterialName = row.Try(5, p => p.StringCellValue.ToString()),
                     IsCustomerSupply = row.Try(6, p => p.ToString().GetIsCustomerSupply()),
                     AssemblyCount = row.Try(7, p => p.NumericCellValue.ToString().ToDouble()),
                     MaterialPrice = row.Try(8, p => p.NumericCellValue.ToString().ToDecimal()),
-                    CurrencyText = row.Try(9, p => p.ToString()),
+                    CurrencyText = row.Try(9, p => p.StringCellValue.ToString()),
                     ExchangeRate = row.Try(10, p => p.NumericCellValue.ToString().ToDecimal()),
                     MaterialPriceCyn = row.Try(11, p => p.NumericCellValue.ToString().ToDecimal()),
                     TotalMoneyCyn = row.Try(12, p => p.NumericCellValue.ToString().ToDecimal()),
@@ -80,7 +80,7 @@ namespace Finance.Ext
                     MoqShareCount = row.Try(18, p => p.NumericCellValue.ToString().ToDecimal()),
                     Moq = row.Try(19, p => p.NumericCellValue.ToString().ToDecimal()),
                     AvailableInventory = row.Try(20, p => p.NumericCellValue.ToString().ToInt()),
-                    Remarks = row.Try(21, p => p.ToString()),
+                    Remarks = row.Try(21, p => p.StringCellValue.ToString()),
                 };
             }
         }
@@ -163,7 +163,7 @@ namespace Finance.Ext
                     Year = year,
                     UpDown = upDonw,
                     EditId = i.ToString(),
-                    Name = nameRow.Try(i, p => p.ToString()),
+                    Name = nameRow.Try(i, p => p.StringCellValue.ToString()),
                     WastageCost = lossRow.Try(i, p => p.NumericCellValue.ToString().ToDecimal()),
                     MoqShareCount = moqRow.Try(i, p => p.NumericCellValue.ToString().ToDecimal()),
                 };
@@ -188,7 +188,7 @@ namespace Finance.Ext
                     Year = year,
                     UpDown = upDonw,
                     Quantity = quantity,
-                    ItemName = row.Try(0, p => p.ToString()),
+                    ItemName = row.Try(0, p => p.StringCellValue.ToString()),
                     Total = row.Try(7, p => p.NumericCellValue.To<decimal>()),
                     MoldCosts = row.Try(8, p => p.NumericCellValue.To<decimal>()),
                     FixtureCost = row.Try(9, p => p.NumericCellValue.To<decimal>()),
@@ -225,8 +225,8 @@ namespace Finance.Ext
                 UpDown = upDonw,
                 Fixture = row.Try(7, p => p.ToString().IsNullOrWhiteSpace()) ? null : row.Try(7, p => p.NumericCellValue.ToString().ToDecimal()),
                 LogisticsFee = row.Try(8, p => p.NumericCellValue.ToString().ToDecimal()),
-                ProductCategory = row.Try(9, p => p.ToString()),
-                CostProportion = row.Try(10, p => p.ToString().Replace("%", string.Empty).ToDecimal()),
+                ProductCategory = row.Try(9, p => p.StringCellValue.ToString()),
+                CostProportion = row.Try(10, p => p.StringCellValue.ToString().Replace("%", string.Empty).ToDecimal()),
                 QualityCost = row.Try(11, p => p.NumericCellValue.ToString().ToDecimal()),
                 AccountingPeriod = row.Try(12, p => p.ToString().ToInt()),
                 CapitalCostRate = row.Try(14, p => p.ToString().IsNullOrWhiteSpace()) ? null : row.Try(7, p => p.NumericCellValue.ToString().ToDecimal()),
@@ -251,8 +251,8 @@ namespace Finance.Ext
                 Year = year,
                 UpDown = upDonw,
                 EditId = UpdateItemType.QualityCost.ToString(),
-                ProductCategory = row.Try(9, p => p.ToString()),
-                CostProportion = row.Try(10, p => p.ToString().Replace("%", string.Empty).ToDecimal() * 100),
+                ProductCategory = row.Try(9, p => p.StringCellValue.ToString()),
+                CostProportion = row.Try(10, p => p.StringCellValue.ToString().Replace("%", string.Empty).ToDecimal() * 100),
                 QualityCost = row.Try(11, p => p.NumericCellValue.ToString().ToDecimal()),
             };
         }
