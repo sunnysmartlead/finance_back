@@ -23,6 +23,7 @@
     <PackageReference Include="Abp.AutoMapper" Version="7.1.0" />
     <PackageReference Include="Abp.ZeroCore.EntityFrameworkCore" Version="7.1.0" />
     <PackageReference Include="Castle.Windsor.MsDependencyInjection" Version="3.4.0" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="MiniExcel" Version="1.26.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Sundial.Dashboard" Version="2.7.2" />

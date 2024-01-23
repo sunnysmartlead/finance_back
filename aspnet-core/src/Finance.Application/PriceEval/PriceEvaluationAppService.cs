@@ -1348,7 +1348,7 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
                 new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq},
                 new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
-                
+
             };
 
             //var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
@@ -1371,18 +1371,18 @@ namespace Finance.PriceEval
                 //throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
             }
 
-            decimal jq;
-            if (customerTargetPrice.ExchangeRate is null)
+            decimal proportion;
+            if (customerTargetPrice.ExchangeRate is null || targetPrice == 0)
             {
-                jq = 0;
+                proportion = 0;
             }
             else
             {
-                jq = targetPrice * customerTargetPrice.ExchangeRate.Value;
+                proportion = (targetPrice * customerTargetPrice.ExchangeRate.Value) - sum;
             }
 
 
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = jq - sum });
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = proportion });
 
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
