@@ -630,6 +630,12 @@ namespace Finance.EntityFrameworkCore
 
             modelBuilder.Entity<AfterUpdateSumInfo>().ToTable("AfterUpdateSumInfo");
 
+
+            modelBuilder.Entity<EnteringElectronic>().HasIndex(p => p.ElectronicId, "IX_ElectronicId").IsUnique();
+            modelBuilder.Entity<EnteringElectronicCopy>().HasIndex(p => p.ElectronicId, "IX_ElectronicIdCopy").IsUnique();
+
+            modelBuilder.Entity<StructureElectronic>().HasIndex(p => p.StructureId, "IX_StructureId").IsUnique();
+            modelBuilder.Entity<StructureElectronicCopy>().HasIndex(p => p.StructureId, "IX_StructureIdCopy").IsUnique();
             base.OnModelCreating(modelBuilder);
         }
     }

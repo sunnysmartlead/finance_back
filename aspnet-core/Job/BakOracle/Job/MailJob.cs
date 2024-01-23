@@ -5,13 +5,15 @@ namespace BakOracle.Job
     public class MailJob : IJob
     {
         private Backups backups { get; set; }
-        public MailJob(Backups _backups)
+        private DapperBack dapperBack { get; set; }
+        public MailJob(Backups _backups, DapperBack dapperBack)
         {
             backups = _backups;
+            this.dapperBack = dapperBack;
         }
         public async Task ExecuteAsync(JobExecutingContext context, CancellationToken stoppingToken)
         {
-            backups.GetIsMain();
+            dapperBack.Main();
         }
     }
 }

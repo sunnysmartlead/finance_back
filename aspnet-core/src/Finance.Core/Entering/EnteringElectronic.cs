@@ -19,8 +19,7 @@ namespace Finance.Entering
         public long SolutionId { get; set; }
         /// <summary>
         /// 电子bom表单id
-        /// </summary>
-        [Index(IsUnique = true)]
+        /// </summary>       
         public long ElectronicId { get; set; }
         /// <summary>
         /// 币种
