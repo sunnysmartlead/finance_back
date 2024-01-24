@@ -261,7 +261,7 @@ namespace Finance.VersionManagement
         /// <returns></returns>
         private async Task<string> GetPricingTeamUserName(string processIdentifier, PricingTeamUser pricingTeamUser, long flowId, long nodeInstanceId)
         {
-            if (processIdentifier == "QuoteApproval")
+            if (processIdentifier == "QuoteApproval" || processIdentifier == "ConfirmWinningBid")
             {
                 return "张宝忠";
             }
