@@ -199,7 +199,7 @@ namespace Finance.VersionManagement
                         where n.WorkFlowInstanceId == flowId
 
                         //根据陈梦瑶在24.01.17给出的需求，这两个节点不再显示在时效性页面中
-                        && (n.NodeId != "主流程_开始" || n.NodeId != "主流程_生成报价分析界面选择报价方案")
+                        && (n.NodeId != "主流程_开始" && n.NodeId != "主流程_生成报价分析界面选择报价方案")
 
                         select new ResultDto
                         {

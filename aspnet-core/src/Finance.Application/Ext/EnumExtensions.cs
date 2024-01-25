@@ -114,6 +114,11 @@ namespace Finance.Ext
         {
             if (isOver)
             {
+                //如果节点是归档，且其状态是“当前”，返回“已完成”
+                if (processIdentifier == "ArchiveEnd" && nodeInstanceStatus == NodeInstanceStatus.Current)
+                {
+                    return PROCESSTYPE.ProcessFinished;
+                }
                 return nodeInstanceStatus switch
                 {
                     NodeInstanceStatus.NotPassed => PROCESSTYPE.ProcessNoStart,

@@ -15,21 +15,21 @@ namespace Finance.WorkFlows
         /// <summary>
         /// 流程Id
         /// </summary>
-        public virtual long WorkFlowInstanceId { get; internal set; }
+        public virtual long WorkFlowInstanceId { get;  set; }
 
         /// <summary>
         /// 节点Id
         /// </summary>
-        public virtual long NodeInstance { get; internal set; }
+        public virtual long NodeInstance { get;  set; }
 
         /// <summary>
         /// 开始时间
         /// </summary>
-        public virtual DateTime? StartTime { get; internal set; }
+        public virtual DateTime? StartTime { get;  set; }
 
         /// <summary>
         /// 更新时间
         /// </summary>
-        public virtual DateTime? UpdateTime { get; internal set; }
+        public virtual DateTime? UpdateTime { get;  set; }
     }
 }
