@@ -226,7 +226,7 @@ namespace Finance.Ext
                 Fixture = row.Try(7, p => p.ToString().IsNullOrWhiteSpace()) ? null : row.Try(7, p => p.NumericCellValue.ToString().ToDecimal()),
                 LogisticsFee = row.Try(8, p => p.NumericCellValue.ToString().ToDecimal()),
                 ProductCategory = row.Try(9, p => p.StringCellValue.ToString()),
-                CostProportion = row.Try(10, p => p.StringCellValue.ToString().Replace("%", string.Empty).ToDecimal()),
+                CostProportion = row.Try(10, p => p.NumericCellValue.ToString().ToDecimal()) * 100,
                 QualityCost = row.Try(11, p => p.NumericCellValue.ToString().ToDecimal()),
                 AccountingPeriod = row.Try(12, p => p.ToString().ToInt()),
                 CapitalCostRate = row.Try(14, p => p.ToString().IsNullOrWhiteSpace()) ? null : row.Try(7, p => p.NumericCellValue.ToString().ToDecimal()),
