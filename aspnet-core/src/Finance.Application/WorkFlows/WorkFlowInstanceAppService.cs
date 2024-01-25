@@ -837,14 +837,6 @@ namespace Finance.WorkFlows
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
 
-                //查询重置
-                var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
-                foreach (var reset in resets)
-                {
-                    item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
-                    item.TaskUserIds.Add(reset.TargetUserId.To<int>());
-                }
-
                 #region 用户权限
 
                 //获取当前流程方案列表
@@ -911,6 +903,14 @@ namespace Finance.WorkFlows
                 }
 
                 #endregion
+
+                //查询重置
+                var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
+                foreach (var reset in resets)
+                {
+                    item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
+                    item.TaskUserIds.Add(reset.TargetUserId.To<int>());
+                }
             }
             return data;
         }
