@@ -1371,18 +1371,18 @@ namespace Finance.PriceEval
                 //throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
             }
 
-            decimal proportion;
-            if (customerTargetPrice.ExchangeRate is null || targetPrice == 0)
+            decimal js;
+            if (customerTargetPrice.ExchangeRate is null)
             {
-                proportion = 0;
+                js = 0;
             }
             else
             {
-                proportion = (targetPrice * customerTargetPrice.ExchangeRate.Value) - sum;
+                js = (targetPrice * customerTargetPrice.ExchangeRate.Value);
             }
 
 
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = proportion });
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = js - sum });
 
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
