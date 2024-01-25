@@ -24,6 +24,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Finance.Ext;
 using Z.EntityFramework.Plus;
+using NPOI.SS.Formula.Functions;
+using Microsoft.AspNetCore.Identity;
+using Abp.Collections.Extensions;
 
 namespace Finance.VersionManagement
 {
@@ -58,11 +61,13 @@ namespace Finance.VersionManagement
         private readonly AuditFlowAppService _auditFlowAppService;
         private readonly IRepository<PricingTeam, long> _pricingTeamRepository;
         private readonly IRepository<TaskReset, long> _taskResetRepository;
+        private readonly IRepository<NodeTime, long> _nodeTimeRepository;
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
 
         private long _projectManager = 0;
 
-        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository)
+        public VersionManagmentAppService(IRepository<AuditFlow, long> auditFlowRepository, IRepository<AuditFlowRight, long> auditFlowRightRepository, IRepository<AuditCurrentProcess, long> auditCurrentProcessRepository, IRepository<AuditFinishedProcess, long> auditFinishedProcessRepository, IRepository<AuditFlowDetail, long> auditFlowDetailRepository, IRepository<FlowProcess, long> flowProcessRepository, IRepository<UserInputInfo, long> userInputInfoRepository, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<ModelCount, long> modelCountRepository, IRepository<User, long> userRepository, IRepository<Role> roleRepository, IRepository<UserRole, long> userRoleRepository, AnalyseBoardAppService analyseBoardAppService, PriceEvaluationAppService priceEvaluationAppService, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, AuditFlowAppService auditFlowAppService, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<NodeTime, long> nodeTimeRepository, WorkflowInstanceAppService workflowInstanceAppService)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFlowRightRepository = auditFlowRightRepository;
@@ -86,6 +91,8 @@ namespace Finance.VersionManagement
             _auditFlowAppService = auditFlowAppService;
             _pricingTeamRepository = pricingTeamRepository;
             _taskResetRepository = taskResetRepository;
+            _nodeTimeRepository = nodeTimeRepository;
+            _workflowInstanceAppService = workflowInstanceAppService;
         }
 
 
@@ -99,8 +106,10 @@ namespace Finance.VersionManagement
             var data = (from p in _priceEvaluationRepository.GetAll()
                         join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
                         join n in _nodeInstanceRepository.GetAll() on p.AuditFlowId equals n.WorkFlowInstanceId
-                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id
-                        join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
+
+                        join f in _financeDictionaryDetailRepository.GetAll() on n.FinanceDictionaryDetailId equals f.Id into f1
+                        from f2 in f1.DefaultIfEmpty()
+                            //join w in _workflowInstanceRepository.GetAll() on p.AuditFlowId equals w.Id
                         where
                         //w.WorkflowState == WorkflowState.Running &&
                         n.NodeId == "主流程_核价需求录入"
@@ -111,7 +120,7 @@ namespace Finance.VersionManagement
                             Version = p.QuoteVersion,
                             Number = p.Number,
                             ProjectManager = u.Name,
-                            QuoteTypeName = f.DisplayName,
+                            QuoteTypeName = f2 == null ? string.Empty : f2.DisplayName,
                             DraftTime = p.DraftDate,
                             //FinishedTime = p.FinishedTime
                         }).WhereIf(versionFilterInput.Version != default, p => p.Version == versionFilterInput.Version)
@@ -184,26 +193,29 @@ namespace Finance.VersionManagement
 
             var data = (from n in _nodeInstanceRepository.GetAll()
 
-                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1//
+                        join t in _taskResetRepository.GetAll() on n.Id equals t.NodeInstanceId into t1
                         from t2 in t1.DefaultIfEmpty()
 
                         where n.WorkFlowInstanceId == flowId
-                        select new
+
+                        //根据陈梦瑶在24.01.17给出的需求，这两个节点不再显示在时效性页面中
+                        && (n.NodeId != "主流程_开始" && n.NodeId != "主流程_生成报价分析界面选择报价方案")
+
+                        select new ResultDto
                         {
-                            priceEvaluation.ProjectName,
+                            ProjectName = priceEvaluation.ProjectName,
                             Version = priceEvaluation.QuoteVersion,
                             ProcessName = n.Name,
-                            n.NodeInstanceStatus,
-                            //UserName = string.Empty,//u2.Name,
+                            NodeInstanceStatus = n.NodeInstanceStatus,
                             CreationTime = n.StartTime,
-                            n.LastModificationTime,
-                            n.RoleId,
-                            n.WorkFlowInstanceId,
-                            n.ProcessIdentifier,
+                            LastModificationTime = n.LastModificationTime,
+                            RoleId = n.RoleId,
+                            WorkFlowInstanceId = n.WorkFlowInstanceId,
+                            ProcessIdentifier = n.ProcessIdentifier,
                             ResetTime = t2 == null ? DateTime.MinValue : t2.CreationTime,
                             Id = t2 == null ? 0 : t2.Id,
                             NodeInstanceId = n.Id,
-                        });//.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId);
+                        });
             var result = await data.ToListAsync();
 
             var roles = await _roleRepository.GetAllListAsync();
@@ -212,11 +224,14 @@ namespace Finance.VersionManagement
             var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
 
             //获取核价团队姓名
-            var pricingTeamUser = GetPricingTeamUser(pricingTeam);
+            var pricingTeamUser = await GetPricingTeamUser(flowId);
 
             var isOver = result.First(p => p.ProcessIdentifier == "ArchiveEnd").NodeInstanceStatus == NodeInstanceStatus.Current;
 
-            var dto = result.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId).Select(item => new AuditFlowOperateReocrdDto
+            var nodeTimes = await _nodeTimeRepository.GetAllListAsync(p => p.WorkFlowInstanceId == flowId);
+
+
+            var dto = (await result.OrderByDescending(p => p.Id).DistinctBy(p => p.NodeInstanceId).SelectAsync(async item => new AuditFlowOperateReocrdDto
             {
                 ProcessIdentifier = item.ProcessIdentifier,
                 Title = item.ProcessName.GetTitle(),
@@ -224,23 +239,80 @@ namespace Finance.VersionManagement
                 ProjectName = item.ProjectName,
                 Version = item.Version,
                 ProcessName = item.ProcessName,
-                ProcessState = item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),
-                UserName = item.ProcessIdentifier.GetPricingTeamUserName(pricingTeamUser),
-                auditFlowOperateTimes = new List<AuditFlowOperateTime>
-                    {
-                        new ()
-                        {
-                            LastModifyTime = GetLastModifyTime(item.ProcessIdentifier,item.NodeInstanceStatus.ToProcessType(isOver,item.ProcessIdentifier),item.CreationTime,item.LastModificationTime),// item.LastModificationTime,
-                            StartTime = item.CreationTime,
-                        }
-                    },
+                ProcessState = item.NodeInstanceStatus.ToProcessType(isOver, item.ProcessIdentifier),
+                UserName = await GetPricingTeamUserName(item.ProcessIdentifier, pricingTeamUser, flowId, item.NodeInstanceId),
+                auditFlowOperateTimes = nodeTimes.Where(p => p.NodeInstance == item.NodeInstanceId).OrderBy(p => p.Id).Select(p => new AuditFlowOperateTime
+                {
+                    LastModifyTime = p.UpdateTime,
+                    StartTime = p.StartTime
+                }).ToList(),
                 ResetTime = item.ResetTime == DateTime.MinValue ? null : item.ResetTime,
                 RoleName = item.RoleId.IsNullOrWhiteSpace() ? string.Empty : string.Join("，", item.RoleId.Split(',').Select(p => roles.FirstOrDefault(o => o.Id == p.To<int>())?.Name)),
                 RequiredTime = item.ProcessIdentifier.GetRequiredTime(pricingTeam),
 
-            }).OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
+            })).OrderBy(p => p.ProcessName.GetTypeNameSort()).ToList();
 
             return dto;
+        }
+
+        /// <summary>
+        /// 获取责任人
+        /// </summary>
+        /// <returns></returns>
+        private async Task<string> GetPricingTeamUserName(string processIdentifier, PricingTeamUser pricingTeamUser, long flowId, long nodeInstanceId)
+        {
+            if (processIdentifier == "QuoteApproval" || processIdentifier == "ConfirmWinningBid")
+            {
+                return "张宝忠";
+            }
+            var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(flowId, nodeInstanceId);
+            if (allAuditFlowInfos.IsNullOrEmpty()) { return string.Empty; }
+            var allAuditFlowInfo = allAuditFlowInfos.FirstOrDefault();
+            if (allAuditFlowInfo == null) { return string.Empty; }
+            if (allAuditFlowInfo.TaskUserIds.IsNullOrEmpty()) { return string.Empty; }
+            var userNames = await _userRepository.GetAll().Where(p => allAuditFlowInfo.TaskUserIds.Select(x => x.To<long>()).Contains(p.Id)).Select(p => p.Name).ToListAsync();
+
+            return string.Join("，", userNames);
+            //if (pricingTeamUser is null)
+            //{
+            //    return string.Empty;
+            //}
+            //return processIdentifier switch
+            //{
+            //    FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
+            //    FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
+            //    FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
+            //    FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
+            //    FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
+            //    FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
+            //    "QuoteApproval" => "张宝忠",//硬编码，以免暴露陈梦瑶的账号
+            //    FinanceConsts.PricingDemandInput => pricingTeamUser.PriceInput,
+            //    FinanceConsts.PriceDemandReview => pricingTeamUser.ProjectManager,
+
+            //    _ => await GetRoleUserName(nodeInstanceId),
+            //};
+        }
+
+        private async Task<string> GetRoleUserName(long nodeInstanceId)
+        {
+            var dto = await _nodeInstanceRepository.GetAsync(nodeInstanceId);
+            if (dto.RoleId.IsNullOrWhiteSpace())
+            {
+                return string.Empty;
+            }
+            var roles = dto.RoleId.StrToList().Select(p => p.To<long>()).Distinct();
+            //根据角色获取用户
+            var users = await (from u in _userRepository.GetAll()
+                               join ur in _userRoleRepository.GetAll() on u.Id equals ur.UserId
+                               //join r in roles on ur.RoleId equals r
+                               join r in _roleRepository.GetAll() on ur.RoleId equals r.Id
+                               where roles.Contains(r.Id)
+                               select new
+                               {
+                                   r.Id,
+                                   u.Name
+                               }).ToListAsync();
+            return string.Join("，", users.Select(p => p.Name));
         }
 
         private DateTime? GetLastModifyTime(string processIdentifier, PROCESSTYPE processType, DateTime? creationTime, DateTime? lastModificationTime)
@@ -271,29 +343,60 @@ namespace Finance.VersionManagement
         /// <summary>
         /// 获取核价团队人员的姓名
         /// </summary>
-        /// <param name="pricingTeam"></param>
         /// <returns></returns>
-        private PricingTeamUser GetPricingTeamUser(PricingTeam pricingTeam)
+        private async Task<PricingTeamUser> GetPricingTeamUser(long flowId)
         {
-            if (pricingTeam is null)
+            //获取核价团队
+            var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == flowId);
+
+            var engineer = string.Empty;
+            var qualityBench = string.Empty;
+            var emc = string.Empty;
+            var productCostInput = string.Empty;
+            var productManageTime = string.Empty;
+            var audit = string.Empty;
+
+            if (pricingTeam is not null)
             {
-                return null;
+                var fEngineer = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EngineerId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+                var fQualityBench = _userRepository.GetAll().Where(p => p.Id == pricingTeam.QualityBenchId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+                var fEmc = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EMCId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+                var fProductCostInput = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductCostInputId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+                var fProductManageTime = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductManageTimeId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+                var fAudit = _userRepository.GetAll().Where(p => p.Id == pricingTeam.AuditId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+
+                engineer = fEngineer.Value;
+                qualityBench = fQualityBench.Value;
+                emc = fEmc.Value;
+                productCostInput = fProductCostInput.Value;
+                productManageTime = fProductManageTime.Value;
+                audit = fAudit.Value;
             }
-            var engineer = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EngineerId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
-            var qualityBench = _userRepository.GetAll().Where(p => p.Id == pricingTeam.QualityBenchId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
-            var emc = _userRepository.GetAll().Where(p => p.Id == pricingTeam.EMCId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
-            var productCostInput = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductCostInputId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
-            var productManageTime = _userRepository.GetAll().Where(p => p.Id == pricingTeam.ProductManageTimeId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
-            var audit = _userRepository.GetAll().Where(p => p.Id == pricingTeam.AuditId).Select(p => p.Name).DeferredFirstOrDefault().FutureValue();
+
+            //获取核价需求录入责任人
+            var priceEvaluation = await _priceEvaluationRepository.GetAll().Where(p => p.AuditFlowId == flowId).Select(p => new { p.CreatorUserId, p.ProjectManager }).FirstOrDefaultAsync();
+            var priceInput = string.Empty;
+            var projectManager = string.Empty;
+            if (priceEvaluation is not null)
+            {
+                var prvaiceInputUser = await _userRepository.FirstOrDefaultAsync(p => p.Id == priceEvaluation.CreatorUserId);
+                var ProjectManagerUser = await _userRepository.FirstOrDefaultAsync(p => p.Id == priceEvaluation.ProjectManager);
+
+                priceInput = prvaiceInputUser.Name;
+                projectManager = ProjectManagerUser.Name;
+            }
+
 
             return new PricingTeamUser
             {
-                Engineer = engineer.Value,
-                QualityBench = qualityBench.Value,
-                EMC = emc.Value,
-                ProductCostInput = productCostInput.Value,
-                ProductManageTime = productManageTime.Value,
-                Audit = audit.Value,
+                Engineer = engineer,
+                QualityBench = qualityBench,
+                EMC = emc,
+                ProductCostInput = productCostInput,
+                ProductManageTime = productManageTime,
+                Audit = audit,
+                PriceInput = priceInput,
+                ProjectManager = projectManager
             };
         }
 

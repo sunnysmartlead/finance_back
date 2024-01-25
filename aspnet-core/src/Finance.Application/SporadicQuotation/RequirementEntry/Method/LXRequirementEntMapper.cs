@@ -36,6 +36,9 @@ namespace Finance.SporadicQuotation.RequirementEntry.Method
             configuration.CreateMap<DataList, LXDataListDto>()
                .ForMember(u => u.ListNameDisplayName, p => p.MapFrom(o => o.ListName.ToString()))//供应商优先级 ;
               .ForMember(u => u.Data, p => p.MapFrom(o => o.Data.StrToList()));// Data ,合并
+
+            configuration.CreateMap<ManagerApprovalDto, LXRequirementEntDto>();
+            configuration.CreateMap<LXRequirementEntDto, ManagerApprovalDto>();
         } 
     }
 }

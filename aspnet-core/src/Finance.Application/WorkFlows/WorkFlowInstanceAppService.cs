@@ -71,8 +71,9 @@ namespace Finance.WorkFlows
         private readonly IRepository<AuditFlowIdPricingForm, long> _auditFlowIdPricingForm;
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly IRepository<Department, long> _departmentRepository;
+        private readonly IRepository<NodeTime, long> _nodeTimeRepository;
 
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager, IRepository<Department, long> departmentRepository)
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager, IRepository<Department, long> departmentRepository, IRepository<NodeTime, long> nodeTimeRepository)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
@@ -97,6 +98,7 @@ namespace Finance.WorkFlows
             _auditFlowIdPricingForm = auditFlowIdPricingForm;
             _backgroundJobManager = backgroundJobManager;
             _departmentRepository = departmentRepository;
+            _nodeTimeRepository = nodeTimeRepository;
         }
 
         /// <summary>
@@ -327,6 +329,42 @@ namespace Finance.WorkFlows
                 FinanceDictionaryDetailId = businessStartNode.FinanceDictionaryDetailId,
                 NodeInstanceId = businessStartNode.Id
             });
+
+            #endregion
+
+            #region 增加开始和更新时间
+
+            if (businessStartNode.NodeInstanceStatus == NodeInstanceStatus.Current)
+            {
+                await _nodeTimeRepository.InsertAsync(new NodeTime
+                {
+                    NodeInstance = businessStartNode.Id,
+                    StartTime = DateTime.Now,
+                    UpdateTime = null,
+                    WorkFlowInstanceId = businessStartNode.WorkFlowInstanceId,
+                });
+            }
+            else
+            {
+                await _nodeTimeRepository.InsertAsync(new NodeTime
+                {
+                    NodeInstance = businessStartNode.Id,
+                    StartTime = DateTime.Now,
+                    UpdateTime = DateTime.Now,
+                    WorkFlowInstanceId = businessStartNode.WorkFlowInstanceId,
+                });
+            }
+            var evalInput = nodeInstanceList.Where(p => p.Id != businessStartNode.Id && p.NodeInstanceStatus == NodeInstanceStatus.Current);
+            foreach (var item in evalInput)
+            {
+                await _nodeTimeRepository.InsertAsync(new NodeTime
+                {
+                    NodeInstance = item.Id,
+                    StartTime = DateTime.Now,
+                    UpdateTime = null,
+                    WorkFlowInstanceId = item.WorkFlowInstanceId,
+                });
+            }
 
             #endregion
 
@@ -812,7 +850,7 @@ namespace Finance.WorkFlows
         {
             var data = await (from n in _nodeInstanceRepository.GetAll()
                               join w in _workflowInstanceRepository.GetAll() on n.WorkFlowInstanceId equals w.Id
-                              where n.WorkFlowInstanceId == workflowInstanceId && n.NodeInstanceStatus == NodeInstanceStatus.Current
+                              where n.WorkFlowInstanceId == workflowInstanceId //&& n.NodeInstanceStatus == NodeInstanceStatus.Current
                               select new UserTask
                               {
                                   Id = n.Id,
@@ -824,21 +862,18 @@ namespace Finance.WorkFlows
                                   WorkflowState = w.WorkflowState,
                                   ProcessIdentifier = n.ProcessIdentifier,
                                   RoleId = n.RoleId,
+
                               }).WhereIf(nodeInstanceId.HasValue, p => p.Id == nodeInstanceId).ToListAsync();
 
             foreach (var item in data)
             {
+                if (item.RoleId.IsNullOrWhiteSpace())
+                {
+                    return null;
+                }
                 var roleids = item.RoleId.Split(",").Select(p => p.To<int>());
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
-
-                //查询重置
-                var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
-                foreach (var reset in resets)
-                {
-                    item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
-                    item.TaskUserIds.Add(reset.TargetUserId.To<int>());
-                }
 
                 #region 用户权限
 
@@ -881,7 +916,7 @@ namespace Finance.WorkFlows
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
 
             || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
-            || (projectPm != null && projectPm.ProjectManager != userId && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+            || (projectPm != null && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
 
             || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
 
@@ -906,6 +941,14 @@ namespace Finance.WorkFlows
                 }
 
                 #endregion
+
+                //查询重置
+                var resets = await _taskResetRepository.GetAllListAsync(p => p.NodeInstanceId == item.Id && p.IsActive);
+                foreach (var reset in resets)
+                {
+                    item.TaskUserIds.Remove(reset.ResetUserId.To<int>());
+                    item.TaskUserIds.Add(reset.TargetUserId.To<int>());
+                }
             }
             return data;
         }
@@ -1388,7 +1431,8 @@ namespace Finance.WorkFlows
                     NodeInstanceId = input.NodeInstanceId,
                     FinanceDictionaryDetailId = input.FinanceDictionaryDetailIds[0]
                 });
-            }else
+            }
+            else
             {
                 #region 退回
 

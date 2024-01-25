@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Finance.Audit
 {
-    public class SendEmail: ISingletonDependency
+    public class SendEmail : ISingletonDependency
     {
         private readonly IConfigurationRoot _appConfiguration;
 
@@ -45,6 +45,8 @@ namespace Finance.Audit
             MailMessage mailMessage;
             if (isInternet)
             {
+                return true;
+
                 mailMessage = new MailMessage();
                 mailMessage.From = new MailAddress(FinanceConsts.MailFrom_Tencent, "智领核价报价系统"); // 发送人和收件人
                 mailMessage.To.Add(new MailAddress(mailTo));
@@ -62,7 +64,7 @@ namespace Finance.Audit
 
             try
             {
-                if(isInternet)
+                if (isInternet)
                 {
                     SmtpClient SMTPClient_Tencent = new SmtpClient()
                     {
@@ -114,7 +116,7 @@ namespace Finance.Audit
                     ipList.Add(add);
                 }
             }
-            if(ipList.Count > 0)
+            if (ipList.Count > 0)
             {
                 loginIP = ipList[0].ToString();
             }

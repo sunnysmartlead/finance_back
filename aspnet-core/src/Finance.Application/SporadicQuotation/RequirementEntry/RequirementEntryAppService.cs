@@ -4,12 +4,16 @@ using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Finance.Ext;
 using Finance.Hr;
+using Finance.Infrastructure;
 using Finance.LXRequirementEntry;
 using Finance.PriceEval;
 using Finance.ProjectManagement.Dto;
 using Finance.SporadicQuotation.RequirementEntry.Dto;
 using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,6 +42,11 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// 文件管理表
         /// </summary>
         private readonly IRepository<FileManagement, long> _fileManagement;
+
+        /// <summary>
+        /// 字典明细表
+        /// </summary>
+        private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetail;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -45,12 +54,14 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// <param name="dataList"></param>
         /// <param name="department"></param>
         /// <param name="fileManagement"></param>
-        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList, IRepository<Department, long> department ,IRepository<FileManagement, long> fileManagement)
+        /// <param name="financeDictionaryDetail"></param>
+        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList, IRepository<Department, long> department ,IRepository<FileManagement, long> fileManagement, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetail)
         {
             _requirementEnt= requirementEnt;
             _dataList= dataList;
             _department= department;
-            _fileManagement= fileManagement;
+            _fileManagement = fileManagement;
+            _financeDictionaryDetail= financeDictionaryDetail;
         }
         /// <summary>
         /// 零星报价需求录入 保存\提交
@@ -125,12 +136,40 @@ namespace Finance.SporadicQuotation.RequirementEntry
 
                 FileManagement fileNames = await _fileManagement.FirstOrDefaultAsync(p => lXRequirementEntDto.EnclosureId == p.Id);
                 if (fileNames is not null) lXRequirementEntDto.File = new FileUploadOutputDto { FileId = fileNames.Id, FileName = fileNames.Name, };
+                lXRequirementEntDto.ComponentTypeDisplayName = _financeDictionaryDetail.FirstOrDefault(p => p.Id.Equals(lXRequirementEntDto.ComponentType))?.DisplayName;
                 return lXRequirementEntDto;
             }
             catch (System.Exception ex)
             {
                 throw new FriendlyException(ex.Message);
             }          
+        }
+        /// <summary>
+        /// 总经理审批查询
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async Task<ManagerApprovalDto> QueryLXManagerApproval(long auditFlowId)
+        {
+            ManagerApprovalDto managerApprovalDto=new ManagerApprovalDto();
+            LXRequirementEntDto lXRequirementEntDto =await QueryLXRequirementEnt(auditFlowId);
+            if (lXRequirementEntDto is not null) managerApprovalDto = ObjectMapper.Map<ManagerApprovalDto>(lXRequirementEntDto);
+            return managerApprovalDto;
+        }
+        /// <summary>
+        /// 下载生成报价审核表
+        /// </summary>
+        /// <param name="auditFlowId"></param>
+        /// <returns></returns>
+        public async Task<IActionResult> DownloadQueryLXManagerApproval(long auditFlowId)
+        {
+            var values = await QueryLXManagerApproval(auditFlowId);
+            MemoryStream memoryStream = new MemoryStream();
+            await MiniExcel.SaveAsAsync(memoryStream, values);
+            return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = $"报价审核表-{DateTime.Now}.xlsx"
+            };
         }
     }
 }

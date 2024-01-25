@@ -168,7 +168,7 @@ namespace Finance.Ext
                 case "总经理查看中标金额": return "总经理中标查看";
                 case "归档": return "核价表归档、报价审批表、报价单归档";
 
-                default: return string.Empty;
+                default: return projectName;
             }
         }
 
@@ -226,7 +226,7 @@ namespace Finance.Ext
 
                 case "归档": return "报价归档";
 
-                default: return string.Empty;
+                default: return projectName;
 
             }
         }
@@ -317,22 +317,6 @@ namespace Finance.Ext
             };
         }
 
-        internal static string GetPricingTeamUserName(this string processIdentifier, PricingTeamUser pricingTeamUser)
-        {
-            if (pricingTeamUser is null)
-            {
-                return string.Empty;
-            }
-            return processIdentifier switch
-            {
-                FinanceConsts.ProjectChiefAudit => pricingTeamUser.Audit,
-                FinanceConsts.COBManufacturingCostEntry => pricingTeamUser.ProductCostInput,
-                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeamUser.EMC,
-                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeamUser.QualityBench,
-                FinanceConsts.FormulaOperationAddition => pricingTeamUser.Engineer,
-                FinanceConsts.LogisticsCostEntry => pricingTeamUser.ProductManageTime,
-                _ => string.Empty,
-            };
-        }
+
     }
 }

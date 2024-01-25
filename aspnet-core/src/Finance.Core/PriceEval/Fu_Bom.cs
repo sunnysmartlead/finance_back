@@ -3,6 +3,7 @@ using MiniExcelLibs.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 数量（模组年数量）
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Quantity { get; set; }
 
         /// <summary>
@@ -87,11 +89,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 装配数量
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual double AssemblyCount { get; set; }
 
         /// <summary>
         /// 材料单价（原币）
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal MaterialPrice { get; set; }
 
         /// <summary>
@@ -102,51 +106,61 @@ namespace Finance.PriceEval
         /// <summary>
         /// 汇率
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal ExchangeRate { get; set; }
 
         /// <summary>
         /// 材料单价（人民币）
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal MaterialPriceCyn { get; set; }
 
         /// <summary>
         /// 合计金额（人民币）
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal TotalMoneyCyn { get; set; }
 
         /// <summary>
         /// 合计金额（人民币）不含客供
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal TotalMoneyCynNoCustomerSupply { get; set; }
 
         /// <summary>
         /// 损耗
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Loss { get; set; }
 
         /// <summary>
         /// 材料成本（含损耗）
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal MaterialCost { get; set; }
 
         /// <summary>
         /// 投入量
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal InputCount { get; set; }
 
         /// <summary>
         /// 采购量
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal PurchaseCount { get; set; }
 
         /// <summary>
         /// MOQ分摊成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal MoqShareCount { get; set; }
 
         /// <summary>
         /// MOQ
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Moq { get; set; }
 
         /// <summary>
@@ -240,27 +254,32 @@ namespace Finance.PriceEval
         /// <summary>
         /// 直接制造成本：直接人工
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal DDirectLabor { get; set; }
 
         /// <summary>
         /// 直接制造成本：设备折旧
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal DEquipmentDepreciation { get; set; }
 
         /// <summary>
         /// 直接制造成本：换线成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal DLineChangeCost { get; set; }
 
         /// <summary>
         /// 直接制造成本：制造费用
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal DManufacturingExpenses { get; set; }
 
 
         /// <summary>
         /// 小计
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal DSubtotal { get; set; }
 
         #endregion
@@ -281,21 +300,25 @@ namespace Finance.PriceEval
         /// <summary>
         /// 间接制造成本：直接人工
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal IDirectLabor { get; set; }
 
         /// <summary>
         /// 间接制造成本：设备折旧
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal IEquipmentDepreciation { get; set; }
 
         /// <summary>
         /// 间接制造成本：制造费用
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal IManufacturingExpenses { get; set; }
 
         /// <summary>
         /// 小计
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal ISubtotal { get; set; }
 
         #endregion
@@ -304,6 +327,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 合计
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Subtotal { get; set; }
     }
 
@@ -357,11 +381,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 损耗成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal WastageCost { get; set; }
 
         /// <summary>
         /// MOQ分摊成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal MoqShareCount { get; set; }
     }
     public class Fu_OtherCostItem2 : Entity<long>
@@ -395,6 +421,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 每年的模组数量
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Quantity { get; set; }
 
         /// <summary>
@@ -405,73 +432,87 @@ namespace Finance.PriceEval
         /// <summary>
         /// 合计
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? Total { get; set; }
 
 
         /// <summary>
         /// 模具费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? MoldCosts { get; set; }
 
 
         /// <summary>
         /// 治具费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? FixtureCost { get; set; }
 
         /// <summary>
         /// 工装费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? ToolCost { get; set; }
 
         /// <summary>
         /// 检具费用分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? InspectionCost { get; set; }
 
         /// <summary>
         /// 实验费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? ExperimentCost { get; set; }
 
         /// <summary>
         /// 专用设备分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? SpecializedEquipmentCost { get; set; }
 
         /// <summary>
         /// 测试软件费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? TestSoftwareCost { get; set; }
 
         /// <summary>
         /// 其他费用分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? OtherExpensesCost { get; set; }
 
         /// <summary>
         /// 差旅费分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? TravelCost { get; set; }
 
         /// <summary>
         /// 呆滞物料分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? SluggishCost { get; set; }
 
         /// <summary>
         /// 质保金分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? RetentionCost { get; set; }
 
         /// <summary>
         /// 线体成本分摊
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? LineCost { get; set; }
 
         /// <summary>
         /// 其他成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? OtherCost { get; set; }
     }
     public class Fu_OtherCostItem : Entity<long>
@@ -510,11 +551,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 夹具
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? Fixture { get; set; }
 
         /// <summary>
         /// 物流费
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal LogisticsFee { get; set; }
 
         /// <summary>
@@ -525,11 +568,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 成本比例
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal CostProportion { get; set; }
 
         /// <summary>
         /// 质量成本（MAX)
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal QualityCost { get; set; }
 
         /// <summary>
@@ -540,6 +585,7 @@ namespace Finance.PriceEval
         /// <summary>
         /// 资金成本率
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? CapitalCostRate { get; set; }
 
         ///// <summary>
@@ -550,11 +596,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 税务成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal? TaxCost { get; set; }
 
         /// <summary>
         /// 合计
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal Total { get; set; }
     }
     public class Fu_QualityCostListDto : Entity<long>
@@ -603,11 +651,13 @@ namespace Finance.PriceEval
         /// <summary>
         /// 成本比例
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal CostProportion { get; set; }
 
         /// <summary>
         /// 质量成本（MAX)
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public virtual decimal QualityCost { get; set; }
     }
     public class Fu_LogisticsCost : Entity<long>
@@ -651,31 +701,37 @@ namespace Finance.PriceEval
         /// <summary>
         /// 单pcs包装价格/元
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal PerPackagingPrice { get; set; }
 
         /// <summary>
         /// 运费/月
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal Freight { get; set; }
 
         /// <summary>
         /// 仓储费用/元
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal StorageExpenses { get; set; }
 
         /// <summary>
         /// 月底需求量
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal MonthEndDemand { get; set; }
 
         /// <summary>
         /// 单PCS运输费
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal PerFreight { get; set; }
 
         /// <summary>
         /// 单PCS总物流成本
         /// </summary>
+        [Column(TypeName = "decimal(18,5)")]
         public decimal PerTotalLogisticsCost { get; set; }
     }
 
