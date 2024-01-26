@@ -9,11 +9,33 @@ namespace BakOracle.Ext
     public static class ToSQLExtension
     {
         public static string ToSQL(this object value)
-        {
-            if (value == null)
-                return string.Empty;
-
+        {           
             return GetSQLString(value);
+        }
+        public static string ToSQLType(this object value)
+        {           
+            if (value == null)
+            {
+                return "null";
+            }
+            Type type = value.GetType();
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Int32:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                case TypeCode.Int64:
+                case TypeCode.Int16:
+
+                    return $"{value}";
+                case TypeCode.DateTime:
+                    return $"TO_DATE('{value.ToString()}', 'YYYY-MM-DD HH24:MI:SS')";
+                case TypeCode.String:                    
+                    return $"\'{value.ToString()}\'";
+                case TypeCode.DBNull: return "null";
+                default:
+                    return $"\'{value.ToString()}\'";
+            }
         }
         public static void CombineFile(this List<string> infileName, String outfileName)
         {
@@ -41,24 +63,54 @@ namespace BakOracle.Ext
 
                 }
             }
-        }
+        }  
         private static string GetSQLString(object value)
-        {          
+        {
             if (value == null)
             {
                 return "null";
             }
-            else if (IsDate(value.ToString()))
+            Type type = value.GetType();
+            switch (Type.GetTypeCode(type))
             {
-                return $"TO_DATE('{value}','YYYY-MM-DD HH24:MI:SS')";
+                case TypeCode.Int32:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                case TypeCode.Int64:
+                case TypeCode.Int16:
+
+                    return $"{value}";
+                case TypeCode.DateTime:
+                    return $"TO_DATE('{value.ToString()}', 'YYYY-MM-DD HH24:MI:SS')";
+                case TypeCode.String:
+                    return $"\'{value.ToString()}\'";
+                case TypeCode.DBNull: return "null";
+                default:
+                    return $"\'{value.ToString()}\'";
             }
-            else if (IsNumber(value.ToString()))
+        }
+        private static string GetSQLString(object value, Type type)
+        {
+            if (value == null)
             {
-                return value.ToString();
-            }
-            else
+                return "null";
+            }                   
+            switch (Type.GetTypeCode(type))
             {
-                return $"'{value}'";
+                case TypeCode.Int32:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                case TypeCode.Int64:
+                case TypeCode.Int16:
+                
+                    return $"{value}";
+                case TypeCode.DateTime:
+                    return $"TO_DATE('{value.ToString()}', 'YYYY-MM-DD HH24:MI:SS')";
+                case TypeCode.String:
+                    return $"\'{value.ToString()}\'";
+                case TypeCode.DBNull: return "null";
+                default:
+                    return $"\'{value.ToString()}\'";
             }
         }
         private static bool IsDate(string strDate)

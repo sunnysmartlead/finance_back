@@ -15,7 +15,8 @@ namespace BakOracle.Job
 {
     public class ADOBack
     {
-        int taskCount = 1;        
+        int taskCount = 1;
+        string suffix = ".sql";
         public ADOBack()
         {
             if (!int.TryParse(Program.Config["taskCount"], out taskCount) || taskCount == 0)
@@ -26,8 +27,8 @@ namespace BakOracle.Job
         public void Main()
         {
             // 指定数据库连接信息
-            var ip = "139.196.216.165";
-            var userId = "FINANCE_V2";
+            var ip = "10.1.1.131";
+            var userId = "WISSEN_TEST_V2";
             var password = "admin";
 
             // 构建文件路径
@@ -35,7 +36,7 @@ namespace BakOracle.Job
 
             // 不必要的表过滤列表
             List<string> removeTables = new List<string>() { "Al", "__EFMigrationsHistory" };
-          
+
             ParallelOptions parallelOptions = new ParallelOptions();
 
             // 并行线程数量
@@ -78,7 +79,7 @@ namespace BakOracle.Job
                     {
                         Directory.CreateDirectory(filePath);
                     }
-
+                    //allTableNames = new List<string>() { "AuditFlowIdPricingForm" };
                     // 遍历表名并创建任务
                     allTableNames.ForEach(tableName =>
                     {
@@ -88,7 +89,7 @@ namespace BakOracle.Job
                             using (OracleCommand command = new OracleCommand(query, connection))
                             {
                                 OracleDataReader dataReader = command.ExecuteReader();
-                                string outputPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}_{tableName}.txt";
+                                string outputPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}_{tableName}{suffix}";
 
                                 using (StreamWriter streamWriter = new StreamWriter(outputPath))
                                 {
@@ -99,13 +100,44 @@ namespace BakOracle.Job
 
                                     streamWriter.WriteLine($"--文件已创建{tableName} - {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
                                     streamWriter.WriteLine("--======================开始========================");
-
+                                    streamWriter.WriteLine("set define off;");
                                     while (dataReader.Read())
                                     {
-                                        var data = Enumerable.Range(0, dataReader.FieldCount)
-                                            .Select(index => ($"\"{dataReader.GetName(index)}\"", dataReader.GetValue(index).ToSQL()));
 
-                                        streamWriter.WriteLine($"INSERT INTO \"{tableName}\"({string.Join(",", data.Select(pair => pair.Item1))}) VALUES({string.Join(",", data.Select(pair => pair.Item2))})");
+                                        IEnumerable<(string, string)>? data = Enumerable.Range(0, dataReader.FieldCount)
+                                            .Select(index => ($"\"{dataReader.GetName(index)}\"", dataReader.GetValue(index).ToSQLType()));
+
+                                        var dataBool = data.Any(p => p.Item2.Length >= 3000);
+                                        if (dataBool)
+                                        {
+                                            streamWriter.WriteLine("DECLARE");
+                                            data.Select((pair, index) =>
+                                            {
+                                                if (pair.Item2.Length >= 3000)
+                                                {
+                                                    streamWriter.WriteLine($"v_clob{index} clob;");
+                                                }
+                                                return pair;
+                                            }).ToList();
+                                            streamWriter.WriteLine("BEGIN");
+                                            data = data.Select((pair, index) =>
+                                            {
+                                                if (pair.Item2.Length >= 3000)
+                                                {
+                                                    streamWriter.WriteLine($"v_clob{index} :={pair.Item2};");
+                                                    pair.Item2 = $"v_clob{index}";
+                                                }
+                                                return pair;
+                                            }).ToList();
+                                            streamWriter.WriteLine($"INSERT INTO \"{tableName}\"({string.Join(",", data.Select(pair => pair.Item1))}) VALUES({string.Join(",", data.Select(pair => pair.Item2))});");
+                                            streamWriter.WriteLine("end;");
+                                            streamWriter.WriteLine("/");
+                                        }
+                                        else
+                                        {
+                                            streamWriter.WriteLine($"INSERT INTO \"{tableName}\"({string.Join(",", data.Select(pair => pair.Item1))}) VALUES({string.Join(",", data.Select(pair => pair.Item2))});");
+                                        }
+
                                     }
 
                                     streamWriter.WriteLine("--======================结束========================");
@@ -123,7 +155,7 @@ namespace BakOracle.Job
 
                     // 合并所有生成的文件
                     string allSqlPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}_ALLSql";
-                    List<string> inputFiles = orderedTableNames.Select(prefix => $"{filePath}\\{DateTime.Now.ToString("yyyyMMdd")}_{prefix}.txt").ToList();
+                    List<string> inputFiles = allTableNames.Select(prefix => $"{filePath}\\{DateTime.Now.ToString("yyyyMMdd")}_{prefix}{suffix}").ToList();
                     inputFiles.CombineFile(allSqlPath);
                 }
                 catch (Exception e)

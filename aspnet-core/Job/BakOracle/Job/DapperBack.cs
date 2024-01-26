@@ -1,4 +1,5 @@
 ﻿
+using BakOracle.Ext;
 using Dapper;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
@@ -37,12 +38,12 @@ namespace BakOracle.Job
                         {
                             var ppp = (IDictionary<string, object>)item;
                             var keys = ppp.Keys.ToList();
-                            var values = ppp.Values.Select(val => FormatValue(val)).ToList();
+                            var values = ppp.Values.Select(val => val.ToSQL()).ToList();
 
                             string keysNames = "\"" + string.Join("\",\"", keys) + "\"";
                             string valuesNames = string.Join(",", values);
 
-                            strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
+                            strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames});");
                             //Console.WriteLine($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
                         }
 
@@ -62,29 +63,7 @@ namespace BakOracle.Job
                 }
             }
 
-        }
-        // Helper method to format values
-        private string FormatValue(object value)
-        {
-            if (value == null)
-            {
-                return "null";
-            }
-            else if (IsDate(value.ToString()))
-            {
-                return $"TO_DATE('{value}','YYYY-MM-DD HH24:MI:SS')";
-            }
-            else if (IsNumber(value.ToString()))
-            {
-                return value.ToString();
-            }
-            else
-            {
-                return $"'{value}'";
-            }
-        }
-
-        // Helper method to save to individual file
+        }      
         private void SaveToFile(string path, string rowTable, List<string> strings)
         {
             if (!File.Exists(path))
@@ -100,9 +79,7 @@ namespace BakOracle.Job
                     sw.WriteLine("--======================结束========================");
                 }
             }
-        }
-
-        // Helper method to save to all file
+        }     
         private void SaveAllToFile(string pathAll, List<string> list)
         {
             if (!File.Exists(pathAll))
