@@ -2663,7 +2663,38 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         int version = isOfferDto.version;
         var AuditFlowId = isOfferDto.AuditFlowId;
 
+        int ntype = isOfferDto.ntype;
 
+        int time = isOfferDto.ntime;
+
+        if (ntype == 0 && time > 3)
+        {
+            throw new UserFriendlyException("本流程报价提交次数已经到顶");
+        }
+
+
+        if (ntype == 0)
+        {
+            await InsertSolution(solutions, version, time, AuditFlowId, isOfferDto.IsFirst);
+        }
+        else
+        {
+            var product = isOfferDto.Product;
+            var productid = isOfferDto.Productld;
+            var ModuleName = isOfferDto.ProductName;
+            var solutionQuotation =
+                await _solutionQutation.FirstOrDefaultAsync(p =>
+                    p.AuditFlowId == AuditFlowId && p.version == version);
+            if (productid != 0)
+            {
+                solutionQuotation.Product = product;
+                solutionQuotation.Productld = productid;
+                solutionQuotation.ModuleName = ModuleName;
+            }
+
+            solutionQuotation.status = 1;
+            await _solutionQutation.UpdateAsync(solutionQuotation);
+        }
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(AuditFlowId);
         var pricetype = priceEvaluationStartInputResult.PriceEvalType;
@@ -2688,6 +2719,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     throw new UserFriendlyException("样品数据不完整");
                 }
             }
+           
+            await InsertSample(isOfferDto.SampleOffer, solutions, version, ntype);
+            return;
         }
         else if (priceEvaluationStartInputResult.IsHasSample == true) //有样品
         {
@@ -2847,38 +2881,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-        int ntype = isOfferDto.ntype;
 
-        int time = isOfferDto.ntime;
-
-        if (ntype == 0 && time > 3)
-        {
-            throw new UserFriendlyException("本流程报价提交次数已经到顶");
-        }
-
-
-        if (ntype == 0)
-        {
-            await InsertSolution(solutions, version, time, AuditFlowId, isOfferDto.IsFirst);
-        }
-        else
-        {
-            var product = isOfferDto.Product;
-            var productid = isOfferDto.Productld;
-            var ModuleName = isOfferDto.ProductName;
-            var solutionQuotation =
-                await _solutionQutation.FirstOrDefaultAsync(p =>
-                    p.AuditFlowId == AuditFlowId && p.version == version);
-            if (productid != 0)
-            {
-                solutionQuotation.Product = product;
-                solutionQuotation.Productld = productid;
-                solutionQuotation.ModuleName = ModuleName;
-            }
-
-            solutionQuotation.status = 1;
-            await _solutionQutation.UpdateAsync(solutionQuotation);
-        }
 
         List<AnalyseBoardNreDto> nres = isOfferDto.nres;
         await InsertNre(nres, solutions, version, ntype);
@@ -3276,6 +3279,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     public async Task InsertSample(List<OnlySampleDto> onlySampleDtos, List<Solution> solutionQuotations, int version,
         int ntype)
     {
+        if (onlySampleDtos is null || onlySampleDtos.Count == 0)
+        {
+            return;
+        }
         foreach (var onlySampleDto in onlySampleDtos)
         {
             var soltuion = solutionQuotations.FirstOrDefault(p => p.Id == onlySampleDto.SolutionId);
