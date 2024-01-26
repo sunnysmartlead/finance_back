@@ -16,7 +16,9 @@ namespace BakOracle
             IHost host = Host.CreateDefaultBuilder(args)
                 .ConfigureServices(services =>
                 {
+                    services.AddTransient<ADOBack>();
                     services.AddTransient<Backups>();
+                    services.AddTransient<DapperBacktTow>();
                     services.AddTransient<DapperBack>();
                     services.AddSchedule(options =>
                     {
