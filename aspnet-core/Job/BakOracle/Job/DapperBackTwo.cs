@@ -1,4 +1,5 @@
 ﻿
+using BakOracle.Ext;
 using Dapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -23,7 +24,7 @@ namespace BakOracle.Job
             //过滤不必要的表
             List<string> Remove = new List<string>() { "Al", "__EFMigrationsHistory" };
             //开启线程数量
-            const int taskCount = 30;
+            const int taskCount = 1;
             ParallelOptions parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = taskCount;
             using (OracleConnection connection = new OracleConnection($"Data Source={ip}/ORCL;Persist Security Info=True;user id={userId};password={password};"))
@@ -45,12 +46,12 @@ namespace BakOracle.Job
                                 {
                                     var ppp = (IDictionary<string, object>)item;
                                     var keys = ppp.Keys.ToList();
-                                    var values = ppp.Values.Select(val => FormatValue(val)).ToList();
+                                    var values = ppp.Values.Select(val => val.ToSQL()).ToList();
 
                                     string keysNames = "\"" + string.Join("\",\"", keys) + "\"";
                                     string valuesNames = string.Join(",", values);
 
-                                    strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
+                                    strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames});");
                                     //Console.WriteLine($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
                                 }
                                 string path = $@"File\{DateTime.Now.ToString("yyyyMMdd")}_{rowTable}.txt";
@@ -76,29 +77,7 @@ namespace BakOracle.Job
                 }
             }
 
-        }
-        // Helper method to format values
-        private string FormatValue(object value)
-        {
-            if (value == null)
-            {
-                return "null";
-            }
-            else if (IsDate(value.ToString()))
-            {
-                return $"TO_DATE('{value}','YYYY-MM-DD HH24:MI:SS')";
-            }
-            else if (IsNumber(value.ToString()))
-            {
-                return value.ToString();
-            }
-            else
-            {
-                return $"'{value}'";
-            }
-        }
-
-        // Helper method to save to individual file
+        }       
         private void SaveToFile(string path, string rowTable, List<string> strings)
         {
             if(strings.Count==0)

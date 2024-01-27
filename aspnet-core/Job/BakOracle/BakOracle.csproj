@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="6.1.0" />
     <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.61" />
     <PackageReference Include="Sundial.Dashboard" Version="2.32.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +46,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="File\" />
+    <Folder Include="File\202401262002\" />
   </ItemGroup>
 </Project>
