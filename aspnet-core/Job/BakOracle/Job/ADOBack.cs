@@ -17,15 +17,17 @@ namespace BakOracle.Job
     {
         int taskCount = 1;
         string suffix = ".sql";
+        const int MaxLength = 4000;
         public ADOBack()
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             if (!int.TryParse(Program.Config["taskCount"], out taskCount) || taskCount == 0)
             {
                 taskCount = 1;
             }
         }
         public void Main()
-        {
+        {   
             // 指定数据库连接信息
             var ip = "10.1.1.131";
             var userId = "WISSEN_TEST_V2";
@@ -91,7 +93,7 @@ namespace BakOracle.Job
                                 OracleDataReader dataReader = command.ExecuteReader();
                                 string outputPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}_{tableName}{suffix}";
 
-                                using (StreamWriter streamWriter = new StreamWriter(outputPath))
+                                using (StreamWriter streamWriter = new StreamWriter(outputPath,true, Encoding.GetEncoding("GB2312")))
                                 {
                                     if (!File.Exists(outputPath))
                                     {
@@ -102,18 +104,16 @@ namespace BakOracle.Job
                                     streamWriter.WriteLine("--======================开始========================");
                                     streamWriter.WriteLine("set define off;");
                                     while (dataReader.Read())
-                                    {
-
-                                        IEnumerable<(string, string)>? data = Enumerable.Range(0, dataReader.FieldCount)
+                                    {                                       
+                                        var data = Enumerable.Range(0, dataReader.FieldCount)
                                             .Select(index => ($"\"{dataReader.GetName(index)}\"", dataReader.GetValue(index).ToSQLType()));
-
-                                        var dataBool = data.Any(p => p.Item2.Length >= 3000);
+                                        var dataBool = data.Any(p => p.Item2.Length >= MaxLength);
                                         if (dataBool)
                                         {
                                             streamWriter.WriteLine("DECLARE");
                                             data.Select((pair, index) =>
                                             {
-                                                if (pair.Item2.Length >= 3000)
+                                                if (pair.Item2.Length >= MaxLength)
                                                 {
                                                     streamWriter.WriteLine($"v_clob{index} clob;");
                                                 }
@@ -122,7 +122,7 @@ namespace BakOracle.Job
                                             streamWriter.WriteLine("BEGIN");
                                             data = data.Select((pair, index) =>
                                             {
-                                                if (pair.Item2.Length >= 3000)
+                                                if (pair.Item2.Length >= MaxLength)
                                                 {
                                                     streamWriter.WriteLine($"v_clob{index} :={pair.Item2};");
                                                     pair.Item2 = $"v_clob{index}";
@@ -133,14 +133,14 @@ namespace BakOracle.Job
                                             streamWriter.WriteLine("end;");
                                             streamWriter.WriteLine("/");
                                         }
+                                        // 如果数据不需要拆分，则直接写入INSERT INTO语句
                                         else
                                         {
                                             streamWriter.WriteLine($"INSERT INTO \"{tableName}\"({string.Join(",", data.Select(pair => pair.Item1))}) VALUES({string.Join(",", data.Select(pair => pair.Item2))});");
                                         }
 
                                     }
-
-                                    streamWriter.WriteLine("--======================结束========================");
+                                    streamWriter.WriteLine("--======================结束========================");                                   
                                 }
                             }
                         }));
@@ -150,13 +150,14 @@ namespace BakOracle.Job
                     Parallel.ForEach(taskList, parallelOptions, task =>
                     {
                         task.Start();
-                        task.Wait();
+                        task.Wait();                       
                     });
 
                     // 合并所有生成的文件
-                    string allSqlPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}_ALLSql";
+                    string allSqlPath = filePath + $@"\{DateTime.Now.ToString("yyyyMMdd")}__________________ALLSql{suffix}";
                     List<string> inputFiles = allTableNames.Select(prefix => $"{filePath}\\{DateTime.Now.ToString("yyyyMMdd")}_{prefix}{suffix}").ToList();
                     inputFiles.CombineFile(allSqlPath);
+                    Console.WriteLine("--======================结束========================");
                 }
                 catch (Exception e)
                 {
