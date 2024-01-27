@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using Oracle.ManagedDataAccess.Client;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,16 +20,19 @@ namespace BakOracle.Job
         int taskCount = 1;
         string suffix = ".sql";
         const int MaxLength = 4000;
-        public ADOBack()
+        private readonly ILogger<Backups> _logger;
+        public ADOBack(ILogger<Backups> logger)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             if (!int.TryParse(Program.Config["taskCount"], out taskCount) || taskCount == 0)
             {
                 taskCount = 1;
             }
+            _logger = logger;
         }
         public void Main()
-        {   
+        {
+            return;
             // 指定数据库连接信息
             var ip = "10.1.1.131";
             var userId = "WISSEN_TEST_V2";
@@ -35,6 +40,11 @@ namespace BakOracle.Job
 
             // 构建文件路径
             string filePath = $@"File\{DateTime.Now.ToString("yyyyMMddHHmm")}";
+#if DEBUG
+
+#else
+ filePath = AppDomain.CurrentDomain.BaseDirectory + filePath;
+#endif
 
             // 不必要的表过滤列表
             List<string> removeTables = new List<string>() { "Al", "__EFMigrationsHistory" };
@@ -140,7 +150,8 @@ namespace BakOracle.Job
                                         }
 
                                     }
-                                    streamWriter.WriteLine("--======================结束========================");                                   
+                                    streamWriter.WriteLine("--======================结束========================");
+                                    _logger.LogInformation($"日志打印日期:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} ,{streamWriter}表已备份完成, 地址为:{outputPath}");
                                 }
                             }
                         }));
@@ -161,7 +172,7 @@ namespace BakOracle.Job
                 }
                 catch (Exception e)
                 {
-                    throw;
+                    _logger.LogError($"日志打印日期:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},数据库自动备份失败=>>>{DateTime.Now},错误消息=>>>" + e.Message);
                 }
             }
         }
