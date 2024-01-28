@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using Oracle.ManagedDataAccess.Client;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,22 +15,21 @@ namespace BakOracle.Job
 {
     public class ADOBack
     {
+        private readonly ILogger<Backups> _logger;
         int taskCount = 1;
         string suffix = ".sql";
-        const int MaxLength = 4000;
-        private readonly ILogger<Backups> _logger;
+        const int MaxLength = 3000;
         public ADOBack(ILogger<Backups> logger)
         {
+            _logger = logger;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             if (!int.TryParse(Program.Config["taskCount"], out taskCount) || taskCount == 0)
             {
                 taskCount = 1;
             }
-            _logger = logger;
         }
         public void Main()
-        {
-            return;
+        {   
             // 指定数据库连接信息
             var ip = "10.1.1.131";
             var userId = "WISSEN_TEST_V2";
@@ -117,13 +114,13 @@ namespace BakOracle.Job
                                     {                                       
                                         var data = Enumerable.Range(0, dataReader.FieldCount)
                                             .Select(index => ($"\"{dataReader.GetName(index)}\"", dataReader.GetValue(index).ToSQLType()));
-                                        var dataBool = data.Any(p => p.Item2.Length >= MaxLength);
+                                        var dataBool = data.Any(p =>Encoding.Default.GetBytes(p.Item2.ToCharArray()).Length >= MaxLength);
                                         if (dataBool)
                                         {
                                             streamWriter.WriteLine("DECLARE");
                                             data.Select((pair, index) =>
                                             {
-                                                if (pair.Item2.Length >= MaxLength)
+                                                if (Encoding.Default.GetBytes(pair.Item2.ToCharArray()).Length >= MaxLength)
                                                 {
                                                     streamWriter.WriteLine($"v_clob{index} clob;");
                                                 }
@@ -132,7 +129,7 @@ namespace BakOracle.Job
                                             streamWriter.WriteLine("BEGIN");
                                             data = data.Select((pair, index) =>
                                             {
-                                                if (pair.Item2.Length >= MaxLength)
+                                                if (Encoding.Default.GetBytes(pair.Item2.ToCharArray()).Length >= MaxLength)
                                                 {
                                                     streamWriter.WriteLine($"v_clob{index} :={pair.Item2};");
                                                     pair.Item2 = $"v_clob{index}";
