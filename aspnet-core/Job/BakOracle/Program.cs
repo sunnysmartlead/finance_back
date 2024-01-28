@@ -17,6 +17,7 @@ namespace BakOracle
                 .ConfigureServices(services =>
                 {
                     services.AddTransient<ADOBack>();
+                    services.AddTransient<ADOBackTwo>();
                     services.AddTransient<Backups>();
                     services.AddTransient<DapperBacktTow>();
                     services.AddTransient<DapperBack>();
