@@ -1337,7 +1337,7 @@ namespace Finance.PriceEval
             //MOQ分摊成本
             var moq = data.MoqShareCountCount;
 
-            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
+            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other + moq;
 
             var list = new List<ProportionOfProductCostListDto>
             {

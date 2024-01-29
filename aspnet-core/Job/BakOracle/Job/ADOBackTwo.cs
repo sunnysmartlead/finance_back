@@ -13,14 +13,14 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace BakOracle.Job
 {
-    public class ADOBack
+    public class ADOBackTwo
     {
         private readonly ILogger<Backups> _logger;
         int taskCount = 1;
         string suffix = ".sql";
         const int MaxLength = 3000;
         private static Encoding _encoding = System.Text.Encoding.GetEncoding("GB2312");
-        public ADOBack(ILogger<Backups> logger)
+        public ADOBackTwo(ILogger<Backups> logger)
         {
             _logger = logger;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -89,7 +89,7 @@ namespace BakOracle.Job
                     {
                         Directory.CreateDirectory(filePath);
                     }
-                    //allTableNames = new List<string>() { "AuditFlowIdPricingForm" };
+                    //allTableNames = new List<string>() { "Pe_PanelJson" };
                     // 遍历表名并创建任务
                     allTableNames.ForEach(tableName =>
                     {
@@ -118,7 +118,7 @@ namespace BakOracle.Job
                                         var dataBool = data.Any(p => _encoding.GetBytes(p.Item2.ToCharArray()).Length >= MaxLength);                                       
                                         if (dataBool)
                                         {
-                                            var Id = data.FirstOrDefault(p => p.Item1.Equals("Id")).Item2;
+                                            var Id = data.FirstOrDefault(p => p.Item1.Equals("\"Id\"")).Item2;
                                             Dictionary<string, List<string>> keyValuePairs = new Dictionary<string, List<string>>();
                                             streamWriter.WriteLine("DECLARE");
                                             data.Select((pair, index) =>
@@ -126,7 +126,7 @@ namespace BakOracle.Job
                                                 if (_encoding.GetBytes(pair.Item2.ToCharArray()).Length >= MaxLength)
                                                 {
                                                     streamWriter.WriteLine($"v_clob{index} clob;");
-                                                    keyValuePairs.Add("v_clob{index}", SplitByByteLength(pair.Item2, MaxLength));
+                                                    keyValuePairs.Add($"{pair.Item1}", SplitByByteLength(pair.Item2, MaxLength));
                                                 }
                                                 return pair;
                                             }).ToList();
@@ -135,15 +135,32 @@ namespace BakOracle.Job
                                             {
                                                 if (_encoding.GetBytes(pair.Item2.ToCharArray()).Length >= MaxLength)
                                                 {
-                                                    streamWriter.WriteLine($"v_clob{index} :={pair.Item2};");
+                                                    streamWriter.WriteLine($"v_clob{index} :='随便什么';");
                                                     pair.Item2 = $"v_clob{index}";
                                                 }
                                                 return pair;
                                             }).ToList();
 
                                             streamWriter.WriteLine($"INSERT INTO \"{tableName}\"({string.Join(",", data.Select(pair => pair.Item1))}) VALUES({string.Join(",", data.Select(pair => pair.Item2))});");
-                                            
-                                            
+                                            //清空清空DataJson字段
+                                            foreach (var item in keyValuePairs)
+                                            {
+                                                streamWriter.WriteLine($"UPDATE \"{tableName}\"  SET {item.Key} = EMPTY_CLOB() WHERE \"Id\" = {Id};");                                            
+                                                foreach (var valuies in item.Value)
+                                                {
+                                                    String stringBuilder = valuies;
+                                                    if (stringBuilder.Length > 0 && stringBuilder[0] == '\'')
+                                                    {
+                                                        stringBuilder=stringBuilder.TrimStart('\'');
+                                                    }
+
+                                                    if (stringBuilder.Length > 0 && stringBuilder[stringBuilder.Length - 1] == '\'')
+                                                    {
+                                                        stringBuilder=stringBuilder.TrimEnd('\'');
+                                                    }
+                                                    streamWriter.WriteLine($"UPDATE \"{tableName}\"  SET {item.Key} ={item.Key}||\'{stringBuilder}'  WHERE \"Id\" = {Id};");
+                                                }
+                                            }                                           
                                             streamWriter.WriteLine("end;");
                                             streamWriter.WriteLine("/");
                                         }
@@ -197,7 +214,7 @@ namespace BakOracle.Job
             // 用于存储截取后的字符串列表
             List<string> result = new List<string>();
             // 将输入字符串转换为字节数组
-            byte[] bytes = _encoding.GetBytes(input);
+            byte[] bytes = Encoding.Default.GetBytes(input);
             int index = 0;
             while (index < bytes.Length)
             {
@@ -213,7 +230,7 @@ namespace BakOracle.Job
                     {
                         // 如果是中文字符，将3个字节添加到子串中
                         byteCount += 3;
-                        builder.Append(_encoding.GetString(bytes, index + length, 3));
+                        builder.Append(Encoding.Default.GetString(bytes, index + length, 3));
                         length += 3;
                     }
                     else
