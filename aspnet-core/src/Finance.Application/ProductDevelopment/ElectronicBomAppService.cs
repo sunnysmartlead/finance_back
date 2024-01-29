@@ -204,7 +204,9 @@ namespace Finance.ProductDevelopment
                 "其他零件（金属弹片）",
                 "BTB or ZIF连接器",
                 "PIN针连接器/座",
-                "LVDS连接器", "线路板（尺寸、叠构等）" };
+                "LVDS连接器", "线路板（尺寸、叠构等）" };           
+            int MaterialCategoryCount = 0;//一共几个物料大类
+            List<SERow> sERows = new List<SERow>();
             #endregion
             ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
             FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
@@ -229,14 +231,50 @@ namespace Finance.ProductDevelopment
                 int lastRowNum = sheet.LastRowNum;
                 try
                 {
+                    //开关
+                    bool Switch = false;
+                    //循环
                     for (int i = 2; i < lastRowNum + 1; i++)
                     {
-                        string wlzlrow = sheet.GetRow(i).GetCell(1).ToString();                        
-                        if (!wlzl.Any(p => p.Equals(wlzlrow)))
-                        {                          
-                            throw new FriendlyException($"{i + 1}行的物料种类与模版不匹配,您填的是{wlzlrow},请修改!");
+                        //排除 循环刚开始的时候  和开关是开着的时候
+                        if (MaterialCategoryCount != 0 && Switch)
+                        {
+                            sERows.Add(new() { WhichMaterialCategory = MaterialCategoryCount, StartLine = i });
+                            Switch = false;
+                        }
+                        //取物料大类的值
+                        var porp = sheet.GetRow(i).GetCell(0);    
+                        //如果无聊大类的值不为空和""咋表示进入了下一个物料大类
+                        if (porp != null&&!string.IsNullOrEmpty(porp.ToString()))
+                        {              
+                            //开启开关
+                            Switch = true;
+                            //物料大类相加
+                            MaterialCategoryCount++;
                         }
                     }
+                    //给物料大类的结束行赋值
+                    sERows = sERows.OrderBy(p => p.WhichMaterialCategory).Select((item, index) =>
+                    {
+                        if (index + 1 <= sERows.Count - 1) item.EndLine = sERows[index + 1].StartLine - 1;
+                        if (index == sERows.Count - 1) item.EndLine = lastRowNum + 1;
+                        return item;
+                    }).ToList();
+                    //循环每一个物料大类
+                    foreach (var item in sERows)
+                    {
+                        //进行深拷贝
+                        List<string> strings = wlzl.DeepClone();
+                        //循环开始行和结束行
+                        for (int i = item.StartLine-1; i <=item.EndLine-1; i++)
+                        {
+                            string prop = sheet.GetRow(i).GetCell(1).ToString();
+                            //除去模版中的数据
+                            strings.RemoveAll(p=>p.Equals(prop));
+                        }
+                        //如果到最后模版数据里没有被去除干净,说明用户上传的模版有欠缺
+                        if(strings.Count!=0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,缺少\"{strings.ListToStr()}\",请修改!");
+                    }                 
                 }
                 catch (FriendlyException ex)
                 {
@@ -244,7 +282,7 @@ namespace Finance.ProductDevelopment
                 }
                 catch (System.Exception)
                 {
-                    throw new FriendlyException("模版错误请检查");
+                    throw new FriendlyException("模版错误请检查,物料种类不能为空");
                 }
                 //从第三行开始获取
                 string daLei = "";

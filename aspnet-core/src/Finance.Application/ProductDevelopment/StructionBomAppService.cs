@@ -163,6 +163,48 @@ namespace Finance.ProductDevelopment
         /// <exception cref="UserFriendlyException"></exception>
         public async Task<ProductDevelopmentInputDto> LoadExcel(IFormFile file)
         {
+            #region 增加物料种类的校验
+            Dictionary<string, List<string>> keyValuePairs = new Dictionary<string, List<string>>
+            {
+                { "光学类", new List<string>() { "镜头", "COVER GLASS", "防红曝膜", "滤光片", "滤色片组件", "保护玻璃", "其它" } },
+                { "注塑、压铸、冷锻、手板类", new List<string>() { "上壳", "下壳", "支架", "镜座", "护罩外", "护罩内", "固定件", "盖板", "其它" } },
+                { "螺母类", new List<string>() { "内螺母", "外螺母", "标准螺母", "其它" } },
+                { "输出类（连接器）", new List<string>() { "自制FAKRA", "外购FAKRA", "带壳连接器组件", "线束", "其它" } },
+                { "硅橡胶类", new List<string>() { "镜头与上壳密封", "壳体密封", "尾部密封", "防尘、档光环", "其它" } },
+                { "螺钉螺杆类", new List<string>() { "线路板螺钉", "外壳螺钉", "尾线螺钉", "支架螺钉", "螺杆", "其它" } },
+                { "垫片类", new List<string>() { "波形垫圈", "平垫、弹垫", "开口卡簧", "其它"} },
+                { "钣金类", new List<string>() { "屏蔽罩", "弹片", "支架", "外壳", "其它"} },
+                { "泡棉类", new List<string>() { "发泡硅胶", "挡光泡棉", "隔热棉", "其它"} },
+                { "产品标签类", new List<string>() { "二维码标签", "外壳标签", "其它"} },
+                { "导热类", new List<string>() { "导热胶", "导热片", "石墨稀", "加热膜", "其它" } },
+                { "电子电器类", new List<string>() { "电机组件", "模块", "金线","其它" } },
+                { "半成品", new List<string>() { "组件", "其它" } },
+                { "AA胶", new List<string>() { "OB786" } },
+                { "密封胶", new List<string>() { "8008" } },
+                { "螺纹胶", new List<string>() { "AS-533504" } },
+                { "DA胶", new List<string>() { "AS-533505" } },
+                { "HA胶", new List<string>() { "AS-533506" } },
+                { "粘IR片胶", new List<string>() { "AS-533507" } },
+                { "underfill胶", new List<string>() { "AS-533508" } },
+                { "焊锡丝", new List<string>() { "AS-533509" } },
+                { "其它", new List<string>() { "AS-533510" } },
+                { "SMT外协", new List<string>() { "AS-533510", "AS-533510" } },
+                { "纸箱、纸板类", new List<string>() { "内箱", "外箱", "内箱衬板", "外箱衬板", "隔板", "其它" } },
+                { "塑料箱类", new List<string>() { "周转箱", "箱盖" } },
+                { "托盘类", new List<string>() { "托盘", "托盘盖" } },
+                { "护角类", new List<string>() { "护角" } },
+                { "泡棉类", new List<string>() { "EPE、EVA泡棉", "其它" } },
+                { "包装标签类", new List<string>() { "盒号标签", "合格证标签", "内箱标签", "外箱标签", "托盘标签", "周转箱标签", "其它标签" } },
+                { "吸塑类", new List<string>() { "面壳", "底壳", "其它" } },
+                { "包装袋类", new List<string>() { "真空袋", "PE袋", "气泡袋", "其它" } },
+                { "盒、木箱类", new List<string>() { "彩盒", "牛皮纸盒", "木箱", "其它" } },
+                { "包装辅料类", new List<string>() { "缠绕膜", "绑带", "透明胶带", "纸胶带", "保护盖", "保护膜", "其它" } },
+                { "其他", new List<string>() { "其他", "其他" } },
+            };
+            int MaterialCategoryCount = 0;//一共几个物料大类
+            List<SERow> sERows = new List<SERow>();
+            #endregion
+
             ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
 
             FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
@@ -188,6 +230,39 @@ namespace Finance.ProductDevelopment
             {
                 //最后一列的标号
                 int lastRowNum = sheet.LastRowNum;
+
+                #region 增加物料种类的校验
+                //开关
+                bool Switch = false;
+                //循环
+                for (int i = 2; i < lastRowNum + 1; i++)
+                {
+                    //排除 循环刚开始的时候  和开关是开着的时候
+                    if (MaterialCategoryCount != 0 && Switch)
+                    {
+                        sERows.Add(new() { WhichMaterialCategory = MaterialCategoryCount, StartLine = i });
+                        Switch = false;
+                    }
+                    //取物料大类的值
+                    var porp = sheet.GetRow(i).GetCell(1);
+                    //如果无聊大类的值不为空和""咋表示进入了下一个物料大类
+                    if (porp != null && !string.IsNullOrEmpty(porp.ToString()))
+                    {
+                        //开启开关
+                        Switch = true;
+                        //物料大类相加
+                        MaterialCategoryCount++;
+                    }
+                }
+                //给物料大类的结束行赋值
+                sERows = sERows.OrderBy(p => p.WhichMaterialCategory).Select((item, index) =>
+                {
+                    if (index + 1 <= sERows.Count - 1) item.EndLine = sERows[index + 1].StartLine - 1;
+                    if (index == sERows.Count - 1) item.EndLine = lastRowNum + 1;
+                    return item;
+                }).ToList();
+                 
+                #endregion
                 //从第三行开始获取
                 string superType = "";
 
