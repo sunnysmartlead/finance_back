@@ -122,7 +122,7 @@ namespace Finance.ProductDevelopment
             }
             return list;
         }
-       
+
         /// <summary>
         /// 电子bak录入复制表快速核报价
         /// </summary>
@@ -184,16 +184,31 @@ namespace Finance.ProductDevelopment
         /// <returns></returns>
         public async Task<ProductDevelopmentInputDto> UploadExcel(IFormFile file)
         {
-
+            #region 增加物料种类的校验
+            List<string> wlzl = new List<string>() {
+                "Sensor芯片",
+                "串行芯片",
+                "芯片IC——电源芯片",
+                "芯片IC——EEPROM/Flsah",
+                "芯片IC——ISP",
+                "芯片IC——门器件",
+                "芯片IC——复位IC或延时IC",
+                "芯片IC——其他传感器",
+                "芯片IC——LED Driver IC",
+                "其他IC——MCU/转换芯片/麦克风等",
+                "LED/VCSEL",
+                "二极管/三极管/MOS",
+                "晶振", "电阻",
+                "电容", "电感",
+                "磁珠",
+                "其他零件（金属弹片）",
+                "BTB or ZIF连接器",
+                "PIN针连接器/座",
+                "LVDS连接器", "线路板（尺寸、叠构等）" };
+            #endregion
             ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
-
             FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
-  
-
             result.ElcFileId = fileUploadOutputDto.FileId;
-
-
-
             //打开上传文件的输入流
             Stream stream = file.OpenReadStream();
 
@@ -205,14 +220,32 @@ namespace Finance.ProductDevelopment
             var sheet = workbook.GetSheetAt(0);
 
             List<ElectronicBomDto> list = new List<ElectronicBomDto>();
-            
+
 
             //判断是否获取到 sheet
             if (sheet != null)
             {
                 //最后一行的标号
                 int lastRowNum = sheet.LastRowNum;
-
+                try
+                {
+                    for (int i = 2; i < lastRowNum + 1; i++)
+                    {
+                        string wlzlrow = sheet.GetRow(i).GetCell(1).ToString();                        
+                        if (!wlzl.Any(p => p.Equals(wlzlrow)))
+                        {                          
+                            throw new FriendlyException($"{i + 1}行的物料种类与模版不匹配,您填的是{wlzlrow},请修改!");
+                        }
+                    }
+                }
+                catch (FriendlyException ex)
+                {
+                    throw new FriendlyException(ex.Message);
+                }
+                catch (System.Exception)
+                {
+                    throw new FriendlyException("模版错误请检查");
+                }
                 //从第三行开始获取
                 string daLei = "";
                 for (int i = 2; i < lastRowNum + 1; i++)
@@ -242,9 +275,9 @@ namespace Finance.ProductDevelopment
                                 {
                                     dto = DataToList(dto, row.GetCell(j), j);
                                     //在读取EXCLE的时候，是否涉及这一列的如果填了“是”，这个装配数量希望做个校验，不能再填0了
-                                    if (j == 5&&dto.IsInvolveItem.Equals("是")) 
+                                    if (j == 5 && dto.IsInvolveItem.Equals("是"))
                                     {
-                                        if (dto.AssemblyQuantity<=0)
+                                        if (dto.AssemblyQuantity <= 0)
                                         {
                                             throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“是”，装配数量不能再填0,请检查！");
                                         }
@@ -341,54 +374,54 @@ namespace Finance.ProductDevelopment
         {
 
 
-                List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
-                if (productIsSubmits.Count is not 0)
+            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+            if (productIsSubmits.Count is not 0)
+            {
+                throw new FriendlyException(dto.SolutionId + ":该零件方案id电子BOM已经提交过了");
+            }
+            else
+            {
+                //查询总方案
+                List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
+
+                List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
+                long AuditFlowId = dto.AuditFlowId;
+                long SolutionId = dto.SolutionId;
+                long ProductId = dto.ProductId;
+
+                List<string> strList = new List<string>();
+
+                electronicBomDtos.ForEach(bomInfo =>
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案id电子BOM已经提交过了");
+                    bomInfo.AuditFlowId = AuditFlowId;
+                    bomInfo.SolutionId = SolutionId;
+                    bomInfo.ProductId = ProductId;
+
+                    bomInfo.FileId = dto.ElectronicBomDtos.FirstOrDefault().FileId;
+                    string str = bomInfo.CategoryName + bomInfo.TypeName + bomInfo.IsInvolveItem + bomInfo.SapItemName + bomInfo.SapItemNum;
+
+                    strList.Add(str);
+                });
+
+                bool ifrRep = strList.GroupBy(i => i).Where(g => g.Count() > 1).Count() >= 1;
+                if (ifrRep)
+                {
+                    throw new FriendlyException("EXCLE中前五列相同，系统判定重复，请更新EXCLE!");
+                }
+
+
+                //要保存的bom表list
+                var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
+                if (listBak.Count > 0)
+                {
+                    await _electronicBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                    _electronicBomInfoBakRepository.GetDbContext().Set<ElectronicBomInfoBak>().AddRange(listBak);
+                    _electronicBomInfoBakRepository.GetDbContext().SaveChanges();
                 }
                 else
                 {
-                    //查询总方案
-                    List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
-
-                    List<ElectronicBomDto> electronicBomDtos = dto.ElectronicBomDtos;
-                    long AuditFlowId = dto.AuditFlowId;
-                    long SolutionId = dto.SolutionId;
-                    long ProductId = dto.ProductId;
-
-                    List<string> strList = new List<string>();
-
-                    electronicBomDtos.ForEach(bomInfo =>
-                    {
-                        bomInfo.AuditFlowId = AuditFlowId;
-                        bomInfo.SolutionId = SolutionId;
-                        bomInfo.ProductId = ProductId;
-
-                        bomInfo.FileId = dto.ElectronicBomDtos.FirstOrDefault().FileId;
-                        string str = bomInfo.CategoryName + bomInfo.TypeName + bomInfo.IsInvolveItem + bomInfo.SapItemName + bomInfo.SapItemNum;
-
-                        strList.Add(str);
-                    });
-
-                    bool ifrRep = strList.GroupBy(i => i).Where(g => g.Count() > 1).Count() >=1 ; 
-                    if (ifrRep)
-                    {
-                        throw new FriendlyException( "EXCLE中前五列相同，系统判定重复，请更新EXCLE!");
-                    }
-
-
-                    //要保存的bom表list
-                    var listBak = _objectMapper.Map<List<ElectronicBomInfoBak>>(electronicBomDtos);
-                    if (listBak.Count > 0)
-                    {
-                        await _electronicBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                        _electronicBomInfoBakRepository.GetDbContext().Set<ElectronicBomInfoBak>().AddRange(listBak);
-                        _electronicBomInfoBakRepository.GetDbContext().SaveChanges();
-                    }
-                    else
-                    {
-                        throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
-                    }
+                    throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                }
 
 
                 foreach (var item in electronicBomDtos)
@@ -435,32 +468,32 @@ namespace Finance.ProductDevelopment
 
                 }
 
-                    #region 录入完成之后
+                #region 录入完成之后
 
-                    //为提交操作才执行插库、流转工作流操作
-                    if (dto.Opinion == FinanceConsts.Done)
+                //为提交操作才执行插库、流转工作流操作
+                if (dto.Opinion == FinanceConsts.Done)
+                {
+                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
+
+                    List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
+                    //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
+                    if (solutionId.Count == allProductIsSubmits.Count + 1)
                     {
-                        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_ElectronicBomImport });
-
-                        List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImport));
-                        //当前已保存的bom表中零件数目等于 核价需求导入时的零件数目
-                        if (solutionId.Count == allProductIsSubmits.Count + 1)
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
                         {
-                            //嵌入工作流
-                            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                            {
-                                NodeInstanceId = dto.NodeInstanceId,
-                                FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
-                                Comment = dto.Comment,
-                            });
-                        }
+                            NodeInstanceId = dto.NodeInstanceId,
+                            FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
+                            Comment = dto.Comment,
+                        });
                     }
-
-                    #endregion
-
-
                 }
-           
+
+                #endregion
+
+
+            }
+
         }
 
 
@@ -472,25 +505,25 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveBoard(ProductDevelopmentInputDto dto)
         {
-       
-                List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
-                if (productIsSubmits.Count is not 0)
-                {
-                    //return;
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案拼版数据已经提交过了");
-                }
-                else
-                {
-                    List<BoardDto> boardDtos = dto.BoardDtos;
+
+            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_ElectronicBomImportPb));
+            if (productIsSubmits.Count is not 0)
+            {
+                //return;
+                throw new FriendlyException(dto.SolutionId + ":该零件方案拼版数据已经提交过了");
+            }
+            else
+            {
+                List<BoardDto> boardDtos = dto.BoardDtos;
                 if (boardDtos.Count == 0)
                 {
                     throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
                 }
-                    boardDtos.ForEach(bomInfo =>
-                    {
-                        bomInfo.AuditFlowId = dto.AuditFlowId;
-                        bomInfo.SolutionId = dto.SolutionId;
-                    });
+                boardDtos.ForEach(bomInfo =>
+                {
+                    bomInfo.AuditFlowId = dto.AuditFlowId;
+                    bomInfo.SolutionId = dto.SolutionId;
+                });
 
                 foreach (var item in boardDtos)
                 {
@@ -498,7 +531,7 @@ namespace Finance.ProductDevelopment
                     var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
                     if (boardInfoByProductIds.Count > 0)
                     {
-                        await _boardInfoRepository.HardDeleteAsync(p=>p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId));
+                        await _boardInfoRepository.HardDeleteAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId));
                         boardInfo = new()
                         {
                             AuditFlowId = item.AuditFlowId,
@@ -529,7 +562,7 @@ namespace Finance.ProductDevelopment
                         };
                         await _boardInfoRepository.InsertAsync(boardInfo);
                     }
-            
+
                 }
 
                 //    var boardInfoByProductIds = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
@@ -564,8 +597,8 @@ namespace Finance.ProductDevelopment
 
                 //    }
                 //    #endregion
-                }
-           
+            }
+
 
         }
 
@@ -582,7 +615,7 @@ namespace Finance.ProductDevelopment
             //    await _productIsSubmit.HardDeleteAsync(item);
             //}
 
-            await _productIsSubmit.HardDeleteAsync(p=>(p.AuditFlowId == Id && p.EnumSole== AuditFlowConsts.AF_ElectronicBomImport)|| (p.AuditFlowId == Id && p.EnumSole == AuditFlowConsts.AF_ElectronicBomImportPb));
+            await _productIsSubmit.HardDeleteAsync(p => (p.AuditFlowId == Id && p.EnumSole == AuditFlowConsts.AF_ElectronicBomImport) || (p.AuditFlowId == Id && p.EnumSole == AuditFlowConsts.AF_ElectronicBomImportPb));
         }
 
         /// <summary>
@@ -643,11 +676,11 @@ namespace Finance.ProductDevelopment
                         {
                             foreach (ElectronicBomInfo bominfo in exsitBomInfos)
                             {
-                            
+
                                 //如果前面7项相同，但后面两项有不同，则是一个修改
                                 if (bominfo.AssemblyQuantity != item.AssemblyQuantity || bominfo.EncapsulationSize != item.EncapsulationSize)
                                 {
-                                   
+
                                     bominfo.AssemblyQuantity = item.AssemblyQuantity;
                                     bominfo.EncapsulationSize = item.EncapsulationSize;
                                     await _electronicBomInfoRepository.UpdateAsync(bominfo);
@@ -767,30 +800,30 @@ namespace Finance.ProductDevelopment
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-         [AbpAuthorize]
+        [AbpAuthorize]
         public async Task<List<ElectronicBomInfo>> FindElectronicBomByProcess(ProductDevelopmentInputDto dto)
         {
-           
-                long AuditFlowId = dto.AuditFlowId;
-                long SolutionId = dto.SolutionId;
-                var dataBak = _electronicBomInfoBakRepository.GetAll()
-                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                List<ElectronicBomInfoBak> resultBak = await dataBak.ToListAsync();
-                List<ElectronicBomInfo> result = _objectMapper.Map<List<ElectronicBomInfo>>(resultBak);
-                if (result.Count == 0)
-                {
-                    var data = _electronicBomInfoRepository.GetAll()
-                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
+            long AuditFlowId = dto.AuditFlowId;
+            long SolutionId = dto.SolutionId;
+            var dataBak = _electronicBomInfoBakRepository.GetAll()
+                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                    result = await data.ToListAsync();
-                }
+            List<ElectronicBomInfoBak> resultBak = await dataBak.ToListAsync();
+            List<ElectronicBomInfo> result = _objectMapper.Map<List<ElectronicBomInfo>>(resultBak);
+            if (result.Count == 0)
+            {
+                var data = _electronicBomInfoRepository.GetAll()
+                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                return result;
-            
-            
+                result = await data.ToListAsync();
+            }
+
+            return result;
+
+
         }
 
         /// <summary>
@@ -809,11 +842,11 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<List<BoardDto>> GetBoardInfomation(long auditFlowId, long SolutionId)
         {
-         
-                var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
-                List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
-                return boardDto;
-           
+
+            var boardtInformation = await _boardInfoRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId && p.SolutionId == SolutionId);
+            List<BoardDto> boardDto = ObjectMapper.Map<List<BoardDto>>(boardtInformation);
+            return boardDto;
+
         }
 
     }
