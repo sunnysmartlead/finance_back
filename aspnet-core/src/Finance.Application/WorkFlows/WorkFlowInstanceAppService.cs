@@ -23,6 +23,7 @@ using Microsoft.EntityFrameworkCore;
 using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using NPOI.Util;
+using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,8 +73,9 @@ namespace Finance.WorkFlows
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly IRepository<Department, long> _departmentRepository;
         private readonly IRepository<NodeTime, long> _nodeTimeRepository;
+        private readonly RuleAppService _ruleAppService;
 
-        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager, IRepository<Department, long> departmentRepository, IRepository<NodeTime, long> nodeTimeRepository)
+        public WorkflowInstanceAppService(IRepository<Workflow, string> workflowRepository, IRepository<Node, string> nodeRepository, IRepository<Line, string> lineRepository, IRepository<WorkflowInstance, long> workflowInstanceRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IRepository<LineInstance, long> lineInstanceRepository, IRepository<InstanceHistory, long> instanceHistoryRepository, IRepository<FinanceDictionary, string> financeDictionaryRepository, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetailRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role> roleRepository, UserManager userManager, RoleManager roleManager, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<TaskReset, long> taskResetRepository, IRepository<Solution, long> solutionRepository, IRepository<PricingTeam, long> pricingTeamRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, IRepository<Fu_Bom, long> fu_BomRepository, IRepository<Gradient, long> gradientRepository, IRepository<AuditFlowIdPricingForm, long> auditFlowIdPricingForm, IBackgroundJobManager backgroundJobManager, IRepository<Department, long> departmentRepository, IRepository<NodeTime, long> nodeTimeRepository, RuleAppService ruleAppService)
         {
             _workflowRepository = workflowRepository;
             _nodeRepository = nodeRepository;
@@ -99,6 +101,7 @@ namespace Finance.WorkFlows
             _backgroundJobManager = backgroundJobManager;
             _departmentRepository = departmentRepository;
             _nodeTimeRepository = nodeTimeRepository;
+            _ruleAppService = ruleAppService;
         }
 
         /// <summary>
@@ -875,65 +878,79 @@ namespace Finance.WorkFlows
                 var userIds = await _userRoleRepository.GetAll().Where(p => roleids.Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
                 item.TaskUserIds = userIds.Select(p => p.To<int>()).ToList();
 
+
+
                 #region 用户权限
 
-                //获取当前流程方案列表
-                var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == workflowInstanceId);
+                //    //获取当前流程方案列表
+                //    var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == workflowInstanceId);
 
-                //获取核价团队
-                var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+                //    //获取核价团队
+                //    var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
 
-                //获取项目经理
-                var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+                //    //获取项目经理
+                //    var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
 
-                //获取核价需求录入保存项
-                var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
+                //    //获取核价需求录入保存项
+                //    var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == workflowInstanceId);
 
-                //项目经理控制的页面
-                var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
+                //    //项目经理控制的页面
+                //    var pmPage = new List<string> { FinanceConsts.PriceDemandReview, FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine, FinanceConsts.PriceEvaluationBoard };
 
-                //拥有能看归档的角色的用户
-                var role = await _roleRepository.GetAllListAsync(p =>
-                                p.Name == StaticRoleNames.Host.FinanceTableAdmin
-                                || p.Name == StaticRoleNames.Host.EvalTableAdmin
-                        || p.Name == StaticRoleNames.Host.Bjdgdgly);
-                var endUserIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
+                //    //拥有能看归档的角色的用户
+                //    var role = await _roleRepository.GetAllListAsync(p =>
+                //                    p.Name == StaticRoleNames.Host.FinanceTableAdmin
+                //                    || p.Name == StaticRoleNames.Host.EvalTableAdmin
+                //            || p.Name == StaticRoleNames.Host.Bjdgdgly);
+                //    var endUserIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
 
                 var deleteUserIds = new List<int>();
 
                 foreach (var userId in item.TaskUserIds)
                 {
-                    if (
-                        (!solutionList.Any(p => p.ElecEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
-                        || (!solutionList.Any(p => p.StructEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.StructureBOM)
-            || (pricingTeam == null || pricingTeam.EngineerId != userId && item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
-            || (pricingTeam == null || pricingTeam.QualityBenchId != userId && item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
-            || (pricingTeam == null || pricingTeam.EMCId != userId && item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
-            || (pricingTeam == null || pricingTeam.ProductCostInputId != userId && item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
-            || (pricingTeam == null || pricingTeam.ProductManageTimeId != userId && item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
-            || (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
-            || (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
-            || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
-
-            || ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
-            || (projectPm != null && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
-
-            || (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
-
-            || (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
-
-            || ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
-            || item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
-            )))
-
-            || (projectPm == null || (projectPm.CreatorUserId != userId && projectPm.ProjectManager != userId)
-            && (!endUserIds.Contains(userId) && item.ProcessIdentifier == "ArchiveEnd")
-                        )
-                        )
+                    var dto = await _ruleAppService.FilteTask(workflowInstanceId, new List<Audit.Dto.AuditFlowRightDetailDto> { new Audit.Dto.AuditFlowRightDetailDto
+                    {
+                        ProcessIdentifier = item.ProcessIdentifier,
+                        ProcessName = item.NodeName
+                    }},userId);
+                    if (dto.IsNullOrEmpty()) 
                     {
                         deleteUserIds.Add(userId);
                     }
                 }
+                //    foreach (var userId in item.TaskUserIds)
+                //    {
+                //        if (
+                //            (!solutionList.Any(p => p.ElecEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.ElectronicsBOM)
+                //            || (!solutionList.Any(p => p.StructEngineerId == userId) && item.ProcessIdentifier == FinanceConsts.StructureBOM)
+                //|| (pricingTeam == null || pricingTeam.EngineerId != userId && item.ProcessIdentifier == FinanceConsts.FormulaOperationAddition)
+                //|| (pricingTeam == null || pricingTeam.QualityBenchId != userId && item.ProcessIdentifier == FinanceConsts.NRE_ReliabilityExperimentFeeInput)
+                //|| (pricingTeam == null || pricingTeam.EMCId != userId && item.ProcessIdentifier == FinanceConsts.NRE_EMCExperimentalFeeInput)
+                //|| (pricingTeam == null || pricingTeam.ProductCostInputId != userId && item.ProcessIdentifier == FinanceConsts.COBManufacturingCostEntry)
+                //|| (pricingTeam == null || pricingTeam.ProductManageTimeId != userId && item.ProcessIdentifier == FinanceConsts.LogisticsCostEntry)
+                //|| (pricingTeam == null || pricingTeam.AuditId != userId && item.ProcessIdentifier == FinanceConsts.ProjectChiefAudit)
+                //|| (projectPm == null || projectPm.ProjectManager != userId && ((pmPage.Contains(item.ProcessIdentifier)) && item.NodeName != FinanceConsts.Bomcbsh))
+                //|| (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.QuoteAnalysis)
+
+                //|| ((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != userId && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+                //|| (projectPm != null && projectPm.CreatorUserId != userId) && item.ProcessIdentifier == FinanceConsts.PricingDemandInput)
+
+                //|| (projectPm == null || projectPm.CreatorUserId != userId && item.ProcessIdentifier == "ExternalQuotation")
+
+                //|| (projectPm == null || projectPm.CreatorUserId != userId && (item.ProcessIdentifier == "QuotationApprovalForm" || item.ProcessIdentifier == "QuoteFeedback"))
+
+                //|| ((projectPm == null) || (projectPm.ProjectManager == userId && (item.ProcessIdentifier == "QuoteApproval"
+                //|| item.ProcessIdentifier == "QuoteFeedback" || item.ProcessIdentifier == "BidWinningConfirmation"
+                //)))
+
+                //|| (projectPm == null || (projectPm.CreatorUserId != userId && projectPm.ProjectManager != userId)
+                //&& (!endUserIds.Contains(userId) && item.ProcessIdentifier == "ArchiveEnd")
+                //            )
+                //            )
+                //        {
+                //            deleteUserIds.Add(userId);
+                //        }
+                //    }
 
                 foreach (var deleteUserId in deleteUserIds)
                 {
