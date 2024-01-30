@@ -229,6 +229,7 @@ namespace Finance.ProductDevelopment
             {
                 //最后一行的标号
                 int lastRowNum = sheet.LastRowNum;
+                #region 增加物料种类的校验
                 try
                 {
                     //开关
@@ -253,14 +254,14 @@ namespace Finance.ProductDevelopment
                             MaterialCategoryCount++;
                         }
                     }
-                    //给物料大类的结束行赋值
+                    //给物料种类的结束行赋值
                     sERows = sERows.OrderBy(p => p.WhichMaterialCategory).Select((item, index) =>
                     {
                         if (index + 1 <= sERows.Count - 1) item.EndLine = sERows[index + 1].StartLine - 1;
                         if (index == sERows.Count - 1) item.EndLine = lastRowNum + 1;
                         return item;
                     }).ToList();
-                    //循环每一个物料大类
+                    //循环每一个物料种类
                     foreach (var item in sERows)
                     {
                         //进行深拷贝
@@ -273,7 +274,7 @@ namespace Finance.ProductDevelopment
                             strings.RemoveAll(p=>p.Equals(prop));
                         }
                         //如果到最后模版数据里没有被去除干净,说明用户上传的模版有欠缺
-                        if(strings.Count!=0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,缺少\"{strings.ListToStr()}\",请修改!");
+                        if(strings.Count!=0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,开始行:{item.StartLine};结束行:{item.EndLine},缺少\"{strings.ListToStr()}\",请修改!");
                     }                 
                 }
                 catch (FriendlyException ex)
@@ -284,6 +285,7 @@ namespace Finance.ProductDevelopment
                 {
                     throw new FriendlyException("模版错误请检查,物料种类不能为空");
                 }
+                #endregion
                 //从第三行开始获取
                 string daLei = "";
                 for (int i = 2; i < lastRowNum + 1; i++)
