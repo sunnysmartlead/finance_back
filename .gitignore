@@ -9,3 +9,5 @@ aspnet-core/src/Finance.Web.Mvc/App_Data/Logs/
 aspnet-core/src/Finance.Migrator/Logs/Logs.txt
 /.idea
 
+
+/aspnet-core/Job/BakOracle/File

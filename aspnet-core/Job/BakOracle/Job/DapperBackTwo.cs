@@ -1,12 +1,19 @@
 ﻿
 using BakOracle.Ext;
 using Dapper;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualBasic;
 using Oracle.ManagedDataAccess.Client;
 using System.Data;
+using System.IO;
+using System.Linq;
+using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BakOracle.Job
 {
-    public class DapperBack
+    public class DapperBacktTow
     {
         List<List<string>> listAll = new List<List<string>>();
         public void Main()
@@ -17,10 +24,10 @@ namespace BakOracle.Job
             //过滤不必要的表
             List<string> Remove = new List<string>() { "Al", "__EFMigrationsHistory" };
             //开启线程数量
-            const int taskCount = 40;
+            const int taskCount = 1;
             ParallelOptions parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = taskCount;
-            using (IDbConnection connection = new OracleConnection($"Data Source={ip}/ORCL;Persist Security Info=True;user id={userId};password={password};"))
+            using (OracleConnection connection = new OracleConnection($"Data Source={ip}/ORCL;Persist Security Info=True;user id={userId};password={password};"))
             {
                 try
                 {
@@ -28,29 +35,36 @@ namespace BakOracle.Job
                     var tableNames = connection.Query<string>($"SELECT table_name FROM all_tables WHERE owner = '{userId}'").ToList();
                     List<string> list = tableNames.ToList();
                     list.RemoveAll(p => Remove.Contains(p));
-                    Parallel.ForEach(list, parallelOptions, rowTable =>
+                    List<Task> listTask = new();
+                    list.ForEach(rowTable =>
                     {
-                        List<string> strings = new List<string>();
-                        string query = $"SELECT * FROM \"{rowTable}\"";
-                        var data = connection.Query(query);
+                        listTask.Add(new Task(() =>{
+                                List<string> strings = new List<string>();
+                                string query = $"SELECT * FROM \"{rowTable}\"";
+                                var data = connection.Query(query);
+                                foreach (var item in data)
+                                {
+                                    var ppp = (IDictionary<string, object>)item;
+                                    var keys = ppp.Keys.ToList();
+                                    var values = ppp.Values.Select(val => val.ToSQL()).ToList();
 
-                        foreach (var item in data)
-                        {
-                            var ppp = (IDictionary<string, object>)item;
-                            var keys = ppp.Keys.ToList();
-                            var values = ppp.Values.Select(val => val.ToSQL()).ToList();
+                                    string keysNames = "\"" + string.Join("\",\"", keys) + "\"";
+                                    string valuesNames = string.Join(",", values);
 
-                            string keysNames = "\"" + string.Join("\",\"", keys) + "\"";
-                            string valuesNames = string.Join(",", values);
+                                    strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames});");
+                                    //Console.WriteLine($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
+                                }
+                                string path = $@"File\{DateTime.Now.ToString("yyyyMMdd")}_{rowTable}.txt";
+                                SaveToFile(path, rowTable, strings);
+                                listAll.Add(strings);
+                         }));
+                    });
 
-                            strings.Add($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames});");
-                            //Console.WriteLine($"INSERT INTO \"{rowTable}\"({keysNames}) VALUES({valuesNames}) ");
-                        }
-
-                        string path = $@"File\{DateTime.Now.ToString("yyyyMMdd")}_{rowTable}.txt";
-                        SaveToFile(path, rowTable, strings);
-
-                        listAll.Add(strings);
+                  
+                    Parallel.ForEach(listTask, parallelOptions, rowTable =>
+                    {
+                        rowTable.Start();
+                        rowTable.Wait();
                     });
 
                     string pathAll = $@"File\{DateTime.Now.ToString("yyyyMMdd")}_ALLSql.txt";
@@ -63,9 +77,14 @@ namespace BakOracle.Job
                 }
             }
 
-        }      
+        }       
         private void SaveToFile(string path, string rowTable, List<string> strings)
         {
+            if(strings.Count==0)
+            {
+                File.CreateText(path+"空");
+                return;
+            }
             if (!File.Exists(path))
             {
                 using (StreamWriter sw = File.CreateText(path))
@@ -79,9 +98,16 @@ namespace BakOracle.Job
                     sw.WriteLine("--======================结束========================");
                 }
             }
-        }     
+        }
+
+        // Helper method to save to all file
         private void SaveAllToFile(string pathAll, List<string> list)
         {
+            if (list.Count == 0)
+            {
+                File.CreateText(pathAll + "空");
+                return;
+            }
             if (!File.Exists(pathAll))
             {
                 using (StreamWriter sw = File.CreateText(pathAll))

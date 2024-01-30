@@ -19,11 +19,15 @@ using Finance.WorkFlows.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.UserModel;
+using NUglify.Helpers;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -163,6 +167,46 @@ namespace Finance.ProductDevelopment
         /// <exception cref="UserFriendlyException"></exception>
         public async Task<ProductDevelopmentInputDto> LoadExcel(IFormFile file)
         {
+            #region 增加物料种类的校验
+            Dictionary<string, List<string>> wlzl = new Dictionary<string, List<string>>
+            {
+                { "结构料,光学类", new List<string>() { "镜头", "COVER GLASS", "防红曝膜", "滤光片", "滤色片组件", "保护玻璃", "其它" } },
+                { "结构料,注塑、压铸、冷锻、手板类", new List<string>() { "上壳", "下壳", "支架", "镜座", "护罩外", "护罩内", "固定件", "盖板", "其它" } },
+                { "结构料,螺母类", new List<string>() { "内螺母", "外螺母", "标准螺母", "其它" } },
+                { "结构料,输出类（连接器）", new List<string>() { "自制FAKRA", "外购FAKRA", "带壳连接器组件", "线束", "其它" } },
+                { "结构料,硅橡胶类", new List<string>() { "镜头与上壳密封", "壳体密封", "尾部密封", "防尘、档光环", "其它" } },
+                { "结构料,螺钉螺杆类", new List<string>() { "线路板螺钉", "外壳螺钉", "尾线螺钉", "支架螺钉", "螺杆", "其它" } },
+                { "结构料,垫片类", new List<string>() { "波形垫圈", "平垫、弹垫", "开口卡簧", "其它"} },
+                { "结构料,钣金类", new List<string>() { "屏蔽罩", "弹片", "支架", "外壳", "其它"} },
+                { "结构料,泡棉类", new List<string>() { "发泡硅胶", "挡光泡棉", "隔热棉", "其它"} },
+                { "结构料,产品标签类", new List<string>() { "二维码标签", "外壳标签", "其它"} },
+                { "结构料,导热类", new List<string>() { "导热胶", "导热片", "石墨稀", "加热膜", "其它" } },
+                { "结构料,电子电器类", new List<string>() { "电机组件", "模块", "金线","其它" } },
+                { "结构料,半成品", new List<string>() { "组件", "其它" } },
+                { "胶水等辅材,AA胶", new List<string>() { "OB786" } },
+                { "胶水等辅材,密封胶", new List<string>() { "8008" } },
+                { "胶水等辅材,螺纹胶", new List<string>() { "AS-533504" } },
+                { "胶水等辅材,DA胶", new List<string>() { "AS-533505" } },
+                { "胶水等辅材,HA胶", new List<string>() { "AS-533506" } },
+                { "胶水等辅材,粘IR片胶", new List<string>() { "AS-533507" } },
+                { "胶水等辅材,underfill胶", new List<string>() { "AS-533508" } },
+                { "胶水等辅材,焊锡丝", new List<string>() { "AS-533509" } },
+                { "胶水等辅材,其它", new List<string>() { "AS-533510" } },
+                { "SMT外协,SMT外协", new List<string>() { "AS-533510", "AS-533510" } },
+                { "包材,纸箱、纸板类", new List<string>() { "内箱", "外箱", "内箱衬板", "外箱衬板", "隔板", "其它" } },
+                { "包材,塑料箱类", new List<string>() { "周转箱", "箱盖" } },
+                { "包材,托盘类", new List<string>() { "托盘", "托盘盖" } },
+                { "包材,护角类", new List<string>() { "护角" } },
+                { "包材,泡棉类", new List<string>() { "EPE、EVA泡棉", "其它" } },
+                { "包材,包装标签类", new List<string>() { "盒号标签", "合格证标签", "内箱标签", "外箱标签", "托盘标签", "周转箱标签", "其它标签" } },
+                { "包材,吸塑类", new List<string>() { "面壳", "底壳", "其它" } },
+                { "包材,包装袋类", new List<string>() { "真空袋", "PE袋", "气泡袋", "其它" } },
+                { "包材,盒、木箱类", new List<string>() { "彩盒", "牛皮纸盒", "木箱", "其它" } },
+                { "包材,包装辅料类", new List<string>() { "缠绕膜", "绑带", "透明胶带", "纸胶带", "保护盖", "保护膜", "其它" } },
+                { "包材,其它", new List<string>() { "其它", "其它" } },
+            };                   
+            #endregion
+
             ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
 
             FileUploadOutputDto fileUploadOutputDto = await _fileCommonService.UploadFile(file);
@@ -181,13 +225,55 @@ namespace Finance.ProductDevelopment
             var sheet = workbook.GetSheetAt(0);
 
             List<StructureBomDto> list = new List<StructureBomDto>();
-           
 
             //判断是否获取到 sheet
             if (sheet != null)
             {
                 //最后一列的标号
                 int lastRowNum = sheet.LastRowNum;
+                #region 增加物料种类的校验
+                string LargeVariety = "";//大种类
+                string GeneralCategory = "";//大类       
+                try
+                {                   
+                    Dictionary<string, List<string>> Dic = wlzl.DeepClone();
+                    for (int i = 2; i < lastRowNum + 1; i++)
+                    {
+                        ICell LargeVarietypor = sheet.GetRow(i - 1).GetCell(0);
+                        ICell GeneralCategorypor = sheet.GetRow(i).GetCell(1);
+                        if (LargeVarietypor.CellType == CellType.String)
+                        {
+                            LargeVariety = LargeVarietypor.ToString();
+                        }
+                        if (GeneralCategorypor.CellType == CellType.String)
+                        {
+                            GeneralCategory = GeneralCategorypor.ToString();
+                        }
+                        //进行深拷贝
+                        var value = sheet.GetRow(i).GetCell(2).ToString();                   
+                        if(Dic.ContainsKey($"{LargeVariety},{GeneralCategory}")) Dic[$"{LargeVariety},{GeneralCategory}"].Remove(value);                  
+                    }
+                    var ll = Dic.Where(p => p.Value.Count == 0);
+                    ll.ForEach(p => {
+                        Dic.Remove(p.Key);
+                    });
+                    if (Dic.Count != 0)
+                    {
+                        foreach (var kv in Dic)
+                        {
+                            throw new FriendlyException($"缺少{kv.Key}中的{kv.Value.ListToStr()},请修改!");
+                        }
+                    }                  
+                }
+                catch (FriendlyException ex)
+                {
+                    throw new FriendlyException(ex.Message);
+                }
+                catch (System.Exception)
+                {
+                    throw new FriendlyException($"模版错误请检查,物料种类不能为空,或者缺失{LargeVariety},{GeneralCategory}");
+                }
+                #endregion
                 //从第三行开始获取
                 string superType = "";
 
@@ -370,103 +456,103 @@ namespace Finance.ProductDevelopment
 
         public async Task SaveStructionBom(ProductDevelopmentInputDto dto)
         {
-            
-                List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
+
+            List<NreIsSubmit> productIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
 
 
-                if (productIsSubmits.Count is not 0)
+            if (productIsSubmits.Count is not 0)
+            {
+                throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+            }
+            else
+            {
+                await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
+                //查询总方案
+                List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
+                //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
+
+
+                List<StructureBomDto> structureBomDtos = dto.StructureBomDtos;
+                long AuditFlowId = dto.AuditFlowId;
+                long SolutionId = dto.SolutionId;
+                long ProductId = dto.ProductId;
+                //long ProductId = solutionTable.ProductId//dto.ProductId;
+                structureBomDtos.ForEach(bomInfo =>
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
+                    bomInfo.AuditFlowId = AuditFlowId;
+                    bomInfo.SolutionId = SolutionId;
+                    bomInfo.ProductId = ProductId;
+                    bomInfo.FileId = dto.StuFileId;
+                });
+
+                //要保存的bom表list
+                var listBak = _objectMapper.Map<List<StructureBomInfoBak>>(structureBomDtos);
+                if (listBak.Count > 0)
+                {
+                    await _structureBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                    _structureBomInfoBakRepository.GetDbContext().Set<StructureBomInfoBak>().AddRange(listBak);
+                    _structureBomInfoBakRepository.GetDbContext().SaveChanges();
                 }
                 else
                 {
-                    await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
-                    //查询总方案
-                    List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
-                    //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
-
-
-                    List<StructureBomDto> structureBomDtos = dto.StructureBomDtos;
-                    long AuditFlowId = dto.AuditFlowId;
-                    long SolutionId = dto.SolutionId;
-                    long ProductId = dto.ProductId;
-                    //long ProductId = solutionTable.ProductId//dto.ProductId;
-                    structureBomDtos.ForEach(bomInfo =>
-                    {
-                        bomInfo.AuditFlowId = AuditFlowId;
-                        bomInfo.SolutionId = SolutionId;
-                        bomInfo.ProductId = ProductId;
-                        bomInfo.FileId = dto.StuFileId;
-                    });
-
-                    //要保存的bom表list
-                    var listBak = _objectMapper.Map<List<StructureBomInfoBak>>(structureBomDtos);
-                    if (listBak.Count > 0)
-                    {
-                        await _structureBomInfoBakRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                        _structureBomInfoBakRepository.GetDbContext().Set<StructureBomInfoBak>().AddRange(listBak);
-                        _structureBomInfoBakRepository.GetDbContext().SaveChanges();
-                    }
-                    else
-                    {
-                        throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
-                    }
-
-                    var bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                    if (bomInfoByProductIds.Count == 0)
-                    {
-                        foreach (var item in structureBomDtos)
-                        {
-                            StructureBomInfo structureBomInfo = new()
-                            {
-                                AuditFlowId = item.AuditFlowId,
-                                ProductId = item.ProductId,
-                                SolutionId = item.SolutionId,
-                                SuperTypeName = item.SuperTypeName,
-                                CategoryName = item.CategoryName,
-                                TypeName = item.TypeName,
-                                IsInvolveItem = item.IsInvolveItem,
-                                SapItemNum = item.SapItemNum,
-                                DrawingNumName = item.DrawingNumName,
-                                AssemblyQuantity = item.AssemblyQuantity,
-                                OverallDimensionSize = item.OverallDimensionSize,
-                                MaterialName = item.MaterialName,
-                                WeightNumber = item.WeightNumber,
-                                MoldingProcess = item.MoldingProcess,
-                                IsNewMouldProduct = item.IsNewMouldProduct,
-                                SecondaryProcessingMethod = item.SecondaryProcessingMethod,
-                                SurfaceTreatmentMethod = item.SurfaceTreatmentMethod,
-                                DimensionalAccuracyRemark = item.DimensionalAccuracyRemark,
-                                FileId=item.FileId,
-                            };
-                            await _structureBomInfoRepository.InsertAsync(structureBomInfo);
-                        }
-                    }
-
-                    #region 录入完成之后
-
-                    //为提交操作才执行插库、流转工作流操作
-                    if (dto.Opinion == FinanceConsts.Done)
-                    {
-                        await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_StructBomImport });
-
-                        List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
-                        //当前已保存的确认表中零件数目等于 核价需求导入时的零件数目
-                        if (solutionId.Count == allProductIsSubmits.Count + 1)
-                        {
-                            //嵌入工作流
-                            await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
-                            {
-                                NodeInstanceId = dto.NodeInstanceId,
-                                FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
-                                Comment = dto.Comment,
-                            });
-                        }
-                    }
-                    #endregion
-
+                    throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
                 }
-           
+
+                var bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                if (bomInfoByProductIds.Count == 0)
+                {
+                    foreach (var item in structureBomDtos)
+                    {
+                        StructureBomInfo structureBomInfo = new()
+                        {
+                            AuditFlowId = item.AuditFlowId,
+                            ProductId = item.ProductId,
+                            SolutionId = item.SolutionId,
+                            SuperTypeName = item.SuperTypeName,
+                            CategoryName = item.CategoryName,
+                            TypeName = item.TypeName,
+                            IsInvolveItem = item.IsInvolveItem,
+                            SapItemNum = item.SapItemNum,
+                            DrawingNumName = item.DrawingNumName,
+                            AssemblyQuantity = item.AssemblyQuantity,
+                            OverallDimensionSize = item.OverallDimensionSize,
+                            MaterialName = item.MaterialName,
+                            WeightNumber = item.WeightNumber,
+                            MoldingProcess = item.MoldingProcess,
+                            IsNewMouldProduct = item.IsNewMouldProduct,
+                            SecondaryProcessingMethod = item.SecondaryProcessingMethod,
+                            SurfaceTreatmentMethod = item.SurfaceTreatmentMethod,
+                            DimensionalAccuracyRemark = item.DimensionalAccuracyRemark,
+                            FileId = item.FileId,
+                        };
+                        await _structureBomInfoRepository.InsertAsync(structureBomInfo);
+                    }
+                }
+
+                #region 录入完成之后
+
+                //为提交操作才执行插库、流转工作流操作
+                if (dto.Opinion == FinanceConsts.Done)
+                {
+                    await _productIsSubmit.InsertAsync(new NreIsSubmit() { AuditFlowId = dto.AuditFlowId, SolutionId = dto.SolutionId, EnumSole = AuditFlowConsts.AF_StructBomImport });
+
+                    List<NreIsSubmit> allProductIsSubmits = await _productIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.EnumSole.Equals(AuditFlowConsts.AF_StructBomImport));
+                    //当前已保存的确认表中零件数目等于 核价需求导入时的零件数目
+                    if (solutionId.Count == allProductIsSubmits.Count + 1)
+                    {
+                        //嵌入工作流
+                        await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                        {
+                            NodeInstanceId = dto.NodeInstanceId,
+                            FinanceDictionaryDetailId = FinanceConsts.Done,//这个方法没有保存机制，把所以的输入都视作提交 dto.Opinion,
+                            Comment = dto.Comment,
+                        });
+                    }
+                }
+                #endregion
+
+            }
+
         }
 
         /// <summary>
@@ -691,28 +777,28 @@ namespace Finance.ProductDevelopment
         /// <returns></returns>
         public async Task<List<StructureBomInfo>> FindStructureBomByProcess(ProductDevelopmentInputDto dto)
         {
-           
-                long AuditFlowId = dto.AuditFlowId;
-                long ProductId = dto.ProductId;
-                long SolutionId = dto.SolutionId;
 
-                var dataBak = _structureBomInfoBakRepository.GetAll()
-                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
+            long AuditFlowId = dto.AuditFlowId;
+            long ProductId = dto.ProductId;
+            long SolutionId = dto.SolutionId;
 
-                List<StructureBomInfoBak> resultBak = await dataBak.ToListAsync();
-                List<StructureBomInfo> result = _objectMapper.Map<List<StructureBomInfo>>(resultBak);
-                if (result.Count == 0)
-                {
-                    var data = _structureBomInfoRepository.GetAll()
-                    .Where(p => AuditFlowId.Equals(p.AuditFlowId))
-                    .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
+            var dataBak = _structureBomInfoBakRepository.GetAll()
+                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                    result = await data.ToListAsync();
-                }
+            List<StructureBomInfoBak> resultBak = await dataBak.ToListAsync();
+            List<StructureBomInfo> result = _objectMapper.Map<List<StructureBomInfo>>(resultBak);
+            if (result.Count == 0)
+            {
+                var data = _structureBomInfoRepository.GetAll()
+                .Where(p => AuditFlowId.Equals(p.AuditFlowId))
+                .Where(p => SolutionId.Equals(p.SolutionId)).OrderBy(p => p.Id);
 
-                return result;
-           
+                result = await data.ToListAsync();
+            }
+
+            return result;
+
         }
 
 
