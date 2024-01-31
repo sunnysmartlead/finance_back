@@ -18,6 +18,7 @@ using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Finance.PropertyDepartment.Entering.Model;
 using Finance.WorkFlows;
 using Finance.WorkFlows.Dto;
+using Interface.Expends;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -185,6 +186,7 @@ namespace Finance.ProductDevelopment
         public async Task<ProductDevelopmentInputDto> UploadExcel(IFormFile file)
         {
             #region 增加物料种类的校验
+            //物料种类
             List<string> wlzl = new List<string>() {
                 "Sensor芯片",
                 "串行芯片",
@@ -204,7 +206,9 @@ namespace Finance.ProductDevelopment
                 "其他零件（金属弹片）",
                 "BTB or ZIF连接器",
                 "PIN针连接器/座",
-                "LVDS连接器", "线路板（尺寸、叠构等）" };           
+                "LVDS连接器", "线路板（尺寸、叠构等）" };
+            //物料大类
+            string porpValue = "PCB1/Sensor板(①如果是多块板，各PCB分别填写;②如果不包含该器件，选择不涉及;③如果同时涉及多个同类型器件，需要分行写出;）";
             int MaterialCategoryCount = 0;//一共几个物料大类
             List<SERow> sERows = new List<SERow>();
             #endregion
@@ -244,10 +248,21 @@ namespace Finance.ProductDevelopment
                             Switch = false;
                         }
                         //取物料大类的值
-                        var porp = sheet.GetRow(i).GetCell(0);    
+                        var porp = sheet.GetRow(i).GetCell(0);
+                        //取物料种类
+                        ICell MaterialTypeICell = sheet.GetRow(i).GetCell(1);
+                        string MaterialType = wlzl.FirstOrDefault(p => p.Equals(MaterialTypeICell.ToString()));
+                        if(string.IsNullOrEmpty(MaterialType))
+                        {
+                            throw new FriendlyException($"{i+1}行的物料种类非标准模版种类");
+                        }
                         //如果无聊大类的值不为空和""咋表示进入了下一个物料大类
                         if (porp != null&&!string.IsNullOrEmpty(porp.ToString()))
-                        {              
+                        {                           
+                            if (porpValue!= porp.ToString())
+                            {
+                                throw new FriendlyException($"{i + 1}行的物料大类非标准模版大类");
+                            }
                             //开启开关
                             Switch = true;
                             //物料大类相加
@@ -271,7 +286,7 @@ namespace Finance.ProductDevelopment
                         {
                             string prop = sheet.GetRow(i).GetCell(1).ToString();
                             //除去模版中的数据
-                            strings.RemoveAll(p=>p.Equals(prop));
+                            strings.Remove(prop);
                         }
                         //如果到最后模版数据里没有被去除干净,说明用户上传的模版有欠缺
                         if(strings.Count!=0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,开始行:{item.StartLine};结束行:{item.EndLine},缺少\"{strings.ListToStr()}\",请修改!");
@@ -283,7 +298,7 @@ namespace Finance.ProductDevelopment
                 }
                 catch (System.Exception)
                 {
-                    throw new FriendlyException("模版错误请检查,物料种类不能为空");
+                    throw new FriendlyException("模版错误请检查,物料种类不能为空或者格式严重不正确");
                 }
                 #endregion
                 //从第三行开始获取
