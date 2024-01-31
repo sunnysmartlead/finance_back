@@ -204,7 +204,7 @@ namespace Finance.ProductDevelopment
                 { "包材,盒、木箱类", new List<string>() { "彩盒", "牛皮纸盒", "木箱", "其它" } },
                 { "包材,包装辅料类", new List<string>() { "缠绕膜", "绑带", "透明胶带", "纸胶带", "保护盖", "保护膜", "其它" } },
                 { "包材,其它", new List<string>() { "其它", "其它" } },
-            };                   
+            };
             #endregion
 
             ProductDevelopmentInputDto result = new ProductDevelopmentInputDto();
@@ -232,29 +232,52 @@ namespace Finance.ProductDevelopment
                 //最后一列的标号
                 int lastRowNum = sheet.LastRowNum;
                 #region 增加物料种类的校验
-                string LargeVariety = "";//大种类
-                string GeneralCategory = "";//大类       
+                string LargeVariety = string.Empty;//大种类(超级大类)
+                string GeneralCategory = string.Empty;//大类       
                 try
-                {                   
+                {
                     Dictionary<string, List<string>> Dic = wlzl.DeepClone();
                     for (int i = 2; i < lastRowNum + 1; i++)
                     {
+                        //获取物料超级大类的值
                         ICell LargeVarietypor = sheet.GetRow(i - 1).GetCell(0);
+                        //获取物料大类
                         ICell GeneralCategorypor = sheet.GetRow(i).GetCell(1);
+                        //获取物料种类的值
+                        var MaterialTypeICell = sheet.GetRow(i).GetCell(2).ToString();
                         if (LargeVarietypor.CellType == CellType.String)
                         {
                             LargeVariety = LargeVarietypor.ToString();
                         }
+                        else if (LargeVarietypor.CellType != CellType.Numeric)
+                        {
+                            throw new FriendlyException($"{i}行,无序号,请修改!");
+                        }
+
                         if (GeneralCategorypor.CellType == CellType.String)
                         {
                             GeneralCategory = GeneralCategorypor.ToString();
                         }
-                        //进行深拷贝
-                        var value = sheet.GetRow(i).GetCell(2).ToString();                   
-                        if(Dic.ContainsKey($"{LargeVariety},{GeneralCategory}")) Dic[$"{LargeVariety},{GeneralCategory}"].Remove(value);                  
+                        //判断物料种类是否存在模版中存在,如果不存在则给出提示                     
+
+                        //在固定模版中去除物料种类
+                        if (Dic.ContainsKey($"{LargeVariety},{GeneralCategory}"))
+                        {
+                            if (sheet.GetRow(i).GetCell(0).CellType != CellType.String)
+                            {
+                                string MaterialType = Dic[$"{LargeVariety},{GeneralCategory}"].FirstOrDefault(p => p.Equals(MaterialTypeICell));
+                                if (string.IsNullOrEmpty(MaterialType)) { throw new FriendlyException($"{i + 1}行的物料种类非标准模版种类"); }
+                            }
+                            Dic[$"{LargeVariety},{GeneralCategory}"].Remove(MaterialTypeICell);
+                        }
+                        else
+                        {
+                            throw new FriendlyException($"{i}行,{LargeVariety}大类下{GeneralCategory}物料大类在模版中不存在!,请修改!");
+                        }
                     }
                     var ll = Dic.Where(p => p.Value.Count == 0);
-                    ll.ForEach(p => {
+                    ll.ForEach(p =>
+                    {
                         Dic.Remove(p.Key);
                     });
                     if (Dic.Count != 0)
@@ -263,7 +286,7 @@ namespace Finance.ProductDevelopment
                         {
                             throw new FriendlyException($"缺少{kv.Key}中的{kv.Value.ListToStr()},请修改!");
                         }
-                    }                  
+                    }
                 }
                 catch (FriendlyException ex)
                 {

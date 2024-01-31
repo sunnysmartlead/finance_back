@@ -1511,9 +1511,10 @@ namespace Finance.NerPricing
         /// <param name="price"></param>
         /// <returns></returns>
         [AbpAuthorize]
+        [PlatformActionFilterlock]
         public async Task PostResourcesManagementSingle(ResourcesManagementSingleDto price)
         {
-            await ProcessAntiShaking("PostResourcesManagementSingle", price);
+            //await ProcessAntiShaking("PostResourcesManagementSingle", price);      
             if (price?.ResourcesManagementModels?.MouldInventory?.Id == 0)
             {
                 int prop = await _resourceMouldInventory.CountAsync(p => p.AuditFlowId.Equals(price.AuditFlowId) && p.SolutionId.Equals(price.ResourcesManagementModels.SolutionId) && p.StructuralId.Equals(price.ResourcesManagementModels.MouldInventory.StructuralId));
@@ -3457,9 +3458,10 @@ namespace Finance.NerPricing
         /// </summary>
         /// <param name="name"></param>
         /// <param name="object"></param>
+        /// <param name="object"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task ProcessAntiShaking(string name, object @object)
+        public async Task ProcessAntiShaking(string name, object @object,bool islock=false)
         {
             #region 流程防抖
             var cacheJson = JsonConvert.SerializeObject(@object);
