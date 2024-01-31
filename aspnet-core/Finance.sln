@@ -33,6 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tool", "tool", "{89762C14-1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Finance.RefreshSequence", "tool\oracle刷新序列\Finance.RefreshSequence.csproj", "{824176F5-3A0E-4E18-BBD6-5FFA570B72C0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbExp", "tool\DbExp\DbExp.csproj", "{1C98A8D1-0208-4958-A63F-03C64F42B81D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{824176F5-3A0E-4E18-BBD6-5FFA570B72C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{824176F5-3A0E-4E18-BBD6-5FFA570B72C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{824176F5-3A0E-4E18-BBD6-5FFA570B72C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C98A8D1-0208-4958-A63F-03C64F42B81D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C98A8D1-0208-4958-A63F-03C64F42B81D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C98A8D1-0208-4958-A63F-03C64F42B81D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C98A8D1-0208-4958-A63F-03C64F42B81D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +105,7 @@ Global
 		{46A39CA5-7E8C-425A-8ED1-F2051F20DF6D} = {F20B9BE7-426B-4702-B8C6-5EEC29A2F7BE}
 		{F2CFC8A6-22D9-4395-B13A-9A8FE73E5FAF} = {F20B9BE7-426B-4702-B8C6-5EEC29A2F7BE}
 		{824176F5-3A0E-4E18-BBD6-5FFA570B72C0} = {89762C14-1FBD-4B8E-83B6-7D35E28E600B}
+		{1C98A8D1-0208-4958-A63F-03C64F42B81D} = {89762C14-1FBD-4B8E-83B6-7D35E28E600B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A55C749-0BFF-4EFD-8499-12A2CB3B5B07}
