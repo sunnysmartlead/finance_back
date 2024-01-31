@@ -391,8 +391,8 @@ namespace Finance.Audit
                 //如果当前用户不是本流程的项目经理，就把【查看每个方案初版BOM成本】页面过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
 
-                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】或该流传的项目经理，就把【项目部长查看核价表】页面过滤掉
-                .WhereIf((priceEvaluation == null) || (!isMarketProjectMinister) || (!isProjectMinister) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
+                //如果当前用户不是【项目管理部-项目部长】，并且也不是【市场部-项目部长】，并且也不是该流程的项目经理，就把【项目部长查看核价表】页面过滤掉
+                .WhereIf((priceEvaluation == null) || ((!isMarketProjectMinister) && (!isProjectMinister) && priceEvaluation.ProjectManager != AbpSession.UserId), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
 
                 //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
                 .WhereIf((!isGeneralManager), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)
