@@ -8,6 +8,7 @@ using Oracle.ManagedDataAccess.Client;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -95,7 +96,12 @@ namespace BakOracle.Job
                     {
                         taskList.Add(new Task(() =>
                         {
+                            var hasId = connection.QuerySingle<bool>($"SELECT Count(*) FROM USER_TAB_COLUMNS where table_name='{tableName}' and column_name='Id'");
                             string query = $"SELECT * FROM \"{tableName}\"";
+                            if (hasId)
+                            {
+                                query += "Order by \"Id\"";
+                            }
                             using (OracleCommand command = new OracleCommand(query, connection))
                             {
                                 OracleDataReader dataReader = command.ExecuteReader();
