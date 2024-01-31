@@ -1,8 +1,11 @@
 ﻿using Abp.Dependency;
+using Abp.Runtime.Caching;
 using Abp.Runtime.Session;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,20 +17,28 @@ namespace Finance.Ext
 {
 
     /// <summary>
-    /// action方法过滤器
+    /// action方法过滤器 其中包含lock锁 他能确保对共享资源的独占访问权限,但是也使接口变成了同步并非异步,会使接口的访问时间变长
     /// </summary>
-    public class PlatformActionFilter : Attribute, IActionFilter
+    /// 
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public class PlatformActionFilterlock : ActionFilterAttribute, IActionFilter
     {
-        private static MemoryCache cache = new MemoryCache(new MemoryCacheOptions());
+        private readonly ICacheManager _cacheManager;
         private readonly IAbpSession _abpSession;
 
-
-        public PlatformActionFilter()
+        /// <summary>
+        /// 
+        /// </summary>
+        public PlatformActionFilterlock()
         {
-            _abpSession = IocManager.Instance.Resolve<IAbpSession>(); ;
+            _abpSession = IocManager.Instance.Resolve<IAbpSession>();
+            _cacheManager = IocManager.Instance.Resolve<ICacheManager>(); ;
         }
-
-        public void OnActionExecuted(ActionExecutedContext context)
+        /// <summary>
+        /// action 执行之后
+        /// </summary>
+        /// <param name="context"></param>
+        public override void OnActionExecuted(ActionExecutedContext context)
         {
 
         }
@@ -36,34 +47,34 @@ namespace Finance.Ext
         /// </summary>
         /// <param name="filterContext"></param>
         /// <exception cref="FriendlyException"></exception>
-        public virtual void OnActionExecuting(ActionExecutingContext filterContext)
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            string httpMethod = WebUtility.HtmlEncode(filterContext.HttpContext.Request.Method);
-            if (httpMethod == "POST")
+            try
             {
-                //使用请求路径作为唯一key
-                string path = filterContext.HttpContext.Request.Path;
-                string cacheToken = $"{_abpSession.UserId}_{path}";
-                string keyValue = new Guid().ToString() + DateTime.Now.Ticks;
-                if (path != null)
+                string httpMethod = WebUtility.HtmlEncode(filterContext.HttpContext.Request.Method);
+                lock (_cacheManager)
                 {
-                    //var cache = iZen.Utils.Core.iCache.CacheManager.GetCacheValue(cacheToken);
-                    var cv = cache.Get(cacheToken);
-                    if (cv == null)
+                    //使用请求路径作为唯一key
+                    string path = filterContext.HttpContext.Request.Path;
+                    var cacheJson = JsonConvert.SerializeObject(path);
+                    var code = cacheJson.GetHashCode().ToString();
+                    string cacheToken = $"{_abpSession.UserId}_{code}";
+                    var cache = _cacheManager.GetCache(code).GetOrDefault(cacheToken);
+                    if (cache is null)
                     {
-                        //iZen.Utils.Core.iCache.CacheManager.SetChacheValueSeconds(cacheToken, keyValue, 1);
-                        //设置缓存1秒过期
-                        cache.Set(cacheToken, keyValue, new MemoryCacheEntryOptions() { SlidingExpiration = TimeSpan.FromSeconds(3) });                     
+                        _cacheManager.GetCache(code).Set(cacheToken, cacheToken, new TimeSpan(0, 0, 1));
                     }
                     else
                     {
-                        throw new FriendlyException($"您重复提交了数据！--PlatformActionFilter");
+                        throw new Exception($"您重复提交了数据！--PlatformActionFilter");
                     }
                 }
-                return;
             }
-            this.OnActionExecuting(filterContext);
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex}--PlatformActionFilter");
+            }
+            base.OnActionExecuting(filterContext);
         }
-
     }
 }
