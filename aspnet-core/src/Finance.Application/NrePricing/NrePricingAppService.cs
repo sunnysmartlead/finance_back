@@ -3457,11 +3457,10 @@ namespace Finance.NerPricing
         /// 提交防抖
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="object"></param>
-        /// <param name="object"></param>
+        /// <param name="object"></param>       
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task ProcessAntiShaking(string name, object @object,bool islock=false)
+        public async Task ProcessAntiShaking(string name, object @object)
         {
             #region 流程防抖
             var cacheJson = JsonConvert.SerializeObject(@object);
