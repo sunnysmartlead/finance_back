@@ -888,7 +888,7 @@ namespace Finance.PriceEval
                    .Join(_pcsYearRepository.GetAll(), p => p.Id, p => p.PcsId, (pcs, pcstYear) => new { pcs, pcstYear }).ToListAsync()).GroupBy(p => p.pcs).Select(p =>
                    {
                        var dto = ObjectMapper.Map<CreatePcsDto>(p.Key);
-                       dto.PcsYearList = ObjectMapper.Map<List<CreatePcsYearDto>>(p.Select(o => o.pcstYear));
+                       dto.PcsYearList = ObjectMapper.Map<List<CreatePcsYearDto>>(p.Select(o => o.pcstYear)).OrderBy(o => o.Year).ThenBy(o => o.UpDown).ToList();
                        return dto;
                    }).ToList();
 
@@ -896,7 +896,7 @@ namespace Finance.PriceEval
                    .Join(_modelCountYearRepository.GetAll(), p => p.Id, p => p.ProductId, (modelCount, modelCountYear) => new { modelCount, modelCountYear }).ToListAsync()).GroupBy(p => p.modelCount).Select(p =>
                    {
                        var dto = ObjectMapper.Map<CreateModelCountDto>(p.Key);
-                       dto.ModelCountYearList = ObjectMapper.Map<List<CreateModelCountYearDto>>(p.Select(o => o.modelCountYear));
+                       dto.ModelCountYearList = ObjectMapper.Map<List<CreateModelCountYearDto>>(p.Select(o => o.modelCountYear)).OrderBy(o => o.Year).ThenBy(o => o.UpDown).ToList();
                        return dto;
                    }).ToList();
 
@@ -904,7 +904,7 @@ namespace Finance.PriceEval
                    .Join(_carModelCountYearRepository.GetAll(), p => p.Id, p => p.CarModelCountId, (carModelCount, carModelCountYear) => new { carModelCount, carModelCountYear }).ToListAsync()).GroupBy(p => p.carModelCount).Select(p =>
                    {
                        var dto = ObjectMapper.Map<CreateCarModelCountDto>(p.Key);
-                       dto.ModelCountYearList = ObjectMapper.Map<List<CreateCarModelCountYearDto>>(p.Select(o => o.carModelCountYear));
+                       dto.ModelCountYearList = ObjectMapper.Map<List<CreateCarModelCountYearDto>>(p.Select(o => o.carModelCountYear)).OrderBy(o => o.Year).ThenBy(o => o.UpDown).ToList();
                        return dto;
                    }).ToList();
 
@@ -934,7 +934,7 @@ namespace Finance.PriceEval
                    {
                        var dto = ObjectMapper.Map<GradientModelInput>(p.Key);
                        dto.GradientValue = gradient.FirstOrDefault(o => o.Id == p.Key.GradientId).GradientValue;
-                       dto.GradientModelYear = ObjectMapper.Map<List<GradientModelYearInput>>(p.Select(o => o.gradientModelYear));
+                       dto.GradientModelYear = ObjectMapper.Map<List<GradientModelYearInput>>(p.Select(o => o.gradientModelYear)).OrderBy(o => o.Year).ThenBy(o => o.UpDown).ToList();
                        return dto;
                    }).ToList();
 
