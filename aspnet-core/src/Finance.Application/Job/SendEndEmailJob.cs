@@ -51,6 +51,11 @@ namespace Finance.Job
                     string loginIp = email.GetLoginAddr();
                     var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
 
+                    var pmName = await (from p in _priceEvaluationRepository.GetAll()
+                                        join u in _userRepository.GetAll() on p.ProjectManager equals u.Id
+                                        where p.AuditFlowId == nodeInstance.WorkFlowInstanceId
+                                        select u.Name).FirstOrDefaultAsync();
+
 
                     var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
                     var role = await _roleRepository.GetAllListAsync(p =>
@@ -76,7 +81,7 @@ namespace Finance.Job
                         {
                             string emailAddr = userInfo.EmailAddress;
                             string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                            string emailBody = $"核价报价提醒：您有新的工作流{priceEvaluation.Title}（{nodeInstance.Name}——流程号：{nodeInstance.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
+                            string emailBody = $"核价报价提醒：您有新的工作流{priceEvaluation.Title}，项目经理：{pmName}（{nodeInstance.Name}——流程号：{nodeInstance.WorkFlowInstanceId}）需要完成（<a href=\"{loginAddr}\" >系统地址</a>）";
 
                             try
                             {
