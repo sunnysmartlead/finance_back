@@ -227,7 +227,21 @@ namespace Finance.ProductDevelopment.Dto
 
     }
 
-
+    public class SERow
+    {
+        /// <summary>
+        /// 开始行
+        /// </summary>
+        public int StartLine { get; set; }
+        /// <summary>
+        /// 结束行
+        /// </summary>
+        public int EndLine { get; set; }
+        /// <summary>
+        /// 第几个物料大类
+        /// </summary>
+        public int WhichMaterialCategory { get; set; }
+    }
 
     public class ProductDevelopmentInputDto: ToExamineDto
     {

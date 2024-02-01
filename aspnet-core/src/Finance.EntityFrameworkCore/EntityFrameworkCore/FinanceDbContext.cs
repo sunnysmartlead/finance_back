@@ -438,7 +438,8 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<Fu_QualityCostListDto> Fu_QualityCostListDto { get; set; }
         public virtual DbSet<Fu_LogisticsCost> Fu_LogisticsCost { get; set; }
 
-
+        public virtual DbSet<NodeTime> NodeTime { get; set; }
+        
 
         #region 报价单新增表
         /// <summary>
@@ -629,6 +630,12 @@ namespace Finance.EntityFrameworkCore
 
             modelBuilder.Entity<AfterUpdateSumInfo>().ToTable("AfterUpdateSumInfo");
 
+
+            modelBuilder.Entity<EnteringElectronic>().HasIndex(p => p.ElectronicId, "IX_ElectronicId").IsUnique();
+            modelBuilder.Entity<EnteringElectronicCopy>().HasIndex(p => p.ElectronicId, "IX_ElectronicIdCopy").IsUnique();
+
+            modelBuilder.Entity<StructureElectronic>().HasIndex(p => p.StructureId, "IX_StructureId").IsUnique();
+            modelBuilder.Entity<StructureElectronicCopy>().HasIndex(p => p.StructureId, "IX_StructureIdCopy").IsUnique();
             base.OnModelCreating(modelBuilder);
         }
     }

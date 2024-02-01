@@ -7,6 +7,6 @@ color 0e
 
 cd ..
 sc create BakOracle binPath=%~dp0BakOracle.exe start= auto 
-sc description BakOracle "财务邮件提醒服务"
+sc description BakOracle "财务系统数据库备份"
 Net Start BakOracle
 pause

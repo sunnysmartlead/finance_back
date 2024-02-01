@@ -1,4 +1,8 @@
-﻿using NPOI.POIFS.Crypt.Dsig;
+﻿using Finance.DemandApplyAudit;
+using Finance.Dto;
+using Finance.VersionManagement.Dto;
+using Finance.WorkFlows;
+using NPOI.POIFS.Crypt.Dsig;
 using NPOI.SS.Formula.Functions;
 using NUglify.JavaScript.Syntax;
 using System;
@@ -164,7 +168,7 @@ namespace Finance.Ext
                 case "总经理查看中标金额": return "总经理中标查看";
                 case "归档": return "核价表归档、报价审批表、报价单归档";
 
-                default: return string.Empty;
+                default: return projectName;
             }
         }
 
@@ -222,7 +226,7 @@ namespace Finance.Ext
 
                 case "归档": return "报价归档";
 
-                default: return string.Empty;
+                default: return projectName;
 
             }
         }
@@ -282,8 +286,37 @@ namespace Finance.Ext
                 case "归档": return 40;
 
                 default: return 999;
-
             }
         }
+
+        /// <summary>
+        /// 获取要求完成时间
+        /// </summary>
+        /// <param name="processIdentifier"></param>
+        /// <param name="pricingTeam"></param>
+        /// <returns></returns>
+        internal static DateTime? GetRequiredTime(this string processIdentifier, PricingTeam pricingTeam)
+        {
+            if (pricingTeam is null)
+            {
+                return null;
+            }
+            return processIdentifier switch
+            {
+                FinanceConsts.ElectronicsBOM => pricingTeam.ElecEngineerTime,
+                FinanceConsts.StructureBOM => pricingTeam.StructEngineerTime,
+                FinanceConsts.NRE_EMCExperimentalFeeInput => pricingTeam.EMCTime,
+                FinanceConsts.NRE_ReliabilityExperimentFeeInput => pricingTeam.QualityBenchTime,
+                "ElectronicUnitPriceEntry" => pricingTeam.ResourceElecTime,
+                "StructureUnitPriceEntry" => pricingTeam.ResourceStructTime,
+                "NRE_MoldFeeEntry" => pricingTeam.MouldWorkHourTime,
+                FinanceConsts.FormulaOperationAddition => pricingTeam.EngineerWorkHourTime,
+                FinanceConsts.LogisticsCostEntry => pricingTeam.ProductManageTime,
+                FinanceConsts.COBManufacturingCostEntry => pricingTeam.ProductCostInputTime,
+                _ => null,
+            };
+        }
+
+
     }
 }

@@ -16,12 +16,16 @@ namespace BakOracle
             IHost host = Host.CreateDefaultBuilder(args)
                 .ConfigureServices(services =>
                 {
+                    services.AddTransient<ADOBack>();
+                    services.AddTransient<ADOBackTwo>();
                     services.AddTransient<Backups>();
+                    services.AddTransient<DapperBacktTow>();
+                    services.AddTransient<DapperBack>();
                     services.AddSchedule(options =>
                     {
-                        var triggerBuilder = Triggers.DailyAt(3)
+                        var triggerBuilder = Triggers.DailyAt(1)
                        .SetTriggerId("BackOracle")   // 作业触发器 Id
-                       .SetDescription("每天的早上三点备份数据库(只保留最近七天的)")  // 作业触发器描述
+                       .SetDescription("每天的半夜一点备份数据库(只保留最近七天的)")  // 作业触发器描述
                        .SetRunOnStart(true);   // 作业触发器是否启动时执行一次                                                   
                         options.AddJob<MailJob>("BackOracle", triggerBuilder);
                     });

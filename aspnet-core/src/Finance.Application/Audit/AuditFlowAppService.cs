@@ -61,6 +61,7 @@ namespace Finance.Audit
 
         private readonly IRepository<NodeInstance, long> _nodeInstanceRepository;
         private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
+        private readonly RuleAppService _ruleAppService;
 
 
         private long _projectManager = 0;
@@ -92,7 +93,8 @@ namespace Finance.Audit
             IRepository<PricingTeam, long> pricingTeamRepository,
             IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository,
             IRepository<NodeInstance, long> nodeInstanceRepository,
-            IRepository<WorkflowInstance, long> workflowInstanceRepository)
+            IRepository<WorkflowInstance, long> workflowInstanceRepository,
+            RuleAppService ruleAppService)
         {
             _auditFlowRepository = auditFlowRepository;
             _auditFinishedProcessRepository = auditFinishedProcessRepository;
@@ -122,6 +124,7 @@ namespace Finance.Audit
 
             _nodeInstanceRepository = nodeInstanceRepository;
             _workflowInstanceRepository = workflowInstanceRepository;
+            _ruleAppService = ruleAppService;
         }
 
 
@@ -283,93 +286,9 @@ namespace Finance.Audit
         /// <returns></returns>
         private async Task<List<AuditFlowRightDetailDto>> FilteTask(long auditFlowId, List<AuditFlowRightDetailDto> list)
         {
-            //获取当前流程方案列表
-            var solutionList = await _solutionRepository.GetAllListAsync(p => p.AuditFlowId == auditFlowId);
-
-            //获取核价团队
-            var pricingTeam = await _pricingTeamRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-
-            //获取项目经理
-            var projectPm = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-
-            //获取核价需求录入保存项
-            var priceEvaluationStartData = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
-
-
-            //项目经理控制的页面
-            var pmPage = new List<string> { FinanceConsts.PriceDemandReview,
-                FinanceConsts.NRE_ManualComponentInput, FinanceConsts.UnitPriceInputReviewToExamine,
-                FinanceConsts.PriceEvaluationBoard };
-
-            //拥有能看归档的角色的用户
-            var role = await _roleRepository.GetAllListAsync(p =>
-                            p.Name == StaticRoleNames.Host.FinanceTableAdmin
-                            || p.Name == StaticRoleNames.Host.EvalTableAdmin
-                    || p.Name == StaticRoleNames.Host.Bjdgdgly);
-            var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
-
-
-            var dto = list
-
-                //如果当前用户不是电子工程师，就把电子BOM录入页面过滤掉
-                .WhereIf(!solutionList.Any(p => p.ElecEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.ElectronicsBOM || p.IsReset)
-
-                //如果当前用户不是结构工程师，就把结构BOM录入页面过滤掉
-                .WhereIf(!solutionList.Any(p => p.StructEngineerId == AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.StructureBOM || p.IsReset)
-
-                //工序工时
-                .WhereIf(pricingTeam == null || pricingTeam.EngineerId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.FormulaOperationAddition || p.IsReset)
-
-                //环境实验费
-                .WhereIf(pricingTeam == null || pricingTeam.QualityBenchId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_ReliabilityExperimentFeeInput || p.IsReset)
-
-                //EMC+电性能实验费录入
-                .WhereIf(pricingTeam == null || pricingTeam.EMCId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.NRE_EMCExperimentalFeeInput || p.IsReset)
-
-                //制造成本录入
-                .WhereIf(pricingTeam == null || pricingTeam.ProductCostInputId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.COBManufacturingCostEntry || p.IsReset)
-
-                //物流成本录入
-                .WhereIf(pricingTeam == null || pricingTeam.ProductManageTimeId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.LogisticsCostEntry || p.IsReset)
-
-                //项目核价审核
-                .WhereIf(pricingTeam == null || pricingTeam.AuditId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.ProjectChiefAudit || p.IsReset)
-
-                //项目经理
-                .WhereIf(projectPm == null || projectPm.ProjectManager != AbpSession.UserId, p => ((!pmPage.Contains(p.ProcessIdentifier)) || p.ProcessName == FinanceConsts.Bomcbsh) || p.IsReset)
-
-                //生成报价分析界面选择报价方案、选择是否报价，必须是发起核价需求录入的人才能看到
-                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != FinanceConsts.QuoteAnalysis || p.IsReset)
-
-                //核价需求录入，必须是自己录入或项目经理才可见
-                .WhereIf((priceEvaluationStartData != null && priceEvaluationStartData.CreatorUserId != null && priceEvaluationStartData.CreatorUserId != AbpSession.UserId)
-
-                || (projectPm != null && projectPm.ProjectManager != AbpSession.UserId && projectPm.CreatorUserId != AbpSession.UserId), p => p.ProcessIdentifier != FinanceConsts.PricingDemandInput || p.IsReset)
-
-                //报价单，必须是发起核价需求录入的人才能看到
-                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId, p => p.ProcessIdentifier != "ExternalQuotation" || p.IsReset)
-
-                //报价审批表、【报价反馈】，必须是发起核价需求录入的人才能看到
-                .WhereIf(projectPm == null || projectPm.CreatorUserId != AbpSession.UserId,
-                p => (p.ProcessIdentifier != "QuotationApprovalForm" && p.ProcessIdentifier != "QuoteFeedback") || p.IsReset)
-
-                //如果当前用户是本流程的项目经理，就把【审批报价策略与核价表】、【报价反馈】、【确认中标金额】页面过滤掉
-                .WhereIf(projectPm == null || projectPm.ProjectManager == AbpSession.UserId,
-                p => p.ProcessIdentifier != "QuoteApproval" || p.ProcessIdentifier != "QuoteFeedback" || p.ProcessIdentifier != "BidWinningConfirmation"
-                || p.IsReset
-                )
-
-                //归档，如果当前用户不是该流程的发起人、项目经理，或归档管理员，就过滤
-                .WhereIf(projectPm == null || (projectPm.CreatorUserId != AbpSession.UserId && projectPm.ProjectManager != AbpSession.UserId)
-                && (!userIds.Contains(AbpSession.UserId.Value)),
-
-                p => p.ProcessIdentifier != "ArchiveEnd" || p.IsReset)
-
-
-                .ToList();
+            var dto = await _ruleAppService.FilteTask(auditFlowId, list);
 
             return await GetRequiredTime(auditFlowId, dto);
-
         }
 
 
@@ -472,8 +391,8 @@ namespace Finance.Audit
                 //如果当前用户不是本流程的项目经理，就把【查看每个方案初版BOM成本】页面过滤掉
                 .WhereIf((priceEvaluation == null) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "查看每个方案初版BOM成本" || p.IsReset)
 
-                //如果当前用户不是【项目管理部-项目部长】或【市场部-项目部长】或该流传的项目经理，就把【项目部长查看核价表】页面过滤掉
-                .WhereIf((priceEvaluation == null) || (!isMarketProjectMinister) || (!isProjectMinister) || priceEvaluation.ProjectManager != AbpSession.UserId, p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
+                //如果当前用户不是【项目管理部-项目部长】，并且也不是【市场部-项目部长】，并且也不是该流程的项目经理，就把【项目部长查看核价表】页面过滤掉
+                .WhereIf((priceEvaluation == null) || ((!isMarketProjectMinister) && (!isProjectMinister) && priceEvaluation.ProjectManager != AbpSession.UserId), p => p.ProcessName != "项目部长查看核价表" || p.IsReset)
 
                 //如果当前用户不是【总经理】，就把【总经理查看中标金额】页面过滤掉
                 .WhereIf((!isGeneralManager), p => p.ProcessName != "总经理查看中标金额" || p.IsReset)

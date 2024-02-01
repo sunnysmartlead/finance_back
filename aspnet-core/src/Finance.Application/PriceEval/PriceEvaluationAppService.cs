@@ -1334,8 +1334,10 @@ namespace Finance.PriceEval
             //var other = data.OtherCostItem2.FirstOrDefault(p => p.ItemName == "单颗成本").Total.GetValueOrDefault();
             var other = data.OtherCostItem2.Where(p => p.ItemName == "单颗成本").Sum(p => p.Total).GetValueOrDefault();
 
+            //MOQ分摊成本
+            var moq = data.MoqShareCountCount;
 
-            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other;
+            var sum = bomCost + costItemAll + manufacturingCost + logisticsFee + qualityCost + other + moq;
 
             var list = new List<ProportionOfProductCostListDto>
             {
@@ -1344,7 +1346,9 @@ namespace Finance.PriceEval
                 new ProportionOfProductCostListDto{ Name="制造成本", Proportion= manufacturingCost},
                 new ProportionOfProductCostListDto{ Name="物流成本", Proportion= logisticsFee},
                 new ProportionOfProductCostListDto{ Name="质量成本", Proportion= qualityCost},
+                new ProportionOfProductCostListDto{ Name="MOQ分摊成本", Proportion= moq},
                 new ProportionOfProductCostListDto{ Name="其他成本", Proportion= other},
+
             };
 
             //var customerTargetPrice = await _productInformationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == input.AuditFlowId);
@@ -1367,18 +1371,18 @@ namespace Finance.PriceEval
                 //throw new FriendlyException($"客户目标价录入的目标价格式不正确！");
             }
 
-            decimal jq;
+            decimal js;
             if (customerTargetPrice.ExchangeRate is null)
             {
-                jq = 0;
+                js = 0;
             }
             else
             {
-                jq = targetPrice * customerTargetPrice.ExchangeRate.Value;
+                js = (targetPrice * customerTargetPrice.ExchangeRate.Value);
             }
 
 
-            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = jq - sum });
+            list.Add(new ProportionOfProductCostListDto { Name = "利润", Proportion = js - sum });
 
             return new ListResultDto<ProportionOfProductCostListDto>(list);
         }
