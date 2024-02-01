@@ -29,14 +29,14 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace Finance.BaseLibrary
 {
     /// <summary>
-    /// 管理
+    /// 标准工艺库管理
     /// </summary>
     public class FoundationStandardTechnologyAppService : ApplicationService
     {
         /// <summary>
         /// 日志类型
         /// </summary>
-        private readonly LogType logType = LogType.GrossProfitMargin;
+        private readonly LogType logType = LogType.StandardProcessLibrary;
         private readonly IRepository<FoundationStandardTechnology, long> _foundationStandardTechnologyRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<FoundationLogs, long> _foundationLogsRepository;
