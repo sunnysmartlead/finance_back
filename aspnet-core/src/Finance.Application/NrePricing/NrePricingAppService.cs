@@ -3460,7 +3460,7 @@ namespace Finance.NerPricing
         /// <param name="object"></param>       
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task ProcessAntiShaking(string name, object @object)
+        public async Task ProcessAntiShaking(string name, object @object,bool islock=false)
         {
             #region 流程防抖
             var cacheJson = JsonConvert.SerializeObject(@object);
