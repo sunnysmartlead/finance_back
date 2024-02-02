@@ -208,7 +208,7 @@ namespace Finance.ProductDevelopment
                 "PIN针连接器/座",
                 "LVDS连接器", "线路板（尺寸、叠构等）" };
             //物料大类
-            string porpValue = "PCB1/Sensor板(①如果是多块板，各PCB分别填写;②如果不包含该器件，选择不涉及;③如果同时涉及多个同类型器件，需要分行写出;）";
+            //string porpValue = "PCB1/Sensor板(①如果是多块板，各PCB分别填写;②如果不包含该器件，选择不涉及;③如果同时涉及多个同类型器件，需要分行写出;）";
             int MaterialCategoryCount = 0;//一共几个物料大类
             List<SERow> sERows = new List<SERow>();
             #endregion
@@ -259,10 +259,10 @@ namespace Finance.ProductDevelopment
                         //如果无聊大类的值不为空和""咋表示进入了下一个物料大类
                         if (porp != null&&!string.IsNullOrEmpty(porp.ToString()))
                         {                           
-                            if (porpValue!= porp.ToString())
-                            {
-                                throw new FriendlyException($"{i + 1}行的物料大类非标准模版大类");
-                            }
+                            //if (porpValue!= porp.ToString())
+                            //{
+                            //    throw new FriendlyException($"{i + 1}行的物料大类非标准模版大类");
+                            //}
                             //开启开关
                             Switch = true;
                             //物料大类相加
