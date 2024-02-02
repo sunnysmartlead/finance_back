@@ -452,11 +452,11 @@ namespace Finance.Ext
                 }
                 catch (Exception e)
                 {
-                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列参数校验时错误。\r\n错误原因：{e.Message}。", e.StackTrace);
+                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列参数校验时错误。\r\n错误原因：{e.Message}。 如果在此位置未发现错误，请检查核价表序号是否正确。", e.StackTrace);
                 }
                 if (isError)
                 {
-                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列的值不合法 {errorMsg}");
+                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列的值不合法 {errorMsg} 。如果在此位置未发现错误，请检查核价表序号是否正确。");
                 }
             }
             return result;
