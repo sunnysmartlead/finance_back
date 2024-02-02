@@ -2596,7 +2596,11 @@ namespace Finance.PriceEval
             //切线工时
             var workingHoursInputInfo = await _followLineTangentRepository
             .FirstOrDefaultAsync(p => p.Year == year);
-
+            if (workingHoursInputInfo is null)
+            {
+                workingHoursInputInfo = await _followLineTangentRepository.GetAll()
+                  .OrderByDescending(p => p.Year).FirstOrDefaultAsync();
+            }
 
 
             //跟线工价
