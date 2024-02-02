@@ -3482,12 +3482,11 @@ namespace Finance.Processes
                     throw new FriendlyException("没有对应文件");
 
                 }
-                long SorFileId = JsonConvert.DeserializeObject<List<long>>(query[0].FileId.ToString()).FirstOrDefault();
 
                 //long SorFileId = long.Parse(priceInfo.SorFile);
-                if (null != SorFileId)
+                if (null != query[0].FileId)
                 {
-                    return await _fileCommonService.DownloadFile(SorFileId);
+                    return await _fileCommonService.DownloadFile(query[0].FileId);
                 }
                 else
                 {
@@ -3517,11 +3516,10 @@ namespace Finance.Processes
 
                 }
 
-                long SorFileId = JsonConvert.DeserializeObject<List<long>>(query[0].FileId.ToString()).FirstOrDefault();
                 //long SorFileId = long.Parse(priceInfo.SorFile);
-                if (null != SorFileId)
+                if (null != query[0].FileId)
                 {
-                    return await _fileCommonService.DownloadFile(SorFileId);
+                    return await _fileCommonService.DownloadFile(query[0].FileId);
                 }
                 else
                 {
