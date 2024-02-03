@@ -95,6 +95,7 @@ namespace Finance.Processes
         protected readonly IRepository<ElectronicBomInfo, long> _electronicBomInfoRepository;
         protected readonly IRepository<StructureBomInfo, long> _structureBomInfoRepository;
         private readonly FileCommonService _fileCommonService;
+        private readonly IRepository<FileManagement, long> _fileManagementRepository;
         /// <summary>
         /// .ctor
         /// </summary>
@@ -117,7 +118,11 @@ namespace Finance.Processes
                       IRepository<NreIsSubmit, long> resourceNreIsSubmit,
                       WorkflowInstanceAppService workflowInstanceAppService, IRepository<User, long> userRepository, 
                       IRepository<ElectronicBomInfo, long> electronicBomInfoRepository,
-                      IRepository<StructureBomInfo, long> structureBomInfoRepository, FileCommonService fileCommonService)
+                      IRepository<StructureBomInfo, long> structureBomInfoRepository, FileCommonService fileCommonService,
+                      IRepository<FileManagement, long> fileManagementRepository
+
+
+            )
         {
             _foundationDeviceRepository = foundationDeviceRepository;
             _foundationProcedureRepository = foundationProcedureRepository;
@@ -150,6 +155,7 @@ namespace Finance.Processes
             _electronicBomInfoRepository = electronicBomInfoRepository;
             _structureBomInfoRepository = structureBomInfoRepository;
             _fileCommonService = fileCommonService;
+            _fileManagementRepository = fileManagementRepository;
         }
 
         /// <summary>
@@ -3472,7 +3478,7 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        public async Task<FileResult> GetElectronBom(long auditFlowId, long solutionId)
+        public async Task<FileManagement> GetElectronBom(long auditFlowId, long solutionId)
         {
             try
             {
@@ -3486,8 +3492,10 @@ namespace Finance.Processes
                 //long SorFileId = long.Parse(priceInfo.SorFile);
                 if (null != query[0].FileId)
                 {
-                    return await _fileCommonService.DownloadFile(query[0].FileId);
-                }
+                        FileManagement entity = await _fileManagementRepository.FirstOrDefaultAsync(query[0].FileId);
+                        return entity;
+
+                    }
                 else
                 {
                     throw new FriendlyException("文件找不到");
@@ -3505,7 +3513,7 @@ namespace Finance.Processes
         /// </summary>
         /// <param name="auditFlowId"></param>
         /// <returns></returns>
-        public async Task<FileResult> GetStructureBom(long auditFlowId,long solutionId)
+        public virtual async Task<FileManagement> GetStructureBom(long auditFlowId,long solutionId)
         {
             try
             {
@@ -3519,7 +3527,9 @@ namespace Finance.Processes
                 //long SorFileId = long.Parse(priceInfo.SorFile);
                 if (null != query[0].FileId)
                 {
-                    return await _fileCommonService.DownloadFile(query[0].FileId);
+                    FileManagement entity = await _fileManagementRepository.FirstOrDefaultAsync(query[0].FileId);
+                    return entity;
+
                 }
                 else
                 {
