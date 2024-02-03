@@ -86,7 +86,8 @@ namespace Finance.ProductDevelopment
             
                 if (input.Picture3DFileId.IsNullOrEmpty())
                 {
-                    throw new FriendlyException("3D爆炸图必选上传");
+                    //throw new FriendlyException("3D爆炸图必选上传");
+                    input.Picture3DFileId ="0";
                 }
                 ProductDevelopmentInput entity;
                 var productInput = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);

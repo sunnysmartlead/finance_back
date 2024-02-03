@@ -475,7 +475,10 @@ namespace Finance.ProductDevelopment
                 }
                 else
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                    if(dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                    }                  
                 }
 
 
@@ -572,7 +575,13 @@ namespace Finance.ProductDevelopment
                 List<BoardDto> boardDtos = dto.BoardDtos;
                 if (boardDtos.Count == 0)
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
+                    }else
+                    {
+                        return;
+                    }
                 }
                 boardDtos.ForEach(bomInfo =>
                 {
