@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.EntityFrameworkCore.Repositories;
+using Abp.Extensions;
 using Abp.ObjectMapping;
 using Abp.Runtime.Session;
 using Abp.UI;
@@ -488,8 +489,12 @@ namespace Finance.ProductDevelopment
                 throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
             }
             else
-            {
+            {             
                 await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
+                if (dto.Picture3DFileId.IsNullOrEmpty()&& dto.Opinion == FinanceConsts.Done)
+                {
+                    throw new FriendlyException("3D爆炸图必选上传");                    
+                }
                 //查询总方案
                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
                 //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
@@ -518,12 +523,16 @@ namespace Finance.ProductDevelopment
                 }
                 else
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
+                    }
                 }
 
-                var bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if (bomInfoByProductIds.Count == 0)
-                {
+                List<StructureBomInfo> bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                await _structureBomInfoRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                //if (bomInfoByProductIds.Count == 0)
+                //{
                     foreach (var item in structureBomDtos)
                     {
                         StructureBomInfo structureBomInfo = new()
@@ -550,7 +559,7 @@ namespace Finance.ProductDevelopment
                         };
                         await _structureBomInfoRepository.InsertAsync(structureBomInfo);
                     }
-                }
+               // }
 
                 #region 录入完成之后
 

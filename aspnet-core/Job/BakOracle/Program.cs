@@ -1,4 +1,5 @@
 using BakOracle.Job;
+using BakOracle.tool;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Sundial;
@@ -21,6 +22,7 @@ namespace BakOracle
                     services.AddTransient<Backups>();
                     services.AddTransient<DapperBacktTow>();
                     services.AddTransient<DapperBack>();
+                    services.AddTransient<ImportTool>();
                     services.AddSchedule(options =>
                     {
                         var triggerBuilder = Triggers.DailyAt(1)
