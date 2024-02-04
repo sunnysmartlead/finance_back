@@ -629,12 +629,16 @@ namespace Finance.WorkFlows
             }
 
             //将重置给自己的任务取消激活
-            var entity = await _taskResetRepository.FirstOrDefaultAsync(
+            var entitys = await _taskResetRepository.GetAllListAsync(
                 p => p.NodeInstanceId == input.NodeInstanceId && p.IsActive
                    && p.TargetUserId == AbpSession.UserId.Value);
-            if (entity is not null)
+
+            foreach (var entity in entitys)
             {
-                entity.IsActive = false;
+                if (entity is not null)
+                {
+                    entity.IsActive = false;
+                }
             }
 
             //再把任务重置给别人
