@@ -242,7 +242,11 @@ namespace Finance.ProductDevelopment.Dto
         /// </summary>
         public int WhichMaterialCategory { get; set; }
     }
-
+    public class KeyOrValue
+    {      
+        public string Key { get; set; }    
+        public string Value { get; set; }        
+    }
     public class ProductDevelopmentInputDto: ToExamineDto
     {
         /// 审批流程表ID
