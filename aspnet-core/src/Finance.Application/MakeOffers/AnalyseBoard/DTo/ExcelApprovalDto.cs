@@ -121,3 +121,17 @@ public class ExcelApprovalDto
     /// </summary>
     public List<SopSecondModel> sop { get; set; }
 }
+/// <summary>
+/// 报价审核表保存数据(后加)
+/// </summary>
+public class ExcelApprovalDtoSave: ExcelApprovalDto
+{
+    /// <summary>
+    /// 开发计划
+    /// </summary>
+    public string DevelopmentPlan { get; set; }
+    /// <summary>
+    /// 报价币种
+    /// </summary>
+    public string QuoteCurrency { get; set; }
+}

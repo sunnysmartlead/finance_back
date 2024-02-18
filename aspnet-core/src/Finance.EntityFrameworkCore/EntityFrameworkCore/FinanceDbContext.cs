@@ -143,6 +143,8 @@ namespace Finance.EntityFrameworkCore
         public virtual DbSet<SampleQuotation> SampleQuotation { set; get; }
         // 报价审核表
         public virtual DbSet<AuditQuotationList> AuditQuotationList { set; get; }
+        // 报价审核表保存数据(后加)
+        public virtual DbSet<AuditQuotationListSave> AuditQuotationListSave { set; get; }
         // Nre Nre  零件是否全部录入 依据实体类
         public virtual DbSet<NreIsSubmit> NreIsSubmit { set; get; }
         // 回档文件列表实体类

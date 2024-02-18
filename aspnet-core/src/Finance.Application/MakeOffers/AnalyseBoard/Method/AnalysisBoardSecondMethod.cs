@@ -142,6 +142,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 报价审核表
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
+    /// <summary>
+    /// 报价审核表(后加)
+    /// </summary>
+    private readonly IRepository<AuditQuotationListSave, long> _financeAuditQuotationListSave;
 
     private readonly ProcessHoursEnterDeviceAppService _processHoursEnterDeviceAppService;
 
@@ -191,7 +195,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ExternalQuotation, long> externalQuotation,
         IRepository<ProductExternalQuotationMx, long> externalQuotationMx,
         IRepository<NreQuotationList, long> nreQuotationList,
-        WorkflowInstanceAppService workflowInstanceAppService)
+        WorkflowInstanceAppService workflowInstanceAppService,
+        IRepository<AuditQuotationListSave, long> auditQuotationListSave)
     {
         _resourceProjectBoardOffers = resourceProjectBoardOffers;
         _dynamicUnitPriceOffers = dynamicUnitPriceOffers;
@@ -221,6 +226,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _externalQuotationMx = externalQuotationMx;
         _NreQuotationList = nreQuotationList;
         _workflowInstanceAppService = workflowInstanceAppService;
+        _financeAuditQuotationListSave = auditQuotationListSave;
     }
 
     /// <summary>
@@ -5427,7 +5433,36 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             AuditQuotationListJson = content
         });
     }
+    /// <summary>
+    /// 报价审批表保存(后加)
+    /// </summary>
+    /// <param name="quotationListSecondDtoSave"></param>
+    /// <returns></returns>
+    public async Task PostQuotationApprovedSave(ExcelApprovalDtoSave quotationListSecondDtoSave)
+    {
+        var auditFlowId = quotationListSecondDtoSave.auditFlowId;
+        var version = quotationListSecondDtoSave.version;
+        var isQuotation = await getQuotation(auditFlowId, version);
+        int type = isQuotation ? 1 : 0;
+        var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
+            p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 0);
+        int ntype = 0;
+        if (dowm is not null && dowm.Count > 0)
+        {
+            ntype = dowm.Max(p => p.ntype);
+        }
 
+        string content = JsonConvert.SerializeObject(quotationListSecondDtoSave);
+
+        await _financeAuditQuotationListSave.InsertAsync(new AuditQuotationListSave()
+        {
+            AuditFlowId = auditFlowId,
+            ntype = ntype + 1,
+            version = version,
+            nsource = 0,
+            AuditQuotationListJson = content
+        });
+    }
     /// <summary>
     /// 获取审批列表
     /// </summary>
