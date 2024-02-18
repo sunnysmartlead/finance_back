@@ -496,10 +496,10 @@ namespace Finance.ProductDevelopment
             else
             {             
                 await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
-                if (dto.Picture3DFileId.IsNullOrEmpty()&& dto.Opinion == FinanceConsts.Done)
-                {
-                    throw new FriendlyException("3D爆炸图必选上传");                    
-                }
+                //if (dto.Picture3DFileId.IsNullOrEmpty()&& dto.Opinion == FinanceConsts.Done)
+                //{
+                //    throw new FriendlyException("3D爆炸图必选上传");                    
+                //}
                 //查询总方案
                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
                 //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();

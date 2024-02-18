@@ -83,46 +83,46 @@ namespace Finance.ProductDevelopment
 
         public async Task<ProductDevelopmentInput> SaveProductDevelopmentInput(ProductDevelopmentInputDto input)
         {
-            
-                if (input.Picture3DFileId.IsNullOrEmpty())
-                {
-                    //throw new FriendlyException("3D爆炸图必选上传");
-                    input.Picture3DFileId ="0";
-                }
-                ProductDevelopmentInput entity;
-                var productInput = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
 
-                if (productInput.Count > 0)
-                {
-                    entity = productInput.FirstOrDefault();
-                }
-                else
-                {
-                    entity = new();
-                    entity.ProductId = input.ProductId;
-                    entity.SolutionId = input.SolutionId;
-                    entity.AuditFlowId = input.AuditFlowId;
-                }
-                entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
-                entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
-                entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
-                entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
-                entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
-                entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
-                entity.SingleProductWeight = input.SingleProductWeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.SingleProductWeight);
-                entity.SingleBoxQuantity = input.SingleBoxQuantity.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.SingleBoxQuantity);
-                entity.InnerPackagingLength = input.InnerPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingLength);
-                entity.InnerPackagingWidth = input.InnerPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingWidth);
-                entity.InnerPackagingHeight = input.InnerPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingHeight);
-                entity.IsHit = input.IsHit;
-                entity.BoxesPerPallet = input.BoxesPerPallet.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.BoxesPerPallet);
-                entity.QuantityPerBox = input.QuantityPerBox.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.QuantityPerBox);
-                entity.Remarks = input.Remarks;
+            if (input.Picture3DFileId == 0 && input.Opinion == FinanceConsts.Done)
+            {
+                throw new FriendlyException("3D爆炸图必选上传");
+                //input.Picture3DFileId = "0";
+            }
+            ProductDevelopmentInput entity;
+            var productInput = await _productDevelopmentInputRepository.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId && p.SolutionId == input.SolutionId);
 
-                ProductDevelopmentInput entityRet = await _productDevelopmentInputRepository.InsertOrUpdateAsync(entity);
+            if (productInput.Count > 0)
+            {
+                entity = productInput.FirstOrDefault();
+            }
+            else
+            {
+                entity = new();
+                entity.ProductId = input.ProductId;
+                entity.SolutionId = input.SolutionId;
+                entity.AuditFlowId = input.AuditFlowId;
+            }
+            entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
+            entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
+            entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
+            entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
+            entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
+            entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
+            entity.SingleProductWeight = input.SingleProductWeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.SingleProductWeight);
+            entity.SingleBoxQuantity = input.SingleBoxQuantity.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.SingleBoxQuantity);
+            entity.InnerPackagingLength = input.InnerPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingLength);
+            entity.InnerPackagingWidth = input.InnerPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingWidth);
+            entity.InnerPackagingHeight = input.InnerPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.InnerPackagingHeight);
+            entity.IsHit = input.IsHit;
+            entity.BoxesPerPallet = input.BoxesPerPallet.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.BoxesPerPallet);
+            entity.QuantityPerBox = input.QuantityPerBox.IsNullOrEmpty() ? 0 : Convert.ToInt32(input.QuantityPerBox);
+            entity.Remarks = input.Remarks;
 
-                return entityRet;
-         
+            ProductDevelopmentInput entityRet = await _productDevelopmentInputRepository.InsertOrUpdateAsync(entity);
+
+            return entityRet;
+
         }
 
         /// <summary>
@@ -130,37 +130,37 @@ namespace Finance.ProductDevelopment
         /// </summary>
         public async Task<PostProductDevelopmentInputDto> PostProductDevelopmentInput(PostProductDevelopmentInputDto dto)
         {
-           
-                //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
 
-                List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
-                        .Where(p => dto.AuditFlowId.Equals(p.AuditFlowId))
-                        .Where(p => dto.SolutionId.Equals(p.SolutionId)).ToListAsync();
-                PostProductDevelopmentInputDto result = new PostProductDevelopmentInputDto();
-                if (data.Count == 1)
-                {
-                    result.Picture3DFileId = data.FirstOrDefault().Picture3DFileId.ToString();
-                    result.Pixel = data.FirstOrDefault().Pixel.ToString();
-                    result.FOV = data.FirstOrDefault().FOV.ToString();
-                    result.OuterPackagingLength = data.FirstOrDefault().OuterPackagingLength.ToString();
-                    result.OuterPackagingWidth = data.FirstOrDefault().OuterPackagingWidth.ToString();
-                    result.OuterPackagingHeight = data.FirstOrDefault().OuterPackagingHeight.ToString();
-                    result.SingleProductWeight = data.FirstOrDefault().SingleProductWeight.ToString();
-                    result.SingleBoxQuantity = data.FirstOrDefault().SingleBoxQuantity.ToString();
-                    result.InnerPackagingLength = data.FirstOrDefault().InnerPackagingLength.ToString();
-                    result.InnerPackagingWidth = data.FirstOrDefault().InnerPackagingWidth.ToString();
-                    result.InnerPackagingHeight = data.FirstOrDefault().InnerPackagingHeight.ToString();
-                    result.IsHit = data.FirstOrDefault().IsHit;
-                    result.BoxesPerPallet = data.FirstOrDefault().BoxesPerPallet.ToString();
-                    result.QuantityPerBox = data.FirstOrDefault()?.QuantityPerBox.ToString();
-                    result.Remarks = data[0].Remarks;
-                    var productInformation = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
-                    result.ShippingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().ShippingType).DisplayName;
-                    result.PackagingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().PackagingType).DisplayName;
-                    result.PlaceOfDelivery = productInformation.FirstOrDefault()?.PlaceOfDelivery;
-                }
-                return result;
-           
+            //ProductDevelopmentInput data = _objectMapper.Map<ProductDevelopmentInput>(dto);
+
+            List<ProductDevelopmentInput> data = await _productDevelopmentInputRepository.GetAll()
+                    .Where(p => dto.AuditFlowId.Equals(p.AuditFlowId))
+                    .Where(p => dto.SolutionId.Equals(p.SolutionId)).ToListAsync();
+            PostProductDevelopmentInputDto result = new PostProductDevelopmentInputDto();
+            if (data.Count == 1)
+            {
+                result.Picture3DFileId = data.FirstOrDefault().Picture3DFileId.ToString();
+                result.Pixel = data.FirstOrDefault().Pixel.ToString();
+                result.FOV = data.FirstOrDefault().FOV.ToString();
+                result.OuterPackagingLength = data.FirstOrDefault().OuterPackagingLength.ToString();
+                result.OuterPackagingWidth = data.FirstOrDefault().OuterPackagingWidth.ToString();
+                result.OuterPackagingHeight = data.FirstOrDefault().OuterPackagingHeight.ToString();
+                result.SingleProductWeight = data.FirstOrDefault().SingleProductWeight.ToString();
+                result.SingleBoxQuantity = data.FirstOrDefault().SingleBoxQuantity.ToString();
+                result.InnerPackagingLength = data.FirstOrDefault().InnerPackagingLength.ToString();
+                result.InnerPackagingWidth = data.FirstOrDefault().InnerPackagingWidth.ToString();
+                result.InnerPackagingHeight = data.FirstOrDefault().InnerPackagingHeight.ToString();
+                result.IsHit = data.FirstOrDefault().IsHit;
+                result.BoxesPerPallet = data.FirstOrDefault().BoxesPerPallet.ToString();
+                result.QuantityPerBox = data.FirstOrDefault()?.QuantityPerBox.ToString();
+                result.Remarks = data[0].Remarks;
+                var productInformation = await _priceEvaluationRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId);
+                result.ShippingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().ShippingType).DisplayName;
+                result.PackagingType = _financeDictionaryDetailRepository.FirstOrDefault(p => p.Id == productInformation.FirstOrDefault().PackagingType).DisplayName;
+                result.PlaceOfDelivery = productInformation.FirstOrDefault()?.PlaceOfDelivery;
+            }
+            return result;
+
         }
 
         /// <summary>
@@ -172,19 +172,20 @@ namespace Finance.ProductDevelopment
         {
             try
             {
-                List<Solution> resultNew=new List<Solution>();           
-                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);                
-                List<string> strings = result.Select(p=>p.ModuleName).Distinct().ToList();
-                strings.ForEach(m => {
+                List<Solution> resultNew = new List<Solution>();
+                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => auditFlowId == p.AuditFlowId);
+                List<string> strings = result.Select(p => p.ModuleName).Distinct().ToList();
+                strings.ForEach(m =>
+                {
 
-                    resultNew.AddRange(result.Where(p =>p.ModuleName==m));
+                    resultNew.AddRange(result.Where(p => p.ModuleName == m));
                 });
                 return resultNew;
             }
             catch (Exception ex)
             {
                 throw new FriendlyException(ex.Message);
-            }       
+            }
         }
         /// <summary>
         /// 客户特殊性需求与SORId
@@ -209,7 +210,7 @@ namespace Finance.ProductDevelopment
                     SorDto.AuditFlowId = auditFlowId;
                     SorDto.SorFileName = fileName.FirstOrDefault().Name;
                     SorDto.SorFileId = SorFileId;
-                    SorDto.CustomerSpecialRequest= CustomerSpecialRequest;
+                    SorDto.CustomerSpecialRequest = CustomerSpecialRequest;
                     SorDto.IsSuccess = true;
                     return SorDto;
                 }
