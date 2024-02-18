@@ -238,6 +238,7 @@ namespace Finance.ProductDevelopment
                 try
                 {
                     Dictionary<string, List<string>> Dic = wlzl.DeepClone();
+                    List<KeyOrValue> RemoveDic = new();
                     for (int i = 2; i < lastRowNum + 1; i++)
                     {
                         //获取物料超级大类的值
@@ -269,13 +270,17 @@ namespace Finance.ProductDevelopment
                                 string MaterialType = Dic[$"{LargeVariety},{GeneralCategory}"].FirstOrDefault(p => p.Equals(MaterialTypeICell));
                                 if (string.IsNullOrEmpty(MaterialType)) { throw new FriendlyException($"{i + 1}行的物料种类非标准模版种类"); }
                             }
-                            Dic[$"{LargeVariety},{GeneralCategory}"].Remove(MaterialTypeICell);
+                            RemoveDic.Add(new() { Key= $"{LargeVariety},{GeneralCategory}" ,Value= MaterialTypeICell });
                         }
                         else
                         {
                             throw new FriendlyException($"{i}行,{LargeVariety}大类下{GeneralCategory}物料大类在模版中不存在!,请修改!");
                         }
                     }
+                    foreach (var item in RemoveDic)
+                    {
+                        Dic[item.Key].Remove(item.Value);
+                    }                    
                     var ll = Dic.Where(p => p.Value.Count == 0);
                     ll.ForEach(p =>
                     {
