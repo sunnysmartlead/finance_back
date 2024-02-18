@@ -66,5 +66,29 @@ namespace Finance.MakeOffers
         /// 0:报价审批表保存
         /// </summary>
         public int nsource { get; set; }
+        /// <summary>
+        /// 开发计划
+        /// </summary>
+        public string DevelopmentPlan { get; set; }
+        /// <summary>
+        /// 报价币种
+        /// </summary>
+        public string QuoteCurrency { get; set; }
+
+        /// <summary>
+        /// SOP时间
+        /// </summary>
+        public int sopTime { get; set; }
+
+        /// <summary>
+        /// 项目生命周期
+        /// </summary>
+        public int projectCycle { get; set; }
+
+        /// <summary>
+        /// 付款方式
+        /// </summary>
+        public string paymentMethod { get; set; }
     }
 }
+

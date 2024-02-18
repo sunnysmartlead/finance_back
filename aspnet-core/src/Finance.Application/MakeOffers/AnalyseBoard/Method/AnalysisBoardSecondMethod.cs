@@ -5451,16 +5451,20 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         {
             ntype = dowm.Max(p => p.ntype);
         }
-
         string content = JsonConvert.SerializeObject(quotationListSecondDtoSave);
-
+        await _financeAuditQuotationListSave.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.version.Equals(version)&&p.nsource.Equals(0));
         await _financeAuditQuotationListSave.InsertAsync(new AuditQuotationListSave()
         {
             AuditFlowId = auditFlowId,
             ntype = ntype + 1,
             version = version,
             nsource = 0,
-            AuditQuotationListJson = content
+            AuditQuotationListJson = content,
+            DevelopmentPlan= quotationListSecondDtoSave.DevelopmentPlan,
+            QuoteCurrency= quotationListSecondDtoSave.QuoteCurrency,
+            sopTime= quotationListSecondDtoSave.sopTime,
+            projectCycle= quotationListSecondDtoSave.projectCycle,
+            paymentMethod= quotationListSecondDtoSave.paymentMethod,
         });
     }
     /// <summary>
