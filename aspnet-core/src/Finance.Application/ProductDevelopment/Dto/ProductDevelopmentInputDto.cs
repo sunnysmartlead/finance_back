@@ -271,7 +271,7 @@ namespace Finance.ProductDevelopment.Dto
         /// <summary>
         /// 3D爆炸图Id
         /// </summary>
-        public string Picture3DFileId { get; set; }
+        public long Picture3DFileId { get; set; }
         /// <summary>
         /// 像素M
         /// </summary>
