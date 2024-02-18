@@ -33,6 +33,7 @@ using MiniExcelLibs;
 using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using test;
+using NPOI.XSSF.Streaming.Values;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
 
@@ -3750,7 +3751,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<IActionResult> DownloadAuditQuotationList(long auditFlowId, int version, int ntype)
     {
-        var value = await getAppExcel(auditFlowId, version, ntype);
+        ExcelApprovalDtoSave value = await getAppExcel(auditFlowId, version, ntype);
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
         try
@@ -5362,7 +5363,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         pp.SampleOffer = sampless;
         pp.BiddingStrategySecondModelsAct = BiddingStrategySecondModelsAct;
 
-
+        AuditQuotationListSave quotationListSave = await _financeAuditQuotationListSave.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(processId) && p.version.Equals(version) && p.nsource.Equals(0));
+        if (quotationListSave != null)
+        {
+            pp.DevelopmentPlan = quotationListSave.DevelopmentPlan;//开发计划
+            pp.QuoteCurrency = quotationListSave.QuoteCurrency;//报价币种
+            pp.SopTime = quotationListSave.sopTime;//SOP时间
+            pp.ProjectCycle = quotationListSave.projectCycle;//项目生命周期
+            pp.PaymentMethod = quotationListSave.paymentMethod;//付款方式
+        }
         return pp;
     }
     /// <summary>
@@ -6442,7 +6451,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
 
-    public async Task<ExcelApprovalDto> getAppExcel(long auditFlowId, int version, int ntype)
+    public async Task<ExcelApprovalDtoSave> getAppExcel(long auditFlowId, int version, int ntype)
     {
         var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
@@ -6777,7 +6786,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-        var value = new ExcelApprovalDto()
+        var value = new ExcelApprovalDtoSave()
         {
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
@@ -6811,6 +6820,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             biddingStrategySecondModels = BiddingStrategySecondModels, //报价策略
             sop = Sop
         };
+        //
+        AuditQuotationListSave quotationListSave = await _financeAuditQuotationListSave.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.version.Equals(version)&&p.nsource.Equals(0));
+        if(quotationListSave!=null)
+        {
+            value.DevelopmentPlan = quotationListSave.DevelopmentPlan;//开发计划
+            value.QuoteCurrency = quotationListSave.QuoteCurrency;//报价币种
+            value.sopTime = quotationListSave.sopTime;//SOP时间
+            value.projectCycle = quotationListSave.projectCycle;//项目生命周期
+            value.paymentMethod = quotationListSave.paymentMethod;//付款方式
+        }
         return value;
     }
 }
