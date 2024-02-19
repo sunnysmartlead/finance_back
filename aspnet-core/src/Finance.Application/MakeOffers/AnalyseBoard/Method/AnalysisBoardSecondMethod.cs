@@ -3572,7 +3572,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     SolutionName = solution.Product,
                     SolutionId = solution.Id,
                     GradientId = gradient.Id,
-                    Gradient = gradient.GradientValue.ToString(),
+                    Gradient = gradient.GradientValue.ToString()+ (sopTimeType.Equals(YearType.Year) ? "K/Y" : "K/HY"),
                     BomSop = Math.Round(bomsop, 2),
                     Bomfull = Math.Round(Bomfull, 2),
                     ScSop = Math.Round(ScSop, 2),
@@ -4052,7 +4052,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<NreExcel> list = new();
         SolutionQuotation solutionQuotation =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
-        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+        List<Solution> solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
         //从数据库获取
         List<DeviceQuotation> deviceQuotations =
             await _deviceQuotation.GetAllListAsync(
@@ -4119,7 +4119,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 list.Add(new NreExcel()
                 {
-                    solutionName = solution.SolutionName,
+                    solutionName = solution.Product,
                     Index = dev.DeviceName,
                     CostName = Math.Round(dev.DevicePrice, 2).ToString(),
                     PricingMoney = Math.Round(dev.Number, 2).ToString(),
@@ -5071,7 +5071,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<GradientGrossMarginModel> gradientGrossMarginModels = new();
         //获取毛利率
         List<decimal> gross = await GetGrossMargin();
-        var gml = priceEvaluationStartInputResult.GradientModel;
+        List<GradientModelInput> gml = priceEvaluationStartInputResult.GradientModel;
         //走量信息
         List<MotionMessageSecondModel> messageModels = new List<MotionMessageSecondModel>();
 
@@ -5079,11 +5079,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var gmlmap in gmlmaps)
         {
+            var ygs = gmlmap.Value;
             MotionMessageSecondModel motionMessageModel = new MotionMessageSecondModel()
             {
-                MessageName = gmlmap.Key + "K/Y"
-            };
-            var ygs = gmlmap.Value;
+                MessageName = gmlmap.Key + (ygs[0].GradientModelYear[0].UpDown.Equals(YearType.Year) ? "K/Y" : "K/HY")
+            };           
 
             List<YearValue> sopOrValueModes = new();
             for (int i = 0; i < ygs.Count; i++)
