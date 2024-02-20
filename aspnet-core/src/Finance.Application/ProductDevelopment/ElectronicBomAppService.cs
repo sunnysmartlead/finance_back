@@ -208,7 +208,7 @@ namespace Finance.ProductDevelopment
                 "PIN针连接器/座",
                 "LVDS连接器", "线路板（尺寸、叠构等）" };
             //物料大类
-            string porpValue = "PCB1/Sensor板(①如果是多块板，各PCB分别填写;②如果不包含该器件，选择不涉及;③如果同时涉及多个同类型器件，需要分行写出;）";
+            //string porpValue = "PCB1/Sensor板(①如果是多块板，各PCB分别填写;②如果不包含该器件，选择不涉及;③如果同时涉及多个同类型器件，需要分行写出;）";
             int MaterialCategoryCount = 0;//一共几个物料大类
             List<SERow> sERows = new List<SERow>();
             #endregion
@@ -252,17 +252,17 @@ namespace Finance.ProductDevelopment
                         //取物料种类
                         ICell MaterialTypeICell = sheet.GetRow(i).GetCell(1);
                         string MaterialType = wlzl.FirstOrDefault(p => p.Equals(MaterialTypeICell.ToString()));
-                        if(string.IsNullOrEmpty(MaterialType))
+                        if (string.IsNullOrEmpty(MaterialType))
                         {
-                            throw new FriendlyException($"{i+1}行的物料种类非标准模版种类");
+                            throw new FriendlyException($"{i + 1}行的物料种类非标准模版种类");
                         }
                         //如果无聊大类的值不为空和""咋表示进入了下一个物料大类
-                        if (porp != null&&!string.IsNullOrEmpty(porp.ToString()))
-                        {                           
-                            if (porpValue!= porp.ToString())
-                            {
-                                throw new FriendlyException($"{i + 1}行的物料大类非标准模版大类");
-                            }
+                        if (porp != null && !string.IsNullOrEmpty(porp.ToString()))
+                        {
+                            //if (porpValue!= porp.ToString())
+                            //{
+                            //    throw new FriendlyException($"{i + 1}行的物料大类非标准模版大类");
+                            //}
                             //开启开关
                             Switch = true;
                             //物料大类相加
@@ -282,15 +282,15 @@ namespace Finance.ProductDevelopment
                         //进行深拷贝
                         List<string> strings = wlzl.DeepClone();
                         //循环开始行和结束行
-                        for (int i = item.StartLine-1; i <=item.EndLine-1; i++)
+                        for (int i = item.StartLine - 1; i <= item.EndLine - 1; i++)
                         {
                             string prop = sheet.GetRow(i).GetCell(1).ToString();
                             //除去模版中的数据
                             strings.Remove(prop);
                         }
                         //如果到最后模版数据里没有被去除干净,说明用户上传的模版有欠缺
-                        if(strings.Count!=0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,开始行:{item.StartLine};结束行:{item.EndLine},缺少\"{strings.ListToStr()}\",请修改!");
-                    }                 
+                        if (strings.Count != 0) throw new FriendlyException($"第{item.WhichMaterialCategory}个物料大类的物料种类与模版不符合,开始行:{item.StartLine};结束行:{item.EndLine},缺少\"{strings.ListToStr()}\",请修改!");
+                    }
                 }
                 catch (FriendlyException ex)
                 {
@@ -475,52 +475,33 @@ namespace Finance.ProductDevelopment
                 }
                 else
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该零件方案BOM没有上传!");
+                    }
                 }
 
-
+                await _electronicBomInfoRepository.HardDeleteAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId));
                 foreach (var item in electronicBomDtos)
                 {
                     ElectronicBomInfo electronicBomInfo;
-                    var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                    if (bomInfoByProductIds.Count > 0)
-                    {
-                        await _electronicBomInfoRepository.HardDeleteAsync(p => p.AuditFlowId.Equals(dto.AuditFlowId) && p.SolutionId.Equals(dto.SolutionId));
-                        electronicBomInfo = new()
-                        {
-                            AuditFlowId = item.AuditFlowId,
-                            SolutionId = item.SolutionId,
-                            ProductId = item.ProductId,
-                            CategoryName = item.CategoryName,
-                            TypeName = item.TypeName,
-                            IsInvolveItem = item.IsInvolveItem,
-                            SapItemName = item.SapItemName,
-                            SapItemNum = item.SapItemNum,
-                            AssemblyQuantity = item.AssemblyQuantity,
-                            EncapsulationSize = item.EncapsulationSize,
-                            FileId = item.FileId
-                        };
-                        await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
-                    }
-                    else
-                    {
-                        electronicBomInfo = new()
-                        {
-                            AuditFlowId = item.AuditFlowId,
-                            SolutionId = item.SolutionId,
-                            ProductId = item.ProductId,
-                            CategoryName = item.CategoryName,
-                            TypeName = item.TypeName,
-                            IsInvolveItem = item.IsInvolveItem,
-                            SapItemName = item.SapItemName,
-                            SapItemNum = item.SapItemNum,
-                            AssemblyQuantity = item.AssemblyQuantity,
-                            EncapsulationSize = item.EncapsulationSize,
-                            FileId = item.FileId
-                        };
-                        await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
-                    }
+                    //var bomInfoByProductIds = await _electronicBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
 
+                    electronicBomInfo = new()
+                    {
+                        AuditFlowId = item.AuditFlowId,
+                        SolutionId = item.SolutionId,
+                        ProductId = item.ProductId,
+                        CategoryName = item.CategoryName,
+                        TypeName = item.TypeName,
+                        IsInvolveItem = item.IsInvolveItem,
+                        SapItemName = item.SapItemName,
+                        SapItemNum = item.SapItemNum,
+                        AssemblyQuantity = item.AssemblyQuantity,
+                        EncapsulationSize = item.EncapsulationSize,
+                        FileId = item.FileId
+                    };
+                    await _electronicBomInfoRepository.InsertAsync(electronicBomInfo);
                 }
 
                 #region 录入完成之后
@@ -572,7 +553,14 @@ namespace Finance.ProductDevelopment
                 List<BoardDto> boardDtos = dto.BoardDtos;
                 if (boardDtos.Count == 0)
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该方案拼版内容不可为空！");
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 boardDtos.ForEach(bomInfo =>
                 {

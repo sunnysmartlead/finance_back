@@ -18,6 +18,7 @@ using Finance.Job;
 using Finance.Nre;
 using Finance.PriceEval;
 using Finance.WorkFlows.Dto;
+//using Interface.Expends;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using NPOI.POIFS.Crypt.Dsig;
@@ -629,12 +630,16 @@ namespace Finance.WorkFlows
             }
 
             //将重置给自己的任务取消激活
-            var entity = await _taskResetRepository.FirstOrDefaultAsync(
+            var entitys = await _taskResetRepository.GetAllListAsync(
                 p => p.NodeInstanceId == input.NodeInstanceId && p.IsActive
                    && p.TargetUserId == AbpSession.UserId.Value);
-            if (entity is not null)
+
+            foreach (var entity in entitys)
             {
-                entity.IsActive = false;
+                if (entity is not null)
+                {
+                    entity.IsActive = false;
+                }
             }
 
             //再把任务重置给别人
@@ -912,8 +917,8 @@ namespace Finance.WorkFlows
                     {
                         ProcessIdentifier = item.ProcessIdentifier,
                         ProcessName = item.NodeName
-                    }},userId);
-                    if (dto.IsNullOrEmpty()) 
+                    }}, userId);
+                    if (dto.IsNullOrEmpty())
                     {
                         deleteUserIds.Add(userId);
                     }
@@ -1370,7 +1375,6 @@ namespace Finance.WorkFlows
             return result;
         }
 
-
         /// <summary>
         /// 核价看板专用流转接口
         /// </summary>
@@ -1399,7 +1403,6 @@ namespace Finance.WorkFlows
 
             #endregion
 
-
             #region 同意
 
             //审批意见集合有且仅有同意
@@ -1419,16 +1422,17 @@ namespace Finance.WorkFlows
                     var gradientCount = await _gradientRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
                     var solutionCount = await _solutionRepository.CountAsync(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId);
 
-                    var fuBom = await _fu_BomRepository.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId).Select(p => new { p.GradientId, p.SolutionId }).ToListAsync();
-
-                    var fuGradientCount = fuBom.DistinctBy(p => p.GradientId).Count();
-                    var fuSolutionCount = fuBom.DistinctBy(p => p.SolutionId).Count();
-                    if (gradientCount != fuGradientCount || solutionCount != fuSolutionCount)
+                    var fuBomCount = await _fu_BomRepository.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId)
+                        .Select(p => new { p.GradientId, p.SolutionId })
+                        .Distinct()
+                        .CountAsync();
+                    
+                    if (fuBomCount != (gradientCount * solutionCount))
                     {
                         throw new FriendlyException($"没有上传完整的核价表，不可流转！");
                     }
 
-                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId)// && p.JsonData != null && p.JsonData != string.Empty
+                    var auditFlowIdPricingForms = await _auditFlowIdPricingForm.GetAll().Where(p => p.AuditFlowId == nodeInstance.WorkFlowInstanceId)
                         .Select(p => new { p.SolutionId }).ToListAsync();
                     var auditFlowIdPricingFormsCount = auditFlowIdPricingForms.DistinctBy(p => p.SolutionId).Count();
 

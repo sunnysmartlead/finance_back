@@ -1,6 +1,7 @@
 ﻿using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.EntityFrameworkCore.Repositories;
+using Abp.Extensions;
 using Abp.ObjectMapping;
 using Abp.Runtime.Session;
 using Abp.UI;
@@ -237,6 +238,7 @@ namespace Finance.ProductDevelopment
                 try
                 {
                     Dictionary<string, List<string>> Dic = wlzl.DeepClone();
+                    List<KeyOrValue> RemoveDic = new();
                     for (int i = 2; i < lastRowNum + 1; i++)
                     {
                         //获取物料超级大类的值
@@ -268,13 +270,17 @@ namespace Finance.ProductDevelopment
                                 string MaterialType = Dic[$"{LargeVariety},{GeneralCategory}"].FirstOrDefault(p => p.Equals(MaterialTypeICell));
                                 if (string.IsNullOrEmpty(MaterialType)) { throw new FriendlyException($"{i + 1}行的物料种类非标准模版种类"); }
                             }
-                            Dic[$"{LargeVariety},{GeneralCategory}"].Remove(MaterialTypeICell);
+                            RemoveDic.Add(new() { Key= $"{LargeVariety},{GeneralCategory}" ,Value= MaterialTypeICell });
                         }
                         else
                         {
                             throw new FriendlyException($"{i}行,{LargeVariety}大类下{GeneralCategory}物料大类在模版中不存在!,请修改!");
                         }
                     }
+                    foreach (var item in RemoveDic)
+                    {
+                        Dic[item.Key].Remove(item.Value);
+                    }                    
                     var ll = Dic.Where(p => p.Value.Count == 0);
                     ll.ForEach(p =>
                     {
@@ -488,8 +494,12 @@ namespace Finance.ProductDevelopment
                 throw new FriendlyException(dto.SolutionId + ":该零件方案id已经提交过了");
             }
             else
-            {
+            {             
                 await _productDevelopmentInputAppService.SaveProductDevelopmentInput(dto);
+                //if (dto.Picture3DFileId.IsNullOrEmpty()&& dto.Opinion == FinanceConsts.Done)
+                //{
+                //    throw new FriendlyException("3D爆炸图必选上传");                    
+                //}
                 //查询总方案
                 List<SolutionModel> solutionId = await TotalSolution(dto.AuditFlowId);
                 //var solutionTable =  _solutionTableRepository.GetAll().Where(p => p.Id == dto.SolutionId).FirstOrDefault();
@@ -518,12 +528,16 @@ namespace Finance.ProductDevelopment
                 }
                 else
                 {
-                    throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
+                    if (dto.Opinion == FinanceConsts.Done)
+                    {
+                        throw new FriendlyException(dto.SolutionId + ":该零件BOM没有上传!");
+                    }
                 }
 
-                var bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
-                if (bomInfoByProductIds.Count == 0)
-                {
+                List<StructureBomInfo> bomInfoByProductIds = await _structureBomInfoRepository.GetAllListAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                await _structureBomInfoRepository.HardDeleteAsync(p => p.AuditFlowId == dto.AuditFlowId && p.SolutionId == dto.SolutionId);
+                //if (bomInfoByProductIds.Count == 0)
+                //{
                     foreach (var item in structureBomDtos)
                     {
                         StructureBomInfo structureBomInfo = new()
@@ -550,7 +564,7 @@ namespace Finance.ProductDevelopment
                         };
                         await _structureBomInfoRepository.InsertAsync(structureBomInfo);
                     }
-                }
+               // }
 
                 #region 录入完成之后
 

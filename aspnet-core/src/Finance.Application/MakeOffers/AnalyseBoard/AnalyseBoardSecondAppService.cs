@@ -1119,7 +1119,26 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"流程编号为空");
         }
 
-        _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
+       await _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
+    }
+
+
+    /// <summary>
+    /// 报价审批表保存(后加)
+    /// </summary>
+    /// <param name="quotationListSecondDto"></param>   
+    /// <returns></returns>
+    [HttpPost]
+    public async Task PostQuotationApprovedSave(ExcelApprovalDtoSave quotationListSecondDto)
+    {
+        var auditFlowId = quotationListSecondDto.auditFlowId;
+
+        if (auditFlowId == 0)
+        {
+            throw new FriendlyException($"流程编号为空");
+        }
+
+        await _analysisBoardSecondMethod.PostQuotationApprovedSave(quotationListSecondDto);
     }
 
     /// <summary>

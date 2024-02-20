@@ -33,6 +33,7 @@ using MiniExcelLibs;
 using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using test;
+using NPOI.XSSF.Streaming.Values;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
 
@@ -142,6 +143,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 报价审核表
     /// </summary>
     private readonly IRepository<AuditQuotationList, long> _financeAuditQuotationList;
+    /// <summary>
+    /// 报价审核表(后加)
+    /// </summary>
+    private readonly IRepository<AuditQuotationListSave, long> _financeAuditQuotationListSave;
 
     private readonly ProcessHoursEnterDeviceAppService _processHoursEnterDeviceAppService;
 
@@ -191,7 +196,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ExternalQuotation, long> externalQuotation,
         IRepository<ProductExternalQuotationMx, long> externalQuotationMx,
         IRepository<NreQuotationList, long> nreQuotationList,
-        WorkflowInstanceAppService workflowInstanceAppService)
+        WorkflowInstanceAppService workflowInstanceAppService,
+        IRepository<AuditQuotationListSave, long> auditQuotationListSave)
     {
         _resourceProjectBoardOffers = resourceProjectBoardOffers;
         _dynamicUnitPriceOffers = dynamicUnitPriceOffers;
@@ -221,6 +227,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _externalQuotationMx = externalQuotationMx;
         _NreQuotationList = nreQuotationList;
         _workflowInstanceAppService = workflowInstanceAppService;
+        _financeAuditQuotationListSave = auditQuotationListSave;
     }
 
     /// <summary>
@@ -3565,7 +3572,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                     SolutionName = solution.Product,
                     SolutionId = solution.Id,
                     GradientId = gradient.Id,
-                    Gradient = gradient.GradientValue.ToString(),
+                    Gradient = gradient.GradientValue.ToString()+ (sopTimeType.Equals(YearType.Year) ? "K/Y" : "K/HY"),
                     BomSop = Math.Round(bomsop, 2),
                     Bomfull = Math.Round(Bomfull, 2),
                     ScSop = Math.Round(ScSop, 2),
@@ -3744,7 +3751,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// <returns></returns>
     public async Task<IActionResult> DownloadAuditQuotationList(long auditFlowId, int version, int ntype)
     {
-        var value = await getAppExcel(auditFlowId, version, ntype);
+        ExcelApprovalDtoSave value = await getAppExcel(auditFlowId, version, ntype);
         var priceEvaluationStartInputResult =
             await _priceEvaluationAppService.GetPriceEvaluationStartData(auditFlowId);
         try
@@ -4045,7 +4052,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<NreExcel> list = new();
         SolutionQuotation solutionQuotation =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
-        var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
+        List<Solution> solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
         //从数据库获取
         List<DeviceQuotation> deviceQuotations =
             await _deviceQuotation.GetAllListAsync(
@@ -4112,7 +4119,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 list.Add(new NreExcel()
                 {
-                    solutionName = solution.SolutionName,
+                    solutionName = solution.Product,
                     Index = dev.DeviceName,
                     CostName = Math.Round(dev.DevicePrice, 2).ToString(),
                     PricingMoney = Math.Round(dev.Number, 2).ToString(),
@@ -5064,7 +5071,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         List<GradientGrossMarginModel> gradientGrossMarginModels = new();
         //获取毛利率
         List<decimal> gross = await GetGrossMargin();
-        var gml = priceEvaluationStartInputResult.GradientModel;
+        List<GradientModelInput> gml = priceEvaluationStartInputResult.GradientModel;
         //走量信息
         List<MotionMessageSecondModel> messageModels = new List<MotionMessageSecondModel>();
 
@@ -5072,11 +5079,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         foreach (var gmlmap in gmlmaps)
         {
+            var ygs = gmlmap.Value;
             MotionMessageSecondModel motionMessageModel = new MotionMessageSecondModel()
             {
-                MessageName = gmlmap.Key + "K/Y"
-            };
-            var ygs = gmlmap.Value;
+                MessageName = gmlmap.Key + (ygs[0].GradientModelYear[0].UpDown.Equals(YearType.Year) ? "K/Y" : "K/HY")
+            };           
 
             List<YearValue> sopOrValueModes = new();
             for (int i = 0; i < ygs.Count; i++)
@@ -5356,7 +5363,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         pp.SampleOffer = sampless;
         pp.BiddingStrategySecondModelsAct = BiddingStrategySecondModelsAct;
 
-
+        AuditQuotationListSave quotationListSave = await _financeAuditQuotationListSave.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(processId) && p.version.Equals(version) && p.nsource.Equals(0));
+        if (quotationListSave != null)
+        {
+            pp.DevelopmentPlan = quotationListSave.DevelopmentPlan;//开发计划
+            pp.QuoteCurrency = quotationListSave.QuoteCurrency;//报价币种
+            pp.SopTime = quotationListSave.sopTime;//SOP时间
+            pp.ProjectCycle = quotationListSave.projectCycle;//项目生命周期
+            pp.PaymentMethod = quotationListSave.paymentMethod;//付款方式
+        }
         return pp;
     }
     /// <summary>
@@ -5427,7 +5442,40 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             AuditQuotationListJson = content
         });
     }
-
+    /// <summary>
+    /// 报价审批表保存(后加)
+    /// </summary>
+    /// <param name="quotationListSecondDtoSave"></param>
+    /// <returns></returns>
+    public async Task PostQuotationApprovedSave(ExcelApprovalDtoSave quotationListSecondDtoSave)
+    {
+        var auditFlowId = quotationListSecondDtoSave.auditFlowId;
+        var version = quotationListSecondDtoSave.version;
+        var isQuotation = await getQuotation(auditFlowId, version);
+        int type = isQuotation ? 1 : 0;
+        var dowm = await _financeAuditQuotationList.GetAllListAsync(p =>
+            p.AuditFlowId == auditFlowId && p.version == version && p.nsource == 0);
+        int ntype = 0;
+        if (dowm is not null && dowm.Count > 0)
+        {
+            ntype = dowm.Max(p => p.ntype);
+        }
+        string content = JsonConvert.SerializeObject(quotationListSecondDtoSave);
+        await _financeAuditQuotationListSave.HardDeleteAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.version.Equals(version)&&p.nsource.Equals(0));
+        await _financeAuditQuotationListSave.InsertAsync(new AuditQuotationListSave()
+        {
+            AuditFlowId = auditFlowId,
+            ntype = ntype + 1,
+            version = version,
+            nsource = 0,
+            AuditQuotationListJson = content,
+            DevelopmentPlan= quotationListSecondDtoSave.DevelopmentPlan,
+            QuoteCurrency= quotationListSecondDtoSave.QuoteCurrency,
+            sopTime= quotationListSecondDtoSave.sopTime,
+            projectCycle= quotationListSecondDtoSave.projectCycle,
+            paymentMethod= quotationListSecondDtoSave.paymentMethod,
+        });
+    }
     /// <summary>
     /// 获取审批列表
     /// </summary>
@@ -6403,7 +6451,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     }
 
 
-    public async Task<ExcelApprovalDto> getAppExcel(long auditFlowId, int version, int ntype)
+    public async Task<ExcelApprovalDtoSave> getAppExcel(long auditFlowId, int version, int ntype)
     {
         var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId && p.version == version);
@@ -6738,7 +6786,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         }
 
 
-        var value = new ExcelApprovalDto()
+        var value = new ExcelApprovalDtoSave()
         {
             date = DateTime.Now.ToString("yyyy-MM-dd"), //日期
             recordNumber = priceEvaluationStartInputResult.Number, //记录编号           
@@ -6772,6 +6820,16 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             biddingStrategySecondModels = BiddingStrategySecondModels, //报价策略
             sop = Sop
         };
+        //
+        AuditQuotationListSave quotationListSave = await _financeAuditQuotationListSave.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.version.Equals(version)&&p.nsource.Equals(0));
+        if(quotationListSave!=null)
+        {
+            value.DevelopmentPlan = quotationListSave.DevelopmentPlan;//开发计划
+            value.QuoteCurrency = quotationListSave.QuoteCurrency;//报价币种
+            value.sopTime = quotationListSave.sopTime;//SOP时间
+            value.projectCycle = quotationListSave.projectCycle;//项目生命周期
+            value.paymentMethod = quotationListSave.paymentMethod;//付款方式
+        }
         return value;
     }
 }

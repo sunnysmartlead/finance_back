@@ -1,0 +1,110 @@
+﻿<UserControl x:Class="SqlImport.PopUp.Task"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             mc:Ignorable="d"     
+             xmlns:prism="http://prismlibrary.com/"   
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             Background="Transparent" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <prism:Dialog.WindowStyle>
+        <Style TargetType="Window">
+            <Setter Property="prism:Dialog.WindowStartupLocation" Value="CenterOwner" />
+            <Setter Property="ShowInTaskbar" Value="False"/>
+            <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+            <Setter Property="WindowStyle" Value="None"/>
+        </Style>
+    </prism:Dialog.WindowStyle>
+    <Border    Background="WhiteSmoke">
+        <Grid  Background="Transparent">
+            <Grid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="退出" Style="{StaticResource MenuItemExit}" Command="{Binding Quit}"/>
+                </ContextMenu>
+            </Grid.ContextMenu>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+                <hc:TransitioningContentControl>
+                    <hc:UniformSpacingPanel Margin="20">
+                        <StackPanel Orientation="Horizontal">
+
+                            <ComboBox Text="{Binding DegreeEmergency}"  hc:InfoElement.Placeholder="请选择紧急程度"  Height="40" hc:InfoElement.Title="紧急程度" Width="250" hc:InfoElement.TitlePlacement="Left" Style="{StaticResource ComboBoxExtend}" hc:InfoElement.Necessary="True" hc:InfoElement.Symbol="*" Margin="0,16,0,0">
+                                <ComboBoxItem    Content="一般" IsSelected="True"/>
+                                <ComboBoxItem    Content="加急" />
+                            </ComboBox>
+                           
+                            <TextBox hc:InfoElement.Placeholder="请输入任务名称" Width="250" Height="40" Text="{Binding TaskName}" Style="{StaticResource TextBoxExtend}" hc:InfoElement.Necessary="True" Margin="100,16,0,0"/>
+
+                            <Button Content="选择文件" Height="40" Margin="100 10 0 0" Command="{Binding SelectFile}"/>
+                        </StackPanel>
+                    </hc:UniformSpacingPanel>
+                </hc:TransitioningContentControl>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"></ColumnDefinition>
+                    <ColumnDefinition Width="3*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <!--<hc:TransitioningContentControl>
+                        <StackPanel Margin="0 0 0 0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center">
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="图片共有：" Style="{StaticResource TextBlockLargeBold}"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="{Binding ImgCount}" Style="{StaticResource TextBlockLargeBold}"/>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="0 82 0 0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center">
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="Json共有：" Style="{StaticResource TextBlockLargeBold}"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="{Binding JsonCount}" Style="{StaticResource TextBlockLargeBold}"/>
+
+                        </StackPanel>
+                    </hc:TransitioningContentControl>-->
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="0 70 0 0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center">
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="其他文件共有：" Style="{StaticResource TextBlockLargeBold}"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="{Binding ElseCount}" Style="{StaticResource TextBlockLargeBold}"/>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="0 150 0 0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center">
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="Sql共有：" Style="{StaticResource TextBlockLargeBold}"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="{Binding SqlCount}" Style="{StaticResource TextBlockLargeBold}"/>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="0 260 0 0"  Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Center">
+
+                            <ToggleButton Style="{StaticResource ToggleButtonLoading}" IsChecked="{Binding ConfirmUploadBool}" Command="{Binding ConfirmUpload}" Content="确认上传" Margin="5" Width="180" Height="50"/>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="0 50 0 0" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Top">
+                            <ListBox Margin="16" Width="400" Height="250" ItemsSource="{Binding ElseJsonFileModel}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                </Grid>
+                <Grid Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <hc:TransitioningContentControl>
+                        <StackPanel Margin="5" Orientation="Horizontal">
+                            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" Text="匹配不上图片的json：" Style="{StaticResource TextBlockLargeBold}"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="5" Text="{Binding ElseJsonCount}" Style="{StaticResource TextBlockLargeBold}"/>
+                        </StackPanel>
+                    </hc:TransitioningContentControl>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

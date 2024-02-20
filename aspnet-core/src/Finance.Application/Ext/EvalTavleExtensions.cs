@@ -69,7 +69,7 @@ namespace Finance.Ext
                     AssemblyCount = row.Try(7, p => p.NumericCellValue.ToString().ToDouble()),
                     MaterialPrice = row.Try(8, p => p.NumericCellValue.ToString().ToDecimal()),
                     CurrencyText = row.Try(9, p => p.StringCellValue.ToString()),
-                    ExchangeRate = row.Try(10, p => p.NumericCellValue.ToString().ToDecimal()),
+                    ExchangeRate = row.Try(10, p => p.NumericCellValue.ToString().ToDecimal(), p => p != decimal.Zero, "汇率不能为0"),
                     MaterialPriceCyn = row.Try(11, p => p.NumericCellValue.ToString().ToDecimal()),
                     TotalMoneyCyn = row.Try(12, p => p.NumericCellValue.ToString().ToDecimal()),
                     TotalMoneyCynNoCustomerSupply = row.Try(13, p => p.NumericCellValue.ToString().ToDecimal()),
@@ -432,16 +432,34 @@ namespace Finance.Ext
         /// </summary>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public static T Try<T>(this IRow row, int columnIndex, Func<ICell, T> func)
+        public static T Try<T>(this IRow row, int columnIndex, Func<ICell, T> func, Predicate<T> checkFunc = null, string errorMsg = "")
         {
+            T result;
             try
             {
-                return func(row.Cells[columnIndex]);
+                result = func(row.Cells[columnIndex]);
             }
             catch (Exception e)
             {
-                throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列读取错误。\r\n错误原因：{e.Message}", e.StackTrace);
+                throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列读取错误。\r\n错误原因：{e.Message}。如果在此位置未发现错误，请检查核价表序号是否正确。", e.StackTrace);
             }
+            if (checkFunc is not null)
+            {
+                bool isError;
+                try
+                {
+                    isError = !checkFunc(result);
+                }
+                catch (Exception e)
+                {
+                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列参数校验时错误。\r\n错误原因：{e.Message}。 如果在此位置未发现错误，请检查核价表序号是否正确。", e.StackTrace);
+                }
+                if (isError)
+                {
+                    throw new FriendlyException($"{row.Sheet.SheetName}核价表{row.RowNum + 1}行{columnIndex.ToName()}列的值不合法 {errorMsg} 。如果在此位置未发现错误，请检查核价表序号是否正确。");
+                }
+            }
+            return result;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using Sundial;
+﻿using BakOracle.tool;
+using Sundial;
 
 namespace BakOracle.Job
 {
@@ -11,17 +12,20 @@ namespace BakOracle.Job
         private ADOBack  aDOBack { get; set; }
         private ADOBackTwo aDOBackTwo { get; set; }
 
-        public MailJob(Backups _backups, DapperBack dapperBack, DapperBacktTow dapperBacktwo, ADOBack aDOBack, ADOBackTwo aDOBackTwo)
+        private ImportTool importTool { get; set; }
+
+        public MailJob(Backups _backups, DapperBack dapperBack, DapperBacktTow dapperBacktwo, ADOBack aDOBack, ADOBackTwo aDOBackTwo, ImportTool importTool)
         {
             backups = _backups;
             this.dapperBack = dapperBack;
             this.dapperBacktwo = dapperBacktwo;
             this.aDOBack = aDOBack;
             this.aDOBackTwo = aDOBackTwo;
+            this.importTool = importTool;
         }
         public async Task ExecuteAsync(JobExecutingContext context, CancellationToken stoppingToken)
         {
-            aDOBackTwo.Main();
+            importTool.Main();
         }
     }
 }
