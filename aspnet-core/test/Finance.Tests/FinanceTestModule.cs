@@ -12,6 +12,13 @@ using Abp.Zero.EntityFrameworkCore;
 using Finance.EntityFrameworkCore;
 using Finance.Tests.DependencyInjection;
 using Abp.Reflection.Extensions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using System.IO;
+using Finance.EntityFrameworkCore.Seed;
+using Abp.Domain.Uow;
+using Finance.Ext;
+using Finance.Web.Host.Controllers;
 
 namespace Finance.Tests
 {
@@ -44,6 +51,17 @@ namespace Finance.Tests
             RegisterFakeService<AbpZeroDbMigrator<FinanceDbContext>>();
 
             Configuration.ReplaceService<IEmailSender, NullEmailSender>(DependencyLifeStyle.Transient);
+
+            IocManager.IocContainer.Register(
+                Component.For<IWebHostEnvironment>()
+                    .UsingFactoryMethod(() => new TestHostEnvironment())
+                    .LifestyleSingleton()
+
+                    //, Component.For<IUnitOfWorkManager>()
+                    //.UsingFactoryMethod(() => new UnitOfWorkManagerController().GetIUnitOfWorkManager())
+                    //.LifestyleSingleton()
+            );
+
         }
 
         public override void Initialize()
