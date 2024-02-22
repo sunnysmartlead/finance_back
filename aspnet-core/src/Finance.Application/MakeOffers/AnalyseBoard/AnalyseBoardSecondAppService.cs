@@ -1297,7 +1297,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
 
         var spc = await GetSoltionGradPriceList(auditFlowId, version, 1);
-        _analysisBoardSecondMethod.UpdateOrInsert(auditFlowId, version, spc);
+        await _analysisBoardSecondMethod.UpdateOrInsert(auditFlowId, version, spc);
         var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);
         int ntype = isQuotation ? 1 : 0;
 

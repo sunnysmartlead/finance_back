@@ -34,6 +34,9 @@ using Newtonsoft.Json;
 using NPOI.SS.Formula.Functions;
 using test;
 using NPOI.XSSF.Streaming.Values;
+using Finance.PropertyDepartment.Entering.Model;
+using Spire.Xls.Core;
+using Finance.PropertyDepartment.UnitPriceLibrary;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
 
@@ -168,7 +171,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
     private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
-
+    private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
+    /// <summary>
+    /// 客户目标价格
+    /// </summary>
+    private readonly IRepository<CustomerTargetPrice, long> _customerTargetPrice;
+    /// <summary>
+    /// 
+    /// </summary>
+    private readonly UnitPriceLibraryAppService _unitPriceLibraryAppService;
     public AnalysisBoardSecondMethod(IRepository<ModelCountYear, long> modelCountYear,
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<ModelCount, long> modelCount,
@@ -198,7 +209,10 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         IRepository<ProductExternalQuotationMx, long> externalQuotationMx,
         IRepository<NreQuotationList, long> nreQuotationList,
         WorkflowInstanceAppService workflowInstanceAppService,
-        IRepository<AuditQuotationListSave, long> auditQuotationListSave)
+        IRepository<AuditQuotationListSave, long> auditQuotationListSave,
+        PriceEvaluationGetAppService priceEvaluationGetAppService,
+        IRepository<CustomerTargetPrice, long> customerTargetPrice,
+        UnitPriceLibraryAppService unitPriceLibraryAppService)
     {
         _resourceProjectBoardOffers = resourceProjectBoardOffers;
         _dynamicUnitPriceOffers = dynamicUnitPriceOffers;
@@ -229,6 +243,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _NreQuotationList = nreQuotationList;
         _workflowInstanceAppService = workflowInstanceAppService;
         _financeAuditQuotationListSave = auditQuotationListSave;
+        _priceEvaluationGetAppService = priceEvaluationGetAppService;
+        _customerTargetPrice = customerTargetPrice;
+        _unitPriceLibraryAppService = unitPriceLibraryAppService;
     }
 
     /// <summary>
@@ -4938,7 +4955,48 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         var sol =
             await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId == processId && p.version == version);
+        //方案
         List<Solution> solutions = JsonConvert.DeserializeObject<List<Solution>>(sol.SolutionListJson);
+        #region  获取USD汇率 先获取核价看板中BOM成本币别是USD的汇率如果获取不到先取核价需求录入客户目标价那里录入的对应USD的汇率，再取不到，就取系统维护的对应的SOP年的汇率
+        //获取梯度
+        decimal USDExchangeRate = 0;
+        bool isBomCosts = false;
+        var porp = await _priceEvaluationGetAppService.GetGradient(processId);
+        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = processId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year });
+        if (BomCosts != null)
+        {
+            Material BomCostUsd = BomCosts.FirstOrDefault(p => p.CurrencyText.Equals("USD"));
+            if (BomCostUsd != null)
+            {
+                USDExchangeRate = BomCostUsd.ExchangeRate;
+            }
+            else
+            {
+                isBomCosts = true;
+            }
+        }
+        else
+        {
+            isBomCosts = true;
+        }
+        if (isBomCosts)
+        {
+            var ExchangeRates= await _unitPriceLibraryAppService.GetExchangeRate(new ExchangeRateInputDto() { MaxResultCount=100,SkipCount=0});
+            var ExchangeRateId= ExchangeRates.Items.FirstOrDefault(p=>p.ExchangeRateKind.Equals("USD"))?.Id;
+            CustomerTargetPrice customer = await _customerTargetPrice.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(processId)&p.Currency.Equals(ExchangeRateId));
+            if (customer != null&& customer.ExchangeRate!=null)
+            {
+                USDExchangeRate =Convert.ToDecimal(customer.ExchangeRate);
+            }else
+            {
+                var ExchangeRateUSDValue = ExchangeRates.Items.FirstOrDefault(p => p.ExchangeRateKind.Equals("USD"))?.ExchangeRateValue?[0]?.Value;
+                if(ExchangeRateUSDValue!=null)
+                {
+                    USDExchangeRate =Convert.ToDecimal(ExchangeRateUSDValue);
+                }
+            }
+        }
+        #endregion
         //样品阶段
 
         var pricetype = priceEvaluationStartInputResult.PriceEvalType;
@@ -4964,7 +5022,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 SolutionId = gtsl.SolutionId,
                 UnitPrice = gtsl.OfferUnitPrice
             }).ToList();
-
+       
 
         List<ManagerApprovalOfferNre> ManagerApprovalOfferNres = new List<ManagerApprovalOfferNre>();
         foreach (var solution in solutions)
@@ -5007,7 +5065,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             UnitPriceSumModel unitPriceSumModel = new UnitPriceSumModel()
             {
                 Product = solution.Product,
-                price = value
+                price = value,
+                priceUSD=value/ USDExchangeRate
             };
 
 
@@ -5031,7 +5090,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         managerApprovalOfferDto.ManagerApprovalOfferNres = ManagerApprovalOfferNres;
         return managerApprovalOfferDto;
     }
-
+    
     public async Task<QuotationListSecondDto> GetManagerApprovalOfferTwo(long processId, int version, int ntype)
     {
         var priceEvaluationStartInputResult =
@@ -5085,8 +5144,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             var ygs = gmlmap.Value;
             MotionMessageSecondModel motionMessageModel = new MotionMessageSecondModel()
             {
-                MessageName = gmlmap.Key + (ygs[0].GradientModelYear[0].UpDown.Equals(YearType.Year) ? "K/Y" : "K/HY")
+                MessageName = gmlmap.Key + "K/Y"
             };
+            var ygs = gmlmap.Value;
 
             List<YearValue> sopOrValueModes = new();
             for (int i = 0; i < ygs.Count; i++)
