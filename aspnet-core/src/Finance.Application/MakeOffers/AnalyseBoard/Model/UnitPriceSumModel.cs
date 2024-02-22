@@ -10,9 +10,14 @@ public class UnitPriceSumModel
     /// 产品
     /// </summary>
     public string Product { get; set; }    
-    
-    public decimal price{ get; set; }    
-    
+    /// <summary>
+    /// 价格CNY
+    /// </summary>
+    public decimal price{ get; set; }
+    /// <summary>
+    /// 价格USD
+    /// </summary>
+    public decimal priceUSD { get; set; }
 }
 
 
