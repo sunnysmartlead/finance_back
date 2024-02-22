@@ -188,43 +188,47 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="version"></param>
     /// <returns></returns>
     /// <exception cref="UserFriendlyException"></exception>
-    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version, int ntype,int ntime)
+    public async Task<AnalyseBoardSecondDto> getStatementAnalysisBoardSecond(long auditFlowId, int version, int ntype,
+        int ntime)
     {
         AnalyseBoardSecondDto analyseBoardSecondDto = new AnalyseBoardSecondDto();
         try
         {
             var sou = await _solutionQutation.FirstOrDefaultAsync(p =>
                 p.AuditFlowId == auditFlowId && p.version == version && p.ntime == ntime);
-        if (sou is null)
-        {
-            sou = await _solutionQutation.FirstOrDefaultAsync(p =>
-                p.AuditFlowId == auditFlowId && p.version == version);
-            var solutionList = JsonConvert.DeserializeObject<List<Solution>>(sou.SolutionListJson);
-            AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new AnalyseBoardSecondInputDto()
+            if (sou is null)
             {
-                solutionTables = solutionList,
-                auditFlowId = auditFlowId,
-                ntype = ntype,
-                ntime = ntime
-            };
+                sou = await _solutionQutation.FirstOrDefaultAsync(p =>
+                    p.AuditFlowId == auditFlowId && p.version == version);
+                var solutionList = JsonConvert.DeserializeObject<List<Solution>>(sou.SolutionListJson);
+                AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new AnalyseBoardSecondInputDto()
+                {
+                    solutionTables = solutionList,
+                    auditFlowId = auditFlowId,
+                    ntype = ntype,
+                    ntime = ntime
+                };
 
-            analyseBoardSecondDto= await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
-        }
-        else
-        {
-           analyseBoardSecondDto= await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
-        }
+                analyseBoardSecondDto =
+                    await _analysisBoardSecondMethod.PostStatementAnalysisBoardSecond(analyseBoardSecondInputDto);
+            }
+            else
+            {
+                analyseBoardSecondDto =
+                    await _analysisBoardSecondMethod.getStatementAnalysisBoardSecond(auditFlowId, version, ntype);
+            }
         }
         catch (Exception e)
         {
             analyseBoardSecondDto.mes = e.Message;
             return analyseBoardSecondDto;
         }
+
         //财务需求 ProjectBoard 按照指定顺序进行排序
         List<string> sort = new() { "数量", "销售成本", "单位平均成本", "销售收入", "平均单价", "佣金", "销售毛利", "毛利率" };
         analyseBoardSecondDto.ProjectBoard.ForEach(p =>
         {
-            p.ProjectBoardModels=p.ProjectBoardModels?.OrderByFunc(m => m.ProjectName, sort);
+            p.ProjectBoardModels = p.ProjectBoardModels?.OrderByFunc(m => m.ProjectName, sort);
         });
         return analyseBoardSecondDto;
     }
@@ -287,11 +291,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 if (solutionList is null || solutionList.Count == 0)
                 {
                     throw new FriendlyException("方案为空");
-
                 }
-                
-                analyseBoardSecondInputDto.solutionTables = solutionList;
 
+                analyseBoardSecondInputDto.solutionTables = solutionList;
             }
 
             string FileName = "成本信息表下载";
@@ -868,6 +870,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new UserFriendlyException("方案组不能为空");
         }
+        var version = isOfferDto.version;
+        if (version == 0)
+        {
+            throw new UserFriendlyException("前端传来的方案版本不能为0");
+        }
 
         await _analysisBoardSecondMethod.deleteNoSolution(isOfferDto.AuditFlowId, isOfferDto.version, 0);
         var result =
@@ -896,6 +903,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             if (solutions is null || solutions.Count == 0)
             {
                 throw new UserFriendlyException("方案组不能为空");
+            }
+
+            var version = isOfferDto.version;
+            if (version == 0)
+            {
+                throw new UserFriendlyException("前端传来的方案版本不能为0");
             }
 
             await _analysisBoardSecondMethod.deleteNoSolution(isOfferDto.AuditFlowId, isOfferDto.version,
@@ -1083,7 +1096,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"solutionId:{auditFlowId}报价方案组合{version}不存在");
         }
 
-        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version);//是否经过报价反馈
+        var isQuotation = await _analysisBoardSecondMethod.getQuotation(auditFlowId, version); //是否经过报价反馈
         int ntype = isQuotation ? 1 : 0;
         return await _analysisBoardSecondMethod.getAppExcel(auditFlowId, version, ntype);
         /*
@@ -1119,7 +1132,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new FriendlyException($"流程编号为空");
         }
 
-       await _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
+        await _analysisBoardSecondMethod.PostQuotationApproved(quotationListSecondDto);
     }
 
 
@@ -1217,6 +1230,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             throw new UserFriendlyException("请选择报价方案");
         }
+        var version = isOfferDto.version;
+        if (version == 0)
+        {
+            throw new UserFriendlyException("前端传来方案版本不能为0");
+        }
 
         var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
 
@@ -1233,12 +1251,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// </summary>
     /// <param name="auditFlowId"></param>
     /// <returns></returns>
-    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version,int ntime)
+    public async Task<AnalyseBoardSecondDto> GetQuotationFeedback(long auditFlowId, int version, int ntime)
     {
         AnalyseBoardSecondInputDto analyseBoardSecondInputDto = new()
         {
             auditFlowId = auditFlowId,
-            ntime=ntime,
+            ntime = ntime,
             version = version
         };
         SolutionQuotation solutionQuotation =
@@ -1398,12 +1416,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task PostAuditQuotationList(AuditQuotationListDto quotationListDto)
     {
         var IsQuotation = quotationListDto.IsQuotation;
-        if (IsQuotation)//报价归档
+        if (IsQuotation) //报价归档
         {
             await this.GetDownloadListSave(quotationListDto.AuditFlowId);
         }
         else
-        {//不报价归档
+        {
+            //不报价归档
             await this.GetDownloadListSaveNoQuotation(quotationListDto.AuditFlowId);
         }
     }
