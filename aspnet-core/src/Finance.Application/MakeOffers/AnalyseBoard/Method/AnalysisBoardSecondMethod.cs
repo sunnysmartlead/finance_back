@@ -5054,9 +5054,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 : _financeDictionaryDetailRepository
                     .FirstOrDefault(p => p.Id.Equals(priceEvaluationStartInputResult.TerminalNature))
                     .DisplayName, //终端客户性质 //终端客户性质
-            //开发计划 手工录入
-
-            //  ExchangeRate = priceEvaluationStartInputResult.ExchangeRate, //汇率
+            
         };
 
         if ("PriceEvalType_Sample".Equals(priceEvaluationStartInputResult.PriceEvalType))
