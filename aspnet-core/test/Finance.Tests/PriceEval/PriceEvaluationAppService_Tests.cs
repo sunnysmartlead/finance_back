@@ -1,17 +1,8 @@
-﻿using Abp.Dependency;
-using Abp.Domain.Uow;
-using Abp.Json;
+﻿using Abp.Json;
 using Finance.EntityFrameworkCore.Seed;
-using Finance.FinanceMaintain;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
-using Finance.Users;
 using NPOI.SS.Formula.Functions;
-using NPOI.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
