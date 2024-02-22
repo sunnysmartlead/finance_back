@@ -5146,7 +5146,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 MessageName = gmlmap.Key + "K/Y"
             };
-            var ygs = gmlmap.Value;
+            //var ygs = gmlmap.Value;
 
             List<YearValue> sopOrValueModes = new();
             for (int i = 0; i < ygs.Count; i++)
