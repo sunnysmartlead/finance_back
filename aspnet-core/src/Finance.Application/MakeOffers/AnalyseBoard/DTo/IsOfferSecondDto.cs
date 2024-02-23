@@ -23,7 +23,7 @@ public class IsOfferSecondDto:ToExamineDto
     /// <summary>
     /// 附件id
     /// </summary>
-    public long Productld { get; set; }
+    public long ProductId { get; set; }
     /// <summary>
     /// 附件url
     /// </summary>

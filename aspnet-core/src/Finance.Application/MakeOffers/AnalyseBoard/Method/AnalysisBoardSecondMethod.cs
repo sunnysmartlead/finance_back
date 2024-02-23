@@ -37,6 +37,7 @@ using NPOI.XSSF.Streaming.Values;
 using Finance.PropertyDepartment.Entering.Model;
 using Spire.Xls.Core;
 using Finance.PropertyDepartment.UnitPriceLibrary;
+using System.Diagnostics;
 
 namespace Finance.MakeOffers.AnalyseBoard.Method;
 
@@ -2708,7 +2709,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         else
         {
             var product = isOfferDto.Product;
-            var productid = isOfferDto.Productld;
+            var productid = isOfferDto.ProductId;
             var ModuleName = isOfferDto.ProductName;
             var solutionQuotation =
                 await _solutionQutation.FirstOrDefaultAsync(p =>
@@ -5272,7 +5273,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         MotionMessageSecondModel sjsl = new MotionMessageSecondModel()
         {
-            MessageName = "实际数量(K)"
+            MessageName = "实际数量"
         };
         sjsl.YearValues = sjsls;
         messageModels.Add(sjsl);
@@ -6704,7 +6705,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
 
         MotionMessageSecondModel sjsl = new MotionMessageSecondModel()
         {
-            MessageName = "实际数量(K)"
+            MessageName = "实际数量"
         };
         sjsl.YearValues = sjsls;
         messageModels.Add(sjsl);
@@ -6901,7 +6902,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             biddingStrategySecondModels = BiddingStrategySecondModels, //报价策略
             sop = Sop
         };
-        //
+        #region 反填保存的 开发计划 报价币种 SOP事件 项目生命周期  付款方式等信息 (新加)
+        //反填保存的 开发计划 报价币种 SOP事件 项目生命周期  付款方式等信息
         AuditQuotationListSave quotationListSave = await _financeAuditQuotationListSave.FirstOrDefaultAsync(p =>
             p.AuditFlowId.Equals(auditFlowId) && p.version.Equals(version) && p.nsource.Equals(0));
         if (quotationListSave != null)
@@ -6912,7 +6914,49 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             value.projectCycle = quotationListSave.projectCycle; //项目生命周期
             value.paymentMethod = quotationListSave.paymentMethod; //付款方式
         }
-
+        #endregion
+        #region  获取USD汇率 先获取核价看板中BOM成本币别是USD的汇率如果获取不到先取核价需求录入客户目标价那里录入的对应USD的汇率，再取不到，就取系统维护的对应的SOP年的汇率
+        //获取梯度
+        decimal USDExchangeRate = 0;
+        bool isBomCosts = false;
+        var porp = await _priceEvaluationGetAppService.GetGradient(auditFlowId);
+        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = auditFlowId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year });
+        if (BomCosts != null)
+        {
+            Material BomCostUsd = BomCosts.FirstOrDefault(p => p.CurrencyText.Equals("USD"));
+            if (BomCostUsd != null)
+            {
+                USDExchangeRate = BomCostUsd.ExchangeRate;
+            }
+            else
+            {
+                isBomCosts = true;
+            }
+        }
+        else
+        {
+            isBomCosts = true;
+        }
+        if (isBomCosts)
+        {
+            var ExchangeRates = await _unitPriceLibraryAppService.GetExchangeRate(new ExchangeRateInputDto() { MaxResultCount = 100, SkipCount = 0 });
+            var ExchangeRateId = ExchangeRates.Items.FirstOrDefault(p => p.ExchangeRateKind.Equals("USD"))?.Id;
+            CustomerTargetPrice customer = await _customerTargetPrice.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) & p.Currency.Equals(ExchangeRateId));
+            if (customer != null && customer.ExchangeRate != null)
+            {
+                USDExchangeRate = Convert.ToDecimal(customer.ExchangeRate);
+            }
+            else
+            {
+                var ExchangeRateUSDValue = ExchangeRates.Items.FirstOrDefault(p => p.ExchangeRateKind.Equals("USD"))?.ExchangeRateValue?[0]?.Value;
+                if (ExchangeRateUSDValue != null)
+                {
+                    USDExchangeRate = Convert.ToDecimal(ExchangeRateUSDValue);
+                }
+            }
+        }
+        value.exchangeRate = USDExchangeRate;
+        #endregion
         return value;
     }
 }
