@@ -5662,17 +5662,17 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         ExternalQuotationDto externalQuotationDto = new ExternalQuotationDto();
         List<ExternalQuotation> externalQuotations =
             await _externalQuotation.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId));
+        //暂时去除显示
+        //if (externalQuotations.Count != 0 &&
+        //    externalQuotations.Max(p => p.NumberOfQuotations) + 1 < numberOfQuotations || numberOfQuotations == 0)
+        //{
+        //    throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
+        //}
 
-        if (externalQuotations.Count != 0 &&
-            externalQuotations.Max(p => p.NumberOfQuotations) + 1 < numberOfQuotations || numberOfQuotations == 0)
-        {
-            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
-        }
-
-        if (externalQuotations.Count == 0 && numberOfQuotations != 1)
-        {
-            throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
-        }
+        //if (externalQuotations.Count == 0 && numberOfQuotations != 1)
+        //{
+        //    throw new FriendlyException($"version:{numberOfQuotations}版本号有误!");
+        //}
 
         if (numberOfQuotations > 3)
         {
