@@ -1391,6 +1391,19 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
+    /// 报价反馈文件Id
+    /// </summary>
+    /// <param name="auditFlowId"><流程Id/param>
+    /// <param name="version">版本号</param>
+    /// <returns></returns>
+    [HttpGet]
+    public async Task<SolutionQuotation> BjfkFileId(long auditFlowId, int version)
+    {
+        SolutionQuotation solutionQuotation= await _solutionQutation.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.version.Equals(version));
+        return solutionQuotation;
+    }
+
+    /// <summary>
     ///报价反馈到 总经理中标查看
     /// </summary>
     /// <param name="auditFlowId"></param>
