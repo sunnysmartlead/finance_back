@@ -5,6 +5,7 @@ using Abp.Extensions;
 using Abp.ObjectMapping;
 using Abp.Runtime.Session;
 using Abp.UI;
+using Castle.Core.Internal;
 using Finance.Audit;
 using Finance.DemandApplyAudit;
 using Finance.Ext;
@@ -333,7 +334,7 @@ namespace Finance.ProductDevelopment
                                     isMatch = Regex.IsMatch(row.GetCell(j).ToString(), @"^\d+$");
                                     if (isMatch)
                                     {
-                                        dto = DataToList(dto, row.GetCell(j), j);
+                                        dto = DataToList(dto, row.GetCell(j), j,i);
                                     }
                                     else
                                     {
@@ -352,7 +353,7 @@ namespace Finance.ProductDevelopment
                                 }
                                 else
                                 {
-                                    dto = DataToList(dto, row.GetCell(j), j);
+                                    dto = DataToList(dto, row.GetCell(j), j,i);
                                     if (j == 6 && dto.IsInvolveItem.Equals("是"))
                                     {
                                         if (dto.AssemblyQuantity <= 0)
@@ -366,8 +367,7 @@ namespace Finance.ProductDevelopment
                                         {
                                             throw new FriendlyException("第" + (i + 1) + "行是否涉及填了“否”，装配数量必须填0,请检查！");
                                         }
-                                    }
-
+                                    }                                    
                                 }
                             }
                             catch (Exception ex)
@@ -399,66 +399,73 @@ namespace Finance.ProductDevelopment
         /// <param name="data"></param>
         /// <param name="column"></param>
         /// <returns></returns>
-        public static StructureBomDto DataToList(StructureBomDto dto, object data, int column)
+        public static StructureBomDto DataToList(StructureBomDto dto, object data, int column,int row)
         {
-            if (data == null) { return null; }
+            try
+            {
+                if (data == null) { return null; }
 
-            if (column == 0)
-            {
-                dto.IdNumber = int.Parse(data.ToString());
+                if (column == 0)
+                {
+                    dto.IdNumber = int.Parse(data.ToString());
+                }
+                else if (column == 2)
+                {
+                    dto.TypeName = data.ToString();
+                }
+                else if (column == 3)
+                {
+                    dto.IsInvolveItem = data.ToString();
+                }
+                else if (column == 4)
+                {
+                    dto.SapItemNum = Regex.Replace(data.ToString(), @"\s", "");
+                }
+                else if (column == 5)
+                {
+                    dto.DrawingNumName = data.ToString();
+                }
+                else if (column == 6)
+                {
+                    dto.AssemblyQuantity = double.Parse(data.ToString());
+                }
+                else if (column == 7)
+                {
+                    dto.OverallDimensionSize = data.ToString();
+                }
+                else if (column == 8)
+                {
+                    dto.MaterialName = data.ToString();
+                }
+                else if (column == 9)
+                {
+                    dto.WeightNumber = double.Parse(data.ToString());
+                }
+                else if (column == 10)
+                {
+                    dto.MoldingProcess = data.ToString();
+                }
+                else if (column == 11)
+                {
+                    dto.IsNewMouldProduct = data.ToString();
+                }
+                else if (column == 12)
+                {
+                    dto.SecondaryProcessingMethod = data.ToString();
+                }
+                else if (column == 13)
+                {
+                    dto.SurfaceTreatmentMethod = data.ToString();
+                }
+                else if (column == 14)
+                {
+                    dto.DimensionalAccuracyRemark = data.ToString();
+                }
             }
-            else if (column == 2)
+            catch (Exception ex)
             {
-                dto.TypeName = data.ToString();
-            }
-            else if (column == 3)
-            {
-                dto.IsInvolveItem = data.ToString();
-            }
-            else if (column == 4)
-            {
-                dto.SapItemNum = Regex.Replace(data.ToString(), @"\s", "");
-            }
-            else if (column == 5)
-            {
-                dto.DrawingNumName = data.ToString();
-            }
-            else if (column == 6)
-            {
-                dto.AssemblyQuantity = double.Parse(data.ToString());
-            }
-            else if (column == 7)
-            {
-                dto.OverallDimensionSize = data.ToString();
-            }
-            else if (column == 8)
-            {
-                dto.MaterialName = data.ToString();
-            }
-            else if (column == 9)
-            {
-                dto.WeightNumber = double.Parse(data.ToString());
-            }
-            else if (column == 10)
-            {
-                dto.MoldingProcess = data.ToString();
-            }
-            else if (column == 11)
-            {
-                dto.IsNewMouldProduct = data.ToString();
-            }
-            else if (column == 12)
-            {
-                dto.SecondaryProcessingMethod = data.ToString();
-            }
-            else if (column == 13)
-            {
-                dto.SurfaceTreatmentMethod = data.ToString();
-            }
-            else if (column == 14)
-            {
-                dto.DimensionalAccuracyRemark = data.ToString();
-            }
+                throw new FriendlyException($"{row+1}行{column+1}列数据类型转换失败,请检查数据类型是否正确!");
+            }          
             return dto;
         }
         /// <summary>
