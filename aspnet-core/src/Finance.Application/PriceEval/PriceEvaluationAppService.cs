@@ -1499,7 +1499,7 @@ namespace Finance.PriceEval
         }
         #endregion
 
-        #region 制造成本
+        #region 制造成本（二开已不再使用）
 
         /// <summary>
         /// 保存 制造成本（添加和修改）
