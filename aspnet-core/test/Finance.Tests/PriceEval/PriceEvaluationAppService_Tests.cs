@@ -65,6 +65,10 @@ namespace Finance.Tests.PriceEval
             _priceEvaluationAppService.IsHasCostFunc(2027, YearType.SecondHalf, 2023, 1.5M).CompareTo(false);
         }
 
+        /// <summary>
+        /// 测试核价需求录入和核价需求录入数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task PriceEvaluationStart_Test()
         {
@@ -83,6 +87,10 @@ namespace Finance.Tests.PriceEval
             outputResult.Title.CompareTo("2024-01-30营销二部关于YY广丰舱内第2版的核价报价申请");
         }
 
+        /// <summary>
+        /// 测试损耗成本修改项和损耗成本修改项数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task SetUpdateItemLossCost_Test()
         {
@@ -105,6 +113,10 @@ namespace Finance.Tests.PriceEval
             outputResult.Count.ShouldBeEquivalentTo(1);
         }
 
+        /// <summary>
+        /// 测试制造成本修改项和制造成本修改项数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task SetUpdateItemManufacturingCost_Test()
         {
@@ -127,6 +139,10 @@ namespace Finance.Tests.PriceEval
             outputResult.Count.ShouldBeEquivalentTo(2);
         }
 
+        /// <summary>
+        /// 测试物流成本修改项和物流成本修改项数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task SetUpdateItemLogisticsCost_Test()
         {
@@ -149,6 +165,10 @@ namespace Finance.Tests.PriceEval
             outputResult.Count.ShouldBeEquivalentTo(1);
         }
 
+        /// <summary>
+        /// 测试质量成本修改项和质量成本修改项数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task SetUpdateItemQualityCost_Test()
         {
@@ -171,6 +191,10 @@ namespace Finance.Tests.PriceEval
             outputResult.Count.ShouldBeEquivalentTo(1);
         }
 
+        /// <summary>
+        /// 测试其他成本修改项和其他成本修改项数据获取
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task SetUpdateItemOtherCost_Test()
         {
