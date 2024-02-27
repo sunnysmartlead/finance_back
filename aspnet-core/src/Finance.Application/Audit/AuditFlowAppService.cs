@@ -27,6 +27,7 @@ using Finance.DemandApplyAudit;
 using static Finance.Authorization.Roles.StaticRoleNames;
 using Abp.Collections.Extensions;
 using Finance.WorkFlows.Dto;
+using Abp.Application.Services.Dto;
 
 namespace Finance.Audit
 {
@@ -471,7 +472,7 @@ namespace Finance.Audit
         {
             List<AuditFlowRightInfoDto> auditFlowRightInfoDtoList = new();
             //待办
-            var data = await _workflowInstanceAppService.GetTaskByUserId(0);
+            PagedResultDto<UserTask> data = await _workflowInstanceAppService.GetTaskByUserId(0);
 
             //重置
             var resetData = await _workflowInstanceAppService.GetReset(0);
@@ -538,6 +539,7 @@ namespace Finance.Audit
             {
                 AuditFlowId = p.Key.WorkFlowInstanceId,
                 AuditFlowTitle = p.Key.Title,
+                AuditFlowType=await WorkFlowInstanceIdGetAuditFlowType(p.Key.WorkFlowInstanceId),
                 AuditFlowRightDetailList = await FilteTask(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                 {
                     Id = o.Id,
@@ -567,6 +569,7 @@ namespace Finance.Audit
                 {
                     AuditFlowId = p.Key.WorkFlowInstanceId,
                     AuditFlowTitle = p.Key.Title,
+                    AuditFlowType = await WorkFlowInstanceIdGetAuditFlowType(p.Key.WorkFlowInstanceId),
                     AuditFlowRightDetailList = await TaskCompleted(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                     {
                         Id = o.Id,
@@ -587,6 +590,7 @@ namespace Finance.Audit
                 {
                     AuditFlowId = p.Key.WorkFlowInstanceId,
                     AuditFlowTitle = p.Key.Title,
+                    AuditFlowType = await WorkFlowInstanceIdGetAuditFlowType(p.Key.WorkFlowInstanceId),
                     AuditFlowRightDetailList = await GetRequiredTime(p.Key.WorkFlowInstanceId, p.Select(o => new AuditFlowRightDetailDto
                     {
                         Id = o.Id,
@@ -603,7 +607,44 @@ namespace Finance.Audit
 
             return auditFlowRightInfoDtoList;
         }
+        /// <summary>
+        /// 通过WorkFlowInstanceId 获取 AuditFlowType
+        /// </summary> 
+        /// <param name="WorkFlowInstanceId"></param>
+        /// <returns></returns>
+        private  async Task<string> WorkFlowInstanceIdGetAuditFlowType(long WorkFlowInstanceId)
+        {
+            //快速核价流程-已定点  售后件  其他上传流程  本年年降
+            //var KYDD = new List<string> { FinanceConsts.EvalReason_Shj, FinanceConsts.EvalReason_Qtsclc, FinanceConsts.EvalReason_Bnnj };
+            //快速核价流程-RFQ 非方案变更  其他引用流程
+            //var KRFQ = new List<string> { FinanceConsts.EvalReason_Ffabg, FinanceConsts.EvalReason_Qtyylc};
+            //主流程-已定点  节点成本预估 项目变更 下年年降
+            //var ZYDD = new List<string> { FinanceConsts.EvalReason_Jdcbpg, FinanceConsts.EvalReason_Xmbg, FinanceConsts.EvalReason_Xnnj };
+            //主流程-RFQ  首次核价 方案变更 量产样品 其他
+            //var RFQ = new List<string> { FinanceConsts.EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt };
 
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+            if(node==null|| node.FinanceDictionaryDetailId==null|| node.FinanceDictionaryDetailId == "" || node.FinanceDictionaryDetailId == FinanceConsts.Save)
+            {
+                return "";
+            }
+            return node.FinanceDictionaryDetailId switch
+            {
+                FinanceConsts.EvalReason_Shj => "快速核价流程-直接上传(售后件)",
+                FinanceConsts.EvalReason_Qtsclc => "快速核价流程-直接上传(其他上传流程)",
+                FinanceConsts.EvalReason_Bnnj => "快速核价流程-直接上传(本年年降)",
+                FinanceConsts.EvalReason_Ffabg => "快速核价流程-引用(非方案变更)",
+                FinanceConsts.EvalReason_Qtyylc => "快速核价流程-引用(其他引用流程)",
+                FinanceConsts.EvalReason_Jdcbpg => "主流程-已定点(节点成本预估)",
+                FinanceConsts.EvalReason_Xmbg => "主流程-已定点(项目变更)",
+                FinanceConsts.EvalReason_Xnnj => "主流程-已定点(下年年降)",
+                FinanceConsts.EvalReason_Schj => "主流程-RFQ(首次核价)",
+                FinanceConsts.EvalReason_Fabg => "主流程-RFQ(方案变更)",
+                FinanceConsts.EvalReason_Lcyp => "主流程-RFQ(量产样品)",
+                FinanceConsts.EvalReason_Qt => "主流程-RFQ(其他)",
+                _ => "",
+            };
+        }
         private string AuditFlowName(string ProcessIdentifier)
         {
             var flowProcessList = _flowProcessRepository.GetAllList(p => p.ProcessIdentifier == ProcessIdentifier);

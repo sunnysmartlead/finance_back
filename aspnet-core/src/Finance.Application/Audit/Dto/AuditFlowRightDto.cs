@@ -104,6 +104,10 @@ namespace Finance.Audit.Dto
         /// </summary>
         public string AuditFlowTitle { get; set; }
         /// <summary>
+        /// 流程类型
+        /// </summary>
+        public string AuditFlowType { get; set; }
+        /// <summary>
         /// 返回的节点信息
         /// </summary>
         public List<AuditFlowRightDetailDto> AuditFlowRightDetailList { get; set; }
