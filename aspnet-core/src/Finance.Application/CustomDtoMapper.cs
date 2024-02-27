@@ -215,8 +215,8 @@ namespace Finance
                 .ForMember(p => p.Count, p => p.MapFrom(o => o.AssemblyCount))
                 .ForMember(p => p.UnitPrice, p => p.MapFrom(o => o.MaterialPriceCyn))
                 .ForMember(p => p.Amount, p => p.MapFrom(o => o.TotalMoneyCyn));
-
-
+            //新增
+            configuration.CreateMap<ProductMaterialInfo, ProductMaterialInfoiIndex>();
             //Workflow
             configuration.CreateMap<Node, NodeInstance>()
                 .ForMember(p => p.Id, p => p.Ignore())

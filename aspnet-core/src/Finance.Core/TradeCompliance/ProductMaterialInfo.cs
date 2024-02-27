@@ -66,4 +66,12 @@ namespace Finance.TradeCompliance
         /// </summary>
         public string ControlStateType { get; set; }
     }
+    public class ProductMaterialInfoiIndex: ProductMaterialInfo
+    {
+        /// <summary>
+        /// 序号
+        /// </summary>
+        public long Index { get; set; }
+        
+    }
 }
