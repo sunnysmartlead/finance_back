@@ -2,6 +2,7 @@
 using Abp.Domain.Entities.Auditing;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -120,16 +121,19 @@ namespace Finance.PriceEval
         /// <summary>
         /// 全年度
         /// </summary>
+        [Description("全年度")]
         Year,
 
         /// <summary>
         /// 上半年
         /// </summary>
+        [Description("上半年")]
         FirstHalf,
 
         /// <summary>
         /// 下半年
         /// </summary>
+        [Description("下半年")]
         SecondHalf
     }
 }

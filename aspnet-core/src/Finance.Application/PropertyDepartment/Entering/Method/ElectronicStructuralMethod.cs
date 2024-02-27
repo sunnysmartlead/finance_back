@@ -299,7 +299,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                             Year = a.Year,
                             Quantity = a.Quantity,
                             UpDown = a.UpDown
-                        }).OrderBy(p => p.Year).ThenByDescending(p => p.UpDown).ToList();
+                        }).OrderBy(p => p.Year).ThenBy(p => p.UpDown).ToList();
                     List<ElectronicBomInfo> electronicBomInfo = await _resourceElectronicBomInfo.GetAllListAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Equals(IsInvolveItem));
                     electronicBomInfo = electronicBomInfo.DeepClone();
                     List<ElectronicBomInfo> electronicBomInfoCopy = electronicBomInfo.DeepClone();
@@ -583,7 +583,7 @@ namespace Finance.PropertyDepartment.Entering.Method
                         Year = a.Year,
                         Quantity = a.Quantity,
                         UpDown = a.UpDown
-                    }).OrderBy(p => p.Year).ThenByDescending(p => p.UpDown).ToList();
+                    }).OrderBy(p => p.Year).ThenBy(p => p.UpDown).ToList();
                 List<StructureBomInfo> structureBomInfos = _resourceStructureBomInfo.GetAllList(p => p.AuditFlowId.Equals(auditFlowId) && p.SolutionId.Equals(item.SolutionId) && p.IsInvolveItem.Contains(IsInvolveItem));
                 structureBomInfos = structureBomInfos.DeepClone();
                 List<string> structureBomInfosGr = structureBomInfos.GroupBy(p => p.SuperTypeName).Select(c => c.First()).Select(s => s.SuperTypeName).ToList(); //根据超级大类 去重
