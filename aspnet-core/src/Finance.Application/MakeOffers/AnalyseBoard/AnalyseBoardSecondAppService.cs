@@ -1608,7 +1608,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     [HttpGet]
     public async Task<SolutionQuotation> BjfkFileId(long auditFlowId, int version)
     {
-        SolutionQuotation solutionQuotation = await _solutionQutation.FirstOrDefaultAsync(p => p.AuditFlowId.Equals(auditFlowId) && p.version.Equals(version));
+        SolutionQuotation solutionQuotation= await _solutionQutation.FirstOrDefaultAsync(p=>p.AuditFlowId.Equals(auditFlowId)&&p.version.Equals(version));
         return solutionQuotation;
     }
 

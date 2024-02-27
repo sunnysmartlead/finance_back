@@ -15,6 +15,7 @@ using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.EntityFrameworkCore.Seed.Tenants;
 using Finance.MultiTenancy;
 using Abp.Domain.Uow;
+using Finance.EntityFrameworkCore.Seed;
 
 namespace Finance.Tests
 {
@@ -47,6 +48,8 @@ namespace Finance.Tests
             });
 
             LoginAsDefaultTenantAdmin();
+
+            SeedHelper.SeedHostDb(LocalIocManager);
         }
 
         #region UsingDbContext
