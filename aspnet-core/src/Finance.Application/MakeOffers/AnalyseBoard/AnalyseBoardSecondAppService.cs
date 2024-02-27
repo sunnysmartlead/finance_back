@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
-using Abp.Application.Services.Dto;
+﻿using Abp.Application.Services.Dto;
 using Abp.Authorization.Users;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Runtime.Session;
 using Abp.UI;
 using Finance.Audit;
-using Finance.Audit.Dto;
 using Finance.Authorization.Roles;
 using Finance.DemandApplyAudit;
-using Finance.Dto;
-using Finance.FinanceMaintain;
+using Finance.Ext;
 using Finance.Infrastructure;
 using Finance.MakeOffers.AnalyseBoard.DTo;
 using Finance.MakeOffers.AnalyseBoard.Method;
@@ -25,24 +17,26 @@ using Finance.Nre;
 using Finance.NrePricing.Dto;
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
-using Finance.Processes;
 using Finance.ProjectManagement;
 using Finance.ProjectManagement.Dto;
-using Finance.PropertyDepartment.Entering.Dto;
-using static Finance.Authorization.Roles.StaticRoleNames;
 using Finance.Roles.Dto;
 using Finance.Users;
-using Finance.WorkFlows.Dto;
 using Finance.WorkFlows;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using NPOI.HPSF;
 using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
+using NPOI.SS.UserModel.Charts;
 using NPOI.XSSF.UserModel;
-using Finance.Ext;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Threading.Tasks;
+using static Finance.Authorization.Roles.StaticRoleNames;
 
 namespace Finance.MakeOffers.AnalyseBoard;
 
@@ -81,7 +75,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     private readonly FileCommonService _fileCommonService;
 
     private readonly IRepository<Role> _roleRepository;
-
+    /// <summary>
+    /// 获取核价
+    /// </summary>
     private readonly PriceEvaluationGetAppService _priceEvaluationGetAppService;
 
     /// <summary>
@@ -120,6 +116,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     private readonly NrePricingAppService _nrePricingAppService;
     private readonly WorkflowInstanceAppService _workflowInstanceAppService;
 
+    /// <summary>
+    /// 方案表
+    /// </summary>
+    private readonly IRepository<Solution, long> _solution;
+
     public AnalyseBoardSecondAppService(AnalysisBoardSecondMethod analysisBoardSecondMethod,
         IRepository<Gradient, long> gradientRepository, IRepository<AuditQuotationList, long> financeAuditQuotationList,
         IRepository<Solution, long> resourceSchemeTable, AuditFlowAppService flowAppService,
@@ -134,7 +135,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRepository<SolutionQuotation, long> solutionQutation,
         IRepository<DownloadListSave, long> financeDownloadListSave, IRepository<NreQuotation, long> nreQuotation,
         IRepository<AfterUpdateSumInfo, long> afterUpdateSumInfoRepository, NrePricingAppService nrePricingAppService,
-        WorkflowInstanceAppService workflowInstanceAppService)
+        WorkflowInstanceAppService workflowInstanceAppService,
+        IRepository<Solution, long> solution)
     {
         _analysisBoardSecondMethod = analysisBoardSecondMethod;
         _gradientRepository = gradientRepository;
@@ -156,6 +158,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         _nrePricingAppService = nrePricingAppService;
         _userAppService = userAppService;
         _workflowInstanceAppService = workflowInstanceAppService;
+        _solution = solution;
     }
 
     /// <summary>
@@ -348,8 +351,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         //BOM成本
         var electronicAndStructureList = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput
         {
-            AuditFlowId = input.AuditFlowId, GradientId = input.GradientId, InputCount = input.InputCount,
-            SolutionId = input.SolutionId, Year = input.Year, UpDown = input.UpDown
+            AuditFlowId = input.AuditFlowId,
+            GradientId = input.GradientId,
+            InputCount = input.InputCount,
+            SolutionId = input.SolutionId,
+            Year = input.Year,
+            UpDown = input.UpDown
         });
 
         List<CoreDevice> CoreDeviclist = new List<CoreDevice>();
@@ -508,16 +515,13 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <exception cref="FriendlyException"></exception>
     public async Task<FileResult> GetDownloadCoreComponentAndNre(GetPriceEvaluationTableInput input)
     {
-        List<CoreDevice> coreDevice = await PostCoreComponentAndNreList(input);
-        NreExpense2 nreExpense2 = await GetCoreNRE(input.AuditFlowId, input.SolutionId);
-
-
         //创建Workbook
         XSSFWorkbook workbook = new XSSFWorkbook();
+
+        List<CoreDevice> coreDevice = await PostCoreComponentAndNreList(input);
+        NreExpense2 nreExpense2 = await GetCoreNRE(input.AuditFlowId, input.SolutionId);
         //创建一个sheet
-        workbook.CreateSheet("sheet1");
-
-
+        workbook.CreateSheet("sheet");
         ISheet sheet = workbook.GetSheetAt(0); //获取sheet
 
         //创建头部
@@ -533,9 +537,9 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         {
             IRow rowI = sheet.CreateRow(i);
             rowI.CreateCell(0).SetCellValue(dev.ProjectName);
-            rowI.CreateCell(1).SetCellValue(null == dev.UnitPrice ? null : dev.UnitPrice.ToString());
-            rowI.CreateCell(2).SetCellValue(null == dev.Number ? null : dev.Number.ToString());
-            rowI.CreateCell(3).SetCellValue(null == dev.Rate ? null : dev.Rate.ToString());
+            rowI.CreateCell(1).SetCellValue(dev.UnitPrice.ToString());
+            rowI.CreateCell(2).SetCellValue(dev.Number.ToString());
+            rowI.CreateCell(3).SetCellValue(dev.Rate.ToString());
             rowI.CreateCell(4).SetCellValue(dev.Sum.ToString());
             i++;
         }
@@ -548,72 +552,60 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         IRow rowI01 = sheet.CreateRow(i);
         rowI01.CreateCell(0).SetCellValue("手板件费用");
         rowI01.CreateCell(1)
-            .SetCellValue(null == nreExpense2.handPieceCostTotal ? null : nreExpense2.handPieceCostTotal.ToString());
+            .SetCellValue(nreExpense2.handPieceCostTotal.ToString());
 
         IRow rowI02 = sheet.CreateRow(i + 1);
         rowI02.CreateCell(0).SetCellValue("模具费用");
-        rowI02.CreateCell(1).SetCellValue(null == nreExpense2.mouldInventoryTotal
-            ? null
-            : nreExpense2.mouldInventoryTotal.ToString());
+        rowI02.CreateCell(1).SetCellValue(nreExpense2.mouldInventoryTotal.ToString());
 
         IRow rowI03 = sheet.CreateRow(i + 2);
         rowI03.CreateCell(0).SetCellValue("工装费用");
         rowI03.CreateCell(1)
-            .SetCellValue(null == nreExpense2.toolingCostTotal ? null : nreExpense2.toolingCostTotal.ToString());
+            .SetCellValue(nreExpense2.toolingCostTotal.ToString());
 
         IRow rowI04 = sheet.CreateRow(i + 3);
         rowI04.CreateCell(0).SetCellValue("治具费用");
         rowI04.CreateCell(1)
-            .SetCellValue(null == nreExpense2.fixtureCostTotal ? null : nreExpense2.fixtureCostTotal.ToString());
+            .SetCellValue(nreExpense2.fixtureCostTotal.ToString());
 
         IRow rowI05 = sheet.CreateRow(i + 4);
         rowI05.CreateCell(0).SetCellValue("检具费用");
-        rowI05.CreateCell(1).SetCellValue(null == nreExpense2.qaqcDepartmentsTotal
-            ? null
-            : nreExpense2.qaqcDepartmentsTotal.ToString());
+        rowI05.CreateCell(1).SetCellValue(nreExpense2.qaqcDepartmentsTotal.ToString());
 
         IRow rowI06 = sheet.CreateRow(i + 5);
         rowI06.CreateCell(0).SetCellValue("生产设备费用");
-        rowI06.CreateCell(1).SetCellValue(null == nreExpense2.productionEquipmentCostTotal
-            ? null
-            : nreExpense2.productionEquipmentCostTotal.ToString());
+        rowI06.CreateCell(1).SetCellValue(nreExpense2.productionEquipmentCostTotal.ToString());
 
         IRow rowI07 = sheet.CreateRow(i + 6);
         rowI07.CreateCell(0).SetCellValue("专用生产设备");
-        rowI07.CreateCell(1).SetCellValue(null == nreExpense2.deviceStatusSpecial
-            ? null
-            : nreExpense2.deviceStatusSpecial.ToString());
+        rowI07.CreateCell(1).SetCellValue(nreExpense2.deviceStatusSpecial.ToString());
 
         IRow rowI08 = sheet.CreateRow(i + 7);
         rowI08.CreateCell(0).SetCellValue("非专用生产设备");
         rowI08.CreateCell(1)
-            .SetCellValue(null == nreExpense2.deviceStatus ? null : nreExpense2.deviceStatus.ToString());
+            .SetCellValue(nreExpense2.deviceStatus.ToString());
 
         IRow rowI09 = sheet.CreateRow(i + 8);
         rowI09.CreateCell(0).SetCellValue("实验费用");
-        rowI09.CreateCell(1).SetCellValue(null == nreExpense2.laboratoryFeeModelsTotal
-            ? null
-            : nreExpense2.laboratoryFeeModelsTotal.ToString());
+        rowI09.CreateCell(1).SetCellValue(nreExpense2.laboratoryFeeModelsTotal.ToString());
 
         IRow rowI10 = sheet.CreateRow(i + 9);
         rowI10.CreateCell(0).SetCellValue("测试软件费用");
-        rowI10.CreateCell(1).SetCellValue(null == nreExpense2.softwareTestingCostTotal
-            ? null
-            : nreExpense2.softwareTestingCostTotal.ToString());
+        rowI10.CreateCell(1).SetCellValue(nreExpense2.softwareTestingCostTotal.ToString());
 
         IRow rowI11 = sheet.CreateRow(i + 10);
         rowI11.CreateCell(0).SetCellValue("差旅费");
         rowI11.CreateCell(1)
-            .SetCellValue(null == nreExpense2.travelExpenseTotal ? null : nreExpense2.travelExpenseTotal.ToString());
+            .SetCellValue(nreExpense2.travelExpenseTotal.ToString());
 
         IRow rowI12 = sheet.CreateRow(i + 11);
         rowI12.CreateCell(0).SetCellValue("其他费用");
         rowI12.CreateCell(1)
-            .SetCellValue(null == nreExpense2.restsCostTotal ? null : nreExpense2.restsCostTotal.ToString());
+            .SetCellValue(nreExpense2.restsCostTotal.ToString());
 
         IRow rowI13 = sheet.CreateRow(i + 12);
         rowI13.CreateCell(0).SetCellValue("合计");
-        rowI13.CreateCell(1).SetCellValue(null == nreExpense2.sum ? null : nreExpense2.sum.ToString());
+        rowI13.CreateCell(1).SetCellValue(nreExpense2.sum.ToString());
 
         IRow rowI14 = sheet.CreateRow(i + 13);
         rowI14.CreateCell(0).SetCellValue("备注");
@@ -693,11 +685,228 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         Byte[] btye2 = ms.ToArray();
         FileContentResult fileContent =
             new FileContentResult(btye2, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-                { FileDownloadName = "aaa.xlsx" };
+            { FileDownloadName = "aaa.xlsx" };
 
         return fileContent;
     }
 
+    /// <summary>
+    ///   下载核心器件、Nre费用拆分
+    /// </summary>
+    /// <param name="laboratoryFeeModels"></param>
+    /// <returns></returns>
+    /// <exception cref="FriendlyException"></exception>
+    public async Task<FileResult> GetDownloadCoreComponentAndNre1(GetPriceEvaluationTableInput input)
+    {
+        FileContentResult fileContent = null;
+        try
+        {
+            //获取全部的年份  
+            ListResultDto<YearListDto> years = await _priceEvaluationGetAppService.GetPricingPanelTimeSelectList(new GetPricingPanelTimeSelectListInput() { AuditFlowId = input.AuditFlowId });
+            //获取梯度
+            PagedResultDto<GradientListDto> gradients = await _priceEvaluationGetAppService.GetGradient(input.AuditFlowId);
+            //获取方案
+            List<Solution> solutions = await _solution.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId));
+            Solution solution= solutions.FirstOrDefault(p => p.Id.Equals(input.SolutionId));
+            //string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\核心器件、Nre费用拆分.xlsx";
+            //FileStream file = new FileStream(templatePath, FileMode.Open);
+            //创建Workbook
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            //创建头部样式和列宽度
+            XSSFCellStyle titleStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+            titleStyle.Alignment = HorizontalAlignment.Center; // 居中
+            IFont titleFont = workbook.CreateFont();
+            titleFont.IsBold = true;
+            titleFont.FontHeightInPoints = 12;
+            titleFont.Color = HSSFColor.Black.Index;//设置字体颜色
+            titleStyle.SetFont(titleFont);
+            //创建物料种类样式
+            ICellStyle wlStyle = workbook.CreateCellStyle();
+            wlStyle.Alignment = HorizontalAlignment.Center;//水平居中
+            wlStyle.VerticalAlignment = VerticalAlignment.Center; ;//垂直居中         
+            wlStyle.BorderBottom = BorderStyle.Thin;
+            wlStyle.BorderLeft = BorderStyle.Thin;
+            wlStyle.BorderRight = BorderStyle.Thin;
+            wlStyle.BorderTop = BorderStyle.Thin;
+            wlStyle.FillForegroundColor = HSSFColor.Orange.Index;//背景色
+            wlStyle.FillPattern = FillPattern.SolidForeground;
+            wlStyle.SetFont(titleFont);
+            ICellStyle wlStyle1 = workbook.CreateCellStyle();
+            wlStyle1.Alignment = HorizontalAlignment.Center;//水平居中
+            wlStyle1.VerticalAlignment = VerticalAlignment.Center; ;//垂直居中           
+            wlStyle1.BorderBottom = BorderStyle.Thin;
+            wlStyle1.BorderLeft = BorderStyle.Thin;
+            wlStyle1.BorderRight = BorderStyle.Thin;
+            wlStyle1.BorderTop = BorderStyle.Thin;
+            //workbook.SetSheetName(0, years.Items[0].Name);
+            for (int i = 0; i < years.Items.Count; i++)
+            {
+                workbook.CreateSheet(years.Items[i].Name + $"({years.Items[i].UpDown.GetDescription()})");
+                ISheet sheet = workbook.GetSheetAt(i);
+                //sheet.CopyTo(workbook, years.Items[i].Name, true, true);
+                //创建头部
+                //IRow row000 = sheet.CreateRow(1);
+                int roesolu = 0;
+                IRow row2 = sheet.CreateRow(2);
+                row2.CreateCell(1).SetCellValue("项目");
+                row2.CreateCell(2).SetCellValue("");
+                row2.CreateCell(3).SetCellValue("单价");
+                row2.CreateCell(4).SetCellValue("数量");
+                row2.CreateCell(5).SetCellValue("汇率");
+                row2.CreateCell(6).SetCellValue("合计");
+                int rowi = 3;
+                foreach (var gradient in gradients.Items)
+                {                 
+                    IRow row1 = sheet.CreateRow(1);
+                    row1.CreateCell(3).SetCellValue(solution.Product);
+                    row1.CreateCell(1).SetCellValue("项目");
+                    row1.CreateCell(2).SetCellValue("");
+                    row1.CreateCell(4).SetCellValue("");
+                    row1.CreateCell(5).SetCellValue("");
+                    row1.CreateCell(6).SetCellValue("");                   
+                    //foreach (var solution in solutions)
+                    //{
+                        input.Year = years.Items[i].Id;
+                        input.UpDown = years.Items[i].UpDown;
+                        input.GradientId = gradient.Id;
+                        //input.SolutionId = solution.Id;
+                        List<CoreDevice> coreDevice = await PostCoreComponentAndNreList(input);
+                        int startrow = rowi;
+                        foreach (CoreDevice dev in coreDevice)
+                        {
+                            IRow rowI = sheet.CreateRow(rowi);
+                            rowI.CreateCell(1+ roesolu).SetCellValue(gradient.GradientValue.ToString() + "K/Y");
+                            rowI.CreateCell(2+ roesolu).SetCellValue(dev.ProjectName);
+                            rowI.CreateCell(3+ roesolu).SetCellValue(dev.UnitPrice.ToString());
+                            rowI.CreateCell(4+ roesolu).SetCellValue(dev.Number.ToString());
+                            rowI.CreateCell(5+ roesolu).SetCellValue(dev.Rate.ToString());
+                            rowI.CreateCell(6+ roesolu).SetCellValue(dev.Sum.ToString());
+
+                            sheet.GetRow(rowi).GetCell(1 + roesolu).CellStyle = wlStyle1;
+                            sheet.GetRow(rowi).GetCell(2 + roesolu).CellStyle = wlStyle1;
+                            sheet.GetRow(rowi).GetCell(3 + roesolu).CellStyle = wlStyle1;
+                            sheet.GetRow(rowi).GetCell(4 + roesolu).CellStyle = wlStyle1;
+                            sheet.GetRow(rowi).GetCell(5 + roesolu).CellStyle = wlStyle1;
+                            sheet.GetRow(rowi).GetCell(6 + roesolu).CellStyle = wlStyle1;
+
+                            rowi++;
+                        }
+                       sheet.MergedRegion(startrow, rowi-1, 1, 1);
+                    //roesolu += 4;                       
+                    //}
+                }
+                //列宽
+                sheet.SetColumnWidth(1, 5000);
+                sheet.SetColumnWidth(2, 6000);
+                sheet.SetColumnWidth(3, 4000);
+                sheet.SetColumnWidth(4, 4000);
+                sheet.SetColumnWidth(5, 4000);
+                sheet.SetColumnWidth(6, 9000);
+                //添加边框
+                for (int ii = 1; ii <= roesolu+2+4; ii++)
+                {
+                    sheet.GetRow(1).GetCell(ii).CellStyle = wlStyle;
+                    sheet.GetRow(2).GetCell(ii).CellStyle = wlStyle;
+                }
+                //合并单元格
+                sheet.MergedRegion(1, 1, 3, 6);
+                sheet.MergedRegion(1, 2, 1, 2);
+
+
+                rowi += 1;
+                IRow rowirow = sheet.CreateRow(rowi);
+                rowirow.CreateCell(1).SetCellValue(solution.Product);
+                rowirow.CreateCell(2).SetCellValue(solution.Product);
+                sheet.GetRow(rowi).GetCell(1).CellStyle = wlStyle;
+                sheet.GetRow(rowi).GetCell(2).CellStyle = wlStyle;
+                sheet.MergedRegion(rowi, rowi, 1, 2);
+
+
+                IRow rowirow1 = sheet.CreateRow(rowi+1);
+                rowirow1.CreateCell(1).SetCellValue("NRE费用");
+                rowirow1.CreateCell(2).SetCellValue("金额");
+                sheet.GetRow(rowi+1).GetCell(1).CellStyle = wlStyle;
+                sheet.GetRow(rowi+1).GetCell(2).CellStyle = wlStyle;
+
+                NreExpense2 nreExpense2 = await GetCoreNRE(input.AuditFlowId, input.SolutionId);
+                IRow rowI01 = sheet.CreateRow(rowi + 2);
+                rowI01.CreateCell(1).SetCellValue("手板件费用");
+                rowI01.CreateCell(2)
+                    .SetCellValue(nreExpense2.handPieceCostTotal.ToString());
+
+                IRow rowI02 = sheet.CreateRow(rowi + 3);
+                rowI02.CreateCell(1).SetCellValue("模具费用");
+                rowI02.CreateCell(2).SetCellValue(nreExpense2.mouldInventoryTotal.ToString());
+
+                IRow rowI03 = sheet.CreateRow(rowi + 4);
+                rowI03.CreateCell(1).SetCellValue("工装费用");
+                rowI03.CreateCell(2)
+                    .SetCellValue(nreExpense2.toolingCostTotal.ToString());
+
+                IRow rowI04 = sheet.CreateRow(rowi + 5);
+                rowI04.CreateCell(1).SetCellValue("治具费用");
+                rowI04.CreateCell(2)
+                    .SetCellValue(nreExpense2.fixtureCostTotal.ToString());
+
+                IRow rowI05 = sheet.CreateRow(rowi + 6);
+                rowI05.CreateCell(1).SetCellValue("检具费用");
+                rowI05.CreateCell(2).SetCellValue(nreExpense2.qaqcDepartmentsTotal.ToString());
+
+                IRow rowI06 = sheet.CreateRow(rowi + 7);
+                rowI06.CreateCell(1).SetCellValue("生产设备费用");
+                rowI06.CreateCell(2).SetCellValue(nreExpense2.productionEquipmentCostTotal.ToString());
+
+                IRow rowI07 = sheet.CreateRow(rowi + 8);
+                rowI07.CreateCell(1).SetCellValue("专用生产设备");
+                rowI07.CreateCell(2).SetCellValue(nreExpense2.deviceStatusSpecial.ToString());
+
+                IRow rowI08 = sheet.CreateRow(rowi + 9);
+                rowI08.CreateCell(1).SetCellValue("非专用生产设备");
+                rowI08.CreateCell(2)
+                    .SetCellValue(nreExpense2.deviceStatus.ToString());
+
+                IRow rowI09 = sheet.CreateRow(rowi + 10);
+                rowI09.CreateCell(1).SetCellValue("实验费用");
+                rowI09.CreateCell(2).SetCellValue(nreExpense2.laboratoryFeeModelsTotal.ToString());
+
+                IRow rowI10 = sheet.CreateRow(rowi + 11);
+                rowI10.CreateCell(1).SetCellValue("测试软件费用");
+                rowI10.CreateCell(2).SetCellValue(nreExpense2.softwareTestingCostTotal.ToString());
+
+                IRow rowI11 = sheet.CreateRow(rowi + 12);
+                rowI11.CreateCell(1).SetCellValue("差旅费");
+                rowI11.CreateCell(2)
+                    .SetCellValue(nreExpense2.travelExpenseTotal.ToString());
+
+                IRow rowI12 = sheet.CreateRow(rowi + 13);
+                rowI12.CreateCell(1).SetCellValue("其他费用");
+                rowI12.CreateCell(2)
+                    .SetCellValue(nreExpense2.restsCostTotal.ToString());
+
+                IRow rowI13 = sheet.CreateRow(rowi + 14);
+                rowI13.CreateCell(1).SetCellValue("合计");
+                rowI13.CreateCell(2).SetCellValue(nreExpense2.sum.ToString());
+
+                //添加边框
+                for (int ii = rowi + 2; ii <= rowi + 14; ii++)
+                {
+                    sheet.GetRow(ii).GetCell(1).CellStyle = wlStyle1;
+                    sheet.GetRow(ii).GetCell(2).CellStyle = wlStyle1;
+                }
+            }
+            MemoryStream ms = new MemoryStream();
+            workbook.Write(ms);
+            Byte[] btye2 = ms.ToArray();
+            fileContent =
+                new FileContentResult(btye2, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                { FileDownloadName = "aaa.xlsx" };
+        }
+        catch (Exception e)
+        {
+            throw new FriendlyException(e.Message);
+        }
+        return fileContent;
+    }
 
     /// <summary>
     /// 下载对外报价单
@@ -1482,15 +1691,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                     await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                     {
-                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                        ProductName = "", ProductId = 0,
+                        AuditFlowId = auditFlow,
+                        QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "",
+                        ProductId = 0,
                         FileName = FileName,
                         FilePath = fileUploadOutputDtoOfferhejia.FileUrl,
                         FileId = fileUploadOutputDtoOfferhejia.FileId
                     });
                 }
 
-//NRE核价表
+                //NRE核价表
                 var nrehejia = await _priceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput()
                 {
                     AuditFlowId = auditFlow,
@@ -1506,9 +1717,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                 await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                    ProductName = "", ProductId = 0,
-                    FileName = FileName, FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
+                    AuditFlowId = auditFlow,
+                    QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "",
+                    ProductId = 0,
+                    FileName = FileName,
+                    FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
                     FileId = fileUploadOutputDtoOffernrehejia.FileId
                 });
             }
@@ -1555,15 +1769,17 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                     await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                     {
-                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                        ProductName = "", ProductId = 0,
+                        AuditFlowId = auditFlow,
+                        QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "",
+                        ProductId = 0,
                         FileName = FileName,
                         FilePath = fileUploadOutputDtoOfferhejia.FileUrl,
                         FileId = fileUploadOutputDtoOfferhejia.FileId
                     });
                 }
 
-//NRE核价表
+                //NRE核价表
                 var nrehejia = await _priceEvaluationAppService.NreTableDownloadStream(new NreTableDownloadInput()
                 {
                     AuditFlowId = auditFlow,
@@ -1579,9 +1795,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                 await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                    ProductName = "", ProductId = 0,
-                    FileName = FileName, FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
+                    AuditFlowId = auditFlow,
+                    QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "",
+                    ProductId = 0,
+                    FileName = FileName,
+                    FilePath = fileUploadOutputDtoOffernrehejia.FileUrl,
                     FileId = fileUploadOutputDtoOffernrehejia.FileId
                 });
             }
@@ -1607,18 +1826,24 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
 
                 await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                    ProductName = "", ProductId = 0,
-                    FileName = FileName, FilePath = fileUploadOutputDtoOffer.FileUrl,
+                    AuditFlowId = auditFlow,
+                    QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "",
+                    ProductId = 0,
+                    FileName = FileName,
+                    FilePath = fileUploadOutputDtoOffer.FileUrl,
                     FileId = fileUploadOutputDtoOffer.FileId
                 });
                 if (sol.Productld != 0) //附件上传
                 {
                     await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                     {
-                        AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                        ProductName = "", ProductId = 0,
-                        FileName = "附件" + sol.ModuleName, FilePath = sol.Product,
+                        AuditFlowId = auditFlow,
+                        QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                        ProductName = "",
+                        ProductId = 0,
+                        FileName = "附件" + sol.ModuleName,
+                        FilePath = sol.Product,
                         FileId = sol.Productld
                     });
                 }
@@ -1640,9 +1865,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
                 //对外报价单的路径和名称保存到
                 await _financeDownloadListSave.InsertAsync(new DownloadListSave()
                 {
-                    AuditFlowId = auditFlow, QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
-                    ProductName = "", ProductId = 0,
-                    FileName = FileName, FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
+                    AuditFlowId = auditFlow,
+                    QuoteProjectName = priceEvaluationStartInputResult.ProjectName,
+                    ProductName = "",
+                    ProductId = 0,
+                    FileName = FileName,
+                    FilePath = fileUploadOutputDtoOfferdwbj.FileUrl,
                     FileId = fileUploadOutputDtoOfferdwbj.FileId
                 });
             }
@@ -1769,8 +1997,8 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     public async Task<IActionResult> PostPigeonholeDownload(List<long> DownloadListSaveIds)
     {
         List<DownloadListSave> downloadListSaves = (from a in await _financeDownloadListSave.GetAllListAsync()
-            join b in DownloadListSaveIds on a.Id equals b
-            select a).ToList();
+                                                    join b in DownloadListSaveIds on a.Id equals b
+                                                    select a).ToList();
         var memoryStream = new MemoryStream();
         using (var zipArich = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
         {
@@ -1788,7 +2016,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
         }
 
         return new FileContentResult(memoryStream.ToArray(), "application/octet-stream")
-            { FileDownloadName = "归档文件下载.zip" };
+        { FileDownloadName = "归档文件下载.zip" };
     }
 
     /// <summary>

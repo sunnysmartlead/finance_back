@@ -182,5 +182,19 @@ namespace Finance.Ext
                return cell.ToString();
             }
         }
+
+        /// <summary>
+        /// 合并单元格
+        /// </summary>
+        /// <param name="sheet"></param>
+        /// <param name="firstRow">开始行</param>
+        /// <param name="lastRow">结束行</param>
+        /// <param name="firstCol">开始列</param>
+        /// <param name="lastCol">结束列</param>
+        public static void MergedRegion(this ISheet sheet, int firstRow, int lastRow, int firstCol, int lastCol)
+        {
+            CellRangeAddress region = new CellRangeAddress(firstRow, lastRow, firstCol, lastCol);
+            sheet.AddMergedRegion(region);
+        }
     }
 }
