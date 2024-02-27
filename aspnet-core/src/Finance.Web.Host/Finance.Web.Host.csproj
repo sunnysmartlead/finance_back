@@ -60,6 +60,9 @@
     <Content Update="wwwroot\Excel\损耗率模板.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\Excel\贸易合规.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Update="wwwroot\Excel\成本信息表模板.xlsx">

@@ -513,7 +513,7 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     /// <param name="laboratoryFeeModels"></param>
     /// <returns></returns>
     /// <exception cref="FriendlyException"></exception>
-    public async Task<FileResult> GetDownloadCoreComponentAndNre(GetPriceEvaluationTableInput input)
+    public async Task<FileResult> GetDownloadCoreComponentAndNreold(GetPriceEvaluationTableInput input)
     {
         //创建Workbook
         XSSFWorkbook workbook = new XSSFWorkbook();
@@ -691,12 +691,12 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
     }
 
     /// <summary>
-    ///   下载核心器件、Nre费用拆分
+    ///   下载核心器件、Nre费用拆分(优化后)
     /// </summary>
-    /// <param name="laboratoryFeeModels"></param>
+    /// <param name="input"></param>
     /// <returns></returns>
     /// <exception cref="FriendlyException"></exception>
-    public async Task<FileResult> GetDownloadCoreComponentAndNre1(GetPriceEvaluationTableInput input)
+    public async Task<FileResult> GetDownloadCoreComponentAndNre(GetPriceEvaluationTableInput input)
     {
         FileContentResult fileContent = null;
         try

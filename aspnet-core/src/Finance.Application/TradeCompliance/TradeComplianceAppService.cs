@@ -5,6 +5,7 @@ using Finance.Audit;
 using Finance.BaseLibrary;
 using Finance.DemandApplyAudit;
 using Finance.Entering;
+using Finance.Ext;
 using Finance.FinanceMaintain;
 using Finance.Infrastructure;
 using Finance.Infrastructure.Dto;
@@ -14,8 +15,11 @@ using Finance.PropertyDepartment.Entering.Model;
 using Finance.TradeCompliance.Dto;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using MiniExcelLibs.OpenXml;
+using NPOI.HPSF;
 using NPOI.HSSF.Util;
 using NPOI.SS.UserModel;
+using NPOI.SS.UserModel.Charts;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using System;
@@ -251,18 +255,19 @@ namespace Finance.TradeCompliance
                     await _tradeComplianceCheckRepository.InsertOrUpdateAsync(tradeComplianceCheckDto.TradeComplianceCheck);
 
                 }
-                catch {
-                    throw new FriendlyException("核价看板相关数据未取到！流程号："+ priceTableByPart.AuditFlowId + ",方案号："+ priceTableByPart.SolutionId+ ",InputCount = 0,Year:"+ priceTableByPart.Year+ ",GradientId:"+ priceTableByPart.GradientId+ ",UpDown:"+ priceTableByPart.UpDown);
+                catch
+                {
+                    throw new FriendlyException("核价看板相关数据未取到！流程号：" + priceTableByPart.AuditFlowId + ",方案号：" + priceTableByPart.SolutionId + ",InputCount = 0,Year:" + priceTableByPart.Year + ",GradientId:" + priceTableByPart.GradientId + ",UpDown:" + priceTableByPart.UpDown);
                 }
 
-                }
+            }
             else
-                {
-                    throw new FriendlyException("获取零件信息失败，请检查零件信息");
-                }
-           
+            {
+                throw new FriendlyException("获取零件信息失败，请检查零件信息");
+            }
+
             return tradeComplianceCheckDto;
-        
+
         }
 
         public virtual async Task<bool> IsProductsTradeComplianceOK(long flowId)
@@ -306,7 +311,7 @@ namespace Finance.TradeCompliance
                 {
                     throw new FriendlyException("产品组成物料信息表未查询到对应方案信息，请检查！");
                 }
-                else 
+                else
                 {
                     foreach (var productMaterial in productMaterialList)
                     {
@@ -314,7 +319,7 @@ namespace Finance.TradeCompliance
                     }
                     return tradeComplianceCheckDto;
                 }
-                
+
             }
             else
             {
@@ -346,9 +351,9 @@ namespace Finance.TradeCompliance
         /// <param name="laboratoryFeeModels"></param>
         /// <returns></returns>
         /// <exception cref="FriendlyException"></exception>
-        public async Task<FileResult> PostExportOfTradeForm(TradeComplianceInputDto input)
+        public async Task<FileResult> PostExportOfTradeFormold(TradeComplianceInputDto input)
         {
-     
+
             var TradeTable = await GetTradeComplianceCheckFromDateBase(input);
 
             //创建Workbook
@@ -389,7 +394,7 @@ namespace Finance.TradeCompliance
             IRow row004 = sheet.CreateRow(4);
             row004.CreateCell(0).SetCellValue("产品组成物料");
             //合并单元格
-            sheet.AddMergedRegion(new CellRangeAddress( 4, 4+ TradeTable.ProductMaterialInfos.Count+3, 0, 0));
+            sheet.AddMergedRegion(new CellRangeAddress(4, 4 + TradeTable.ProductMaterialInfos.Count + 3, 0, 0));
 
             sheet.AddMergedRegion(new CellRangeAddress(1, 1, 0, 8));
             sheet.AddMergedRegion(new CellRangeAddress(2, 2, 7, 8));
@@ -408,7 +413,7 @@ namespace Finance.TradeCompliance
             int index = 1;
             for (int n = 0; n < TradeTable.ProductMaterialInfos.Count; n++)
             {
-                IRow row00n = sheet.CreateRow(4+1+n);
+                IRow row00n = sheet.CreateRow(4 + 1 + n);
 
                 row00n.CreateCell(1).SetCellValue(index);
                 row00n.CreateCell(2).SetCellValue(TradeTable.ProductMaterialInfos[n].MaterialCode);
@@ -421,7 +426,7 @@ namespace Finance.TradeCompliance
                 index++;
             }
 
-            IRow rowAfterN1= sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);
+            IRow rowAfterN1 = sheet.CreateRow(4 + TradeTable.ProductMaterialInfos.Count + 1);
             rowAfterN1.CreateCell(1).SetCellValue("ECCN成分价值占比");
             sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 1, 4 + TradeTable.ProductMaterialInfos.Count + 1, 1, 4));
             sheet.AddMergedRegion(new CellRangeAddress(4 + TradeTable.ProductMaterialInfos.Count + 1, 4 + TradeTable.ProductMaterialInfos.Count + 1, 5, 8));
@@ -508,7 +513,74 @@ namespace Finance.TradeCompliance
 
 
         }
+        /// <summary>
+        ///  贸易合规EXCLE下载(新加)
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        /// <exception cref="FriendlyException"></exception>
+        public async Task<FileResult> PostExportOfTradeForm(TradeComplianceInputDto input)
+        {
 
+            string templatePath = AppDomain.CurrentDomain.BaseDirectory + @"\wwwroot\Excel\贸易合规.xlsx";
+            TradeComplianceCheckDto TradeTable = await GetTradeComplianceCheckFromDateBase(input);
+            List<ProductMaterialInfoiIndex> productMaterialInfoiIndices = ObjectMapper.Map<List<ProductMaterialInfoiIndex>>(TradeTable.ProductMaterialInfos);
+            productMaterialInfoiIndices.Select((p, index) => { p.Index = index + 1;return p; }).ToList();
+            var value = new Dictionary<string, object>()
+            {
+                ["ProductName"] = TradeTable.TradeComplianceCheck.ProductName,
+                ["Country"] = TradeTable.TradeComplianceCheck.Country,
+                ["ProductType"] = TradeTable.TradeComplianceCheck.ProductType,
+                ["ProductFairValue"] = TradeTable.TradeComplianceCheck.ProductFairValue,
+                ["EccnPricePercent"]= TradeTable.TradeComplianceCheck.EccnPricePercent,
+                ["PendingPricePercent"] = TradeTable.TradeComplianceCheck.PendingPricePercent,
+                ["AmountPricePercent"] = TradeTable.TradeComplianceCheck.AmountPricePercent,
+                ["AnalysisConclusion"] = TradeTable.TradeComplianceCheck.AnalysisConclusion,
+                ["CreationTime"] = TradeTable.TradeComplianceCheck.CreationTime,
+                ["Table"]= productMaterialInfoiIndices,
+                ["ConstName"]= "产品组长物料种类"
+            };         
+            var memoryStream = new MemoryStream();
+            await memoryStream.SaveAsByTemplateAsync(templatePath, value);
+            //进行特殊操作 1.合并单元格  2.贸易合规绿色字体不合规红色
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            XSSFWorkbook workbook = new XSSFWorkbook(memoryStream);
+            var sheet = workbook.GetSheetAt(0);
+            int i = sheet.LastRowNum;
+            sheet.MergedRegion(5, i-2, 0, 0);
+            string AnalysisConclusion = sheet.GetRow(i-1).GetCell(1).ToString();
+
+            XSSFCellStyle titleStyle = (XSSFCellStyle)workbook.CreateCellStyle();
+            titleStyle.Alignment = HorizontalAlignment.Center; // 居中
+            IFont titleFontGreen = workbook.CreateFont();
+            titleFontGreen.IsBold = true;
+            titleFontGreen.FontHeightInPoints = 12;
+            titleFontGreen.Color = HSSFColor.Green.Index;//设置字体颜色
+
+            IFont titleFontRed = workbook.CreateFont();
+            titleFontRed.IsBold = true;
+            titleFontRed.FontHeightInPoints = 12;
+            titleFontRed.Color = HSSFColor.Red.Index;//设置字体颜色
+
+            if (AnalysisConclusion=="合规")
+            {
+                titleStyle.SetFont(titleFontGreen);
+            }
+            else
+            {
+                titleStyle.SetFont(titleFontRed);
+            }
+            sheet.GetRow(i - 1).GetCell(1).CellStyle = titleStyle;
+            MemoryStream ms = new MemoryStream();
+            workbook.Write(ms);
+            Byte[] btye2 = ms.ToArray();
+            return new FileContentResult(btye2, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            {
+                FileDownloadName = $"贸易合规EXCLE下载.xlsx"
+            };
+
+        }
     }
 
 }
