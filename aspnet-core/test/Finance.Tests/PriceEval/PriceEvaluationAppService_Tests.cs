@@ -246,6 +246,28 @@ namespace Finance.Tests.PriceEval
             outputResult.ShouldBeEquivalentTo(1);
         }
 
+        /// <summary>
+        /// 测试获取项目核价表
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPriceEvaluationTable_Test()
+        {
+            PriceEvaluationStart_Test();
 
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                InputCount = 0,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Title.CompareTo("2024-01-30营销二部关于YY广丰舱内第2版的核价报价申请");
+        }
     }
 }
