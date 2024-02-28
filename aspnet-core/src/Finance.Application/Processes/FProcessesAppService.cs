@@ -136,63 +136,108 @@ namespace Finance.Processes
         /// <returns></returns>
         public async Task<bool> UploadFoundationFProcesses(IFormFile file)
         {
-            //打开上传文件的输入流
-            Stream stream = file.OpenReadStream();
-
-            //根据文件流创建excel数据结构
-            IWorkbook workbook = WorkbookFactory.Create(stream);
-            stream.Close();
-
-            //尝试获取第一个sheet
-            var sheet = workbook.GetSheetAt(0);
-            //判断是否获取到 sheet
-            if (sheet != null)
+            try
             {
-                var query = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
-                var list = query.ToList();
-                foreach (var item in list)
+                //打开上传文件的输入流
+                Stream stream = file.OpenReadStream();
+
+                //根据文件流创建excel数据结构
+                IWorkbook workbook = WorkbookFactory.Create(stream);
+                stream.Close();
+
+                //尝试获取第一个sheet
+                var sheet = workbook.GetSheetAt(0);
+                int sheetCount = sheet.LastRowNum;
+                //判断是否获取到 sheet
+                if (sheet != null)
                 {
-                    await _fProcessesRepository.DeleteAsync(s => s.Id == item.Id);
-                }
-                //跳过表头
-                for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
-                {
-                    var initRow = sheet.GetRow(i);
-                    if (initRow == null) break;
-                    var s1 = initRow.GetCell(0);
-                    var s2 = initRow.GetCell(1);
-                    if (null == initRow.GetCell(0) || string.IsNullOrEmpty(initRow.GetCell(1).ToString()))
+                    #region 添加校验(新增)
+                    //添加校验
+
+                    try
                     {
-                        break;
-                    }
-                    else
-                    {
-                        FProcesses p = new FProcesses();
-                        p.IsDeleted = false;
-                        p.ProcessNumber = initRow.GetCell(0).ToString();
-                        p.ProcessName = initRow.GetCell(1).ToString();
-                        p.CreationTime = DateTime.Now;
-                        p.LastModificationTime = DateTime.Now;
-                        if (AbpSession.UserId != null)
+                        if (sheet.GetRow(0).GetCell(0).CellType== CellType.Blank||sheet.GetRow(0).GetCell(0).ToString() != "工序编号")
                         {
-                            p.CreatorUserId = AbpSession.UserId.Value;
-                            p.LastModifierUserId = AbpSession.UserId.Value;
+                            throw new FriendlyException($"非标准模版,缺少工序编号!");
                         }
+                        else if (sheet.GetRow(0).GetCell(1).CellType == CellType.Blank || sheet.GetRow(0).GetCell(1).ToString() != "工序名称")
+                        {
+                            throw new FriendlyException($"非标准模版,缺少工序名称!");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        throw new FriendlyException("非标准模版,请检查!");
+                    }
+                   
+                    for (global::System.Int32 i = 1; i < sheetCount; i++)
+                    {
                         try
                         {
-                            var result = await this._fProcessesRepository.InsertAsync(p);
+                           if (sheet.GetRow(0).GetCell(0).CellType == CellType.Blank||string.IsNullOrEmpty(sheet.GetRow(i).GetCell(0)?.ToString())) throw new FriendlyException($"行:{i} 的工序编号为空");
+                           if (sheet.GetRow(0).GetCell(1).CellType == CellType.Blank||string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工序名称为空");
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
-                            string str = ex.Message;
+                            throw new FriendlyException($"非标准模版,请检查!");
                         }
                     }
-                }
+                    #endregion
 
-                // 获取总数
-                var query1 = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
-                this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
+                    var query = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
+                    var list = query.ToList();
+                    foreach (var item in list)
+                    {
+                        await _fProcessesRepository.DeleteAsync(s => s.Id == item.Id);
+                    }
+                    //跳过表头
+                    for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
+                    {
+                        var initRow = sheet.GetRow(i);
+                        if (initRow == null) break;
+                        var s1 = initRow.GetCell(0);
+                        var s2 = initRow.GetCell(1);
+                        if (null == initRow.GetCell(0) || string.IsNullOrEmpty(initRow.GetCell(1).ToString()))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            FProcesses p = new FProcesses();
+                            p.IsDeleted = false;
+                            p.ProcessNumber = initRow.GetCell(0).ToString();
+                            p.ProcessName = initRow.GetCell(1).ToString();
+                            p.CreationTime = DateTime.Now;
+                            p.LastModificationTime = DateTime.Now;
+                            if (AbpSession.UserId != null)
+                            {
+                                p.CreatorUserId = AbpSession.UserId.Value;
+                                p.LastModifierUserId = AbpSession.UserId.Value;
+                            }
+                            try
+                            {
+                                var result = await this._fProcessesRepository.InsertAsync(p);
+                            }
+                            catch (Exception ex)
+                            {
+                                string str = ex.Message;
+                            }
+                        }
+                    }
+
+                    // 获取总数
+                    var query1 = this._fProcessesRepository.GetAll().Where(t => t.IsDeleted == false);
+                    await this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
+                }
             }
+            catch (FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException("模板错误请检查");
+            }           
             return true;
         }
         /// <summary>

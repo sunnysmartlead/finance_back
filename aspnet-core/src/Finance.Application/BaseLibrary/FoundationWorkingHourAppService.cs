@@ -253,6 +253,19 @@ namespace Finance.BaseLibrary
                     //var memoryStream = new MemoryStream();
                     //MiniExcel.SaveAsByTemplate(path, tempmbPath, list, configuration: config);
                     var rows = MiniExcel.Query(stream).ToList();
+                    #region 新增 判断所有单元格是否为空,如果是空就抛出提示
+                    //判断某个单元格是否为空,如果是的话抛出异常
+                    if (rows.Count > 2)
+                    {
+                        for (global::System.Int32 i = 2; i < rows.Count; i++)
+                        {
+                            foreach (var item in rows[i])
+                            {
+                                if (item.Value == null) throw new FriendlyException($"行数:{i}行,列:{item.Key} 的单元格数据不能为空,请检查!");
+                            }
+                        }
+                    }
+                    #endregion
                     // 解析数量
                     int startCols = 3;
                     // 设备列数
@@ -321,7 +334,7 @@ namespace Finance.BaseLibrary
                             var val1 = row[keys[fromStartIndex + 1]];
                             var val2 = row[keys[fromStartIndex + 2]];
                             foundationWorkingHourItem.LaborHour = val0.ToString();
-                            foundationWorkingHourItem.MachineHour = val1.ToString(); ;
+                            foundationWorkingHourItem.MachineHour = val1.ToString(); 
                             foundationWorkingHourItem.NumberPersonnel = val2.ToString();
                             foundationWorkingHourItem.Year = yearstr;
                             foundationWorkingHourItemDtos.Add(foundationWorkingHourItem);
@@ -382,13 +395,17 @@ namespace Finance.BaseLibrary
                         }
 
                     }
-                     this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
+                    await this.CreateLog(" 导入工时项目" + foundationWorkingHourDtos.Count + "条");
                     return foundationWorkingHourDtos;
                 }
             }
+            catch(FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
             catch (Exception ex)
             {
-                throw new Exception("数据解析失败！");
+                throw new Exception("模版错误,请检查!");
             }
         }
 
