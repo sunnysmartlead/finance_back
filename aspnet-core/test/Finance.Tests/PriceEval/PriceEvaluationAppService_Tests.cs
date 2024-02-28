@@ -1,9 +1,6 @@
 ﻿using Abp.Json;
-
 using Finance.EntityFrameworkCore.Seed;
-
 using Finance.FinanceMaintain;
-
 using Finance.PriceEval;
 using Finance.PriceEval.Dto;
 using NPOI.SS.Formula.Functions;
@@ -231,6 +228,22 @@ namespace Finance.Tests.PriceEval
 
             // Assert
             outputResult.ShouldBeEquivalentTo(2);
+        }
+
+        /// <summary>
+        /// 测试获取核价表模组的InputCount（投入量）和年份
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPriceEvaluationTableInputCount_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPriceEvaluationTableInputCount(1);
+
+            // Assert
+            outputResult.ShouldBeEquivalentTo(1);
         }
 
 
