@@ -18,6 +18,10 @@ public class UnitPriceSumModel
     /// 价格USD
     /// </summary>
     public decimal priceUSD { get; set; }
+    /// <summary>
+    /// 汇率
+    /// </summary>
+    public decimal ExchangeRate { get; set; }
 }
 
 
