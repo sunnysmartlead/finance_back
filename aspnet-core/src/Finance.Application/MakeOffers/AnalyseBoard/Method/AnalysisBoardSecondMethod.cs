@@ -4963,7 +4963,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal USDExchangeRate = 0;
         bool isBomCosts = false;
         var porp = await _priceEvaluationGetAppService.GetGradient(processId);
-        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = processId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year });
+        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = processId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year,UpDown= porp.Items[0].UpDown });
         if (BomCosts != null)
         {
             Material BomCostUsd = BomCosts.FirstOrDefault(p => p.CurrencyText.Equals("USD"));
@@ -5067,7 +5067,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 Product = solution.Product,
                 price = value,
-                priceUSD=value/ USDExchangeRate
+                priceUSD=value/ USDExchangeRate,
+                ExchangeRate= USDExchangeRate
             };
 
 
@@ -6920,7 +6921,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         decimal USDExchangeRate = 0;
         bool isBomCosts = false;
         var porp = await _priceEvaluationGetAppService.GetGradient(auditFlowId);
-        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = auditFlowId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year });
+        List<Material> BomCosts = await _priceEvaluationGetAppService.GetBomCost(new GetBomCostInput() { AuditFlowId = auditFlowId, SolutionId = solutions[0].Id, GradientId = porp.Items[0].Id, Year = porp.Items[0].Year,UpDown= porp.Items[0].UpDown });
         if (BomCosts != null)
         {
             Material BomCostUsd = BomCosts.FirstOrDefault(p => p.CurrencyText.Equals("USD"));
