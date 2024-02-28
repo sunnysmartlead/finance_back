@@ -233,6 +233,22 @@ namespace Finance.Tests.PriceEval
             outputResult.ShouldBeEquivalentTo(2);
         }
 
+        /// <summary>
+        /// 测试获取核价表模组的InputCount（投入量）和年份
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPriceEvaluationTableInputCount_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPriceEvaluationTableInputCount(1);
+
+            // Assert
+            outputResult.ShouldBeEquivalentTo(1);
+        }
+
 
     }
 }
