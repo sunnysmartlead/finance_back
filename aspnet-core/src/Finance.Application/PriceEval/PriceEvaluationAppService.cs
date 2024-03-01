@@ -438,6 +438,11 @@ namespace Finance.PriceEval
                 throw new FriendlyException($"梯度数量不能重复！");
             }
 
+            if (input.ModelCount.Any(p => p.ModelCountYearList.Any(o => o.Quantity == 0)))
+            {
+                throw new FriendlyException($"模组数量不能为0！");
+            }
+
             #endregion
 
             if (!input.IsSubmit)
