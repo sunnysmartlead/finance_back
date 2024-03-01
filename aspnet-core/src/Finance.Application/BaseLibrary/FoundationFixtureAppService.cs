@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Finance.Authorization.Users;
 using Finance.Infrastructure;
@@ -156,27 +157,37 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationFixtureDto entity = new FoundationFixtureDto();
                         entity.IsDeleted = false;
+                        if (initRow.GetCell(0).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的A列(工序编号)为空!请检查!");
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        if (initRow.GetCell(1).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的B列(工序名称)为空!请检查!");
                         entity.ProcessName = initRow.GetCell(1).ToString();
                     
                         var lastColNum = initRow.LastCellNum - 6;
                         var deviceCountt = lastColNum / 4;
                         for (int j = 0; j < deviceCountt; j++)
                         {
+                            //判断每一个单元格是否为空,如果是空就抛出异常
+                            if (sheet.GetRow(i).GetCell(j).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(j).ToString())) throw new FriendlyException($"行:{i + 1};列:{j + 1} 的单元格不能为空,请检查!");
                             int pindex = j * 4 + 2;
                             FoundationFixtureItemDto foundationFixtureItemDto = new FoundationFixtureItemDto();
                             foundationFixtureItemDto.FixtureName = initRow.GetCell(pindex).ToString();
                             foundationFixtureItemDto.FixtureState = initRow.GetCell(pindex + 1).ToString();
-                            if (initRow.GetCell(pindex + 2) != null && !string.IsNullOrEmpty(initRow.GetCell(pindex + 2).ToString()))
-                            {
-                                foundationFixtureItemDto.FixturePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
-                            }
+                            if (initRow.GetCell(pindex + 2).CellType != CellType.Numeric) throw new FriendlyException($"行:{i + 1},的{pindex + 2 + 1}列,必须是数据类型!请检查!");
+                            foundationFixtureItemDto.FixturePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());                        
                             foundationFixtureItemDto.FixtureProvider = initRow.GetCell(pindex + 3).ToString();
                             entity.FixtureList.Add(foundationFixtureItemDto);
                         }
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (sheet.GetRow(i).GetCell(2 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{2 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.FixtureGaugeName = initRow.GetCell(2 + deviceCountt * 4).ToString();
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (sheet.GetRow(i).GetCell(3 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{3 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.FixtureGaugeState = initRow.GetCell(3 + deviceCountt * 4).ToString();
-                       entity.FixtureGaugePrice = decimal.Parse(initRow.GetCell(4 + deviceCountt * 4).ToString());
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (sheet.GetRow(i).GetCell(4 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{4 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
+                        entity.FixtureGaugePrice = decimal.Parse(initRow.GetCell(4 + deviceCountt * 4).ToString());
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (sheet.GetRow(i).GetCell(5 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{5 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.FixtureGaugeBusiness = initRow.GetCell(5 + deviceCountt * 4).ToString();
                         list.Add(entity);
                     }
@@ -259,13 +270,17 @@ namespace Finance.BaseLibrary
                         }
                         var query1 = this._foundationFixtureRepository.GetAll().Where(t => t.IsDeleted == false);
 
-                        this.CreateLog(" 导入治具项目" + query1.Count() + "条");
+                        await this.CreateLog(" 导入治具项目" + query1.Count() + "条");
                     }
                 }
             }
+            catch (FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
             catch (Exception ex)
             {
-                throw new Exception("数据解析失败！");
+                throw new FriendlyException(ex.Message);
             }
             return true;
         }

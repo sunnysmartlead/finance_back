@@ -17,11 +17,23 @@ namespace Finance.BaseLibrary
         public long? LastModifierUserId { get; set; }
         public DateTime CreationTime { get; set; }
         public long? CreatorUserId { get; set; }
+        /// <summary>
+        /// 设备名称
+        /// </summary>
         public string DeviceName { get; set; }
         public string DeviceNumber { get; set; }
-        public decimal DevicePrice { get; set; }
+        /// <summary>
+        /// 设备单价
+        /// </summary>
+        public decimal DevicePrice { get; set; }      
         public decimal? DeviceSort { get; set; }
+        /// <summary>
+        /// 设备状态
+        /// </summary>
         public string DeviceStatus { get; set; }
+        /// <summary>
+        /// 设备供应商
+        /// </summary>
         public string DeviceProvider { get; set; }
         public long? ProcessHoursEnterId { get; set; }
     }
