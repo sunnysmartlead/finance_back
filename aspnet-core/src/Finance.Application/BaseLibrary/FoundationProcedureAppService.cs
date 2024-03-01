@@ -7,6 +7,7 @@ using Finance.PriceEval.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
+using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using Spire.Pdf.Exporting.XPS.Schema;
 using Spire.Pdf.General.Paper.Uof;
@@ -160,76 +161,110 @@ namespace Finance.BaseLibrary
         /// <returns></returns>
         public async Task<bool> UploadFoundationProcedure(IFormFile file)
         {
-            //打开上传文件的输入流
-            Stream stream = file.OpenReadStream();
-
-            //根据文件流创建excel数据结构
-            IWorkbook workbook = WorkbookFactory.Create(stream);
-            stream.Close();
-
-            //尝试获取第一个sheet
-            var sheet = workbook.GetSheetAt(0);
-            //判断是否获取到 sheet
-            if (sheet != null)
+            try
             {
-                   var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
-                var list = query.ToList();
-                var totalCount = query.Count();
-                var dtos = ObjectMapper.Map<List<FoundationProcedure>, List<FoundationProcedureDto>>(list, new List<FoundationProcedureDto>());
-                foreach (var item in dtos)
+                //打开上传文件的输入流
+                Stream stream = file.OpenReadStream();
+
+                //根据文件流创建excel数据结构
+                IWorkbook workbook = WorkbookFactory.Create(stream);
+                stream.Close();
+
+                //尝试获取第一个sheet
+                var sheet = workbook.GetSheetAt(0);
+                //判断是否获取到 sheet
+                if (sheet != null)
                 {
-                    await _foundationProcedureRepository.DeleteAsync(s => s.Id == item.Id);
-                }
-                //跳过表头
-                for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
-                {
-                    var initRow = sheet.GetRow(i);
-                    if (initRow == null) break;
-                    var s1 = initRow.GetCell(0);
-                    if (null == initRow.GetCell(0))
+                    int sheetCount = sheet.LastRowNum;
+                    #region 新增 判断所有单元格是否为空,如果是空就抛出提示
+                    //判断某个单元格是否为空,如果是的话抛出异常
+                    for (global::System.Int32 i = 1; i < sheetCount; i++)
                     {
-                        break;
-                    }
-                    else
-                    {
-                        FoundationProcedureDto entity = new FoundationProcedureDto();
-                        entity.IsDeleted = false;
-                        entity.ProcessNumber = initRow.GetCell(0).ToString();
-                        entity.ProcessName = initRow.GetCell(1).ToString();
-                        entity.InstallationName = initRow.GetCell(2).ToString();
-                        entity.InstallationPrice = decimal.Parse(initRow.GetCell(3).ToString());
-                        entity.InstallationSupplier = initRow.GetCell(4).ToString();
-                        entity.TestName = initRow.GetCell(5).ToString();
-                        entity.TestPrice = decimal.Parse(initRow.GetCell(6).ToString());
-                        entity.CreationTime = DateTime.Now;
-                        entity.LastModificationTime = DateTime.Now;
-                        if (AbpSession.UserId != null)
-                        {
-                            entity.CreatorUserId = AbpSession.UserId.Value;
-                            entity.LastModifierUserId = AbpSession.UserId.Value;
-                        }
                         try
                         {
-                            var entity2 = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(entity, new FoundationProcedure());
-                            var result = await this._foundationProcedureRepository.InsertAsync(entity2);
+                            if (sheet.GetRow(0).GetCell(0).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(0)?.ToString())) throw new FriendlyException($"行:{i} 的工序编号为空");
+                            if (sheet.GetRow(0).GetCell(1).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工序名称为空");
+
+                            if (sheet.GetRow(0).GetCell(2).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工装名称为空");
+                            if (sheet.GetRow(0).GetCell(3).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工序单价为空");
+                            if (sheet.GetRow(0).GetCell(4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工序供应商为空");
+                            if (sheet.GetRow(0).GetCell(5).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的测试线名称为空");
+                            if (sheet.GetRow(0).GetCell(6).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的测试线单价为空");
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
-                            string str = ex.Message;
+                            throw new FriendlyException($"非标准模版,请检查!");
+                        }
+                    }
+                    #endregion
+                    var query = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
+                    var list = query.ToList();
+                    var totalCount = query.Count();
+                    var dtos = ObjectMapper.Map<List<FoundationProcedure>, List<FoundationProcedureDto>>(list, new List<FoundationProcedureDto>());
+                    foreach (var item in dtos)
+                    {
+                        await _foundationProcedureRepository.DeleteAsync(s => s.Id == item.Id);
+                    }
+                    //跳过表头
+                    for (int i = 1; i < 1000; i++)//100为自定义，实际循环中不会达到
+                    {
+                        var initRow = sheet.GetRow(i);
+                        if (initRow == null) break;
+                        var s1 = initRow.GetCell(0);
+                        if (null == initRow.GetCell(0))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            FoundationProcedureDto entity = new FoundationProcedureDto();
+                            entity.IsDeleted = false;
+                            entity.ProcessNumber = initRow.GetCell(0).ToString();
+                            entity.ProcessName = initRow.GetCell(1).ToString();
+                            entity.InstallationName = initRow.GetCell(2).ToString();
+                            if(initRow.GetCell(3).CellType!= CellType.Numeric) throw new FriendlyException($"行:{i+1},的D列(工装单价),必须是数据类型!请检查!");
+                            entity.InstallationPrice = decimal.Parse(initRow.GetCell(3).ToString());
+                            entity.InstallationSupplier = initRow.GetCell(4).ToString();
+                            entity.TestName = initRow.GetCell(5).ToString();
+                            if (initRow.GetCell(6).CellType != CellType.Numeric) throw new FriendlyException($"行:{i + 1},的G列(测试单价),必须是数据类型!请检查!");
+                            entity.TestPrice = decimal.Parse(initRow.GetCell(6).ToString());
+                            entity.CreationTime = DateTime.Now;
+                            entity.LastModificationTime = DateTime.Now;
+                            if (AbpSession.UserId != null)
+                            {
+                                entity.CreatorUserId = AbpSession.UserId.Value;
+                                entity.LastModifierUserId = AbpSession.UserId.Value;
+                            }
+                            try
+                            {
+                                var entity2 = ObjectMapper.Map<FoundationProcedureDto, FoundationProcedure>(entity, new FoundationProcedure());
+                                var result = await this._foundationProcedureRepository.InsertAsync(entity2);
+                            }
+                            catch (Exception ex)
+                            {
+                                string str = ex.Message;
+                            }
+
                         }
 
                     }
-               
+                    var query1 = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
+
+                    // 获取总数
+                    await this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
+
                 }
-                var query1 = this._foundationProcedureRepository.GetAll().Where(t => t.IsDeleted == false);
-
-                // 获取总数
-                this.CreateLog(" 新表单导入，共" + query1.Count() + "条数据");
-
+                return true;
             }
-            return true;
+            catch (FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }           
         }
-
 
         /// <summary>
         /// 获取修改

@@ -1301,7 +1301,7 @@ namespace Finance.Processes
                 using (Stream stream = file.OpenReadStream())
                 {
                     var rows = MiniExcel.Query(stream).ToList();
-                    #region 新增 判断所有单元格是否为空,如果是空就爆出提示
+                    #region 新增 判断所有单元格是否为空,如果是空就抛出提示
                     //判断某个单元格是否为空,如果是的话抛出异常
                     if (rows.Count > 2)
                     {
@@ -1309,7 +1309,7 @@ namespace Finance.Processes
                         {
                             foreach (var item in rows[i])
                             {
-                                if (item.Value == null) throw new FriendlyException($"行数:{i}行,列:{item.Key} 的单元格数据不能为空,请检查!");
+                                if (item.Value == null) throw new FriendlyException($"行数:{i+1}行,列:{item.Key} 的单元格数据不能为空,请检查!");
                             }
                         }
                     }
@@ -1648,7 +1648,7 @@ namespace Finance.Processes
             }
             catch (Exception ex)
             {
-                throw new Exception("模版错误请检查!");
+                throw new FriendlyException("模版错误请检查!");
             }
         }
 

@@ -261,7 +261,7 @@ namespace Finance.BaseLibrary
                         {
                             foreach (var item in rows[i])
                             {
-                                if (item.Value == null) throw new FriendlyException($"行数:{i}行,列:{item.Key} 的单元格数据不能为空,请检查!");
+                                if (item.Value == null) throw new FriendlyException($"行数:{i+1}行,列:{item.Key} 的单元格数据不能为空,请检查!");
                             }
                         }
                     }
@@ -405,7 +405,7 @@ namespace Finance.BaseLibrary
             }
             catch (Exception ex)
             {
-                throw new Exception("模版错误,请检查!");
+                throw new FriendlyException("模版错误,请检查!");
             }
         }
 

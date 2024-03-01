@@ -354,30 +354,44 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationHardwareDto entity = new FoundationHardwareDto();
                         entity.IsDeleted = false;
+                        if (initRow.GetCell(0).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的A列(工序编号)为空!请检查!");
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
+                        if (initRow.GetCell(1).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的B列(工序名称)为空!请检查!");
                         entity.ProcessName = initRow.GetCell(1).ToString();
 
                         var lastColNum = initRow.LastCellNum - 5;
                         var deviceCountt = lastColNum / 4;
                         for (int j = 0; j < deviceCountt; j++)
                         {
+                            //判断每一个单元格是否为空,如果是空就抛出异常
+                            if (sheet.GetRow(i).GetCell(j).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(j).ToString())) throw new FriendlyException($"行:{i + 1};列:{j + 1} 的单元格不能为空,请检查!");
                             int pindex = j * 4 + 2;
                             FoundationHardwareItemDto foundationHardwareDto = new FoundationHardwareItemDto();
                             foundationHardwareDto.HardwareName = initRow.GetCell(pindex).ToString();
                             foundationHardwareDto.HardwareState = initRow.GetCell(pindex + 1).ToString();
-                            if (initRow.GetCell(pindex + 2) != null && !string.IsNullOrEmpty(initRow.GetCell(pindex + 2).ToString()))
-                            {
-                                foundationHardwareDto.HardwarePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
-                            }
+                            if (initRow.GetCell(pindex + 2).CellType != CellType.Numeric) throw new FriendlyException($"行:{i + 1},的{pindex + 2 + 1}列,必须是数据类型!请检查!");
+                            foundationHardwareDto.HardwarePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());                        
                             foundationHardwareDto.HardwareBusiness = initRow.GetCell(pindex + 3).ToString();
                             entity.ListHardware.Add(foundationHardwareDto);
                         }
-                        
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(2 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{2 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.TraceabilitySoftware = initRow.GetCell(2 + deviceCountt * 4).ToString();
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(3 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{3 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.TraceabilitySoftwareCost = decimal.Parse(initRow.GetCell(3 + deviceCountt * 4).ToString());
-                         entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(4 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{4 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
+                        entity.SoftwareName = initRow.GetCell(4 + deviceCountt * 4).ToString();
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(5 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{5 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.SoftwareState = initRow.GetCell(5 + deviceCountt * 4).ToString();
+                        //判断单元格是否为值类型,如果是空就抛出异常
+                        var op= initRow.GetCell(6 + deviceCountt * 4).ToString();
+                        if (initRow.GetCell(6 + deviceCountt * 4).CellType != CellType.Numeric) throw new FriendlyException($"行:{i + 1};列:{6 + deviceCountt * 4 + 1} 的单元格必须是值类型,请检查!");
                         entity.SoftwarePrice = decimal.Parse(initRow.GetCell(6 + deviceCountt * 4).ToString());
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(7 + deviceCountt * 4).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(2 + deviceCountt * 4).ToString())) throw new FriendlyException($"行:{i + 1};列:{7 + deviceCountt * 4 + 1} 的单元格不能为空,请检查!");
                         entity.SoftwareBusiness = initRow.GetCell(7 + deviceCountt * 4).ToString();
 
                         list.Add(entity);
@@ -443,13 +457,17 @@ namespace Finance.BaseLibrary
 
                         }
                         var query1 = this._foundationHardwareRepository.GetAll().Where(t => t.IsDeleted == false);
-                        this.CreateLog(" 导入软硬件项目" + query1.Count() + "条");
+                       await this.CreateLog(" 导入软硬件项目" + query1.Count() + "条");
                     }
                 }
             }
+            catch (FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
             catch (Exception ex)
             {
-                throw new Exception("数据解析失败！");
+                throw new FriendlyException(ex.Message);
             }
             return true;
         }

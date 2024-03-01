@@ -17,9 +17,21 @@ namespace Finance.BaseLibrary
         public System.DateTime CreationTime { get; set; }
         public System.Nullable<System.Int64> CreatorUserId { get; set; }
         public string FixtureBusiness { get; set; }
+        /// <summary>
+        ///  治具名称
+        /// </summary>
         public string FixtureName { get; set; }
+        /// <summary>
+        /// 治具单价
+        /// </summary>
         public System.Nullable<System.Decimal> FixturePrice { get; set; }
+        /// <summary>
+        /// 治具状态
+        /// </summary>
         public string FixtureState { get; set; }
+        /// <summary>
+        /// 治具供应商
+        /// </summary>
         public string FixtureProvider { get; set; }
         public System.Nullable<System.Decimal> FoundationFixtureId { get; set; }
     }

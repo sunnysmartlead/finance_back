@@ -105,7 +105,7 @@ namespace Finance.BaseLibrary
                 var dtos = ObjectMapper.Map<List<FoundationDevice>, List<FoundationDeviceDto>>(list, new List<FoundationDeviceDto>());
                 foreach (var item in dtos)
                 {
-               
+
                     var user = this._userRepository.GetAll().Where(u => u.Id == item.LastModifierUserId).ToList().FirstOrDefault();
                     var FoundationDeviceItemlist = this._foundationFoundationDeviceItemRepository.GetAll().Where(f => f.ProcessHoursEnterId == item.Id).ToList();
 
@@ -124,7 +124,8 @@ namespace Finance.BaseLibrary
                 // 数据返回
                 return dtos;
             }
-            else {
+            else
+            {
                 List<FoundationDeviceDto> foundationDeviceDtos = new List<FoundationDeviceDto>();
                 var FoundationHardwareDtoId = await (from u in _foundationFoundationDeviceItemRepository.GetAll()
                                                      join ur in _foundationDeviceRepository.GetAll() on u.ProcessHoursEnterId equals ur.Id
@@ -177,10 +178,11 @@ namespace Finance.BaseLibrary
         {
 
             var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber).ToList();
-            if (query.Count>0) {
+            if (query.Count > 0)
+            {
                 throw new FriendlyException("工序编号重复");
             }
-            
+
             var entity = ObjectMapper.Map<FoundationDeviceDto, FoundationDevice>(input, new FoundationDevice());
             entity.CreationTime = DateTime.Now;
             if (AbpSession.UserId != null)
@@ -262,8 +264,12 @@ namespace Finance.BaseLibrary
                         var initRow = sheet.GetRow(i);
                         FoundationDeviceDto entity = new FoundationDeviceDto();
                         entity.IsDeleted = false;
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(0).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的A列(工序编号)为空!请检查!");
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
-                        entity.ProcessName = initRow.GetCell(1).StringCellValue;
+                        //判断单元格是否为空,如果是空就抛出异常
+                        if (initRow.GetCell(1).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的B列(工序名称)为空!请检查!");
+                        entity.ProcessName = initRow.GetCell(1).ToString();
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;
                         if (AbpSession.UserId != null)
@@ -275,14 +281,14 @@ namespace Finance.BaseLibrary
                         var deviceCountt = lastColNum / 4;
                         for (int j = 0; j < deviceCountt; j++)
                         {
+                            //判断每一个单元格是否为空,如果是空就抛出异常
+                            if (sheet.GetRow(i).GetCell(j).CellType == CellType.Blank || string.IsNullOrEmpty(sheet.GetRow(i).GetCell(j).ToString())) throw new FriendlyException($"行:{i + 1};列:{j + 1} 的单元格不能为空,请检查!");
                             int pindex = j * 4 + 2;
                             FoundationDeviceItemDto foundationDeviceItemDto = new FoundationDeviceItemDto();
                             foundationDeviceItemDto.DeviceName = initRow.GetCell(pindex).ToString();
                             foundationDeviceItemDto.DeviceStatus = initRow.GetCell(pindex + 1).ToString();
-                            if (initRow.GetCell(pindex + 2) != null && !string.IsNullOrEmpty(initRow.GetCell(pindex + 2).ToString()))
-                            {
-                                foundationDeviceItemDto.DevicePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
-                            }
+                            if (initRow.GetCell(pindex + 2).CellType != CellType.Numeric) throw new FriendlyException($"行:{i + 1},的{pindex + 2+1}列(设备单价),必须是数据类型!请检查!");
+                            foundationDeviceItemDto.DevicePrice = decimal.Parse(initRow.GetCell(pindex + 2).ToString());
                             foundationDeviceItemDto.DeviceProvider = initRow.GetCell(pindex + 3).ToString();
                             entity.DeviceList.Add(foundationDeviceItemDto);
                         }
@@ -351,13 +357,17 @@ namespace Finance.BaseLibrary
                         }
                         var query1 = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
 
-                        this.CreateLog(" 导入设备项目" + query1.Count() + "条");
+                        await this.CreateLog(" 导入设备项目" + query1.Count() + "条");
                     }
                 }
             }
+            catch (FriendlyException ex)
+            {
+                throw new FriendlyException(ex.Message);
+            }
             catch (Exception ex)
             {
-                throw new Exception("数据解析失败！");
+                throw new FriendlyException("模版错误,请检查模版!");
             }
             return true;
         }
@@ -438,7 +448,8 @@ namespace Finance.BaseLibrary
                         value["DeviceStatus" + j] = "";
 
                     }
-                    else {
+                    else
+                    {
                         value["DeviceStatus" + j] = entity.DisplayName;
                     }
                     value["DevicePrice" + j] = foundationDeviceItemDto.DevicePrice;
@@ -469,7 +480,7 @@ namespace Finance.BaseLibrary
             var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false && t.ProcessNumber == input.ProcessNumber && t.Id != input.Id).ToList();
             if (query.Count > 0)
             {
-                   throw new FriendlyException("工序编号重复");
+                throw new FriendlyException("工序编号重复");
             }
             FoundationDevice entity = await _foundationDeviceRepository.GetAsync(input.Id);
             entity = ObjectMapper.Map(input, entity);
@@ -502,7 +513,7 @@ namespace Finance.BaseLibrary
                     ObjectMapper.Map<FoundationDeviceItem, FoundationDeviceItemDto>(foundationDeviceItem, new FoundationDeviceItemDto());
                 }
             }
-             this.CreateLog(" 编辑设备项目1条");
+            this.CreateLog(" 编辑设备项目1条");
             return ObjectMapper.Map<FoundationDevice, FoundationDeviceDto>(entity, new FoundationDeviceDto());
         }
 
@@ -514,7 +525,7 @@ namespace Finance.BaseLibrary
         public virtual async Task DeleteAsync(long id)
         {
             await _foundationDeviceRepository.DeleteAsync(s => s.Id == id);
-             this.CreateLog(" 删除设备项目1条");
+            this.CreateLog(" 删除设备项目1条");
         }
 
         /// <summary>
@@ -534,7 +545,7 @@ namespace Finance.BaseLibrary
                 entity.LastModifierUserId = AbpSession.UserId.Value;
 
                 entity.CreatorUserId = AbpSession.UserId.Value;
-             
+
 
 
             }
