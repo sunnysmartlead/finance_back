@@ -255,6 +255,7 @@ namespace Finance.Tests.PriceEval
         {
             PriceEvaluationStart_Test();
 
+
             // Act
             var outputResult = await _priceEvaluationAppService.GetPriceEvaluationTable(new GetPriceEvaluationTableInput
             {
@@ -268,6 +269,26 @@ namespace Finance.Tests.PriceEval
 
             // Assert
             outputResult.Title.CompareTo("2024-01-30营销二部关于YY广丰舱内第2版的核价报价申请");
+        }
+
+        [Fact]
+        public async Task GetBomCost_Test() 
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetBomCost(new  GetBomCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                InputCount = 0,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
         }
     }
 }
