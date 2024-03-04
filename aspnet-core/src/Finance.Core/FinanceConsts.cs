@@ -571,6 +571,10 @@ namespace Finance
         /// 核价原因
         /// </summary>
         public const string EvalReason = "EvalReason";
+        /// <summary>
+        /// 核价原因
+        /// </summary>
+        public const string EvalReasonLX = "EvalReasonLX";
 
         /// <summary>
         /// 样品
@@ -1020,6 +1024,8 @@ namespace Finance
         /// </summary>
         public const string PricingDemandInput = "PricingDemandInput";
 
+       
+
         #endregion
 
 
@@ -1118,6 +1124,27 @@ namespace Finance
         /// 其他
         /// </summary>
         public const string Other = "Other";
+
+
+        /// <summary>
+        /// 核价需求录入-LX
+        /// </summary>
+        public const string PricingDemandInputLX = "PricingDemandInputLX";      
+
+        /// <summary>
+        /// 审核报价策略-LX
+        /// </summary>
+        public const string ReviewQuotationStrategyLX = "ReviewQuotationStrategyLX";
+
+        /// <summary> 
+        /// 报价审批表-LX
+        /// </summary>
+        public const string QuotationApprovalFormLX = "QuotationApprovalFormLX";
+
+        /// <summary> 
+        /// 查看报价审批表-LX
+        /// </summary>
+        public const string ViewQuotationApprovalFormLX = "ViewQuotationApprovalFormLX";
         #endregion
 
     }

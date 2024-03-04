@@ -1440,10 +1440,11 @@ public class AnalyseBoardSecondAppService : FinanceAppServiceBase, IAnalyseBoard
             throw new UserFriendlyException("请选择报价方案");
         }
         var version = isOfferDto.version;
-        if (version == 0)
-        {
-            throw new UserFriendlyException("前端传来方案版本不能为0");
-        }
+        //2402004 暂时去掉
+        //if (version == 0)
+        //{
+        //    throw new UserFriendlyException("前端传来方案版本不能为0");
+        //}
 
         var solutionList = JsonConvert.DeserializeObject<List<Solution>>(solutionQuotation.SolutionListJson);
 

@@ -1,8 +1,10 @@
 ﻿using Finance.Authorization.Roles;
+using Finance.Infrastructure;
 using Finance.WorkFlows;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Finance.EntityFrameworkCore.Seed.Host
 {
@@ -19,7 +21,14 @@ namespace Finance.EntityFrameworkCore.Seed.Host
         {
             CreateWorkFlows();
         }
+        /// <summary>
+        /// 主流程
+        /// </summary>
         public const string MainFlowId = "主流程";
+        /// <summary>
+        /// 零星报价
+        /// </summary>
+        public const string LXFlowId = "零星件报价流程";
         private void CreateWorkFlows()
         {
             #region 获取角色
@@ -72,12 +81,18 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
 
             #region 主流程结构定义
-            var workFlow = new Workflow
+            var workFlow = new List<Workflow>{new Workflow
             {
                 Id = MainFlowId,
                 Name = "主流程",
                 Version = 1
-            };
+            },
+            new Workflow
+            {
+                Id = LXFlowId,
+                Name = "零星件报价流程",
+                Version = 1
+            }};
 
             var nodeList = new List<Node>
             {
@@ -421,6 +436,47 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                     ProcessIdentifier = "ArchiveEnd",
                 },
             };
+            #region 零星报价
+            //零星报价
+            //nodeList.AddRange(new List<Node>() { new Node
+            //{
+            //      Name="核价需求录入-LX",
+            //      FinanceDictionaryId = FinanceConsts.EvalReasonLX,
+            //      Activation = $"{LXFlowId}审核报价策略-LX_{LXFlowId}_核价需求录入-LX || {LXFlowId}_开始_{LXFlowId}_核价需求录入-LX",
+            //      RoleId = salesMan.Id.ToString(),
+            //      ProcessIdentifier = FinanceConsts.PricingDemandInputLX,},
+            //new Node
+            //{
+            //    Name = "审核报价策略-LX",
+            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
+            //    Activation = $"{LXFlowId}_核价需求录入_{LXFlowId}_核价审批录入-LX",
+            //    RoleId = generalManager.Id.ToString(),
+            //    ProcessIdentifier = FinanceConsts.ReviewQuotationStrategyLX,
+            //}, new Node
+            //{
+            //    Name = "报价审批表-LX",
+            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
+            //    Activation = $"{LXFlowId}_审核报价策略-LX_{LXFlowId}_核价审批录入-LX",
+            //    RoleId = generalManager.Id.ToString(),
+            //    ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
+            //}, new Node
+            //{
+            //    Name = "查看报价审批表-LX",
+            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
+            //    Activation = $"{LXFlowId}_报价审批表-LX_{LXFlowId}_查看报价审批表-LX",
+            //    RoleId = salesMan.Id.ToString(),
+            //    ProcessIdentifier = FinanceConsts.ViewQuotationApprovalFormLX,
+            //},
+            //new Node
+            //{
+            //    Name = "归档-LX",
+            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
+            //    Activation = $"{LXFlowId}_查看报价审批表-LX_{LXFlowId}_归档-LX",
+            //    RoleId = salesMan.Id.ToString(),
+            //    ProcessIdentifier = "ArchiveEndLX",
+            //}});
+            #endregion
+
 
             var lineList = new List<Line>
             {
@@ -1289,6 +1345,66 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 #endregion
             };
 
+            #region 零星报价
+            //零星报价
+            //lineList.AddRange(new List<Line>(){new Line
+            //{
+            //    SoureNodeId = "开始-LX",
+            //    TargetNodeId = "核价需求录入-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = string.Empty,
+            //}, new Line
+            //{
+            //    SoureNodeId = "核价需求录入-LX",
+            //    TargetNodeId = "审核报价策略-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Tgyp},{FinanceConsts.EvalReason_Qtlxbj}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "审核报价策略-LX",
+            //    TargetNodeId = "核价需求录入-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "审核报价策略-LX",
+            //    TargetNodeId = "报审批表-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "报审批表-LX",
+            //    TargetNodeId = "审核报价策略-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "报审批表-LX",
+            //    TargetNodeId = "查看报价审批表-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "查看报价审批表-LX",
+            //    TargetNodeId = "报审批表-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "查看报价审批表-LX",
+            //    TargetNodeId = "归档-LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            //}});
+            #endregion
+
+
             //统一定义Id和所属工作流Id
             nodeList.ForEach(p =>
             {
@@ -1303,12 +1419,19 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 p.TargetNodeId = $"{MainFlowId}_{p.TargetNodeId}";
                 p.Id = $"{p.SoureNodeId}_{p.TargetNodeId}";
             });
-
-            var isHasWorkFlow = _context.Workflow.Any(p => p.Id == workFlow.Id);
+            //查看数据库是否有MainFlowId(主流程) 初始数据,如果没有就添加
+            var isHasWorkFlow = _context.Workflow.Any(p => p.Id == MainFlowId);
             if (!isHasWorkFlow)
             {
-                _context.Workflow.AddRange(workFlow);
+                _context.Workflow.AddRange(workFlow.Where(p => p.Id == MainFlowId));
             }
+            //查看数据库是否有SporadicFlowId(零星报价流程) 初始数据,如果没有就添加
+            var isSporadicFlow = _context.Workflow.Any(p => p.Id == LXFlowId);
+            if (!isSporadicFlow)
+            {
+                _context.Workflow.AddRange(workFlow.Where(p => p.Id == LXFlowId));
+            }
+
 
             var noDb = nodeList.Where(p => !_context.Node.Contains(p));
             if (noDb.Any())
