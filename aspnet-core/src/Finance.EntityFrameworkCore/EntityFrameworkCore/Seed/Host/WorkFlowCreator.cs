@@ -438,43 +438,49 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             };
             #region 零星报价
             //零星报价
-            //nodeList.AddRange(new List<Node>() { new Node
-            //{
-            //      Name="核价需求录入-LX",
-            //      FinanceDictionaryId = FinanceConsts.EvalReasonLX,
-            //      Activation = $"{LXFlowId}审核报价策略-LX_{LXFlowId}_核价需求录入-LX || {LXFlowId}_开始_{LXFlowId}_核价需求录入-LX",
-            //      RoleId = salesMan.Id.ToString(),
-            //      ProcessIdentifier = FinanceConsts.PricingDemandInputLX,},
-            //new Node
-            //{
-            //    Name = "审核报价策略-LX",
-            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
-            //    Activation = $"{LXFlowId}_核价需求录入_{LXFlowId}_核价审批录入-LX",
-            //    RoleId = generalManager.Id.ToString(),
-            //    ProcessIdentifier = FinanceConsts.ReviewQuotationStrategyLX,
-            //}, new Node
-            //{
-            //    Name = "报价审批表-LX",
-            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
-            //    Activation = $"{LXFlowId}_审核报价策略-LX_{LXFlowId}_核价审批录入-LX",
-            //    RoleId = generalManager.Id.ToString(),
-            //    ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
-            //}, new Node
-            //{
-            //    Name = "查看报价审批表-LX",
-            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
-            //    Activation = $"{LXFlowId}_报价审批表-LX_{LXFlowId}_查看报价审批表-LX",
-            //    RoleId = salesMan.Id.ToString(),
-            //    ProcessIdentifier = FinanceConsts.ViewQuotationApprovalFormLX,
-            //},
-            //new Node
-            //{
-            //    Name = "归档-LX",
-            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
-            //    Activation = $"{LXFlowId}_查看报价审批表-LX_{LXFlowId}_归档-LX",
-            //    RoleId = salesMan.Id.ToString(),
-            //    ProcessIdentifier = "ArchiveEndLX",
-            //}});
+            var nodeListLX=new List<Node>() {new Node
+            {
+                Name = "开始-LX",
+                FinanceDictionaryId = string.Empty,
+                Activation = string.Empty,
+                NodeType= NodeType.Start,
+            },new Node
+            {
+                Name="核价需求录入-LX",
+                FinanceDictionaryId = FinanceConsts.EvalReasonLX,
+                Activation = $"{LXFlowId}审核报价策略-LX_{LXFlowId}_核价需求录入-LX || {LXFlowId}_开始_{LXFlowId}_核价需求录入-LX",
+                RoleId = salesMan.Id.ToString(),
+                ProcessIdentifier = FinanceConsts.PricingDemandInputLX,},
+            new Node
+            {
+                Name = "审核报价策略-LX",
+                FinanceDictionaryId = FinanceConsts.YesOrNo,
+                Activation = $"{LXFlowId}_核价需求录入_{LXFlowId}_核价审批录入-LX",
+                RoleId = generalManager.Id.ToString(),//总经理查看
+                ProcessIdentifier = FinanceConsts.ReviewQuotationStrategyLX,
+            }, new Node
+            {
+                Name = "报价审批表-LX",
+                FinanceDictionaryId = FinanceConsts.YesOrNo,
+                Activation = $"{LXFlowId}_审核报价策略-LX_{LXFlowId}_核价审批录入-LX",
+                RoleId = generalManager.Id.ToString(),//总经理查看
+                ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
+            }, new Node
+            {
+                Name = "查看报价审批表-LX",
+                FinanceDictionaryId = FinanceConsts.YesOrNo,
+                Activation = $"{LXFlowId}_报价审批表-LX_{LXFlowId}_查看报价审批表-LX",
+                RoleId = salesMan.Id.ToString(),//营销部查看
+                ProcessIdentifier = FinanceConsts.ViewQuotationApprovalFormLX,
+            },
+            new Node
+            {
+                Name = "归档-LX",
+                FinanceDictionaryId = FinanceConsts.YesOrNo,
+                Activation = $"{LXFlowId}_查看报价审批表-LX_{LXFlowId}_归档-LX",
+                RoleId = salesMan.Id.ToString(),//营销部查看
+                ProcessIdentifier = "ArchiveEndLX",
+            }};
             #endregion
 
 
@@ -1347,61 +1353,61 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
             #region 零星报价
             //零星报价
-            //lineList.AddRange(new List<Line>(){new Line
-            //{
-            //    SoureNodeId = "开始-LX",
-            //    TargetNodeId = "核价需求录入-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = string.Empty,
-            //}, new Line
-            //{
-            //    SoureNodeId = "核价需求录入-LX",
-            //    TargetNodeId = "审核报价策略-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Tgyp},{FinanceConsts.EvalReason_Qtlxbj}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "审核报价策略-LX",
-            //    TargetNodeId = "核价需求录入-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "审核报价策略-LX",
-            //    TargetNodeId = "报审批表-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "报审批表-LX",
-            //    TargetNodeId = "审核报价策略-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "报审批表-LX",
-            //    TargetNodeId = "查看报价审批表-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "查看报价审批表-LX",
-            //    TargetNodeId = "报审批表-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
-            //},
-            //new Line
-            //{
-            //    SoureNodeId = "查看报价审批表-LX",
-            //    TargetNodeId = "归档-LX",
-            //    Index = 0,
-            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
-            //}});
+            var lineListLX=new List<Line>(){new Line
+            {
+                SoureNodeId = "开始-LX",
+                TargetNodeId = "核价需求录入-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = string.Empty,
+            }, new Line
+            {
+                SoureNodeId = "核价需求录入-LX",
+                TargetNodeId = "审核报价策略-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Tgyp},{FinanceConsts.EvalReason_Qtlxbj}",
+            },
+            new Line
+            {
+                SoureNodeId = "审核报价策略-LX",
+                TargetNodeId = "核价需求录入-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            },
+            new Line
+            {
+                SoureNodeId = "审核报价策略-LX",
+                TargetNodeId = "报审批表-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            },
+            new Line
+            {
+                SoureNodeId = "报审批表-LX",
+                TargetNodeId = "审核报价策略-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            },
+            new Line
+            {
+                SoureNodeId = "报审批表-LX",
+                TargetNodeId = "查看报价审批表-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            },
+            new Line
+            {
+                SoureNodeId = "查看报价审批表-LX",
+                TargetNodeId = "报审批表-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            },
+            new Line
+            {
+                SoureNodeId = "查看报价审批表-LX",
+                TargetNodeId = "归档-LX",
+                Index = 0,
+                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            }};
             #endregion
 
 
@@ -1412,11 +1418,23 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 p.WorkFlowId = MainFlowId;
                 //p.RoleId = roleId;
             });
+            nodeListLX.ForEach(p =>
+            {
+                p.Id = $"{LXFlowId}_{p.Name}";
+                p.WorkFlowId = LXFlowId;
+            });
             lineList.ForEach(p =>
             {
                 p.WorkFlowId = MainFlowId;
                 p.SoureNodeId = $"{MainFlowId}_{p.SoureNodeId}";
                 p.TargetNodeId = $"{MainFlowId}_{p.TargetNodeId}";
+                p.Id = $"{p.SoureNodeId}_{p.TargetNodeId}";
+            });
+            lineListLX.ForEach(p =>
+            {
+                p.WorkFlowId = LXFlowId;
+                p.SoureNodeId = $"{LXFlowId}_{p.SoureNodeId}";
+                p.TargetNodeId = $"{LXFlowId}_{p.TargetNodeId}";
                 p.Id = $"{p.SoureNodeId}_{p.TargetNodeId}";
             });
             //查看数据库是否有MainFlowId(主流程) 初始数据,如果没有就添加
@@ -1434,20 +1452,26 @@ namespace Finance.EntityFrameworkCore.Seed.Host
 
 
             var noDb = nodeList.Where(p => !_context.Node.Contains(p));
+            var noDbLX = nodeListLX.Where(p => !_context.Node.Contains(p));
             if (noDb.Any())
             {
-                _context.Node.AddRange(noDb);
+                _context.Node.AddRange(noDb);               
             }
-
+            if (noDbLX.Any())
+            {
+                _context.Node.AddRange(noDbLX);
+            }
 
             var noDb2 = lineList.Where(p => !_context.Line.Contains(p));
+            var noDb2LX = lineListLX.Where(p => !_context.Line.Contains(p));
             if (noDb2.Any())
             {
-                _context.Line.AddRange(noDb2);
+                _context.Line.AddRange(noDb2);               
             }
-
-
-
+            if (noDb2LX.Any())
+            {
+                _context.Line.AddRange(noDb2LX);
+            }
             #endregion
         }
     }

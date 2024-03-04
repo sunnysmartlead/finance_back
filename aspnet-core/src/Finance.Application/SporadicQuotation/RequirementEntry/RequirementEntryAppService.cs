@@ -2,6 +2,7 @@
 
 using Abp.Application.Services;
 using Abp.Domain.Repositories;
+using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.Hr;
 using Finance.Infrastructure;
@@ -9,6 +10,7 @@ using Finance.LXRequirementEntry;
 using Finance.PriceEval;
 using Finance.ProjectManagement.Dto;
 using Finance.SporadicQuotation.RequirementEntry.Dto;
+using Finance.WorkFlows;
 using Microsoft.AspNetCore.Mvc;
 using MiniExcelLibs;
 using System;
@@ -22,7 +24,7 @@ namespace Finance.SporadicQuotation.RequirementEntry
     /// <summary>
     /// 零星报价的需求录入页面
     /// </summary>
-    public class RequirementEntryAppService: FinanceAppServiceBase
+    public class RequirementEntryAppService : FinanceAppServiceBase
     {
         /// <summary>
         /// 零星报价需求录入表
@@ -47,6 +49,16 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// 字典明细表
         /// </summary>
         private readonly IRepository<FinanceDictionaryDetail, string> _financeDictionaryDetail;
+
+        /// <summary>
+        /// 工作流服务
+        /// </summary>
+        private readonly WorkflowInstanceAppService _workflowInstanceAppService;
+
+        /// <summary>
+        /// 工作流节点实例
+        /// </summary>
+        private readonly IRepository<NodeInstance, long> _nodeInstance;
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -55,13 +67,17 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// <param name="department"></param>
         /// <param name="fileManagement"></param>
         /// <param name="financeDictionaryDetail"></param>
-        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList, IRepository<Department, long> department ,IRepository<FileManagement, long> fileManagement, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetail)
+        /// <param name="workflowInstanceAppService"></param>
+        /// <param name="nodeInstance"></param>
+        public RequirementEntryAppService(IRepository<RequirementEnt, long> requirementEnt, IRepository<DataList, long> dataList, IRepository<Department, long> department, IRepository<FileManagement, long> fileManagement, IRepository<FinanceDictionaryDetail, string> financeDictionaryDetail, WorkflowInstanceAppService workflowInstanceAppService, IRepository<NodeInstance, long> nodeInstance)
         {
-            _requirementEnt= requirementEnt;
-            _dataList= dataList;
-            _department= department;
+            _requirementEnt = requirementEnt;
+            _dataList = dataList;
+            _department = department;
             _fileManagement = fileManagement;
-            _financeDictionaryDetail= financeDictionaryDetail;
+            _financeDictionaryDetail = financeDictionaryDetail;
+            _workflowInstanceAppService = workflowInstanceAppService;
+            _nodeInstance = nodeInstance;
         }
         /// <summary>
         /// 零星报价需求录入 保存\提交
@@ -72,6 +88,35 @@ namespace Finance.SporadicQuotation.RequirementEntry
         {
             try
             {
+                //流程提交
+                long auid;
+                //保存
+                if (lXRequirementEntDto.NodeInstanceId == default)
+                {
+
+                    auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    {
+                        WorkflowId = WorkFlowCreator.LXFlowId,
+                        Title = lXRequirementEntDto.Title,
+                        FinanceDictionaryDetailId = FinanceConsts.Save,
+                    });
+                }
+                else
+                {
+                    var nodeInstance = await _nodeInstance.FirstOrDefaultAsync(p => p.Id == lXRequirementEntDto.NodeInstanceId);
+                    auid = nodeInstance.WorkFlowInstanceId;
+                }
+                //提交
+                if (lXRequirementEntDto.IsSubmit)
+                {
+                    auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    {
+                        WorkflowId = WorkFlowCreator.LXFlowId,
+                        Title = lXRequirementEntDto.Title,
+                        FinanceDictionaryDetailId = lXRequirementEntDto.Opinion
+                    });
+                }
+                lXRequirementEntDto.AuditFlowId = auid;
                 var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
                 lXRequirementEntDto.DraftingDepartmentId = user.DepartmentId;
                 var department = await _department.FirstOrDefaultAsync(user.DepartmentId);
@@ -81,21 +126,17 @@ namespace Finance.SporadicQuotation.RequirementEntry
                 }
                 //保存\修改 需求录入实体类
                 RequirementEnt requirementEnt = ObjectMapper.Map<RequirementEnt>(lXRequirementEntDto);
-                long id= await _requirementEnt.InsertOrUpdateAndGetIdAsync(requirementEnt);
+                long id = await _requirementEnt.InsertOrUpdateAndGetIdAsync(requirementEnt);
                 lXRequirementEntDto?.LXDataListDtos.Select(p => p.RequirementEntryId = id).ToList();
                 //保存\修改 数据列表实体类
                 List<DataList> dataLists = ObjectMapper.Map<List<DataList>>(lXRequirementEntDto?.LXDataListDtos);
                 await _dataList.BulkInsertOrUpdateAsync(dataLists);
-                //流程提交
-                if (lXRequirementEntDto.IsSubmit)
-                {
 
-                }
             }
             catch (System.Exception ex)
             {
                 throw new FriendlyException(ex.Message);
-            }           
+            }
         }
         /// <summary>
         /// 零星报价 查询需求录入
@@ -117,20 +158,21 @@ namespace Finance.SporadicQuotation.RequirementEntry
                 else
                 {
                     lXRequirementEntDto = ObjectMapper.Map<LXRequirementEntDto>(requirementEnt);
-                }             
-                List<DataList> dataLists =await _dataList.GetAllListAsync(p=>p.RequirementEntryId.Equals(lXRequirementEntDto.Id));
+                }
+                List<DataList> dataLists = await _dataList.GetAllListAsync(p => p.RequirementEntryId.Equals(lXRequirementEntDto.Id));
                 List<LXDataListDto> dataList = new();
-                if (dataLists is null|| dataLists.Count is 0)
-                {                    
+                if (dataLists is null || dataLists.Count is 0)
+                {
                     dataList = new();
                     List<ListName> strings = new List<ListName>() { ListName.零件名称, ListName.数量, ListName.单价, ListName.单位成本, ListName.销售收入, ListName.销售成本, ListName.销售毛利, ListName.毛利率, ListName.备注 };
                     foreach (var item in strings)
                     {
-                        dataList.Add(new LXDataListDto() {ListName= item, ListNameDisplayName = item.ToString(), RequirementEntryId= lXRequirementEntDto.Id, Data = new List<string>() { ""} });
-                    }                
-                }else
+                        dataList.Add(new LXDataListDto() { ListName = item, ListNameDisplayName = item.ToString(), RequirementEntryId = lXRequirementEntDto.Id, Data = new List<string>() { "" } });
+                    }
+                }
+                else
                 {
-                    dataList=ObjectMapper.Map<List<LXDataListDto>>(dataLists);
+                    dataList = ObjectMapper.Map<List<LXDataListDto>>(dataLists);
                 }
                 lXRequirementEntDto.LXDataListDtos = dataList;
 
@@ -142,7 +184,7 @@ namespace Finance.SporadicQuotation.RequirementEntry
             catch (System.Exception ex)
             {
                 throw new FriendlyException(ex.Message);
-            }          
+            }
         }
         /// <summary>
         /// 总经理审批查询
@@ -151,8 +193,8 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// <returns></returns>
         public async Task<ManagerApprovalDto> QueryLXManagerApproval(long auditFlowId)
         {
-            ManagerApprovalDto managerApprovalDto=new ManagerApprovalDto();
-            LXRequirementEntDto lXRequirementEntDto =await QueryLXRequirementEnt(auditFlowId);
+            ManagerApprovalDto managerApprovalDto = new ManagerApprovalDto();
+            LXRequirementEntDto lXRequirementEntDto = await QueryLXRequirementEnt(auditFlowId);
             if (lXRequirementEntDto is not null) managerApprovalDto = ObjectMapper.Map<ManagerApprovalDto>(lXRequirementEntDto);
             return managerApprovalDto;
         }

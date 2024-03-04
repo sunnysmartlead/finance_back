@@ -1,4 +1,5 @@
-﻿using Finance.Ext;
+﻿using Finance.Dto;
+using Finance.Ext;
 using Finance.LXRequirementEntry;
 using Finance.ProjectManagement.Dto;
 using System;
@@ -12,7 +13,7 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
     /// <summary>
     /// 零星报价需求录入交互类
     /// </summary>
-    public class LXRequirementEntDto
+    public class LXRequirementEntDto : ToExamineDtoLX
     {
         /// <summary>
         /// Id
