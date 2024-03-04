@@ -25,5 +25,25 @@ namespace Finance.Dto
         /// 审批评论
         /// </summary>
         public string Comment { get; set; }
-    }   
+    }
+
+    /// <summary>
+    /// /审批方法通用交互类
+    /// </summary>
+    public class ToExamineDtoLX
+    {
+        /// <summary>
+        /// 节点实例Id
+        /// </summary>
+        public virtual long NodeInstanceId { get; set; }
+        /// <summary>
+        /// 审批意见
+        /// </summary>      
+        [FriendlyRequired("审批意见")]
+        public string Opinion { get; set; }
+        /// <summary>
+        /// 审批评论
+        /// </summary>
+        public string Comment { get; set; }
+    }
 }

@@ -93,6 +93,10 @@ namespace Finance.LXRequirementEntry
         /// 附件Id
         /// </summary>
         public virtual long EnclosureId { get; set; }
+        /// <summary>
+        /// 核价原因（工作流使用）
+        /// </summary>
+        public virtual string Opinion { get; set; }
     }
     /// <summary>
     /// 数据列表
