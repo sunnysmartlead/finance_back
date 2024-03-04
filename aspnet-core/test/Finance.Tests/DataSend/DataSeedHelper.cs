@@ -28,6 +28,8 @@ namespace Finance.Tests.DataSend
 
             // Host seed
             new DataInitialHostDbBuilder(context, unitOfWorkManager).Create();
+            new DefaultEvalTableCreator(context).Create();
+
         }
 
         private static void WithDbContext<TDbContext>(IIocResolver iocResolver, Action<TDbContext, IUnitOfWorkManager> contextAction)

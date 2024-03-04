@@ -11,6 +11,12 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
   <ItemGroup>
+	  <Content Include="wwwroot\Excel\MoqFormula.xlsx">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		  <Link>wwwroot\Excel\MoqFormula.xlsx</Link>
+	  </Content>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Finance.Application\Finance.Application.csproj" />
     <ProjectReference Include="..\..\src\Finance.Core\Finance.Core.csproj" />
     <ProjectReference Include="..\..\src\Finance.EntityFrameworkCore\Finance.EntityFrameworkCore.csproj" />
@@ -30,6 +36,11 @@
     <PackageReference Include="Abp.TestBase" Version="7.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.0" />
     <PackageReference Include="Castle.Core" Version="4.4.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="wwwroot\Excel\MoqFormula.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
