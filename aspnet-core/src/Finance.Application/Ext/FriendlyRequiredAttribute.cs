@@ -25,6 +25,7 @@ namespace Finance.Ext
         private IRepository<Solution, long> _resourceSchemeTable;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public string Opinion { get; set; } = "Opinion";
+        public string isSubmit { get; set; } = "IsSubmit";
         public bool _skip { get; set; }
         /// <summary>
         /// 构造函数
@@ -94,7 +95,7 @@ namespace Finance.Ext
         /// <param name="validationContext"></param>
         /// <returns></returns>
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-        {           
+        {
 #if DEBUG
             // 当前是Debug模式  跳过校验数据
             return ValidationResult.Success;
@@ -116,13 +117,39 @@ namespace Finance.Ext
                 FinanceConsts.HjkbSelect_Yes,
                 FinanceConsts.ElectronicBomEvalSelect_Yes,
                 FinanceConsts.Spbjclyhjb_Yes,
-                FinanceConsts.Done};
-            if (parameterValue != null &&!yes.Contains(parameterValue.ToString()))
+                FinanceConsts.Done,
+               };
+            #region 零星报价特殊处理
+            //零星报价特殊处理
+            if (parameterValue != null && new List<string>() { FinanceConsts.EvalReason_Tgyp, FinanceConsts.EvalReason_Qtlxbj }.Contains(parameterValue.ToString()))
+            {
+                string Submit=GetParameterValue(isSubmit, validationContext.ObjectInstance)?.ToString();
+                var IsSubmit = (Submit == null|| Submit==default) ?true: bool.Parse(Submit);
+                if (!IsSubmit)
+                {
+                    _httpContextAccessor.HttpContext.Items["Skip"] = true;
+                    // 不需要验证
+                    return ValidationResult.Success;
+                }
+                else
+                {
+                    var cacheEntry = _httpContextAccessor.HttpContext.Items["Skip"];
+                    if (cacheEntry is not null && (bool)cacheEntry)
+                    {
+                        // 不需要验证
+                        return ValidationResult.Success;
+                    }
+                    // 需要验证
+                    return base.IsValid(value, validationContext);
+                }
+            }
+            #endregion
+            else if (parameterValue != null &&!yes.Contains(parameterValue.ToString()))
             {
                 _httpContextAccessor.HttpContext.Items["Skip"] = true;
                 // 不需要验证
                 return ValidationResult.Success;
-            }
+            }        
             else
             {
                 var cacheEntry =_httpContextAccessor.HttpContext.Items["Skip"];                

@@ -22,8 +22,7 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
 
         /// <summary>
         /// 审批流程主表ID
-        /// </summary>
-        [FriendlyRequired("审批流程主表ID")]
+        /// </summary>       
         public virtual long AuditFlowId { get; set; }
 
         /// <summary>
@@ -139,6 +138,10 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         /// 上传的文件信息（只有Id和FileName有值）
         /// </summary>
         public virtual FileUploadOutputDto File { get; set; }
+        /// <summary>
+        /// 审批意见
+        /// </summary>         
+        public override string Opinion { get; set; }
     }
     /// <summary>
     /// 零星报价列表交互类 保存\提交\查询
@@ -214,5 +217,6 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         /// </summary>
         [FriendlyRequired("零星报价列表实体类")]
         public virtual List<LXDataListDto> LXDataListDtos { get; set; }
+       
     }
 }
