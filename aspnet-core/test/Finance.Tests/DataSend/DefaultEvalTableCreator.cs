@@ -1,6 +1,8 @@
-﻿using Finance.DemandApplyAudit;
+﻿using Finance.BaseLibrary;
+using Finance.DemandApplyAudit;
 using Finance.EngineeringDepartment;
 using Finance.EntityFrameworkCore;
+using Finance.FinanceMaintain;
 using Finance.FinanceParameter;
 using Finance.Processes;
 using Finance.TradeCompliance;
@@ -49,6 +51,20 @@ namespace Finance.Tests.DataSend
             if (uphNoDb.Any())
             {
                 _context.ProcessHoursEnterUph.AddRange(uphNoDb);
+            }
+
+            //添加ProcessHoursEnter
+            var processHoursEnterList = new List<ProcessHoursEnter>
+            {
+                new ProcessHoursEnter {  Id = 1, AuditFlowId = 1, SolutionId=1,  DevelopTotalPrice = "900000",DeviceTotalPrice = 800000,
+                FixtureName = "0",FixtureNumber = 0, FixturePrice = 0,FrockName = "0",FrockNumber = 0,FrockPrice= 0 ,
+               HardwareDeviceTotalPrice = 10000, HardwareTotalPrice = 0,OpenDrawingSoftware = "上下壳组件组装",  ProcessNumber="18",
+                SoftwarePrice = 0,TestLineName = "0",TestLineNumber = 0,TestLinePrice = 0,TraceabilitySoftware = "追溯软件1", TraceabilitySoftwareCost=10000 },
+            };
+            var processHoursEnterNoDb = processHoursEnterList.Where(p => !_context.ProcessHoursEnter.Contains(p));
+            if (processHoursEnterNoDb.Any())
+            {
+                _context.ProcessHoursEnter.AddRange(processHoursEnterNoDb);
             }
 
             //添加制造成本参数
@@ -109,6 +125,31 @@ namespace Finance.Tests.DataSend
             if (rateEntryInfoNoDb.Any())
             {
                 _context.RateEntryInfo.AddRange(rateEntryInfoNoDb);
+            }
+
+            //添加汇率录入表
+            var exchangeRateList = new List<ExchangeRate>
+            {
+                new ExchangeRate {Id = 1,  ExchangeRateKind="EUR", ExchangeRateValue="[{\"Year\":2023,\"UpDown\":null,\"Value\":8.0},{\"Year\":2024,\"UpDown\":null,\"Value\":7.8},{\"Year\":2025,\"UpDown\":null,\"Value\":7.6},{\"Year\":2026,\"UpDown\":null,\"Value\":7.6},{\"Year\":2027,\"UpDown\":null,\"Value\":7.6},{\"Year\":2028,\"UpDown\":null,\"Value\":7.6},{\"Year\":2029,\"UpDown\":null,\"Value\":7.6},{\"Year\":2030,\"UpDown\":null,\"Value\":7.6},{\"Year\":2031,\"UpDown\":null,\"Value\":7.6}]"},
+                new ExchangeRate {Id = 2,  ExchangeRateKind="USD", ExchangeRateValue="[{\"Year\":2023,\"UpDown\":null,\"Value\":7.0},{\"Year\":2024,\"UpDown\":null,\"Value\":7.1},{\"Year\":2025,\"UpDown\":null,\"Value\":7.15},{\"Year\":2026,\"UpDown\":null,\"Value\":7.2},{\"Year\":2027,\"UpDown\":null,\"Value\":7.2},{\"Year\":2028,\"UpDown\":null,\"Value\":7.2},{\"Year\":2029,\"UpDown\":null,\"Value\":7.2},{\"Year\":2030,\"UpDown\":null,\"Value\":7.2},{\"Year\":2031,\"UpDown\":null,\"Value\":7.2}]"},
+                new ExchangeRate {Id = 3,  ExchangeRateKind="CNY", ExchangeRateValue="[{\"Year\":2023,\"UpDown\":null,\"Value\":1.0},{\"Year\":2024,\"UpDown\":null,\"Value\":1.0},{\"Year\":2025,\"UpDown\":null,\"Value\":1.0},{\"Year\":2026,\"UpDown\":null,\"Value\":1.0},{\"Year\":2027,\"UpDown\":null,\"Value\":1.0},{\"Year\":2028,\"UpDown\":null,\"Value\":1.0},{\"Year\":2029,\"UpDown\":null,\"Value\":1.0},{\"Year\":2030,\"UpDown\":null,\"Value\":1.0},{\"Year\":2031,\"UpDown\":null,\"Value\":1.0}]"},
+            };
+            var exchangeRateNoDb = exchangeRateList.Where(p => !_context.ExchangeRate.Contains(p));
+            if (exchangeRateNoDb.Any())
+            {
+                _context.ExchangeRate.AddRange(exchangeRateNoDb);
+            }
+
+            //logisticscost
+            var logisticscostList = new List<Logisticscost>
+            {
+                new Logisticscost {Id = 1,   AuditFlowId=1, Classification="176.4", FreightPrice =1000, MonthlyDemandPrice =4.37M,
+                PackagingPrice=0.01M, SolutionId=1,SinglyDemandPrice=343.38M, StoragePrice=500, TransportPrice=343.39M, Status=1, ModelCountYearId=2},
+            };
+            var logisticscostNoDb = logisticscostList.Where(p => !_context.Logisticscost.Contains(p));
+            if (logisticscostNoDb.Any())
+            {
+                _context.Logisticscost.AddRange(logisticscostNoDb);
             }
 
 
