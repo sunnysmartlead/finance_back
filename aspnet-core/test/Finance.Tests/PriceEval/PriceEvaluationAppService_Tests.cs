@@ -271,13 +271,17 @@ namespace Finance.Tests.PriceEval
             outputResult.Title.CompareTo("2024-01-30营销二部关于YY广丰舱内第2版的核价报价申请");
         }
 
+        /// <summary>
+        /// 测试BOM录入是否成功
+        /// </summary>
+        /// <returns></returns>
         [Fact]
-        public async Task GetBomCost_Test() 
+        public async Task GetBomCost_Test()
         {
             PriceEvaluationStart_Test();
 
             // Act
-            var outputResult = await _priceEvaluationAppService.GetBomCost(new  GetBomCostInput
+            var outputResult = await _priceEvaluationAppService.GetBomCost(new GetBomCostInput
             {
                 AuditFlowId = 1,
                 GradientId = 1,
@@ -285,6 +289,320 @@ namespace Finance.Tests.PriceEval
                 SolutionId = 1,
                 Year = 2026,
                 UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试BOM录入Dto是否成功
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetBomCostDto_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetBomCostDto(new GetBomCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                InputCount = 0,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.ElectronicCount.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 制造成本汇总表（未修改）
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetManufacturingCostNoChange_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetManufacturingCostNoChange(new GetManufacturingCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 制造成本汇总表
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetManufacturingCost_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetManufacturingCost(new GetManufacturingCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 物流成本汇总表（未修改）
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetLogisticsCostNoChange_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetLogisticsCostNoChange(new GetLogisticsCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 物流成本汇总表
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetLogisticsCost_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetLogisticsCost(new GetLogisticsCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 物流成本汇总表
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetQualityCostNoChange_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetQualityCostNoChange(new GetOtherCostItemInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.CostProportion.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 获取 质量成本
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetQualityCost_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetQualityCost(new GetOtherCostItemInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.CostProportion.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 核价看板-【产品选择】下拉框下拉数据接口
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPricingPanelProductSelectList_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPricingPanelProductSelectList(new GetPricingPanelProductSelectListInput
+            {
+                AuditFlowId = 1,
+            });
+
+            // Assert
+            outputResult.Items.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 核价看板-【产品选择】下拉框下拉数据接口
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPricingPanelTimeSelectList_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPricingPanelTimeSelectList(new GetPricingPanelTimeSelectListInput
+            {
+                AuditFlowId = 1,
+            });
+
+            // Assert
+            outputResult.Items.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 核价看板-产品成本占比图
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetPricingPanelProportionOfProductCostt_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetPricingPanelProportionOfProductCost(new GetPricingPanelProportionOfProductCostInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                Year = 2026,
+                UpDown = 0,
+            });
+
+            // Assert
+            outputResult.Items.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 添加核价表TR方案Id
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task AddPricingPanelTrProgrammeId_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            await _priceEvaluationAppService.AddPricingPanelTrProgrammeId(new AddPricingPanelTrProgrammeIdInput
+            {
+                AuditFlowId = 1,
+                FileManagementId = 1,
+            });
+        }
+
+        /// <summary>
+        /// 测试 推移图
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetGoTable_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetGoTable(new GetGoTableInput
+            {
+                AuditFlowId = 1,
+                GradientId = 1,
+                SolutionId = 1,
+                InputCount = 0,
+            });
+
+            // Assert
+            outputResult.Items.Count.CompareTo(0);
+        }
+
+        /// <summary>
+        /// 测试 核价看板页面，设置是否客供。填写BOM的Id和是否客供
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task SetIsCustomerSupply_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            await _priceEvaluationAppService.SetIsCustomerSupply(new SetIsCustomerSupplyInput
+            {
+                AuditFlowId = 1,
+                BomIsCustomerSupplyList = new List<BomIsCustomerSupply>(),
+            });
+        }
+
+        /// <summary>
+        /// 测试 核价看板梯度下拉框
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetGradient_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetGradient(1);
+
+            // Assert
+            outputResult.Items.Count.CompareTo(2);
+        }
+
+        /// <summary>
+        /// 测试 方案成本对比表
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task GetSolutionContrast_Test()
+        {
+            PriceEvaluationStart_Test();
+
+            // Act
+            var outputResult = await _priceEvaluationAppService.GetSolutionContrast(new GetSolutionContrastInput 
+            {
+
             });
 
             // Assert
