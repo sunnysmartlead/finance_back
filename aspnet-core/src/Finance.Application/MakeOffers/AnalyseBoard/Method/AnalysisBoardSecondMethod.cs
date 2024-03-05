@@ -181,6 +181,11 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
     /// 
     /// </summary>
     private readonly UnitPriceLibraryAppService _unitPriceLibraryAppService;
+
+    /// <summary>
+    /// 客户目标价格
+    /// </summary>
+    private readonly IRepository<ModelCount, long> _modelCount;
     public AnalysisBoardSecondMethod(IRepository<ModelCountYear, long> modelCountYear,
         IRepository<PriceEvaluation, long> priceEvaluationRepository,
         IRepository<ModelCount, long> modelCount,
@@ -247,6 +252,7 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         _priceEvaluationGetAppService = priceEvaluationGetAppService;
         _customerTargetPrice = customerTargetPrice;
         _unitPriceLibraryAppService = unitPriceLibraryAppService;
+        _modelCount = modelCount;
     }
 
     /// <summary>
@@ -5393,10 +5399,15 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
         //  报价策略-实际数量(合计)
         List<BiddingStrategySecondModel> BiddingStrategySecondModelsAct = new();
 
-        var sjslsss = await _dynamicUnitPriceOffers.GetAllListAsync(p =>
+        List<DynamicUnitPriceOffers> sjslsss = await _dynamicUnitPriceOffers.GetAllListAsync(p =>
             p.AuditFlowId == processId && p.version == version && string.IsNullOrEmpty(p.carModel) && p.ntype == ntype);
         foreach (var sjslss in sjslsss)
         {
+            #region 新增实际数量
+            decimal ActualQuantity = (from a in (await _resourceSchemeTable.GetAllListAsync(p => p.Id.Equals(sjslss.SolutionId))).DefaultIfEmpty()
+                                      join  b in (await _modelCount.GetAllListAsync(p => p.AuditFlowId.Equals(sjslss.AuditFlowId))).DefaultIfEmpty() on a.ModuleName equals b.Product
+                                   select b.SumQuantity).FirstOrDefault();           
+            #endregion
             BiddingStrategySecondModel model = new()
             {
                 Product = sjslss.ProductName,
@@ -5404,7 +5415,8 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
                 Price = sjslss.OfferUnitPrice,
                 TotallifeCyclegrossMargin = sjslss.OffeGrossMargin,
                 ClientGrossMargin = sjslss.ClientGrossMargin,
-                NreGrossMargin = sjslss.NreGrossMargin
+                NreGrossMargin = sjslss.NreGrossMargin,
+                ActualQuantity= ActualQuantity,
             };
             //获取实际数量的成本
             var niandu = await PostYearDimensionalityComparisonForactual(new YearProductBoardProcessSecondDto()

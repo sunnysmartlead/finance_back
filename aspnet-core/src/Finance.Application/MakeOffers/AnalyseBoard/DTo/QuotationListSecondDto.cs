@@ -244,6 +244,11 @@ public class BiddingStrategySecondModel
     /// 剔除NRE分摊费用毛利率
     /// </summary>
     public decimal NreGrossMargin { get; set; }
+
+    /// <summary>
+    /// 实际数量
+    /// </summary>
+    public decimal ActualQuantity { get; set; }
 }
 
 /// <summary>
