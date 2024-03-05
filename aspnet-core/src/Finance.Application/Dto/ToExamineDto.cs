@@ -20,15 +20,14 @@ namespace Finance.Dto
         /// <summary>
         /// 审批意见
         /// </summary>      
-        public string Opinion { get; set; }
+        public virtual string Opinion { get; set; }
         /// <summary>
         /// 审批评论
         /// </summary>
         public string Comment { get; set; }
     }
-
     /// <summary>
-    /// /审批方法通用交互类
+    /// /审批方法通用交互类LX
     /// </summary>
     public class ToExamineDtoLX
     {
@@ -40,7 +39,7 @@ namespace Finance.Dto
         /// 审批意见
         /// </summary>      
         [FriendlyRequired("审批意见")]
-        public string Opinion { get; set; }
+        public virtual string Opinion { get; set; }
         /// <summary>
         /// 审批评论
         /// </summary>

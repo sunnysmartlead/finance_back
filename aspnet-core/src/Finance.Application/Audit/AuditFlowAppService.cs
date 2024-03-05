@@ -352,7 +352,7 @@ namespace Finance.Audit
             //节点
 
             //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
-            if (w.WorkflowState == WorkflowState.Ended || n.NodeInstanceStatus == NodeInstanceStatus.Current)
+            if (n!=null&&(w.WorkflowState == WorkflowState.Ended || n.NodeInstanceStatus == NodeInstanceStatus.Current))
             {
                 if (!list.Any(p => p.ProcessName == "归档"))
                 {
