@@ -3127,7 +3127,7 @@ namespace Finance.NerPricing
                                                                             HardwareDevicePrice = b.HardwareDevicePrice,
                                                                             ProcessHoursEnterId = b.ProcessHoursEnterId
                                                                         }).ToList();
-                ProcessHoursEnterTotalDto porp = await _processHoursEnterAppService.GetProcessHoursEnterTotal(new GetProcessHoursEntersInput() { AuditFlowId = auditFlowId, SolutionId = solutionId, MaxResultCount = 9999, PageIndex = 0, SkipCount = 0 });
+                ProcessHoursEnterTotalDto porp = await _processHoursEnterAppService.GetProcessHoursEnterTotal(new GetProcessHoursEntersInput() { AuditFlowId = auditFlowId, SolutionId = solutionId, MaxResultCount = 999, PageIndex = 0, SkipCount = 0 });
                 List<SoftwareTestingCotsModel> softwareTestingCots = new List<SoftwareTestingCotsModel>() { { new SoftwareTestingCotsModel() { Id = processHours.FirstOrDefault().Id, SoftwareProject = "硬件费用", Count = (int)processHoursEnterFrocks.Sum(p => p.HardwareDeviceNumber), Cost = porp.HardwareTotalPrice * UphAndValuesd / 100 } } };
                 modify.SoftwareTestingCost = softwareTestingCots;
 
