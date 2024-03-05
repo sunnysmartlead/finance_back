@@ -88,35 +88,53 @@ namespace Finance.SporadicQuotation.RequirementEntry
         {
             try
             {
-                //流程提交
-                long auid;
-                //保存
-                if (lXRequirementEntDto.NodeInstanceId == default)
+                long AuditFlowId = 0;
+                // 保存
+                if (lXRequirementEntDto.NodeInstanceId == default && !lXRequirementEntDto.IsSubmit && lXRequirementEntDto.AuditFlowId == default)
                 {
-
-                    auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    AuditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
                     {
                         WorkflowId = WorkFlowCreator.LXFlowId,
                         Title = lXRequirementEntDto.Title,
                         FinanceDictionaryDetailId = FinanceConsts.Save,
                     });
-                }
-                else
+                }// 提交
+                else if (lXRequirementEntDto.IsSubmit && lXRequirementEntDto.AuditFlowId == default)
                 {
-                    var nodeInstance = await _nodeInstance.FirstOrDefaultAsync(p => p.Id == lXRequirementEntDto.NodeInstanceId);
-                    auid = nodeInstance.WorkFlowInstanceId;
-                }
-                //提交
-                if (lXRequirementEntDto.IsSubmit)
-                {
-                    auid = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
+                    AuditFlowId = await _workflowInstanceAppService.StartWorkflowInstance(new WorkFlows.Dto.StartWorkflowInstanceInput
                     {
                         WorkflowId = WorkFlowCreator.LXFlowId,
                         Title = lXRequirementEntDto.Title,
                         FinanceDictionaryDetailId = lXRequirementEntDto.Opinion
                     });
                 }
-                lXRequirementEntDto.AuditFlowId = auid;
+                else if (lXRequirementEntDto.IsSubmit && lXRequirementEntDto.AuditFlowId != default)
+                {
+                    // 退回后再提交 
+                    if (lXRequirementEntDto.NodeInstanceId == default) throw new FriendlyException("NodeInstanceId为空请检查!");
+                    await _workflowInstanceAppService.SubmitNode(new WorkFlows.Dto.SubmitNodeInput
+                    {
+                        NodeInstanceId = lXRequirementEntDto.NodeInstanceId,
+                        Comment = "提交",
+                        FinanceDictionaryDetailId = lXRequirementEntDto.Opinion
+                    });
+                    AuditFlowId = lXRequirementEntDto.AuditFlowId;
+                }
+                else if (!lXRequirementEntDto.IsSubmit && lXRequirementEntDto.AuditFlowId != default)
+                {
+                    // 退回后再提交 
+                    if (lXRequirementEntDto.NodeInstanceId == default) throw new FriendlyException("NodeInstanceId为空请检查!");
+                    await _workflowInstanceAppService.SubmitNode(new WorkFlows.Dto.SubmitNodeInput
+                    {
+                        NodeInstanceId = lXRequirementEntDto.NodeInstanceId,
+                        Comment = "提交",
+                        FinanceDictionaryDetailId = FinanceConsts.Save
+                    });
+                    AuditFlowId = lXRequirementEntDto.AuditFlowId;
+                }
+
+                if (AuditFlowId == 0) throw new FriendlyException("流程ID为0,请见检查!");
+                lXRequirementEntDto.AuditFlowId = AuditFlowId;
                 var user = await UserManager.GetUserByIdAsync(AbpSession.UserId.Value);
                 lXRequirementEntDto.DraftingDepartmentId = user.DepartmentId;
                 var department = await _department.FirstOrDefaultAsync(user.DepartmentId);

@@ -623,7 +623,7 @@ namespace Finance.Audit
             //主流程-RFQ  首次核价 方案变更 量产样品 其他
             //var RFQ = new List<string> { FinanceConsts.EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt };
 
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == WorkFlowInstanceId && p.NodeId == "主流程_核价需求录入");
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == WorkFlowInstanceId && (p.NodeId == "主流程_核价需求录入"|| p.NodeId == "零星件报价流程_核价需求录入之LX"));
             if(node==null|| node.FinanceDictionaryDetailId==null|| node.FinanceDictionaryDetailId == "" || node.FinanceDictionaryDetailId == FinanceConsts.Save)
             {
                 return "";
@@ -642,6 +642,8 @@ namespace Finance.Audit
                 FinanceConsts.EvalReason_Fabg => "主流程-RFQ(方案变更)",
                 FinanceConsts.EvalReason_Lcyp => "主流程-RFQ(量产样品)",
                 FinanceConsts.EvalReason_Qt => "主流程-RFQ(其他)",
+                FinanceConsts.EvalReason_Tgyp => "零星件报价流程(推广样品)",
+                FinanceConsts.EvalReason_Qtlxbj => "零星件报价流程(其他零星报价)",
                 _ => "",
             };
         }

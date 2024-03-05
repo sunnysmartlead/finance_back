@@ -455,14 +455,14 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             {
                 Name = "审核报价策略之LX",
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_核价需求录入之LX_{LXFlowId}_审核报价策略之LX",
+                Activation = $"{LXFlowId}_核价需求录入之LX_{LXFlowId}_审核报价策略之LX||{LXFlowId}_报价审批表之LX_{LXFlowId}_审核报价策略之LX",
                 RoleId = generalManager.Id.ToString(),//总经理查看
                 ProcessIdentifier = FinanceConsts.ReviewQuotationStrategyLX,
             }, new Node
             {
                 Name = "报价审批表之LX",
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_报价审批表之LX",
+                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_报价审批表之LX||{LXFlowId}_查看报价审批表之LX_{LXFlowId}_报价审批表之LX",
                 RoleId = generalManager.Id.ToString(),//总经理查看
                 ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
             }, new Node
@@ -1376,20 +1376,20 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             new Line
             {
                 SoureNodeId = "审核报价策略之LX",
-                TargetNodeId = "报审批表之LX",
+                TargetNodeId = "报价审批表之LX",
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
             },
             new Line
             {
-                SoureNodeId = "报审批表之LX",
+                SoureNodeId = "报价审批表之LX",
                 TargetNodeId = "审核报价策略之LX",
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
             },
             new Line
             {
-                SoureNodeId = "报审批表之LX",
+                SoureNodeId = "报价审批表之LX",
                 TargetNodeId = "查看报价审批表之LX",
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
@@ -1397,7 +1397,7 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             new Line
             {
                 SoureNodeId = "查看报价审批表之LX",
-                TargetNodeId = "报审批表之LX",
+                TargetNodeId = "报价审批表之LX",
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
             },
