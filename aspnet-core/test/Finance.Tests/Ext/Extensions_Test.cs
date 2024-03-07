@@ -227,6 +227,31 @@ namespace Finance.Tests.Ext
             "Test string".GetTypeNameSort().CompareTo(99);
         }
 
-       
+
+        /// <summary>
+        /// 测试字符串是否为数据的判断函数
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task IsNumber_Test() 
+        {
+            "123".IsNumber().CompareTo(true);
+            "47567".IsNumber().CompareTo(true);
+            "5".IsNumber().CompareTo(true);
+            "7".IsNumber().CompareTo(true);
+            "9035".IsNumber().CompareTo(true);
+            "0034234".IsNumber().CompareTo(true);
+            "3333333".IsNumber().CompareTo(true);
+            "0000000".IsNumber().CompareTo(true);
+            "0".IsNumber().CompareTo(true);
+            "0.000000000000000001".IsNumber().CompareTo(true);
+            "0.0000000发1".IsNumber().CompareTo(false);
+            "O.1".IsNumber().CompareTo(false);
+            "1q".IsNumber().CompareTo(false);
+            "2e".IsNumber().CompareTo(false);
+            "sfdf".IsNumber().CompareTo(false);
+            "放大".IsNumber().CompareTo(false);
+            "公馆".IsNumber().CompareTo(false);
+        }
     }
 }
