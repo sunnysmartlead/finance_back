@@ -42,6 +42,7 @@ using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using Rougamo;
 using Spire.Xls;
 using System;
@@ -855,8 +856,9 @@ namespace Finance.PriceEval
         /// 获取【PriceEvaluationStart】（开始核价：报价核价需求录入界面（第一步））接口输入的数据
         /// </summary>
         /// <param name="auditFlowId"></param>
+        /// <param name="isQuote">是否是引用类型 true是  false 不是</param>
         /// <returns></returns>
-        public async virtual Task<PriceEvaluationStartInputResult> GetPriceEvaluationStartData(long auditFlowId)
+        public async virtual Task<PriceEvaluationStartInputResult> GetPriceEvaluationStartData(long auditFlowId,bool isQuote=false)
         {
             var priceEvaluationStartData1 = await _priceEvaluationStartDataRepository.FirstOrDefaultAsync(p => p.AuditFlowId == auditFlowId);
             if (priceEvaluationStartData1 is not null)
@@ -873,8 +875,11 @@ namespace Finance.PriceEval
                     var dictionaryDetail = await _financeDictionaryDetailRepository.FirstOrDefaultAsync(p => p.Id == item.ProductType);
                     item.ProductTypeName = dictionaryDetail.DisplayName;
                 }
-
-
+                if(isQuote)
+                {
+                    result.DraftDate=DateTime.Now;//如果是引用的流程 更新拟稿日期
+                    result.QuoteVersion =await GetQuoteVersion(result.ProjectCode);//如果是引用的流程 更新版本
+                }
                 return result;
             }
 
@@ -969,7 +974,11 @@ namespace Finance.PriceEval
 
             //priceEvaluationDto.NodeInstanceId = node.Id;
             //priceEvaluationDto.Opinion = priceEvaluation.Opinion;
-
+            if (isQuote)
+            {
+                priceEvaluationDto.DraftDate = DateTime.Now;//如果是引用的流程 更新拟稿日期
+                priceEvaluationDto.QuoteVersion = await GetQuoteVersion(priceEvaluationDto.ProjectCode);//如果是引用的流程 更新版本
+            }
             return priceEvaluationDto;
         }
 
