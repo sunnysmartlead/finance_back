@@ -28,6 +28,7 @@ using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Spire.Pdf.Exporting.XPS.Schema;
 using Abp.BackgroundJobs;
 using Finance.Job;
+using Finance.Ext;
 
 namespace Finance.WorkFlows
 {
@@ -52,7 +53,6 @@ namespace Finance.WorkFlows
         private readonly NrePricingAppService _nrePricingAppService;
         private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
         private readonly AuditFlowAppService _auditFlowAppService;
-        private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<UserRole, long> _userRoleRepository;
@@ -77,7 +77,7 @@ namespace Finance.WorkFlows
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly NodeTimeManager _nodeTimeManager;
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -94,7 +94,6 @@ namespace Finance.WorkFlows
             _nrePricingAppService = nrePricingAppService;
             _workflowInstanceRepository = workflowInstanceRepository;
             _auditFlowAppService = auditFlowAppService;
-            _sendEmail = sendEmail;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
             _userRepository = userRepository;
             _logisticscostAppService = logisticscostAppService;
@@ -363,8 +362,8 @@ namespace Finance.WorkFlows
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
                             wf.WorkflowState = WorkflowState.Ended;
 
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
+                            //SendEmail email = new SendEmail();
+                            string loginIp = Ip.GetLoginAddr();
 
 
                             //发邮件给拥有这个流程的项目经理
@@ -423,8 +422,8 @@ namespace Finance.WorkFlows
                         }
                         else
                         {
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
+                            //SendEmail email = new SendEmail();
+                            string loginIp = Ip.GetLoginAddr();
 
                             if (loginIp.Equals(FinanceConsts.ShangHaiServerIP))
                             {
