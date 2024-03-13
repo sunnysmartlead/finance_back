@@ -16,11 +16,11 @@ namespace Finance.Tests.WorkFlows
     public class WorkflowInstanceAppService_Tests : FinanceTestBase
     {
         private readonly WorkflowInstanceAppService _workflowInstanceAppService;
-        private readonly PriceEvaluationAppService _priceEvaluationAppService;
+        //private readonly PriceEvaluationAppService _priceEvaluationAppService;
 
         public WorkflowInstanceAppService_Tests()
         {
-            _priceEvaluationAppService = Resolve<PriceEvaluationAppService>();
+            //_priceEvaluationAppService = Resolve<PriceEvaluationAppService>();
             _workflowInstanceAppService = Resolve<WorkflowInstanceAppService>();
         }
 
@@ -86,7 +86,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetTaskByWorkflowInstanceId_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -137,7 +137,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetInstanceHistoryByWorkflowInstanceId_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -155,7 +155,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetInstanceHistoryById_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -173,7 +173,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetInstanceHistorys_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -191,7 +191,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetWorkflowStatus_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -209,7 +209,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetWorkflowInstance_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -227,7 +227,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetEvalDataByNodeInstanceId_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -244,7 +244,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetWorkflowOvered_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -261,7 +261,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task GetWorkflowDelete_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -278,7 +278,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task OverWorkflow_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -295,7 +295,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task ActivateStructBomEval_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -312,7 +312,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task DeactivateStructBomEval_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -329,7 +329,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task ActivateElectronicBomEval_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
@@ -346,7 +346,7 @@ namespace Finance.Tests.WorkFlows
         [Fact]
         public async Task DeactivateElectronicBomEval_Test()
         {
-            _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
+            _ = _workflowInstanceAppService.StartWorkflowInstance(new StartWorkflowInstanceInput
             {
                 WorkflowId = WorkFlowCreator.MainFlowId,
                 FinanceDictionaryDetailId = FinanceConsts.EvalReason_Bb1,
