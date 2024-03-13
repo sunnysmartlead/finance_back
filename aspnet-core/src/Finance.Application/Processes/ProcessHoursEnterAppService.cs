@@ -981,33 +981,59 @@ namespace Finance.Processes
         /// <returns></returns>
         public virtual async Task<String> CreateSubmitAsync(ProcessHoursEnterCreateSubmitInput input)
         {
-            //已经录入数量
-            //已经录入数量
-            List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ProcessHoursEnter.ToString()));
-
-            List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
-            int quantity = result.Count - nreIsSubmits.Count;
-            if (quantity > 0)
+            try
             {
-                return "还有" + quantity + "个方案没有提交，请先保存";
-            }
-            else
-            {
-
-                //嵌入工作流
-                await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                List<Solution> result = await _resourceSchemeTable.GetAllListAsync(p => p.AuditFlowId == input.AuditFlowId);
+                #region 判断全部方案中 UPH录入的值是否有0或者空,如果有的话返回提示 24.3.13新增校验
+                //判断是否 有 cob                 
+                foreach (var sol in result)
                 {
-                    Comment = input.Comment,
-                    FinanceDictionaryDetailId = input.Opinion,
-                    NodeInstanceId = input.NodeInstanceId,
-                });
+                    bool? isCob= (await GetListUphOrLineAsync(new GetProcessHoursEntersInput() { AuditFlowId = input.AuditFlowId, SolutionId = sol.Id }))?.IsCOB;
+                    List<ProcessHoursEnterUph> processHours = await _processHoursEnterUphRepository.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.SolutionId.Equals(sol.Id));
+                    if (isCob==false) 
+                    {
+                        processHours = processHours.Where(p => p.Uph != "cobuph").ToList();
+                    }
+                    bool isProcessHours = processHours.Any(p => p.Value == null || p.Value == 0);
+                    if (isProcessHours)
+                    {
+                        throw new FriendlyException($"{sol.Product}方案中UPH录入有值没有录入/或者录入的值为0,请修改!");
+                    }
+                }                
+                #endregion
+                //已经录入数量
+                //已经录入数量
+                List<NreIsSubmit> nreIsSubmits = await _resourceNreIsSubmit.GetAllListAsync(p => p.AuditFlowId.Equals(input.AuditFlowId) && p.EnumSole.Equals(NreIsSubmitDto.ProcessHoursEnter.ToString()));
 
-                //提交完成  可以在这里做审核处理
-                return "提交完成";
+                int quantity = result.Count - nreIsSubmits.Count;
+                if (quantity > 0)
+                {
+                    return "还有" + quantity + "个方案没有提交，请先保存";
+                }
+                else
+                {
 
+                    //嵌入工作流
+                    await _workflowInstanceAppService.SubmitNodeInterfece(new SubmitNodeInput
+                    {
+                        Comment = input.Comment,
+                        FinanceDictionaryDetailId = input.Opinion,
+                        NodeInstanceId = input.NodeInstanceId,
+                    });
+
+                    //提交完成  可以在这里做审核处理
+                    return "提交完成";
+
+                }
             }
-
-
+            catch (FriendlyException e)
+            {
+                throw new FriendlyException(e.Message);
+            }
+            catch (Exception e)
+            {
+                throw new FriendlyException(e.Message);
+            }         
         }
         /// <summary>
         /// 获取修改--无用接口
