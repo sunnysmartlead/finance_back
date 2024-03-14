@@ -28,6 +28,7 @@ using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Spire.Pdf.Exporting.XPS.Schema;
 using Abp.BackgroundJobs;
 using Finance.Job;
+using Finance.Ext;
 
 namespace Finance.WorkFlows
 {
@@ -52,7 +53,6 @@ namespace Finance.WorkFlows
         private readonly NrePricingAppService _nrePricingAppService;
         private readonly IRepository<WorkflowInstance, long> _workflowInstanceRepository;
         private readonly AuditFlowAppService _auditFlowAppService;
-        private readonly SendEmail _sendEmail;
         private readonly IRepository<NoticeEmailInfo, long> _noticeEmailInfoRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<UserRole, long> _userRoleRepository;
@@ -77,7 +77,7 @@ namespace Finance.WorkFlows
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly NodeTimeManager _nodeTimeManager;
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -94,7 +94,6 @@ namespace Finance.WorkFlows
             _nrePricingAppService = nrePricingAppService;
             _workflowInstanceRepository = workflowInstanceRepository;
             _auditFlowAppService = auditFlowAppService;
-            _sendEmail = sendEmail;
             _noticeEmailInfoRepository = noticeEmailInfoRepository;
             _userRepository = userRepository;
             _logisticscostAppService = logisticscostAppService;
@@ -363,107 +362,24 @@ namespace Finance.WorkFlows
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
                             wf.WorkflowState = WorkflowState.Ended;
 
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
+                            //SendEmail email = new SendEmail();
+                            string loginIp = Ip.GetLoginAddr();
 
 
                             //发邮件给拥有这个流程的项目经理
                             if (loginIp.Equals(FinanceConsts.ShangHaiServerIP))
                             {
                                 await _backgroundJobManager.EnqueueAsync<SendEndEmailJob, NodeInstance>(eventData.Entity);
-                                #region 邮件发送
-
-                                //#if !DEBUG
-                                //SendEmail email = new SendEmail();
-                                //string loginIp = email.GetLoginAddr();
-                                //        var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-
-                                //        var priceEvaluation = await _priceEvaluationRepository.FirstOrDefaultAsync(p => p.AuditFlowId == eventData.Entity.WorkFlowInstanceId);
-                                //        var role = await _roleRepository.GetAllListAsync(p =>
-                                //        p.Name == StaticRoleNames.Host.FinanceTableAdmin || p.Name == StaticRoleNames.Host.EvalTableAdmin
-                                //|| p.Name == StaticRoleNames.Host.Bjdgdgly);
-                                //        var userIds = await _userRoleRepository.GetAll().Where(p => role.Select(p => p.Id).Contains(p.RoleId)).Select(p => p.UserId).ToListAsync();
-
-                                //        if (priceEvaluation != null)
-                                //        {
-                                //            userIds.Add(priceEvaluation.ProjectManager);
-                                //            if (priceEvaluation.CreatorUserId.HasValue
-                                //                && priceEvaluation.CreatorUserId != priceEvaluation.ProjectManager)
-                                //            {
-                                //                userIds.Add(priceEvaluation.CreatorUserId.Value);
-                                //            }
-                                //        }
-                                //        userIds = userIds.Distinct().ToList();
-                                //        foreach (var userId in userIds)
-                                //        {
-                                //            var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-
-                                //            if (userInfo != null)
-                                //            {
-                                //                string emailAddr = userInfo.EmailAddress;
-                                //                string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                //                string emailBody = "核价报价提醒：您有新的工作流（" + eventData.Entity.Name + "——流程号：" + eventData.Entity.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-
-                                //                try
-                                //                {
-                                //                    if (!emailAddr.Contains("@qq.com"))
-                                //                    {
-                                //                        await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{eventData.Entity.Name},流程号{eventData.Entity.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                //                    }
-                                //                }
-                                //                catch (Exception)
-                                //                {
-                                //                }
-                                //            }
-                                //        }
-
-                                #endregion
                             }
                         }
                         else
                         {
-                            SendEmail email = new SendEmail();
-                            string loginIp = email.GetLoginAddr();
+                            //SendEmail email = new SendEmail();
+                            string loginIp = Ip.GetLoginAddr();
 
                             if (loginIp.Equals(FinanceConsts.ShangHaiServerIP))
                             {
                                 await _backgroundJobManager.EnqueueAsync<SendEmailJob, NodeInstance>(eventData.Entity);
-
-                                #region 邮件发送
-
-                                //SendEmail email = new SendEmail();
-                                //string loginIp = email.GetLoginAddr();
-
-
-
-                                //                                var allAuditFlowInfos = await _workflowInstanceAppService.GetTaskByWorkflowInstanceId(eventData.Entity.WorkFlowInstanceId, eventData.Entity.Id);
-                                //                                foreach (var task in allAuditFlowInfos)
-                                //                                {
-                                //                                    foreach (var userId in task.TaskUserIds)
-                                //                                    {
-                                //                                        var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == userId);
-                                //                                        //var userInfo = await _userRepository.FirstOrDefaultAsync(p => p.Id == 272);//测试 ，只发给陈梦瑶
-
-                                //                                        if (userInfo != null)
-                                //                                        {
-                                //                                            string emailAddr = userInfo.EmailAddress;
-
-                                //                                            var emailInfoList = await _noticeEmailInfoRepository.GetAllListAsync();
-
-                                //                                            string loginAddr = "http://" + (loginIp.Equals(FinanceConsts.AliServer_In_IP) ? FinanceConsts.AliServer_Out_IP : loginIp) + ":8081/login";
-                                //                                            string emailBody = "核价报价提醒：您有新的工作流（" + task.NodeName + "——流程号：" + task.WorkFlowInstanceId + "）需要完成（" + "<a href=\"" + loginAddr + "\" >系统地址</a>" + "）";
-                                //#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                //                                            Task.Run(async () =>
-                                //                                            {
-                                //                                                await email.SendEmailToUser(loginIp.Equals(FinanceConsts.AliServer_In_IP), $"{task.NodeName},流程号{task.WorkFlowInstanceId}", emailBody, emailAddr, emailInfoList.Count == 0 ? null : emailInfoList.FirstOrDefault());
-                                //                                            });
-                                //#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
-                                //                                        }
-                                //                                    }
-                                //                                }
-
-                                #endregion
                             }
                         }
 
