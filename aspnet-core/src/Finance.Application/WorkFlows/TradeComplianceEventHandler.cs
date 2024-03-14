@@ -29,6 +29,7 @@ using Spire.Pdf.Exporting.XPS.Schema;
 using Abp.BackgroundJobs;
 using Finance.Job;
 using Finance.MakeOffers;
+using Finance.Ext;
 
 namespace Finance.WorkFlows
 {
