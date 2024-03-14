@@ -28,6 +28,7 @@ using Finance.PropertyDepartment.DemandApplyAudit.Dto;
 using Spire.Pdf.Exporting.XPS.Schema;
 using Abp.BackgroundJobs;
 using Finance.Job;
+using Finance.MakeOffers;
 
 namespace Finance.WorkFlows
 {
@@ -77,7 +78,12 @@ namespace Finance.WorkFlows
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly NodeTimeManager _nodeTimeManager;
 
-        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager)
+        /// <summary>
+        /// 报价方案组合
+        /// </summary>
+        private readonly IRepository<SolutionQuotation, long> _solutionQutation;
+
+        public TradeComplianceEventHandler(TradeComplianceAppService tradeComplianceAppService, WorkflowInstanceAppService workflowInstanceAppService, IUnitOfWorkManager unitOfWorkManager, ElectronicBomAppService electronicBomAppService, StructionBomAppService structionBomAppService, ResourceEnteringAppService resourceEnteringAppService, PriceEvaluationGetAppService priceEvaluationGetAppService, IRepository<ModelCountYear, long> modelCountYearRepository, IRepository<Gradient, long> gradientRepository, IRepository<Solution, long> solutionRepository, IRepository<PanelJson, long> panelJsonRepository, IRepository<PriceEvaluationStartData, long> priceEvaluationStartDataRepository, NrePricingAppService nrePricingAppService, IRepository<WorkflowInstance, long> workflowInstanceRepository, AuditFlowAppService auditFlowAppService, SendEmail sendEmail, IRepository<NoticeEmailInfo, long> noticeEmailInfoRepository, IRepository<User, long> userRepository, LogisticscostAppService logisticscostAppService, ProcessHoursEnterAppService processHoursEnterAppService, BomEnterAppService bomEnterAppService, IRepository<PriceEvaluation, long> priceEvaluationRepository, IRepository<UserRole, long> userRoleRepository, IRepository<Role, int> roleRepository, IRepository<NodeInstance, long> nodeInstanceRepository, IBackgroundJobManager backgroundJobManager, NodeTimeManager nodeTimeManager, IRepository<SolutionQuotation, long> solutionQutation)
         {
             _tradeComplianceAppService = tradeComplianceAppService;
             _workflowInstanceAppService = workflowInstanceAppService;
@@ -106,6 +112,7 @@ namespace Finance.WorkFlows
             _nodeInstanceRepository = nodeInstanceRepository;
             _backgroundJobManager = backgroundJobManager;
             _nodeTimeManager = nodeTimeManager;
+            _solutionQutation = solutionQutation;
         }
 
         /// <summary>
@@ -274,6 +281,10 @@ namespace Finance.WorkFlows
 
                                 #endregion
                             }
+
+                            #region 3.14 核价看板被激活的时候,清除报价看板的组合方案
+                            await _solutionQutation.DeleteAsync(p=>p.AuditFlowId.Equals(eventData.Entity.WorkFlowInstanceId));
+                            #endregion
                         }
 
                         //如果流转到核价看板之后，就缓存核价看板的全部信息
