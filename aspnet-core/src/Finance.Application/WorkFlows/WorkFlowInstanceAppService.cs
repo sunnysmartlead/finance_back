@@ -1426,7 +1426,7 @@ namespace Finance.WorkFlows
                         .Select(p => new { p.GradientId, p.SolutionId })
                         .Distinct()
                         .CountAsync();
-                    
+
                     if (fuBomCount != (gradientCount * solutionCount))
                     {
                         throw new FriendlyException($"没有上传完整的核价表，不可流转！");
