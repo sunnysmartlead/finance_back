@@ -60,7 +60,21 @@ namespace Finance.ProductDevelopment
         /// </summary>
         [Column("FOV")]
         public double FOV { get; set; }
-
+        /// <summary>
+        /// HFOV
+        /// </summary>
+        [Column("HFOV")]
+        public decimal HFOV { get; set; }
+        /// <summary>
+        /// VFOV
+        /// </summary>
+        [Column("VFOV")]
+        public decimal VFOV { get; set; }
+        /// <summary>
+        /// DFOV
+        /// </summary>
+        [Column("DFOV")]
+        public decimal DFOV { get; set; }
         /// <summary>
         /// 外包装长
         /// </summary>

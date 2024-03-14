@@ -106,6 +106,11 @@ namespace Finance.ProductDevelopment
             entity.Picture3DFileId = Convert.ToInt64(input.Picture3DFileId);
             entity.Pixel = input.Pixel.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.Pixel);
             entity.FOV = input.FOV.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.FOV);
+            #region 3.14新增
+            entity.HFOV = input.HFOV;
+            entity.VFOV = input.VFOV;
+            entity.DFOV = input.DFOV;
+            #endregion
             entity.OuterPackagingLength = input.OuterPackagingLength.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingLength);
             entity.OuterPackagingWidth = input.OuterPackagingWidth.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingWidth);
             entity.OuterPackagingHeight = input.OuterPackagingHeight.IsNullOrEmpty() ? 0 : Convert.ToDouble(input.OuterPackagingHeight);
@@ -142,6 +147,11 @@ namespace Finance.ProductDevelopment
                 result.Picture3DFileId = data.FirstOrDefault().Picture3DFileId.ToString();
                 result.Pixel = data.FirstOrDefault().Pixel.ToString();
                 result.FOV = data.FirstOrDefault().FOV.ToString();
+                #region 3.14新增
+                result.HFOV = data.FirstOrDefault().HFOV;
+                result.VFOV = data.FirstOrDefault().VFOV;
+                result.DFOV = data.FirstOrDefault().DFOV;
+                #endregion
                 result.OuterPackagingLength = data.FirstOrDefault().OuterPackagingLength.ToString();
                 result.OuterPackagingWidth = data.FirstOrDefault().OuterPackagingWidth.ToString();
                 result.OuterPackagingHeight = data.FirstOrDefault().OuterPackagingHeight.ToString();

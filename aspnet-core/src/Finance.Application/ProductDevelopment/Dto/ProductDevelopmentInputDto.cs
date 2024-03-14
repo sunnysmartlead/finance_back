@@ -277,10 +277,21 @@ namespace Finance.ProductDevelopment.Dto
         /// </summary>
         public string Pixel { get; set; }
         /// <summary>
-        /// FOV
+        /// FOV 后续改为 HFOV VFOV DFOV 保留此字段做兼容
         /// </summary>
         public string FOV { get; set; }
-
+        /// <summary>
+        /// HFOV
+        /// </summary>
+        public decimal HFOV { get; set; }
+        /// <summary>
+        /// VFOV
+        /// </summary>
+        public decimal VFOV { get; set; }
+        /// <summary>
+        /// DFOV
+        /// </summary>
+        public decimal DFOV { get; set; }
         /// <summary>
         /// 外包装长
         /// </summary>
@@ -420,7 +431,18 @@ namespace Finance.ProductDevelopment.Dto
         /// FOV
         /// </summary>
         public string FOV { get; set; }
-
+        /// <summary>
+        /// HFOV
+        /// </summary>
+        public decimal HFOV { get; set; }
+        /// <summary>
+        /// VFOV
+        /// </summary>
+        public decimal VFOV { get; set; }
+        /// <summary>
+        /// DFOV
+        /// </summary>
+        public decimal DFOV { get; set; }
         /// <summary>
         /// 外包装长
         /// </summary>
