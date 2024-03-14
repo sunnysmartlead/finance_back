@@ -5082,7 +5082,9 @@ public class AnalysisBoardSecondMethod : AbpServiceBase, ISingletonDependency
             {
                 Product = solution.Product,
                 cost = Math.Round(cost, 2),
-                number = Math.Round(number, 2)
+                number = Math.Round(number, 2),
+                numberUSD= number/ USDExchangeRate,
+                ExchangeRate = USDExchangeRate
             };
 
             unitPriceSumModels.Add(unitPriceSumModel);

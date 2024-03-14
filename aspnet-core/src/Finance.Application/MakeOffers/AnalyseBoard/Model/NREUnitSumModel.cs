@@ -16,5 +16,13 @@ public class NREUnitSumModel
     /// <summary>
     /// 报价金额
     /// </summary>
-    public decimal number{ get; set; }  
+    public decimal number{ get; set; }
+    /// <summary>
+    /// 报价金额(USD)
+    /// </summary>
+    public decimal numberUSD { get; set; }
+    /// <summary>
+    /// 汇率
+    /// </summary>
+    public decimal ExchangeRate { get; set; }
 }
