@@ -1328,6 +1328,15 @@ namespace Finance.Processes
                 {
                     var rows = MiniExcel.Query(stream).ToList();
                     #region 新增 判断所有单元格是否为空,如果是空就抛出提示
+                    //判断前四列 判断是否是标准模版 || rows[0]["B"].Value != "工序编号"|| rows[0]["C"].Value!="工序名称"|| rows[0]["D"].Value != "设备"
+                    string A = ((IDictionary<String, Object>)rows[0])["A"].ToString();
+                    string B = ((IDictionary<String, Object>)rows[0])["B"].ToString();
+                    string C = ((IDictionary<String, Object>)rows[0])["C"].ToString();
+                    string D = ((IDictionary<String, Object>)rows[0])["D"].ToString();
+                    if (A!="序号" || B!= "工序编号" || C != "工序名称" || D != "设备")
+                    {
+                        throw new FriendlyException($"非标准模版请检查!");
+                    }
                     //判断某个单元格是否为空,如果是的话抛出异常
                     if (rows.Count > 2)
                     {
