@@ -165,21 +165,28 @@ namespace Finance.Processes
                             throw new FriendlyException($"非标准模版,缺少工序名称!");
                         }
                     }
-                    catch (Exception)
+                    catch (FriendlyException ex)
                     {
-                        throw new FriendlyException("非标准模版,请检查!");
+                        throw new FriendlyException(ex.Message);
                     }
-                   
-                    for (global::System.Int32 i = 1; i < sheetCount; i++)
+                    catch (Exception ex)
+                    {
+                        throw new FriendlyException("模板错误请检查");
+                    }
+                    for (global::System.Int32 i = 1; i <= sheetCount; i++)
                     {
                         try
                         {
                            if (sheet.GetRow(0).GetCell(0).CellType == CellType.Blank||string.IsNullOrEmpty(sheet.GetRow(i).GetCell(0)?.ToString())) throw new FriendlyException($"行:{i} 的工序编号为空");
                            if (sheet.GetRow(0).GetCell(1).CellType == CellType.Blank||string.IsNullOrEmpty(sheet.GetRow(i).GetCell(1)?.ToString())) throw new FriendlyException($"行:{i} 的工序名称为空");
                         }
-                        catch (Exception)
+                        catch (FriendlyException ex)
                         {
-                            throw new FriendlyException($"非标准模版,请检查!");
+                            throw new FriendlyException(ex.Message);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new FriendlyException("模板错误请检查");
                         }
                     }
                     #endregion
