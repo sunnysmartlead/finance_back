@@ -11,6 +11,7 @@ using MiniExcelLibs;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
 using NPOI.SS.UserModel;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Spire.Pdf.Exporting.XPS.Schema;
 using System;
 using System.Collections.Generic;
@@ -248,6 +249,35 @@ namespace Finance.BaseLibrary
                 //判断是否获取到 sheet
                 if (sheet != null)
                 {
+                    #region 判断单元格是否为空
+                    // 检查第一行内容是否符合要求
+                    IRow firstRow = sheet.GetRow(0);
+                    if (firstRow == null ||
+                       firstRow.GetCell(0)?.StringCellValue != "序号" ||
+                       firstRow.GetCell(1)?.StringCellValue != "工序编号" ||
+                       firstRow.GetCell(2)?.StringCellValue != "工序名称" ||
+                       firstRow.GetCell(3)?.StringCellValue != "设备")
+                    {
+                        throw new FriendlyException("模版错误请见检查!");
+
+                    }
+                    for (int rowIdx = 0; rowIdx <= sheet.LastRowNum; rowIdx++)
+                    {
+                        IRow row = sheet.GetRow(rowIdx);
+                        if (row == null)
+                            continue;
+
+                        for (int colIdx = 0; colIdx < row.LastCellNum; colIdx++)
+                        {
+                            ICell cell = row.GetCell(colIdx);
+                            if (cell == null || cell.CellType == CellType.Blank)
+                            {
+                                throw new FriendlyException($"行: {rowIdx + 1}, 列: {colIdx + 1},为空,请检查");
+                            }
+                        }
+                    }
+                    #endregion
+
                     var query = this._foundationDeviceRepository.GetAll().Where(t => t.IsDeleted == false);
                     var list1 = query.ToList();
                     var dtos = ObjectMapper.Map<List<FoundationDevice>, List<FoundationDeviceDto>>(list1, new List<FoundationDeviceDto>());

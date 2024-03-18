@@ -1125,7 +1125,7 @@ namespace Finance.BaseLibrary
                         // 追溯软件
                         if (null != row[keys[fromNumIndex + 1]])
                         {
-                            if (!Regex.IsMatch(row[keys[fromNumIndex + 1]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[fromNumIndex + 1]} 必须是数字类型,请检查!");
+                            //if (!Regex.IsMatch(row[keys[fromNumIndex + 1]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[fromNumIndex + 1]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursdevelopCostInfoResponseDto.TraceabilitySoftware = (row[keys[fromNumIndex + 1]].ToString());
 
@@ -1212,13 +1212,13 @@ namespace Finance.BaseLibrary
                         }
                         if (null != row[keys[frocNumIndex - 2]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 2]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 2]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 2]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.TestLinePrice = decimal.Parse(row[keys[frocNumIndex - 2]].ToString());
                         }
                         if (null != row[keys[frocNumIndex - 3]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 3]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 3]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 3]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.TestLineNumber = decimal.Parse(row[keys[frocNumIndex - 3]].ToString());
                         }
@@ -1228,13 +1228,13 @@ namespace Finance.BaseLibrary
                         }
                         if (null != row[keys[frocNumIndex - 5]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 5]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 5]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 5]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.FrockPrice = decimal.Parse(row[keys[frocNumIndex - 5]].ToString());
                         }
                         if (null != row[keys[frocNumIndex - 6]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 6]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 6]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 6]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.FrockNumber = decimal.Parse(row[keys[frocNumIndex - 6]].ToString());
                         }
@@ -1244,14 +1244,14 @@ namespace Finance.BaseLibrary
                         }
                         if (null != row[keys[frocNumIndex - 8]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 8]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 8]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 8]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.FixturePrice = decimal.Parse(row[keys[frocNumIndex - 8]].ToString());
 
                         }
                         if (null != row[keys[frocNumIndex - 9]])
                         {
-                            if (!Regex.IsMatch(row[keys[frocNumIndex - 9]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 1]} 必须是数字类型,请检查!");
+                            if (!Regex.IsMatch(row[keys[frocNumIndex - 9]].ToString(), @"^[-+]?[0-9]*\.?[0-9]+$")) throw new FriendlyException($"行:{i  + 1},列:{keys[frocNumIndex - 9]} 必须是数字类型,请检查!");
 
                             foundationReliableProcessHoursFixtureResponseDto.FixtureNumber = decimal.Parse(row[keys[frocNumIndex - 9]].ToString());
 
