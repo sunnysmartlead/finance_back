@@ -223,7 +223,12 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// <returns></returns>
         public async Task<IActionResult> DownloadQueryLXManagerApproval(long auditFlowId)
         {
-            var values = await QueryLXManagerApproval(auditFlowId);
+            ManagerApprovalDto values = await QueryLXManagerApproval(auditFlowId);
+
+            var data = new
+            {
+
+            };
             MemoryStream memoryStream = new MemoryStream();
             await MiniExcel.SaveAsAsync(memoryStream, values);
             return new FileContentResult(memoryStream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -231,7 +236,5 @@ namespace Finance.SporadicQuotation.RequirementEntry
                 FileDownloadName = $"报价审核表-{DateTime.Now}.xlsx"
             };
         }
-
-
     }
 }

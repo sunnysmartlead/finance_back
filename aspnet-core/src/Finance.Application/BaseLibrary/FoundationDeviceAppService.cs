@@ -253,10 +253,10 @@ namespace Finance.BaseLibrary
                     // 检查第一行内容是否符合要求
                     IRow firstRow = sheet.GetRow(0);
                     if (firstRow == null ||
-                       firstRow.GetCell(0)?.StringCellValue != "序号" ||
-                       firstRow.GetCell(1)?.StringCellValue != "工序编号" ||
-                       firstRow.GetCell(2)?.StringCellValue != "工序名称" ||
-                       firstRow.GetCell(3)?.StringCellValue != "设备")
+                       firstRow.GetCell(0)?.StringCellValue != "工序编号" ||
+                       firstRow.GetCell(1)?.StringCellValue != "工序名称" ||
+                       firstRow.GetCell(2)?.StringCellValue != "设备1名称" ||
+                       firstRow.GetCell(3)?.StringCellValue != "设备1状态")
                     {
                         throw new FriendlyException("模版错误请见检查!");
 
@@ -295,10 +295,10 @@ namespace Finance.BaseLibrary
                         FoundationDeviceDto entity = new FoundationDeviceDto();
                         entity.IsDeleted = false;
                         //判断单元格是否为空,如果是空就抛出异常
-                        if (initRow.GetCell(0).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的A列(工序编号)为空!请检查!");
+                        //if (initRow.GetCell(0).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的A列(工序编号)为空!请检查!");
                         entity.ProcessNumber = initRow.GetCell(0).ToString();
                         //判断单元格是否为空,如果是空就抛出异常
-                        if (initRow.GetCell(1).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的B列(工序名称)为空!请检查!");
+                        //if (initRow.GetCell(1).CellType == CellType.Blank) throw new FriendlyException($"行:{i + 1},的B列(工序名称)为空!请检查!");
                         entity.ProcessName = initRow.GetCell(1).ToString();
                         entity.CreationTime = DateTime.Now;
                         entity.LastModificationTime = DateTime.Now;

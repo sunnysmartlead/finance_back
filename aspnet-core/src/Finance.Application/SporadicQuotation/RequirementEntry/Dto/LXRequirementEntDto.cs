@@ -213,6 +213,10 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         [FriendlyRequired("零部件类型")]
         public virtual string ComponentType { get; set; }
         /// <summary>
+        /// 零部件类型字典包DisplayName
+        /// </summary>         
+        public virtual string ComponentTypeDisplayName { get; set; }
+        /// <summary>
         /// 零星报价列表实体类
         /// </summary>
         [FriendlyRequired("零星报价列表实体类")]
