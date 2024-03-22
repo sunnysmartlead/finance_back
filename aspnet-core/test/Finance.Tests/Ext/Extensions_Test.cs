@@ -15,6 +15,10 @@ namespace Finance.Tests.Ext
     /// </summary>
     public class Extensions_Test : FinanceTestBase
     {
+        /// <summary>
+        /// 测试成本项目排序
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task CostTypeSort_Test()
         {
@@ -25,6 +29,10 @@ namespace Finance.Tests.Ext
             (new ManufacturingCost { CostType = CostType.Total }).CostTypeSort().CompareTo(5);
         }
 
+        /// <summary>
+        /// 测试获取值或默认值
+        /// </summary>
+        /// <returns></returns>
         [Fact]
         public async Task GetValueOrDefault_Test()
         {
