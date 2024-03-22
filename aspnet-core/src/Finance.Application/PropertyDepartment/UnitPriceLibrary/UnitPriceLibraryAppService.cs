@@ -26,6 +26,7 @@ using NPOI.SS.Formula.Functions;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
+using Org.BouncyCastle.Utilities;
 using Spire.Xls;
 using System;
 using System.Collections.Generic;
@@ -915,13 +916,23 @@ namespace Finance.PropertyDepartment.UnitPriceLibrary
         {
             try
             {
-                if (Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");
+                if (Path.GetExtension(filename.FileName) is not ".xlsx") throw new FriendlyException("模板文件类型不正确");             
                 await _lossRateInfo.HardDeleteAsync(p => true);
                 await _lossRateYearInfo.DeleteAllEntities();                
                 using (var memoryStream = new MemoryStream())
                 {
                     await filename.CopyToAsync(memoryStream);
                     List<LossRateModel> rowExcls = memoryStream.Query<LossRateModel>().ToList();
+                    //检验
+                    var duplicateItem = rowExcls.GroupBy(x => new { x.SuperType, x.MaterialCategory, x.CategoryName })
+                    .Where(g => g.Count() > 1)
+                                .SelectMany(g => g.Select(x => new { x, RowNumber = rowExcls.IndexOf(x) + 2 }))
+                                .FirstOrDefault();
+                    if (duplicateItem != null)
+                    {
+                        throw new FriendlyException("第" + duplicateItem.RowNumber + "行的产品大类和物料大类和物料种类有相同的,请查看并修改!");                       
+                    }               
+                    //
                     List<LossRateSopModel> rowExcl = memoryStream.Query<LossRateSopModel>().ToList();
                     if (rowExcls.Count != rowExcl.Count) throw new FriendlyException("读取文件的过程中产生了错误,产品大类/物料大类和SOP行数不一");
                     List<LossRateInfo> prop = await _lossRateInfo.BulkInsertAsync(ObjectMapper.Map<List<LossRateInfo>>(rowExcls));
