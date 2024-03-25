@@ -39,6 +39,9 @@ namespace Finance.SporadicQuotation.RequirementEntry.Method
 
             configuration.CreateMap<ManagerApprovalDto, LXRequirementEntDto>();
             configuration.CreateMap<LXRequirementEntDto, ManagerApprovalDto>();
+
+            configuration.CreateMap<LXRequirementEntDto, ApprovalFormDto>();
+            configuration.CreateMap<ApprovalFormDto, LXRequirementEntDto>();
         } 
     }
 }

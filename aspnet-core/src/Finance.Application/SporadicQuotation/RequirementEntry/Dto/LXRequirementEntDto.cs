@@ -180,6 +180,10 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
     public class ManagerApprovalDto
     {
         /// <summary>
+        /// Id
+        /// </summary>
+        public virtual long Id { get; set; }
+        /// <summary>
         /// 直接客户名称
         /// </summary>
         [FriendlyRequired("直接客户名称")]
@@ -222,5 +226,46 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         [FriendlyRequired("零星报价列表实体类")]
         public virtual List<LXDataListDto> LXDataListDtos { get; set; }
        
+    }
+    /// <summary>
+    /// 零星报价列表交互类 保存\提交\查询
+    /// </summary>
+    public class LXApprovalFormListDto
+    {
+        /// <summary>
+        /// 走量
+        /// </summary>
+        public virtual decimal TravelVolume { get; set; }
+        /// <summary>
+        /// 成本
+        /// </summary>
+        public virtual decimal Cost { get; set; }
+        /// <summary>
+        /// 毛利率
+        /// </summary>
+        public virtual decimal GrossProfitMargin { get; set; }
+        /// <summary>
+        /// 价格
+        /// </summary>
+        public virtual decimal Price { get; set; }
+        /// <summary>
+        /// 备注
+        /// </summary>
+        public virtual string Remarks { get; set; }
+    }
+    /// <summary>
+    /// 报价审批表Dto
+    /// </summary>
+    public class ApprovalFormDto: ManagerApprovalDto
+    {
+        /// <summary>
+        /// 报价审批表 列表Dto
+        /// </summary>
+        public virtual List<LXApprovalFormListDto> LXApprovalFormListDtos { get; set; }=new List<LXApprovalFormListDto>();
+        /// <summary>
+        /// 当前时间
+        /// </summary>
+        public virtual DateTime DateTime { get; set; }=DateTime.Now;
+   
     }
 }
