@@ -368,7 +368,7 @@ namespace Finance.WorkFlows
                             });
                         }
 
-                        if (eventData.Entity.NodeId == "主流程_归档")
+                        if (eventData.Entity.NodeId == "主流程_归档"|| eventData.Entity.NodeId == $"零星件报价流程_{FinanceConsts.FiledLXDisplayName}")
                         {
                             var wf = await _workflowInstanceRepository.GetAsync(eventData.Entity.WorkFlowInstanceId);
                             wf.WorkflowState = WorkflowState.Ended;

@@ -440,29 +440,29 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             //零星报价
             var nodeListLX=new List<Node>() {new Node
             {
-                Name = "开始之LX",
+                Name = FinanceConsts.StartLXDisplayName,
                 FinanceDictionaryId = string.Empty,
                 Activation = string.Empty,
                 NodeType= NodeType.Start,
             },new Node
             {
-                Name="核价需求录入之LX",
+                Name=FinanceConsts.PricingDemandInputLXDisplayName,
                 FinanceDictionaryId = FinanceConsts.EvalReasonLX,
-                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_核价需求录入之LX || {LXFlowId}_开始之LX_{LXFlowId}_核价需求录入之LX",
+                Activation = $"{LXFlowId}_{FinanceConsts.ReviewQuotationStrategyLXDisplayName}_{LXFlowId}_{FinanceConsts.PricingDemandInputLXDisplayName} || {LXFlowId}_{FinanceConsts.StartLXDisplayName}_{LXFlowId}_{FinanceConsts.PricingDemandInputLXDisplayName}",
                 RoleId = salesMan.Id.ToString(),
                 ProcessIdentifier = FinanceConsts.PricingDemandInputLX,},
             new Node
             {
-                Name = "审核报价策略之LX",
+                Name = FinanceConsts.ReviewQuotationStrategyLXDisplayName,
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_核价需求录入之LX_{LXFlowId}_审核报价策略之LX||{LXFlowId}_报价审批表之LX_{LXFlowId}_审核报价策略之LX",
+                Activation = $"{LXFlowId}_{FinanceConsts.PricingDemandInputLXDisplayName}_{LXFlowId}_{FinanceConsts.ReviewQuotationStrategyLXDisplayName}||{LXFlowId}_{FinanceConsts.QuotationApprovalFormLXDisplayName}_{LXFlowId}_{FinanceConsts.ReviewQuotationStrategyLXDisplayName}",
                 RoleId = generalManager.Id.ToString(),//总经理查看
                 ProcessIdentifier = FinanceConsts.ReviewQuotationStrategyLX,
             }, new Node
             {
-                Name = "报价审批表之LX",
+                Name = FinanceConsts.QuotationApprovalFormLXDisplayName,
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_报价审批表之LX",
+                Activation = $"{LXFlowId}_{FinanceConsts.ReviewQuotationStrategyLXDisplayName}_{LXFlowId}_{FinanceConsts.QuotationApprovalFormLXDisplayName}",
                 RoleId = generalManager.Id.ToString(),//总经理查看
                 ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
             },
@@ -476,9 +476,9 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             //},
             new Node
             {
-                Name = "归档之LX",
+                Name = FinanceConsts.FiledLXDisplayName,
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_报价审批表之LX_{LXFlowId}_归档之LX",
+                Activation = $"{LXFlowId}_{FinanceConsts.QuotationApprovalFormLXDisplayName}_{LXFlowId}_{FinanceConsts.FiledLXDisplayName}",
                 RoleId = salesMan.Id.ToString(),//营销部查看
                 ProcessIdentifier = "ArchiveEndLX",
             }};
@@ -1356,35 +1356,35 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             //零星报价
             var lineListLX=new List<Line>(){new Line
             {
-                SoureNodeId = "开始之LX",
-                TargetNodeId = "核价需求录入之LX",
+                SoureNodeId = FinanceConsts.StartLXDisplayName,
+                TargetNodeId = FinanceConsts.PricingDemandInputLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = string.Empty,
             }, new Line
             {
-                SoureNodeId = "核价需求录入之LX",
-                TargetNodeId = "审核报价策略之LX",
+                SoureNodeId = FinanceConsts.PricingDemandInputLXDisplayName,
+                TargetNodeId = FinanceConsts.ReviewQuotationStrategyLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.EvalReason_Tgyp},{FinanceConsts.EvalReason_Qtlxbj}",
             },
             new Line
             {
-                SoureNodeId = "审核报价策略之LX",
-                TargetNodeId = "核价需求录入之LX",
+                SoureNodeId =FinanceConsts.ReviewQuotationStrategyLXDisplayName,
+                TargetNodeId = FinanceConsts.PricingDemandInputLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
             },
             new Line
             {
-                SoureNodeId = "审核报价策略之LX",
-                TargetNodeId = "报价审批表之LX",
+                SoureNodeId = FinanceConsts.ReviewQuotationStrategyLXDisplayName,
+                TargetNodeId = FinanceConsts.QuotationApprovalFormLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
             },
             new Line
             {
-                SoureNodeId = "报价审批表之LX",
-                TargetNodeId = "审核报价策略之LX",
+                SoureNodeId = FinanceConsts.QuotationApprovalFormLXDisplayName,
+                TargetNodeId = FinanceConsts.ReviewQuotationStrategyLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
             },
@@ -1404,8 +1404,8 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             //},
             new Line
             {
-                SoureNodeId = "报价审批表之LX",
-                TargetNodeId = "归档之LX",
+                SoureNodeId = FinanceConsts.QuotationApprovalFormLXDisplayName,
+                TargetNodeId = FinanceConsts.FiledLXDisplayName,
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
             }};

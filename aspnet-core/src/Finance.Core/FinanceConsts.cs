@@ -1145,6 +1145,32 @@ namespace Finance
         /// 查看报价审批表-LX
         /// </summary>
         public const string ViewQuotationApprovalFormLX = "ViewQuotationApprovalFormLX";
+
+
+        /// <summary>
+        /// 开始-LX 别名
+        /// </summary>
+        public const string StartLXDisplayName = "开始之LX";
+
+        /// <summary>
+        /// 核价需求录入-LX 别名
+        /// </summary>
+        public const string PricingDemandInputLXDisplayName = "核价需求录入之LX";
+
+        /// <summary>
+        /// 审核报价策略-LX 别名
+        /// </summary>
+        public const string ReviewQuotationStrategyLXDisplayName = "审核报价策略之LX";
+
+        /// <summary> 
+        /// 报价审批表-LX 别名
+        /// </summary>
+        public const string QuotationApprovalFormLXDisplayName = "报价审批表之LX";
+
+        /// <summary> 
+        /// 报价审批表-LX 别名
+        /// </summary>
+        public const string FiledLXDisplayName = "归档之LX";
         #endregion
 
     }

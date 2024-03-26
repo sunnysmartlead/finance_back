@@ -348,7 +348,7 @@ namespace Finance.Audit
             var w = await _workflowInstanceRepository.GetAsync(auditFlowId);
             var n = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == "主流程_归档");
 
-
+            var nLX = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == auditFlowId && p.NodeId == $"零星件报价流程_{FinanceConsts.FiledLXDisplayName}");
             //节点
 
             //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
@@ -364,6 +364,24 @@ namespace Finance.Audit
                         JumpDescription = "",
                         ProcessIdentifier = n.ProcessIdentifier,
                         ProcessName = n.Name,
+                        Right = RIGHTTYPE.ReadOnly,
+                    });
+                }
+
+            }
+            //只要此流程的归档节点处于激活状态，或流程处于结束状态，，并且列表里没有归档就把归档节点加入进来
+            if (nLX != null && (w.WorkflowState == WorkflowState.Ended || nLX.NodeInstanceStatus == NodeInstanceStatus.Current))
+            {
+                if (!list.Any(p =>  p.ProcessName == FinanceConsts.FiledLXDisplayName))
+                {
+                    list.Add(new AuditFlowRightDetailDto
+                    {
+                        Id = nLX.Id,
+                        IsReset = false,
+                        IsRetype = false,
+                        JumpDescription = "",
+                        ProcessIdentifier = nLX.ProcessIdentifier,
+                        ProcessName = nLX.Name,
                         Right = RIGHTTYPE.ReadOnly,
                     });
                 }
@@ -623,7 +641,7 @@ namespace Finance.Audit
             //主流程-RFQ  首次核价 方案变更 量产样品 其他
             //var RFQ = new List<string> { FinanceConsts.EvalReason_Schj, FinanceConsts.EvalReason_Fabg, FinanceConsts.EvalReason_Lcyp, FinanceConsts.EvalReason_Qt };
 
-            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == WorkFlowInstanceId && (p.NodeId == "主流程_核价需求录入"|| p.NodeId == "零星件报价流程_核价需求录入之LX"));
+            var node = await _nodeInstanceRepository.FirstOrDefaultAsync(p => p.WorkFlowInstanceId == WorkFlowInstanceId && (p.NodeId == "主流程_核价需求录入"|| p.NodeId == $"零星件报价流程_{FinanceConsts.PricingDemandInputLXDisplayName}"));
             if(node==null|| node.FinanceDictionaryDetailId==null|| node.FinanceDictionaryDetailId == "" || node.FinanceDictionaryDetailId == FinanceConsts.Save)
             {
                 return "";
