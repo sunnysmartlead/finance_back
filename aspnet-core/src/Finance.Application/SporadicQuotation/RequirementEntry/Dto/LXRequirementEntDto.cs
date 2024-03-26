@@ -173,60 +173,7 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         /// 数据
         /// </summary>         
         public virtual List<string> Data { get; set; }
-    } 
-    /// <summary>
-    /// 总经理审批Dto
-    /// </summary>
-    public class ManagerApprovalDto
-    {
-        /// <summary>
-        /// Id
-        /// </summary>
-        public virtual long Id { get; set; }
-        /// <summary>
-        /// 直接客户名称
-        /// </summary>
-        [FriendlyRequired("直接客户名称")]
-        public virtual string DirectCustomerName { get; set; }
-
-        /// <summary>
-        /// 客户性质
-        /// </summary>
-        [FriendlyRequired("客户性质")]
-        public virtual string CustomerNature { get; set; }
-
-        /// <summary>
-        /// 终端客户名称
-        /// </summary>
-        [FriendlyRequired("终端客户名称")]
-        public virtual string EndCustomerName { get; set; }
-
-        /// <summary>
-        /// 终端客户性质
-        /// </summary>
-        [FriendlyRequired("终端客户性质")]
-        public virtual string EndCustomerNature { get; set; }
-        /// <summary>
-        /// 项目名称
-        /// </summary>   
-        [FriendlyRequired("项目名称")]
-        public virtual string ProjectName { get; set; }
-        /// <summary>
-        /// 零部件类型(字典明细表主键)
-        /// </summary>
-        [FriendlyRequired("零部件类型")]
-        public virtual string ComponentType { get; set; }
-        /// <summary>
-        /// 零部件类型字典包DisplayName
-        /// </summary>         
-        public virtual string ComponentTypeDisplayName { get; set; }
-        /// <summary>
-        /// 零星报价列表实体类
-        /// </summary>
-        [FriendlyRequired("零星报价列表实体类")]
-        public virtual List<LXDataListDto> LXDataListDtos { get; set; }
-       
-    }
+    }     
     /// <summary>
     /// 零星报价列表交互类 保存\提交\查询
     /// </summary>
@@ -256,7 +203,7 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
     /// <summary>
     /// 报价审批表Dto
     /// </summary>
-    public class ApprovalFormDto: ManagerApprovalDto
+    public class ApprovalFormDto: LXRequirementEntDto
     {
         /// <summary>
         /// 报价审批表 列表Dto

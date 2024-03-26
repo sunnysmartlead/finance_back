@@ -1,6 +1,7 @@
 ﻿using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Finance.Audit;
+using Finance.Dto;
 using Finance.EntityFrameworkCore.Seed.Host;
 using Finance.Ext;
 using Finance.Hr;
@@ -74,6 +75,7 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// 文件管理接口
         /// </summary>
         private readonly FileCommonService _fileCommonService;
+   
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -277,12 +279,26 @@ namespace Finance.SporadicQuotation.RequirementEntry
                 {
                     throw new FriendlyException("列表长度不一致，无法转换成表格格式,请检查之前的数据");
                 }
-                for (int i = 0; i < count.Max(); i++)
+                for (int i = 0; i < count.Min(); i++)
                 {
                     approvalFormDto.LXApprovalFormListDtos.Add(new LXApprovalFormListDto() { TravelVolume = TravelVolumes[i], Cost = Costs[i], Price = Prices[i], Remarks = Remarkss[i], GrossProfitMargin = (Prices[i] - Costs[i]) / Prices[i] });
                 }
             }
             return approvalFormDto;
+        }
+        /// <summary>
+        /// 审核报价策略 提交
+        /// </summary>
+        /// <param name="toExamineDtoLX"></param>
+        /// <returns></returns>
+        public async Task ReviewQuotationStrategy(ToExamineDtoLX toExamineDtoLX)
+        {
+            await _workflowInstanceAppService.SubmitNode(new() { Comment=toExamineDtoLX.Comment,NodeInstanceId=toExamineDtoLX.NodeInstanceId,FinanceDictionaryDetailId=toExamineDtoLX.Opinion });
+            if(toExamineDtoLX.Opinion== FinanceConsts.YesOrNo_Yes)
+            {
+                NodeInstance prop = await _nodeInstance.FirstOrDefaultAsync(p => p.Id.Equals(toExamineDtoLX.NodeInstanceId));
+                await Filed(prop.WorkFlowInstanceId);
+            }
         }
         /// <summary>
         /// 下载生成报价审核表
@@ -403,7 +419,7 @@ namespace Finance.SporadicQuotation.RequirementEntry
         /// 归档文件下载 单个
         /// </summary>
         /// <returns></returns>
-        public async Task<IActionResult> PostPigeonholeDownload(long Id)
+        public async Task<IActionResult> GetPigeonholeDownload(long Id)
         {
             try
             {
