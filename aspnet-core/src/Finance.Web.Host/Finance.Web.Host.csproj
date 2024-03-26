@@ -63,6 +63,9 @@
     <Content Update="wwwroot\Excel\贸易合规.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\Excel\零星件报价审核表.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Update="wwwroot\Excel\成本信息表模板.xlsx">

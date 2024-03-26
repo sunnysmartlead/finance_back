@@ -173,54 +173,46 @@ namespace Finance.SporadicQuotation.RequirementEntry.Dto
         /// 数据
         /// </summary>         
         public virtual List<string> Data { get; set; }
-    } 
+    }     
     /// <summary>
-    /// 总经理审批Dto
+    /// 零星报价列表交互类 保存\提交\查询
     /// </summary>
-    public class ManagerApprovalDto
+    public class LXApprovalFormListDto
     {
         /// <summary>
-        /// 直接客户名称
+        /// 走量
         /// </summary>
-        [FriendlyRequired("直接客户名称")]
-        public virtual string DirectCustomerName { get; set; }
-
+        public virtual decimal TravelVolume { get; set; }
         /// <summary>
-        /// 客户性质
+        /// 成本
         /// </summary>
-        [FriendlyRequired("客户性质")]
-        public virtual string CustomerNature { get; set; }
-
+        public virtual decimal Cost { get; set; }
         /// <summary>
-        /// 终端客户名称
+        /// 毛利率
         /// </summary>
-        [FriendlyRequired("终端客户名称")]
-        public virtual string EndCustomerName { get; set; }
-
+        public virtual decimal GrossProfitMargin { get; set; }
         /// <summary>
-        /// 终端客户性质
+        /// 价格
         /// </summary>
-        [FriendlyRequired("终端客户性质")]
-        public virtual string EndCustomerNature { get; set; }
+        public virtual decimal Price { get; set; }
         /// <summary>
-        /// 项目名称
-        /// </summary>   
-        [FriendlyRequired("项目名称")]
-        public virtual string ProjectName { get; set; }
-        /// <summary>
-        /// 零部件类型(字典明细表主键)
+        /// 备注
         /// </summary>
-        [FriendlyRequired("零部件类型")]
-        public virtual string ComponentType { get; set; }
+        public virtual string Remarks { get; set; }
+    }
+    /// <summary>
+    /// 报价审批表Dto
+    /// </summary>
+    public class ApprovalFormDto: LXRequirementEntDto
+    {
         /// <summary>
-        /// 零部件类型字典包DisplayName
-        /// </summary>         
-        public virtual string ComponentTypeDisplayName { get; set; }
-        /// <summary>
-        /// 零星报价列表实体类
+        /// 报价审批表 列表Dto
         /// </summary>
-        [FriendlyRequired("零星报价列表实体类")]
-        public virtual List<LXDataListDto> LXDataListDtos { get; set; }
-       
+        public virtual List<LXApprovalFormListDto> LXApprovalFormListDtos { get; set; }=new List<LXApprovalFormListDto>();
+        /// <summary>
+        /// 当前时间
+        /// </summary>
+        public virtual DateTime DateTime { get; set; }=DateTime.Now;
+   
     }
 }

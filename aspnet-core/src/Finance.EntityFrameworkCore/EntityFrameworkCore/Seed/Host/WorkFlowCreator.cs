@@ -462,22 +462,23 @@ namespace Finance.EntityFrameworkCore.Seed.Host
             {
                 Name = "报价审批表之LX",
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_报价审批表之LX||{LXFlowId}_查看报价审批表之LX_{LXFlowId}_报价审批表之LX",
+                Activation = $"{LXFlowId}_审核报价策略之LX_{LXFlowId}_报价审批表之LX",
                 RoleId = generalManager.Id.ToString(),//总经理查看
                 ProcessIdentifier = FinanceConsts.QuotationApprovalFormLX,
-            }, new Node
-            {
-                Name = "查看报价审批表之LX",
-                FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_报价审批表之LX_{LXFlowId}_查看报价审批表之LX",
-                RoleId = salesMan.Id.ToString(),//营销部查看
-                ProcessIdentifier = FinanceConsts.ViewQuotationApprovalFormLX,
             },
+            //new Node
+            //{
+            //    Name = "查看报价审批表之LX",
+            //    FinanceDictionaryId = FinanceConsts.YesOrNo,
+            //    Activation = $"{LXFlowId}_报价审批表之LX_{LXFlowId}_查看报价审批表之LX",
+            //    RoleId = salesMan.Id.ToString(),//营销部查看
+            //    ProcessIdentifier = FinanceConsts.ViewQuotationApprovalFormLX,
+            //},
             new Node
             {
                 Name = "归档之LX",
                 FinanceDictionaryId = FinanceConsts.YesOrNo,
-                Activation = $"{LXFlowId}_查看报价审批表之LX_{LXFlowId}_归档之LX",
+                Activation = $"{LXFlowId}_报价审批表之LX_{LXFlowId}_归档之LX",
                 RoleId = salesMan.Id.ToString(),//营销部查看
                 ProcessIdentifier = "ArchiveEndLX",
             }};
@@ -1387,23 +1388,23 @@ namespace Finance.EntityFrameworkCore.Seed.Host
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
             },
+            //new Line
+            //{
+            //    SoureNodeId = "报价审批表之LX",
+            //    TargetNodeId = "查看报价审批表之LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
+            //},
+            //new Line
+            //{
+            //    SoureNodeId = "查看报价审批表之LX",
+            //    TargetNodeId = "报价审批表之LX",
+            //    Index = 0,
+            //    FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
+            //},
             new Line
             {
                 SoureNodeId = "报价审批表之LX",
-                TargetNodeId = "查看报价审批表之LX",
-                Index = 0,
-                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
-            },
-            new Line
-            {
-                SoureNodeId = "查看报价审批表之LX",
-                TargetNodeId = "报价审批表之LX",
-                Index = 0,
-                FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_No}",
-            },
-            new Line
-            {
-                SoureNodeId = "查看报价审批表之LX",
                 TargetNodeId = "归档之LX",
                 Index = 0,
                 FinanceDictionaryDetailId = $"{FinanceConsts.YesOrNo_Yes}",
